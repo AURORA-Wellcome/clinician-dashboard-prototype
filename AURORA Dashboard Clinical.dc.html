@@ -170,54 +170,20 @@ a{color:#0072B2;text-underline-offset:3px}a:hover{color:#005E94}
         <div style="font-size:12.5px;color:#4C6272;font-variant-numeric:tabular-nums">29 F · MRN A-10442 · MDD (F32.1)</div>
         <div style="font-size:12px;color:#4C6272">In care 14 weeks</div>
       </div>
-      <!-- On View C the brief owns status, severity, safety, appt and goals, so the rail hides them; C3 (patient-facing) keeps identity only -->
-      <sc-if value="{{ viewB }}">
-      <span style="{{ railChip }}"><svg width="11" height="11" viewBox="0 0 10 10"><path d="M5 0L10 9H0Z" fill="#D55E00"></path></svg>Off-track — reliable deterioration</span>
-      <div style="height:1px;background:#D8DDE0"></div>
-      <div style="font-variant-numeric:tabular-nums">
-        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#4C6272">Est. severity <span style="{{ aiPill }}">AI</span></span><b style="color:#8A5F00">{{ railEst }}</b></div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:3px"><span style="color:#4C6272">PHQ-9 (last)</span><b>20 · Aug 10</b></div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:3px"><span style="color:#4C6272">Est. change vs baseline (12)</span><b style="color:#9C4400">{{ railChange }}</b></div>
-        <div style="font-size:11px;color:#768692;margin-top:5px">Estimate based on 9 of 12 check-ins · PHQ-9 scale (0–27)</div>
-      </div>
-      </sc-if>
+      <!-- The main panel owns status, severity, safety, appt and goals on both B and C; C3 (patient-facing) keeps identity only -->
       <sc-if value="{{ railFull }}">
       <div style="height:1px;background:#D8DDE0"></div>
       <div>
         <div style="font-size:11px;font-weight:600;color:#4C6272;margin-bottom:4px">Medications</div>
         <div style="font-size:12.5px;line-height:1.5">Sertraline 100 mg qAM<div style="font-size:11px;color:#9C4400">{{ sertSub }}</div></div>
-        <div style="font-size:12.5px;margin-top:4px">Trazodone 50 mg qHS prn<sc-if value="{{ viewB }}"><div style="font-size:11px;color:#768692">Since Apr · no changes</div></sc-if></div>
+        <div style="font-size:12.5px;margin-top:4px">Trazodone 50 mg qHS prn</div>
         <a href="#" onClick="{{ noop }}" style="font-size:11.5px">Full med history</a>
       </div>
       <div style="height:1px;background:#D8DDE0"></div>
       <div style="font-size:12.5px">
-        <sc-if value="{{ viewB }}">
-        <div style="display:flex;justify-content:space-between"><span style="color:#4C6272">Safety</span><span>No active flags</span></div>
-        <div style="display:flex;justify-content:space-between;margin-top:3px"><span style="color:#4C6272">Next appt</span><span>Thu 14:00</span></div>
-        </sc-if>
-        <div style="display:flex;justify-content:space-between;margin-top:{{ hamdTop }}"><span style="color:#4C6272">Last HAM-D</span><span>Jun 29 · 17</span></div>
+        <div style="display:flex;justify-content:space-between;margin-top:0"><span style="color:#4C6272">Last HAM-D</span><span>Jun 29 · 17</span></div>
       </div>
-      <sc-if value="{{ viewB }}">
       <div style="height:1px;background:#D8DDE0"></div>
-      <div>
-        <div style="font-size:11px;font-weight:600;color:#4C6272;margin-bottom:6px">Patient goals</div>
-        <sc-for list="{{ goals }}" as="g" hint-placeholder-count="3">
-          <div style="display:flex;align-items:baseline;gap:6px;font-size:12px;margin-bottom:5px"><span style="{{ g.dot }}"></span><span style="flex:1;font-style:italic">“{{ g.text }}”</span></div>
-        </sc-for>
-      </div>
-      </sc-if>
-      <div style="height:1px;background:#D8DDE0"></div>
-      <sc-if value="{{ viewB }}">
-      <div style="display:flex;flex-direction:column;gap:6px;font-size:12.5px">
-        <a href="#" onClick="{{ noop }}" style="text-decoration:none">Check-in completeness — 9/12</a>
-        <a href="#" onClick="{{ noop }}" style="text-decoration:none">What the patient saw (4 new)</a>
-        <a href="#" onClick="{{ noop }}" style="text-decoration:none">Tier-2 thresholds (safety floor)</a>
-        <a href="#" onClick="{{ noop }}" style="text-decoration:none">Passive streams — mobility · comms</a>
-        <a href="#" onClick="{{ openFacts }}" style="text-decoration:none">Model Facts — severity estimate</a>
-        <a href="#" onClick="{{ noop }}" style="text-decoration:none">Anxiety trend — GAD-7 / HAM-A</a>
-      </div>
-      </sc-if>
-      <sc-if value="{{ viewC }}">
       <div style="display:flex;flex-direction:column;gap:6px;font-size:12.5px">
         <a href="#" onClick="{{ noop }}" style="text-decoration:none">Check-in completeness</a>
         <a href="#" onClick="{{ noop }}" style="text-decoration:none">What the patient saw (4 new)</a>
@@ -227,8 +193,7 @@ a{color:#0072B2;text-underline-offset:3px}a:hover{color:#005E94}
         <a href="#" onClick="{{ noop }}" style="text-decoration:none">Anxiety trend</a>
       </div>
       </sc-if>
-      </sc-if>
-      <sc-if value="{{ viewB }}"><span onClick="{{ goC }}" style="margin-top:auto;text-align:center;font-size:13px;font-weight:600;color:#fff;background:#0072B2;border-radius:4px;padding:8px 12px;cursor:pointer" style-hover="background:#005E94">Session prep →</span></sc-if>
+      <sc-if value="{{ viewB }}"><span onClick="{{ goC }}" style="margin-top:auto;text-align:center;font-size:13px;font-weight:600;color:#fff;background:#0072B2;border-radius:4px;padding:8px 12px;cursor:pointer" style-hover="background:#005E94">Session prep · Thu 14:00 →</span></sc-if>
       <sc-if value="{{ viewC }}"><span onClick="{{ goB }}" style="margin-top:auto;text-align:center;font-size:13px;font-weight:600;color:#0072B2;border:1px solid #0072B2;border-radius:4px;padding:8px 12px;cursor:pointer" style-hover="background:#E7F1F8">← Patient detail</span></sc-if>
     </div>
 
@@ -236,9 +201,10 @@ a{color:#0072B2;text-underline-offset:3px}a:hover{color:#005E94}
     <sc-if value="{{ viewB }}">
     <div data-screen-label="View B — Patient detail" style="flex:1;padding:16px 20px 40px;max-width:1000px">
 
+      <!-- B3 promotes goals above the chart; B1/B2/B4 show the same block last -->
       <sc-if value="{{ isB3 }}">
         <div style="background:#fff;border:1px solid #D8DDE0;border-radius:4px;padding:14px 16px;margin-bottom:14px">
-          <div style="font-size:12px;font-weight:600;color:#4C6272;margin-bottom:8px">Patient-defined goals — in her own words</div>
+          <div style="font-size:12px;font-weight:600;color:#4C6272;margin-bottom:8px">Patient-defined goals</div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
             <sc-for list="{{ goals }}" as="g" hint-placeholder-count="3">
               <div style="border:1px solid #EAEEF1;border-radius:4px;padding:10px 12px">
@@ -251,14 +217,27 @@ a{color:#0072B2;text-underline-offset:3px}a:hover{color:#005E94}
       </sc-if>
 
       <div style="background:#fff;border:1px solid #D8DDE0;border-radius:4px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:15px;font-weight:600">Severity trend — estimated, PHQ-9 scale</span>
-          <span style="{{ aiPillLg }}">AI-generated estimate</span>
-          <span style="{{ confChip }}">{{ confLabel }}</span>
-          <sc-if value="{{ isB4 }}"><span onClick="{{ toggleNomo }}" style="{{ nomoChip }}">Population expected-response overlay: {{ nomoState }}</span></sc-if>
-          <span style="margin-left:auto;font-size:11px;color:#768692">Estimate based on 9 of 12 check-ins · 14 d</span>
-          <span onClick="{{ openOverride }}" style="font-size:12px;font-weight:600;color:#0072B2;border:1px solid #0072B2;border-radius:4px;padding:3px 10px;cursor:pointer" style-hover="background:#E7F1F8">✎ Override / annotate</span>
+        <!-- Readout: same vocabulary as the Session prep status strip -->
+        <div style="display:grid;grid-template-columns:1.3fr 1fr 1.4fr auto;padding-bottom:10px;border-bottom:1px solid #EAEEF1;font-variant-numeric:tabular-nums">
+          <div style="padding-right:18px">
+            <div style="font-size:12px;font-weight:600;color:#4C6272">Est. severity <span style="{{ aiPill }}">AI</span></div>
+            <div style="display:flex;align-items:baseline;gap:6px;line-height:28px"><b style="font-size:22px;color:#8A5F00">{{ estVal }}</b><span style="font-size:11.5px;color:#4C6272">{{ estSub }}</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:5px"><sc-if value="{{ showAiPoint }}"><span style="{{ ctxChip }}"><svg width="9" height="9" viewBox="0 0 10 10"><path d="M5 0L10 9H0Z" fill="#D55E00"></path></svg>Reliable deterioration</span></sc-if><sc-if value="{{ lowConf }}"><span style="{{ confChip }}">{{ confLabel }}</span></sc-if></div>
+          </div>
+          <div style="padding:0 18px;border-left:1px solid #EAEEF1">
+            <div style="font-size:12px;font-weight:600;color:#4C6272">PHQ-9 · Aug 10</div>
+            <div style="display:flex;align-items:baseline;gap:6px;line-height:28px"><b style="font-size:22px">{{ phqNow }}</b><span style="font-size:12px;color:#4C6272">{{ phqBand }}</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:5px"><span style="{{ ctxChip }}"><svg width="9" height="9" viewBox="0 0 10 10"><path d="M5 0L10 9H0Z" fill="#D55E00"></path></svg>Off-track</span><sc-if value="{{ showAiPoint }}"><sc-if value="{{ discordant }}"><span style="{{ ctxChip }}"><svg width="9" height="9" viewBox="0 0 10 10"><path d="M5 0L10 9H0Z" fill="#D55E00"></path></svg>Discordant with estimate</span></sc-if></sc-if></div>
+          </div>
+          <div style="padding:0 18px;border-left:1px solid #EAEEF1">
+            <div style="font-size:12px;font-weight:600;color:#4C6272">Safety</div>
+            <div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:6px;line-height:28px"><b style="font-size:15px">No flags</b><span style="font-size:12px;color:#4C6272">in 9 completed check-ins</span></div>
+            <div style="font-size:11.5px;color:#4C6272;margin-top:5px">PHQ-9 item 9 = 0 · Safety-model flags: 0 <span style="{{ aiPill }}">AI</span></div>
+          </div>
+          <div><span onClick="{{ openOverride }}" style="display:inline-block;white-space:nowrap;font-size:12px;font-weight:600;color:#0072B2;border:1px solid #0072B2;border-radius:4px;padding:3px 10px;cursor:pointer" style-hover="background:#E7F1F8">✎ Override / annotate</span></div>
         </div>
+        <!-- The override record sits next to the estimate it reinterprets -->
+        <div style="display:flex;align-items:baseline;gap:8px;border-left:3px solid #0072B2;background:#F4F9FC;padding:6px 10px;font-size:12.5px;line-height:1.55"><span style="{{ ovrPill }}">✎ Overridden Jul 27</span><span style="flex:1"><b>R. Patel (trainee):</b> “Estimated-severity spike reflects a missed check-in cluster, not deterioration — retain off-track status on PHQ-9 evidence only.”</span><a href="#" onClick="{{ noop }}" style="font-size:11.5px;flex:none">audit trail</a></div>
         <svg width="100%" viewBox="0 0 780 250" style="background:#fff;font-variant-numeric:tabular-nums">
           <sc-for list="{{ bands }}" as="b" hint-placeholder-count="5">
             <rect x="0" y="{{ b.y }}" width="780" height="{{ b.h }}" fill="{{ b.fill }}"></rect>
@@ -272,22 +251,25 @@ a{color:#0072B2;text-underline-offset:3px}a:hover{color:#005E94}
           <line x1="36" y1="{{ baselineY }}" x2="662" y2="{{ baselineY }}" stroke="#4C6272" stroke-width="1" stroke-dasharray="2 3"></line>
           <text x="40" y="{{ baselineLabelY }}" font-size="9.5" fill="#4C6272">own baseline (12)</text>
           <line x1="36" y1="{{ threshY }}" x2="662" y2="{{ threshY }}" stroke="#D55E00" stroke-width="1" stroke-dasharray="5 3"></line>
-          <text x="40" y="{{ threshLabelY }}" font-size="9.5" fill="#9C4400">individualized deviation threshold (+5)</text>
+          <text x="40" y="{{ threshLabelY }}" font-size="9.5" fill="#9C4400">deviation threshold (+5)</text>
           <sc-if value="{{ showInterval }}" hint-placeholder-val="{{ true }}"><polygon points="{{ aiPoly }}" fill="rgba(230,159,0,.18)"></polygon></sc-if>
           <sc-if value="{{ showViolin }}"><g><sc-for list="{{ violins }}" as="v" hint-placeholder-count="12"><ellipse cx="{{ v.x }}" cy="{{ v.y }}" rx="8" ry="{{ v.ry }}" fill="rgba(230,159,0,.22)" stroke="rgba(230,159,0,.45)" stroke-width="0.5"></ellipse></sc-for></g></sc-if>
-          <sc-if value="{{ showNomo }}"><g><polyline points="{{ nomoPts }}" fill="none" stroke="#768692" stroke-width="1.3" stroke-dasharray="7 4"></polyline><text x="666" y="{{ nomoLabelY }}" font-size="9.5" fill="#4C6272">expected response</text><text x="666" y="{{ nomoLabelY2 }}" font-size="8.5" fill="#768692">(population — toggle)</text></g></sc-if>
+          <sc-if value="{{ showNomo }}"><g><polyline points="{{ nomoPts }}" fill="none" stroke="#768692" stroke-width="1.3" stroke-dasharray="7 4"></polyline><text x="666" y="{{ nomoLabelY }}" font-size="9.5" fill="#4C6272">population expected</text></g></sc-if>
           <polyline points="{{ aiPts }}" fill="none" stroke="#C67F00" stroke-width="2"></polyline>
           <sc-for list="{{ aiMarks }}" as="m" hint-placeholder-count="12"><path d="{{ m.d }}" fill="#fff" stroke="#C67F00" stroke-width="1.5"></path></sc-for>
-          <sc-for list="{{ events }}" as="e" hint-placeholder-count="4">
+          <sc-for list="{{ events }}" as="e" hint-placeholder-count="3">
             <line x1="{{ e.x }}" y1="26" x2="{{ e.x }}" y2="224" stroke="rgba(76,98,114,.4)" stroke-width="1"></line>
           </sc-for>
+          <!-- Clinician action (override) drawn apart from patient events -->
+          <line x1="{{ evX3 }}" y1="26" x2="{{ evX3 }}" y2="224" stroke="#0072B2" stroke-width="1" stroke-dasharray="3 3"></line>
+          <sc-if value="{{ lowConf }}"><line x1="662" y1="26" x2="662" y2="224" stroke="#E69F00" stroke-width="1" stroke-dasharray="2 3"></line></sc-if>
           <rect x="0" y="0" width="780" height="18" fill="#fff"></rect>
           <text x="{{ evX0 }}" y="12" text-anchor="middle" font-size="9.5" font-weight="600" fill="#4C6272">Med change</text>
           <text x="{{ evX1 }}" y="12" text-anchor="middle" font-size="9.5" font-weight="600" fill="#4C6272">HAM-D 17</text>
           <text x="{{ evX2 }}" y="12" text-anchor="middle" font-size="9.5" font-weight="600" fill="#4C6272">Life event</text>
-          <text x="{{ evX3 }}" y="12" text-anchor="middle" font-size="9.5" font-weight="600" fill="#4C6272">Override ✎</text>
-          <sc-if value="{{ showAiPoint }}"><text x="666" y="{{ aiEndY }}" font-size="11" font-weight="700" fill="#8A5F00">Est. severity<tspan x="666" dy="12">21 ±4</tspan></text></sc-if>
-          <sc-if value="{{ lowConf }}"><text x="666" y="{{ aiEndY }}" font-size="11" font-weight="700" fill="#8A5F00">Est. severity<tspan x="666" dy="12">withheld</tspan></text></sc-if>
+          <text x="{{ evX3 }}" y="12" text-anchor="middle" font-size="9.5" font-weight="600" fill="#005E94">✎ Override</text>
+          <sc-if value="{{ lowConf }}"><text x="662" y="12" text-anchor="middle" font-size="9.5" font-weight="600" fill="#9C4400">Aug 10 · withheld</text></sc-if>
+          <text x="{{ devLabelX }}" y="30" text-anchor="end" font-size="9.5" fill="#9C4400">above threshold · 3 wk</text>
           <text x="{{ wkX0 }}" y="244" font-size="9.5" fill="#768692" text-anchor="middle">May 25</text>
           <text x="{{ wkX1 }}" y="244" font-size="9.5" fill="#768692" text-anchor="middle">Jun 8</text>
           <text x="{{ wkX2 }}" y="244" font-size="9.5" fill="#768692" text-anchor="middle">Jun 22</text>
@@ -295,59 +277,54 @@ a{color:#0072B2;text-underline-offset:3px}a:hover{color:#005E94}
           <text x="{{ wkX4 }}" y="244" font-size="9.5" fill="#768692" text-anchor="middle">Jul 20</text>
           <text x="{{ wkX5 }}" y="244" font-size="9.5" fill="#768692" text-anchor="middle">Aug 3</text>
         </svg>
-        <sc-if value="{{ showEvalRec }}"><div style="display:flex;align-items:center;gap:8px;border:1px solid #E69F00;background:#FDF0E3;border-radius:4px;padding:8px 12px;font-size:12.5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9C4400" stroke-width="1.5"><path d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"></path></svg><b>Further evaluation recommended</b>&nbsp;— the latest estimate is low-confidence (3 of 6 expected check-ins this week); a point value is withheld by design.</div></sc-if>
-        <div style="display:flex;gap:16px;font-size:11.5px;color:#4C6272;flex-wrap:wrap">
-          <span><span style="color:#C67F00;font-weight:700">—◇—</span> Estimated severity, AI-derived, converted to PHQ-9 scale ({{ uncLegend }})</span><span>▮ deviation region (own-baseline breach began 3 wk ago)</span>
-          <a href="#" onClick="{{ openFacts }}" style="margin-left:auto;font-weight:600">Model Facts</a>
-          <a href="#" onClick="{{ noop }}">Source: check-in summaries</a>
+        <sc-if value="{{ showEvalRec }}"><div style="display:flex;align-items:center;gap:8px;border:1px solid #E69F00;background:#FDF0E3;border-radius:4px;padding:8px 12px;font-size:12.5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9C4400" stroke-width="1.5"><path d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"></path></svg><b>Further evaluation recommended</b>&nbsp;— latest estimate is low-confidence (3 of 6 expected check-ins this week); point value withheld by design.</div></sc-if>
+        <div style="display:flex;align-items:center;gap:14px;font-size:11.5px;color:#4C6272;flex-wrap:wrap">
+          <span><span style="color:#C67F00;font-weight:700">—◇—</span> AI estimate</span>
+          <span><span style="display:inline-block;width:14px;height:8px;border-radius:2px;background:rgba(230,159,0,.3);vertical-align:middle;margin-right:5px"></span>{{ uncLegend }}</span>
+          <sc-if value="{{ isB4 }}"><span onClick="{{ toggleNomo }}" style="{{ nomoChip }}">Population expected response: {{ nomoState }}</span></sc-if>
+          <span style="margin-left:auto;display:flex;gap:12px"><sc-if value="{{ showAiPoint }}"><span>Confidence: high</span></sc-if><a href="#" onClick="{{ noop }}">9 of 12 check-ins · 14 d</a><a href="#" onClick="{{ openFacts }}" style="font-weight:600">Model Facts</a></span>
         </div>
       </div>
 
+      <!-- Context resolution: paired (B1/B3) and stacked (B2/B4) carry identical content; only the layout differs -->
       <div style="background:#fff;border:1px solid #D8DDE0;border-radius:4px;padding:14px 16px;margin-top:14px;display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:15px;font-weight:600">Context resolution</span><span style="{{ ctxChip }}"><svg width="9" height="9" viewBox="0 0 10 10"><path d="M5 0L10 9H0Z" fill="#D55E00"></path></svg>Unresolved</span><span style="margin-left:auto;font-size:11px;color:#768692">Flagged 2 wk ago · feeds context resolution rate</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:15px;font-weight:600">Context resolution</span><span style="{{ ctxChip }}"><svg width="9" height="9" viewBox="0 0 10 10"><path d="M5 0L10 9H0Z" fill="#D55E00"></path></svg>Unresolved</span><sc-if value="{{ ctxPaired }}"><span style="font-size:11.5px;color:#768692">Flagged 2 wk ago</span></sc-if><span onClick="{{ noop }}" style="margin-left:auto;font-size:12px;font-weight:600;color:#0072B2;border:1px solid #0072B2;border-radius:4px;padding:3px 10px;cursor:pointer" style-hover="background:#E7F1F8">Mark resolved</span></div>
         <sc-if value="{{ ctxPaired }}" hint-placeholder-val="{{ true }}">
           <div style="display:grid;grid-template-columns:1fr 26px 1fr;gap:8px;align-items:stretch">
-            <div style="border:1px solid #EAEEF1;border-radius:4px;padding:12px 14px">
-              <div style="font-size:11px;font-weight:600;color:#4C6272;margin-bottom:6px">Passive-sensing anomaly <span style="{{ srcPill }}">sensor data</span></div>
-              <div style="font-size:14px;line-height:1.5"><b>Sleep fragmentation up 40%</b> vs. her baseline, three consecutive nights two weeks ago. Night-time phone use up.</div>
-              <div style="font-size:11.5px;color:#768692;margin-top:6px">Actigraphy + device telemetry · <a href="#" onClick="{{ noop }}">view stream</a></div>
+            <div style="border:1px solid #EAEEF1;border-radius:4px;padding:10px 14px">
+              <div style="font-size:11px;font-weight:600;color:#4C6272;margin-bottom:4px">Anomaly <span style="{{ srcPill }}">sensor data</span> · <a href="#" onClick="{{ noop }}" style="font-weight:400">actigraphy + phone telemetry</a></div>
+              <div style="font-size:14px;line-height:1.5"><b>Sleep fragmentation +40%</b> vs baseline, 3 consecutive nights · night-time phone use up</div>
             </div>
             <div style="display:grid;place-items:center;color:#768692;font-size:15px">⇄</div>
-            <div style="border:1px solid #B7D2E6;border-radius:4px;padding:12px 14px;background:#F4F9FC">
-              <div style="font-size:11px;font-weight:600;color:#005E94;margin-bottom:6px">Conversational explanation <span style="{{ aiPill }}">AI summary</span></div>
-              <div style="font-size:14px;line-height:1.5">In her check-in two weeks ago, patient reports <b>stopping sertraline</b> ("made me feel flat"). Denies acute stressor; mood "heavier in the mornings."</div>
-              <div style="font-size:11.5px;color:#768692;margin-top:6px"><a href="#" onClick="{{ noop }}">Check-in summary</a> · <a href="#" onClick="{{ noop }}">transcript</a></div>
+            <div style="border:1px solid #B7D2E6;border-radius:4px;padding:10px 14px;background:#F4F9FC">
+              <div style="font-size:11px;font-weight:600;color:#005E94;margin-bottom:4px">Explanation <span style="{{ aiPill }}">AI summary</span> · <a href="#" onClick="{{ noop }}" style="font-weight:400">transcript</a></div>
+              <div style="font-size:14px;line-height:1.5">Reports <b>stopping sertraline</b> ("made me feel flat"). Denies acute stressor; mood "heavier in the mornings."</div>
             </div>
           </div>
+          <div style="font-size:13px"><span style="font-size:11px;font-weight:600;color:#9C4400">Next step</span> <span style="{{ aiPill }}">AI-suggested</span> Assess adherence + dose review at Thu 14:00 visit</div>
         </sc-if>
         <sc-if value="{{ ctxStacked }}">
           <div style="border-left:2px solid #D8DDE0;padding-left:16px">
-            <div style="padding:7px 0"><span style="font-size:11px;font-weight:600;color:#4C6272">2 wk ago · Anomaly detected <span style="{{ srcPill }}">sensor data</span></span><div style="font-size:13.5px;margin-top:2px"><b>Sleep fragmentation up 40%</b> vs. baseline, three nights · night-time phone use up</div></div>
-            <div style="padding:7px 0;border-top:1px dashed #EAEEF1"><span style="font-size:11px;font-weight:600;color:#005E94">Same day · Check-in probed <span style="{{ aiPill }}">AI</span></span><div style="font-size:13.5px;margin-top:2px">Patient reports <b>stopping sertraline</b> ("made me feel flat") · denies acute stressor · <a href="#" onClick="{{ noop }}">summary</a> · <a href="#" onClick="{{ noop }}">transcript</a></div></div>
-            <div style="padding:7px 0;border-top:1px dashed #EAEEF1"><span style="font-size:11px;font-weight:600;color:#9C4400">Now · Awaiting clinician action</span><div style="font-size:13.5px;margin-top:2px">Suggested next step: assess adherence + dose review at Thursday appointment · <a href="#" onClick="{{ noop }}">mark resolved</a></div></div>
+            <div style="padding:6px 0"><span style="font-size:11px;font-weight:600;color:#4C6272">2 wk ago · Anomaly <span style="{{ srcPill }}">sensor data</span></span> <a href="#" onClick="{{ noop }}" style="font-size:11px">actigraphy + phone telemetry</a><div style="font-size:13.5px;margin-top:2px"><b>Sleep fragmentation +40%</b> vs baseline, 3 consecutive nights · night-time phone use up</div></div>
+            <div style="padding:6px 0;border-top:1px dashed #EAEEF1"><span style="font-size:11px;font-weight:600;color:#005E94">Same day · Explanation <span style="{{ aiPill }}">AI summary</span></span> <a href="#" onClick="{{ noop }}" style="font-size:11px">transcript</a><div style="font-size:13.5px;margin-top:2px">Reports <b>stopping sertraline</b> ("made me feel flat"). Denies acute stressor; mood "heavier in the mornings."</div></div>
+            <div style="padding:6px 0;border-top:1px dashed #EAEEF1"><span style="font-size:11px;font-weight:600;color:#9C4400">Now · Next step <span style="{{ aiPill }}">AI-suggested</span></span><div style="font-size:13.5px;margin-top:2px">Assess adherence + dose review at Thu 14:00 visit</div></div>
           </div>
         </sc-if>
-      </div>
-
-      <div style="background:#fff;border:1px solid #D8DDE0;border-left:3px solid #0072B2;border-radius:0 4px 4px 0;padding:10px 14px;margin-top:14px;display:flex;gap:12px;align-items:flex-start">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0072B2" stroke-width="1.5" style="margin-top:2px;flex:none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-        <div style="flex:1;font-size:12.5px;line-height:1.55"><b>Clinician override · 2 wk ago (Jul 27) · R. Patel (trainee):</b> “Estimated-severity spike reflects a missed check-in cluster, not deterioration — retain off-track status on PHQ-9 evidence only.” <span style="color:#768692">Recorded in chart + audit trail; feeds model monitoring.</span></div>
-        <span style="{{ ovrPill }}">Clinician-overridden</span>
       </div>
 
       <sc-if value="{{ notB3 }}" hint-placeholder-val="{{ true }}">
         <div style="background:#fff;border:1px solid #D8DDE0;border-radius:4px;padding:14px 16px;margin-top:14px">
-          <div style="font-size:12px;font-weight:600;color:#4C6272;margin-bottom:8px">Patient-defined goals — in her own words</div>
-          <sc-for list="{{ goals }}" as="g" hint-placeholder-count="3">
-            <div style="display:flex;align-items:baseline;gap:10px;border-bottom:1px dashed #EAEEF1;padding:6px 0">
-              <span style="{{ g.chip }}">{{ g.status }}</span>
-              <span style="font-size:13px;font-style:italic;flex:1">“{{ g.text }}”</span>
-              <span style="font-size:11px;color:#768692;flex:none">{{ g.when }}</span>
-            </div>
-          </sc-for>
+          <div style="font-size:12px;font-weight:600;color:#4C6272;margin-bottom:8px">Patient-defined goals</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <sc-for list="{{ goals }}" as="g" hint-placeholder-count="3">
+              <div style="border:1px solid #EAEEF1;border-radius:4px;padding:10px 12px">
+                <div style="font-size:14px;font-style:italic;line-height:1.45">“{{ g.text }}”</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="{{ g.chip }}">{{ g.status }}</span><span style="font-size:11px;color:#768692">{{ g.when }}</span></div>
+              </div>
+            </sc-for>
+          </div>
         </div>
       </sc-if>
-
 
     </div>
     </sc-if>
@@ -617,7 +594,7 @@ class Component extends DCLogic {
     const bands = bandDefs.map(([lo, hi, fill]) => ({ y: y(hi).toFixed(1), h: (y(lo) - y(hi)).toFixed(1), fill }));
     const upper = ai.map((v, i) => `${x(i).toFixed(1)},${y(Math.min(27, v + unc[i])).toFixed(1)}`);
     const lower = ai.map((v, i) => `${x(i).toFixed(1)},${y(Math.max(0, v - unc[i])).toFixed(1)}`).reverse();
-    const events = [3,5,7,9].map(i => ({ x: x(i).toFixed(1) }));
+    const events = [3,5,7].map(i => ({ x: x(i).toFixed(1) }));
     const violins = ai.map((v, i) => ({ x: x(i).toFixed(1), y: y(v).toFixed(1), ry: (unc[i] * ((B - T) / 27)).toFixed(1) }));
     const dia = (cx, cy, r) => `M${cx.toFixed(1)} ${(cy - r).toFixed(1)}L${(cx + r).toFixed(1)} ${cy.toFixed(1)}L${cx.toFixed(1)} ${(cy + r).toFixed(1)}L${(cx - r).toFixed(1)} ${cy.toFixed(1)}Z`;
     const aiMarks = ai.map((v, i) => ({ d: dia(x(i), y(v), 3.5) }));
@@ -673,18 +650,16 @@ class Component extends DCLogic {
       isC2: vc === 2, isC3: vc === 3, notC3: vc !== 3, isC4: vc === 4,
       patients, queue, kpis, goals,
       aiPill: pill('#E7F1F8', '#005E94', '#7FB2D4'),
-      aiPillLg: { ...pill('#E7F1F8', '#005E94', '#7FB2D4'), fontSize: '11px', padding: '2px 9px' },
       srcPill: pill('#EEF1F4', '#4C6272', '#B9C4CC'),
       ovrPill, ovrLink: { ...ovrPill, cursor: 'pointer' },
-      railChip: { ...chipBase, fontSize: '12px', padding: '5px 10px', borderColor: '#D55E00', color: '#9C4400', background: '#FDF0E3', whiteSpace: 'normal', lineHeight: 1.3 },
       ctxChip,
       bands, aiPts: pts(lowConf ? ai.slice(0, 11) : ai), aiPoly: upper.concat(lower).join(' '),
-      violins, events, aiMarks: lowConf ? aiMarks.slice(0, 11) : aiMarks, nomoPts: pts(nomo),
+      violins: lowConf ? violins.slice(0, 11) : violins, events, aiMarks: lowConf ? aiMarks.slice(0, 11) : aiMarks, nomoPts: pts(nomo),
       baselineY: y(12).toFixed(1), baselineLabelY: (y(12) - 10).toFixed(1),
       threshY: y(17).toFixed(1), threshLabelY: (y(17) - 4).toFixed(1),
       devX: x(8).toFixed(1), devW: (x(11) - x(8)).toFixed(1), devY: T, devH: (y(17) - T).toFixed(1),
-      aiEndY: (y(21) - 8).toFixed(1),
-      nomoLabelY: (y(8.6) + 3).toFixed(1), nomoLabelY2: (y(8.6) + 13).toFixed(1),
+      devLabelX: (x(11) - 4).toFixed(1),
+      nomoLabelY: (y(8.6) + 3).toFixed(1),
       evX0: x(3).toFixed(1), evX1: x(5).toFixed(1), evX2: x(7).toFixed(1), evX3: x(9).toFixed(1),
       wkX0: x(0).toFixed(1), wkX1: x(2).toFixed(1), wkX2: x(4).toFixed(1), wkX3: x(6).toFixed(1), wkX4: x(8).toFixed(1), wkX5: x(10).toFixed(1),
       showInterval: vb === 1 || vb === 3 || vb === 4, showViolin: vb === 2,
@@ -695,10 +670,10 @@ class Component extends DCLogic {
       confChip: lowConf
         ? { ...chipBase, fontSize: '11px', borderColor: '#E69F00', color: '#9C4400', background: '#FDF0E3' }
         : { ...chipBase, fontSize: '11px', borderColor: '#009E73', color: '#00795A', background: '#E6F4EF' },
-      confLabel: lowConf ? '⚠ Caution — high uncertainty (latest)' : '✓ Confidence: high',
+      confLabel: '⚠ Caution — high uncertainty',
       showAiPoint: !lowConf, lowConf,
-      railEst: lowConf ? 'withheld' : '21 ±4 · Severe', railChange: lowConf ? '—' : '+9 ↗',
-      uncLegend: vb === 2 ? 'violin width = uncertainty' : 'shaded band = uncertainty interval',
+      estVal: lowConf ? 'withheld' : '21 ±4', estSub: lowConf ? 'PHQ-9 scale' : 'PHQ-9 scale · +9 vs baseline',
+      uncLegend: vb === 2 ? 'violin width = uncertainty' : 'shaded band = uncertainty',
       ctxPaired: vb === 1 || vb === 3, ctxStacked: vb === 2 || vb === 4,
       cChipClin: cChip(vc === 1 || vc === 4), cChipSup: cChip(vc === 2), cChipPat: cChip(vc === 3),
       pickClin: set({ vc: 1 }), pickSup: set({ vc: 2 }), pickPat: set({ vc: 3 }),
@@ -723,8 +698,7 @@ class Component extends DCLogic {
       // Rail: on View C the brief owns status/severity/safety/goals; C3 may face the patient, so identity only
       railFull: view === 'B' || (view === 'C' && vc !== 3),
       railPrint: view === 'C' ? 'never' : 'auto',
-      sertSub: view === 'C' ? '▲ Reported stopped · see #1' : 'Pt reports stopped ~2 wk ago — unresolved',
-      hamdTop: view === 'B' ? '3px' : '0',
+      sertSub: view === 'C' ? '▲ Reported stopped · see #1' : '▲ Reported stopped · unresolved',
       crisisOpen: s.crisisOpen, ackCrisis: set({ crisisOpen: false }),
       replayCrisis: set({ crisisOpen: true }),
       factsOpen: s.factsOpen, openFacts: set({ factsOpen: true }), closeFacts: set({ factsOpen: false }),
