@@ -73,7 +73,7 @@ a{color:#0072B2;text-underline-offset:3px}a:hover{color:#005E94}
               <tr onClick="{{ p.open }}" style="cursor:pointer;border-bottom:1px solid #EAEEF1" style-hover="background:#F0F4F5">
                 <td style="padding:4px 10px"><span style="{{ p.chip }}"><svg width="10" height="10" viewBox="0 0 10 10"><path d="{{ p.shape }}" fill="{{ p.color }}" fill-rule="evenodd"></path><path d="{{ p.shape2 }}" fill="{{ p.color }}"></path></svg>{{ p.statusLabel }}</span></td>
                 <td style="padding:4px 10px"><a href="#" onClick="{{ p.open }}" style="font-weight:600;text-decoration:none;color:#0072B2">{{ p.name }}</a> <span style="color:#4C6272;font-size:12px">{{ p.meta }}</span></td>
-                <td style="padding:4px 10px;white-space:nowrap"><span style="display:inline-block;min-width:24px;font-weight:600;color:#8A5F00">{{ p.aiLast }}</span><sc-if value="{{ p.hasSpark }}"><svg width="64" height="18" viewBox="0 0 64 18" style="vertical-align:middle;margin-left:6px"><polyline points="{{ p.spark }}" fill="none" stroke="#C67F00" stroke-width="1.5"></polyline><circle cx="62" cy="{{ p.sparkEndY }}" r="2" fill="#C67F00"></circle></svg></sc-if></td>
+                <td style="padding:4px 10px;white-space:nowrap"><span style="display:inline-block;min-width:24px;font-weight:600;color:#8A5F00">{{ p.aiLast }}</span><sc-if value="{{ p.hasSpark }}"><span title="{{ p.sparkTitle }}"><svg width="80" height="24" viewBox="0 0 80 24" style="vertical-align:middle;margin-left:6px"><polyline points="{{ p.spark }}" fill="none" stroke="#C67F00" stroke-width="1.75" stroke-linejoin="round"></polyline><circle cx="78" cy="{{ p.sparkEndY }}" r="2.5" fill="#C67F00"></circle></svg></span></sc-if></td>
                 <td style="padding:4px 10px"><span style="{{ p.trendChip }}" title="{{ p.trendTitle }}">{{ p.trendLabel }}</span></td>
                 <td style="padding:4px 10px"><span style="{{ p.adhStyle }}">{{ p.adherence }}</span></td>
                 <td style="padding:4px 10px;color:#4C6272;font-size:12.5px">{{ p.flag }}<sc-if value="{{ p.flagAi }}"> <span style="{{ aiPill }}">AI</span></sc-if></td>
@@ -546,17 +546,24 @@ class Component extends DCLogic {
       { name: 'L. Brooks', meta: '26y', st: 'stable', tr: -1, phq: [8,8,7,7,8,7,6,7,6,6,7,6], adh: '11/12', appt: '16:15', flag: '' },
       { name: 'P. Santoso', meta: '31y', st: 'nodata', tr: null, phq: [10,11,9], adh: '2/12', appt: 'Unscheduled', flag: 'Check-ins 2/12 — estimate withheld', action: 'Outreach' }
     ];
+    const aiOf = (p) => p.phq.map((v, i) => Math.min(27, Math.max(0, v + (i % 3 === 0 ? 1 : i % 3 === 1 ? 2 : -1) + (i === p.phq.length - 1 ? 2 : 0))));
+    // Smooth series ending at the displayed estimate (the check-in PHQ-9 trace sits 1 below the estimate at the last point)
+    const seriesOf = (p) => { const ai = aiOf(p); return p.est || p.phq.map(v => Math.min(27, v + (ai[ai.length - 1] - p.phq[p.phq.length - 1]))); };
+    // Sparklines share one vertical scale (points per pixel) so slopes compare across rows; each is centred on its own range
+    const SW = 80, SH = 24;
+    const sparkSpan = Math.max(8, ...raw.filter(p => p.st !== 'nodata').map(p => { const v = seriesOf(p); return Math.max(...v) - Math.min(...v); }));
+    const sparkY = (v, mid) => (SH / 2 - (v - mid) * ((SH - 6) / sparkSpan)).toFixed(1);
     const openCrisis = (key) => (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.setState({ crisisOpen: true, crisisPt: key }); };
     const minus = (n) => (n < 0 ? '−' : n > 0 ? '+' : '') + Math.abs(n);
     const patients = raw.map((p) => {
       const m = STATUS[p.st];
-      const ai = p.phq.map((v, i) => Math.min(27, Math.max(0, v + (i % 3 === 0 ? 1 : i % 3 === 1 ? 2 : -1) + (i === p.phq.length - 1 ? 2 : 0))));
+      const ai = aiOf(p);
       const aiLastV = ai[ai.length - 1];
       const insuff = p.st === 'nodata';
       const d = p.tr;
       const rel = d !== null && Math.abs(d) >= 5;
-      // Smooth series ending at the displayed estimate (the check-in PHQ-9 trace sits 1 below the estimate at the last point)
-      const series = p.est || p.phq.map(v => Math.min(27, v + (aiLastV - p.phq[p.phq.length - 1])));
+      const series = seriesOf(p);
+      const mid = (Math.max(...series) + Math.min(...series)) / 2;
       const [cn, cd] = p.adh.split('/').map(Number);
       const tcol = (d === null || !rel) ? ['#B9C4CC', '#4C6272', '#EEF1F4']
         : d > 0 ? ['#D55E00', '#9C4400', '#FDF0E3'] : ['#009E73', '#00795A', '#E6F4EF'];
@@ -566,7 +573,10 @@ class Component extends DCLogic {
         chip: { ...chipBase, borderColor: m.c, color: m.tc, background: m.bg },
         chipSm: { ...chipBase, fontSize: '10.5px', padding: '1px 6px', borderColor: m.c, color: m.tc, background: m.bg },
         aiLast: insuff ? 'withheld' : String(aiLastV),
-        hasSpark: !insuff, spark: this.spark(series, 64, 18), sparkEndY: (15 - (series[series.length - 1] / 27) * 12).toFixed(1),
+        hasSpark: !insuff,
+        spark: series.map((v, i) => `${(2 + (i / (series.length - 1)) * (SW - 4)).toFixed(1)},${sparkY(v, mid)}`).join(' '),
+        sparkEndY: sparkY(series[series.length - 1], mid),
+        sparkTitle: `Est. severity, 12 wk: ${series[0]} → ${series[series.length - 1]}`,
         trendLabel: d === null ? '—' : rel ? (d > 0 ? '▲ ' : '▼ ') + minus(d) : minus(d),
         trendTitle: d === null ? 'Insufficient data' : rel ? (d > 0 ? 'Reliable deterioration' : 'Reliable improvement') + ' since last visit (≥5 points)' : 'No reliable change since last visit',
         trendChip: { ...chipBase, borderColor: tcol[0], color: tcol[1], background: tcol[2] },
