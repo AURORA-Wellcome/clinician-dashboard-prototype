@@ -1,8 +1,9 @@
 """Landing-page banner: a night sky with blue-violet aurora curtains over a low horizon (SVG, no animation).
 
 Usage: python3 design/landing/banner_gen.py banner.html   then paste the output over the <div class="banner"> in index.html.
-Layers (sky and stars, back curtain, two ray patterns for the main curtain, hills) are separate SVGs, so the page can
-drift and cross-fade them cheaply with CSS transforms and opacity, without redrawing the blur and noise filters.
+Layers (sky and stars, back curtain, three ray patterns and a bright edge for the main curtain, hills) are separate
+SVGs inside drift and sway wrappers, so the page can move and cross-fade them cheaply with CSS transforms and opacity,
+without redrawing the blur and noise filters.
 Cool hues only: green means "on track" in the dashboard."""
 import math, random, sys
 W, H = 1600, 240
@@ -68,7 +69,7 @@ def layer(cls, body, defs=''):
 # Stars: a few twinkle slowly, each on its own beat (CSS animates .tw)
 star_svg = []
 for i, st in enumerate(stars):
-    star_svg.append(st.replace('<circle ', f'<circle class="tw" style="animation-delay:-{(i * 1.7) % 9:.1f}s" ', 1) if i % 9 == 0 else st)
+    star_svg.append(st.replace('<circle ', f'<circle class="tw" style="animation-delay:-{(i * 1.7) % 9:.1f}s" ', 1) if i % 5 == 0 else st)
 
 sky = layer('bn-sky', f'<rect width="{W}" height="{H}" fill="url(#bn-sky)"/><g fill="#E8EEFF">{"".join(star_svg)}</g>',
             '<linearGradient id="bn-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060D26"/><stop offset=".6" stop-color="#0F1B4B"/><stop offset=".86" stop-color="#1B2C6A"/><stop offset="1" stop-color="#26397E"/></linearGradient>')
@@ -76,19 +77,23 @@ back_defs = ('<linearGradient id="bn-back" x1="0" y1="1" x2="0" y2="0"><stop off
              + hfade('bn-hf-back', [(0, 0), (.15, .7), (.4, .35), (.6, .8), (.85, .45), (1, 0)])
              + f'<mask id="bn-m-back" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}"><rect width="{W}" height="{H}" fill="url(#bn-hf-back)"/></mask>'
              + '<filter id="bn-glow-b" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur stdDeviation="12"/></filter>' + rays_filter('bn-rays-b1', 9))
-back_svg = layer('bn-back', f'<g mask="url(#bn-m-back)"><path d="{back}" fill="url(#bn-back)" filter="url(#bn-glow-b)"/><path d="{back}" fill="url(#bn-back)" filter="url(#bn-rays-b1)"/></g>', back_defs)
+back_svg = layer('bn-back-art', f'<g mask="url(#bn-m-back)"><path d="{back}" fill="url(#bn-back)" filter="url(#bn-glow-b)"/><path d="{back}" fill="url(#bn-back)" filter="url(#bn-rays-b1)"/></g>', back_defs)
 main_grad = ('<linearGradient id="bn-main" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#B2C9F8" stop-opacity=".95"/><stop offset=".22" stop-color="#90ABF0" stop-opacity=".62"/><stop offset=".6" stop-color="#7A8FE6" stop-opacity=".22"/><stop offset="1" stop-color="#6E7FE0" stop-opacity="0"/></linearGradient>'
              '<linearGradient id="bn-edge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#EEF3FF" stop-opacity=".95"/><stop offset="1" stop-color="#CFDCFB" stop-opacity="0"/></linearGradient>'
-             + hfade('bn-hf-main', [(0, 0), (.08, .55), (.3, .95), (.46, .5), (.62, 1), (.82, .8), (1, .15)])
+             + hfade('bn-hf-main', [(0, 0), (.08, .55), (.3, .95), (.46, .5), (.62, 1), (.8, .8), (.93, .35), (1, 0)])
              + f'<mask id="bn-m-main" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}"><rect width="{W}" height="{H}" fill="url(#bn-hf-main)"/></mask>'
              '<filter id="bn-glow" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur stdDeviation="12"/></filter>'
              '<filter id="bn-soft" x="-5%" y="-80%" width="110%" height="260%"><feGaussianBlur stdDeviation="2.5"/></filter>'
-             + rays_filter('bn-rays-1', 9) + rays_filter('bn-rays-2', 23))
-main_a = layer('bn-rays-a', f'<g mask="url(#bn-m-main)"><path d="{main}" fill="url(#bn-main)" filter="url(#bn-glow)" opacity=".7"/><path d="{main}" fill="url(#bn-main)" filter="url(#bn-rays-1)"/><path d="{edge}" fill="url(#bn-edge)" filter="url(#bn-soft)" opacity=".75"/></g>', main_grad)
+             + rays_filter('bn-rays-1', 9) + rays_filter('bn-rays-2', 23) + rays_filter('bn-rays-3', 41))
+main_a = layer('bn-rays-a', f'<g mask="url(#bn-m-main)"><path d="{main}" fill="url(#bn-main)" filter="url(#bn-glow)" opacity=".7"/><path d="{main}" fill="url(#bn-main)" filter="url(#bn-rays-1)"/></g>', main_grad)
 main_b = layer('bn-rays-b', f'<g mask="url(#bn-m-main)"><path d="{main}" fill="url(#bn-main)" filter="url(#bn-rays-2)"/></g>')
+main_c = layer('bn-rays-c', f'<g mask="url(#bn-m-main)"><path d="{main}" fill="url(#bn-main)" filter="url(#bn-rays-3)"/></g>')
+edge_l = layer('bn-edge', f'<g mask="url(#bn-m-main)"><path d="{edge}" fill="url(#bn-edge)" filter="url(#bn-soft)" opacity=".75"/></g>')
 hills = layer('bn-hills', f'<path d="{far}" fill="#0E1842"/><path d="{near}" fill="#050A1F"/>')
 
-html = ('<div class="banner" aria-hidden="true">\n  ' + sky + '\n  ' + back_svg
-        + '\n  <div class="bn-main">\n    ' + main_a + '\n    ' + main_b + '\n  </div>\n  ' + hills + '\n</div>')
+html = ('<div class="banner" aria-hidden="true">\n  ' + sky
+        + '\n  <div class="bn-back"><div class="bn-sway-b">\n    ' + back_svg + '\n  </div></div>'
+        + '\n  <div class="bn-main"><div class="bn-sway">\n    ' + main_a + '\n    ' + main_b + '\n    ' + main_c + '\n    ' + edge_l + '\n  </div></div>\n  '
+        + hills + '\n</div>')
 open(sys.argv[1], 'w').write(html)
 print(len(html), 'bytes')
