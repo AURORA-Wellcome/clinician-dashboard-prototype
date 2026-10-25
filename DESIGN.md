@@ -69,7 +69,8 @@ Interface words are labels, headers, notes and buttons, not patient data.
 
 - **American English** in everything a person reads: the interface, the patient handout, the landing page, these docs and code comments. For example: color, gray, center, behavior, labeled, license, toward, and -ize endings (summarize, prioritize).
 - **Dates and times** are US style too: see Times under Components.
-- **Quotations** keep their original spelling: meeting quotes, the titles of papers and guidance, and names of organizations.
+- **Written quotations** keep their original spelling: the titles of papers and guidance, passages quoted from them, and names of organizations.
+- **Quotes from meetings** use American spelling. Speech has no spelling: a transcript's is the transcription software's, not the speaker's. The transcripts themselves stay as recorded.
 - **Lines and zones are named for what they mean,** in the words of the status they start, not their arithmetic: the line where Worse than baseline begins is labeled Worse than baseline.
 - **Don't call the AI estimate's changes "reliable".** In measurement the word means a change bigger than the measure's own error, which hasn't been measured for the estimate yet, and to a reader it can sound like "confirmed". The study design's "reliable deterioration" (the PHQ-9 rising 6 or more) is Worse than baseline on screen.
 
@@ -382,7 +383,7 @@ A polish pass. Since 2026-10-25 it is v3's default look; the review strip's Look
 - [ ] Printed brief at 10 pt body and 9 pt notes, nothing below 8 pt? Printed handout at 14 pt?
 - [ ] Caseload and patient page still usable at 200% zoom?
 - [ ] Every clock time follows the time-format setting (12-hour by default), and every date puts the month first?
-- [ ] American English spelling throughout (color, gray, center, labeled), outside quotations?
+- [ ] American English spelling throughout (color, gray, center, labeled), outside written quotations?
 - [ ] Caseload numbers line up by place value, with dates and times left-aligned?
 - [ ] Hover readouts also work by keyboard and are announced, and nothing safety-relevant appears only on hover?
 - [ ] No browser `title` tooltips? Every ⓘ opens at once by pointer, Tab or tap, and Escape closes it?
