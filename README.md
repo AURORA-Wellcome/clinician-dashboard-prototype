@@ -4,6 +4,8 @@ Interactive mockups of the clinician dashboard for the AURORA trial, for review 
 
 **Open the mockups:** https://aurora-wellcome.github.io/clinician-dashboard-prototype/
 
+This public link is for looking. To leave notes the group can see, you need the private review link instead (see How to review).
+
 ## What's in the latest version
 
 v3 has four pages:
@@ -19,7 +21,10 @@ v2 and v1 stay available for comparison from the landing page. What changed in e
 - **Try the 5-second test:** look at the Patients page for five seconds. Who needs attention first?
 - **Use the striped strip at the top** to switch pages and options. It isn't part of the design. Its "All versions" link goes back to the landing page.
 - **Point at an ⓘ**, or reach it with Tab, for what a scale or rule means.
-- **Leave notes:** click **Notes** at bottom right, then **Add a note**, then the part of the page the note is about. Open the mockups from the invite link you were sent, so your notes are shared with the group; without it, notes stay in your browser. Please leave out patient information.
+- **Leave notes:** notes are shared only through a private review link, which has an access code in it. Ask the study team for it, and please don't pass it on outside the group.
+  - From that link, click **Notes** at bottom right, then **Add a note**, then the part of the page the note is about.
+  - On the public link, notes stay in your own browser and no one else sees them; the Notes panel says so.
+  - Please leave out patient information.
 
 ## Design rules
 
