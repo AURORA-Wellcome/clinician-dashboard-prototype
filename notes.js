@@ -156,7 +156,7 @@
   const here = (n) => n.pageKey === pageKey() && (page.view === 'list' || !n.pid || n.pid === page.pid);
   function patientName() {
     if (page.view === 'list') return '';
-    const parts = [...document.querySelectorAll('#dc-root .crumbs a, #dc-root .crumbs .cur')].map(clean);
+    const parts = [...document.querySelectorAll('#dc-root .crumbs .crumb, #dc-root .crumbs .cur')].map(clean);
     return parts[1] || '';
   }
   function contextNow() {

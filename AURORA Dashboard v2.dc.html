@@ -62,8 +62,16 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .topbar{display:flex;align-items:center;gap:24px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
 .brand{font-size:var(--fs-lg);font-weight:600;letter-spacing:.04em}
 .crumbs{display:flex;align-items:center;gap:8px}
-.crumbs a{color:var(--muted)}.crumbs .cur{color:var(--ink);font-weight:600}
-.crumbs .sep{color:var(--line)}
+/* Pages above this one are links in accent, like every other link; buttons, so Tab reaches them */
+.crumbs .crumb{margin:0 -6px;padding:4px 6px;font:inherit;color:var(--accent);background:transparent;border:0;border-radius:var(--r);cursor:pointer}
+.crumbs .crumb:hover{background:var(--hover);text-decoration:underline}
+.crumbs .crumb:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.crumbs .cur{color:var(--ink);font-weight:600}
+.crumbs .sep{color:var(--muted)}
+/* Click-only links are buttons that look like links, so Tab reaches them too */
+.linkbtn{padding:0;font:inherit;color:var(--accent);background:none;border:0;cursor:pointer}
+.linkbtn:hover{text-decoration:underline}
+.linkbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
 /* Account menu: the clinician's settings (time format) */
 .who-wrap{position:relative;margin-left:auto}
 .who{font:inherit;color:var(--muted);background:transparent;border:0;border-radius:var(--r);padding:6px 8px;cursor:pointer}
@@ -340,11 +348,11 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 
   <header class="topbar no-print">
     <span class="brand">AURORA</span>
-    <nav class="crumbs">
-      <sc-if value="{{ onList }}"><span class="cur">Patients</span></sc-if>
-      <sc-if value="{{ !onList }}"><a onClick="{{ goList }}">Patients</a><span class="sep">/</span></sc-if>
-      <sc-if value="{{ onPatient }}"><span class="cur">{{ pt.name }}</span></sc-if>
-      <sc-if value="{{ onHandout }}"><a onClick="{{ goPatient }}">{{ pt.name }}</a><span class="sep">/</span><span class="cur">Patient handout</span></sc-if>
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <sc-if value="{{ onList }}"><span class="cur" aria-current="page">Patients</span></sc-if>
+      <sc-if value="{{ !onList }}"><button type="button" class="crumb" onClick="{{ goList }}">Patients</button><span class="sep" aria-hidden="true">›</span></sc-if>
+      <sc-if value="{{ onPatient }}"><span class="cur" aria-current="page">{{ pt.name }}</span></sc-if>
+      <sc-if value="{{ onHandout }}"><button type="button" class="crumb" onClick="{{ goPatient }}">{{ pt.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">Patient handout</span></sc-if>
     </nav>
     <div class="who-wrap">
       <button class="who" onClick="{{ toggleMenu }}" aria-haspopup="true" aria-expanded="{{ menuExpanded }}">Dr E. Okafor · Site 03<span class="caret" aria-hidden="true">▾</span></button>
@@ -408,7 +416,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       </sc-for>
     </div>
     <p class="sr-only" aria-live="polite">{{ peek.aria }}</p>
-    <p class="foot">Severity: AI estimate on the PHQ-9 scale; coloured changes are 5 or more points from the patient’s baseline. Not monitored in real time; PHQ-9 item 9 answers appear without study-team review. <a onClick="{{ openFacts }}">Model Facts</a></p>
+    <p class="foot">Severity: AI estimate on the PHQ-9 scale; coloured changes are 5 or more points from the patient’s baseline. Not monitored in real time; PHQ-9 item 9 answers appear without study-team review. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></p>
   </main>
   </sc-if>
 
@@ -448,7 +456,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
             </div>
           </sc-if>
           <div class="stat-note {{ pt.deltaCls }}">{{ pt.deltaLong }}</div>
-          <div class="stat-note no-print"><a onClick="{{ openFacts }}">Model Facts</a></div>
+          <div class="stat-note no-print"><button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></div>
         </div>
         <div class="stat">
           <div class="stat-label">PHQ-9 <span class="ai">({{ pt.phqDate }})</span></div>
@@ -475,7 +483,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
           <sc-for list="{{ pt.changes }}" as="c">
             <li class="change">{{ c.iconEl }}
               <div class="change-title {{ c.cls }}">{{ c.title }}</div>
-              <div class="change-src">{{ c.src }}<sc-if value="{{ c.ai }}"> <span class="ai">(AI)</span></sc-if><sc-if value="{{ c.quote }}"> · “{{ c.quote }}”</sc-if><sc-if value="{{ c.goal }}"> · goal: “{{ c.goal }}”</sc-if><sc-if value="{{ c.link }}"><span class="no-print"> · <a onClick="{{ noop }}">{{ c.link }}</a></span></sc-if></div>
+              <div class="change-src">{{ c.src }}<sc-if value="{{ c.ai }}"> <span class="ai">(AI)</span></sc-if><sc-if value="{{ c.quote }}"> · “{{ c.quote }}”</sc-if><sc-if value="{{ c.goal }}"> · goal: “{{ c.goal }}”</sc-if><sc-if value="{{ c.link }}"><span class="no-print"> · <button type="button" class="linkbtn" onClick="{{ noop }}">{{ c.link }}</button></span></sc-if></div>
             </li>
           </sc-for>
         </ul>

@@ -157,6 +157,8 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colours ar
   - A solid `accent` button is reserved for a page's single primary action; the current pages have none.
   - No outlined buttons.
   - Caseload rows have no action buttons: the whole row opens the patient.
+- **Breadcrumbs:** the top bar shows where you are: "Patients › M. Delgado › Patient handout". Pages above this one are links in `accent`, like every other link, with an underline on hover; the current page is `ink`, weight 600. Separators are a muted ›. No back-arrow icon: it would double up with the separators, and the link colour is the standard cue.
+- **Links:** anything clickable looks clickable and is reachable with Tab. Links that act on the page, rather than going to an address, are buttons styled as links.
 - **Safety flag:**
   - It is the first tile on the patient page, with the marker and text in `safety`.
   - It is the first group in the caseload in either order: grouped by status, or pinned above the day headers by next visit.
@@ -330,6 +332,7 @@ A polish pass, switched in the review strip (Look: Current or Refined; deep link
 - [ ] Hover readouts also work by keyboard and are announced, and nothing safety-relevant appears only on hover?
 - [ ] No browser `title` tooltips? Every ⓘ opens at once by pointer, Tab or tap, and Escape closes it?
 - [ ] Does every control that opens something close it from the same place?
+- [ ] Does everything clickable look clickable, and can Tab reach it?
 
 ## Prompt template for AI design work
 
