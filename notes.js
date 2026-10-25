@@ -1,5 +1,5 @@
 /* AURORA review notes: post-it notes pinned to parts of the dashboard mockups, shared through Firebase.
-   Review scaffolding, like the review strip: not part of the design. README ("Review notes") covers the
+   Review scaffolding, like the review strip: not part of the design. MAINTAINING.md ("Review notes") covers the
    invite link, the facilitator link and the Firebase project; firestore.rules is the access template. */
 (function () {
   'use strict';
