@@ -213,8 +213,9 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colours ar
   - Never use icons for urgency (the status shapes and colour do that), never colour them, and never show one alone. Each sits next to its text and is hidden from screen readers.
   - At most one icon per row or item.
   - Used in: caseload flags, "What changed" items (in a left gutter), chart events and goals.
-  - No emoji, illustrations or decorative graphics.
+  - No emoji, illustrations or decorative graphics. The exceptions are the brand mark (below) and, in the Refined look, the greeting band.
   - The capsule "pill" icon was replaced by the pill bottle because at 16 px it read as a hyperlink symbol.
+- **Brand mark:** a 24 px rounded square in a blue-to-violet gradient (`#2E6FD6` to `#7B5CC9`) with two level white aurora ribbons, the lower one shorter and fainter. It sits beside the AURORA wordmark in the top bar (v3 and the landing page) and is the browser-tab icon (`favicon.svg`). Cool hues only, like the greeting band, so it never reads as a status. The ribbons stay level: a rising line would read as rising severity, and two identical waves as "≈".
 - **Discussed checkbox:** "Discussed AURORA data with the patient at this visit". This feeds the discussion-rate measure in the supervisor A&F playbook.
 - **ⓘ tooltip:** the place for scales, thresholds and definitions. The page draws it; don't use the browser's `title` tooltip, which appears only after a delay and never by keyboard or touch.
   - The ⓘ is a button. Pointing at it, or reaching it with Tab, opens the tip at once.

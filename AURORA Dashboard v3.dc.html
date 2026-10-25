@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AURORA clinician dashboard v3</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <script src="./support.js"></script>
 </head>
 <body>
@@ -67,7 +68,9 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .seg button.on{background:#E8EEF3;color:var(--ink)}
 
 .topbar{display:flex;align-items:center;gap:24px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
-.brand{font-size:var(--fs-lg);font-weight:600;letter-spacing:.04em}
+/* Brand mark: two aurora ribbons in the blue-violet of the greeting band; cool hues only, since warm hues and greens mean status */
+.brand{display:inline-flex;align-items:center;gap:10px;font-size:var(--fs-lg);font-weight:600;letter-spacing:.04em}
+.brand .logo{display:block;flex:none;width:24px;height:24px}
 .crumbs{display:flex;align-items:center;gap:8px}
 /* Pages above this one are links in accent, like every other link; buttons, so Tab reaches them */
 .crumbs .crumb{margin:0 -6px;padding:4px 6px;font:inherit;color:var(--accent);background:transparent;border:0;border-radius:var(--r);cursor:pointer}
@@ -402,7 +405,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
   </div>
 
   <header class="topbar no-print">
-    <span class="brand">AURORA</span>
+    <span class="brand"><img class="logo" src="favicon.svg" width="24" height="24" alt="">AURORA</span>
     <nav class="crumbs" aria-label="Breadcrumb">
       <sc-if value="{{ onList }}"><span class="cur" aria-current="page">Patients</span></sc-if>
       <sc-if value="{{ !onList }}"><button type="button" class="crumb" onClick="{{ goList }}">Patients</button><span class="sep" aria-hidden="true">›</span></sc-if>

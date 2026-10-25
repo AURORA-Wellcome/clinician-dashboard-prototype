@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AURORA clinician dashboard: design mockups</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta name="description" content="Interactive design mockups of the AURORA clinician dashboard, for review by the clinician working group. All patient data are fictional.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,7 +30,8 @@ img{display:block;max-width:100%;height:auto}
 /* Top bar: the same wordmark as the dashboard */
 .top{background:var(--surface);border-bottom:1px solid var(--line)}
 .top .wrap{display:flex;align-items:center;gap:16px;height:56px}
-.brand{font-size:1.3125rem;font-weight:600;letter-spacing:.04em}
+.brand{display:inline-flex;align-items:center;gap:10px;font-size:1.3125rem;font-weight:600;letter-spacing:.04em}
+.brand .logo{display:block;flex:none;width:24px;height:24px}
 .top-note{color:var(--muted)}
 .top-link{margin-left:auto;font-weight:600;text-decoration:none}
 .top-link:hover{text-decoration:underline}
@@ -117,7 +119,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
 
 <header class="top">
   <div class="wrap">
-    <span class="brand">AURORA</span>
+    <span class="brand"><img class="logo" src="favicon.svg" width="24" height="24" alt="">AURORA</span>
     <span class="top-note">Clinician dashboard</span>
     <a class="top-link" href="https://github.com/AURORA-Wellcome/clinician-dashboard-prototype">GitHub</a>
   </div>
