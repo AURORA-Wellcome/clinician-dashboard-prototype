@@ -37,6 +37,12 @@
   const EMULATOR = query.get('emulator') === '1'; // tests against the Firebase emulator on this machine
 
   let page = { ...DEFAULT_STATE }; // the mockup's state, from its dc:render events
+  // The site build this page was loaded from: GitHub Pages fills in build.json on each deploy. Locally it stays blank.
+  let BUILD = { commit: '', built: '' };
+  fetch('build.json', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((b) => {
+    if (!b) return;
+    BUILD = { commit: /^[0-9a-f]{7,40}$/.test(b.commit || '') ? b.commit : '', built: /^\d{4}-/.test(b.built || '') ? b.built : '' };
+  }).catch(() => { /* opened from disk or served without Jekyll */ });
   let notes = []; // every note on the board, replies included
   let store = null;
   let status = { ok: false, text: 'Connecting…' };
@@ -156,6 +162,7 @@
   function contextNow() {
     return {
       version: VERSION, view: page.view, pid: page.view === 'list' ? null : page.pid, pname: patientName(), pageKey: pageKey(),
+      commit: BUILD.commit, built: BUILD.built,
       ctx: { order: page.order, style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false }
     };
   }
@@ -403,7 +410,7 @@
       const who = me();
       ui.reply = null;
       act(() => store.add({
-        version: n.version, view: n.view, pid: n.pid || null, pname: n.pname || '', pageKey: n.pageKey, ctx: n.ctx || {},
+        version: n.version, view: n.view, pid: n.pid || null, pname: n.pname || '', pageKey: n.pageKey, ctx: n.ctx || {}, commit: BUILD.commit, built: BUILD.built,
         anchor: n.anchor, anchorLabel: n.anchorLabel, x: null, y: null, kind: '', text: t.slice(0, 4000),
         name: who.name, role: who.role, parent: n.id, plus: {}, resolved: false, resolvedBy: ''
       }));
@@ -589,12 +596,12 @@
       return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const iso = (ms) => (ms ? new Date(ms).toISOString().replace('T', ' ').slice(0, 16) : '');
-    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look'];
+    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc'];
     const rows = [...m.visible, ...m.visible.flatMap((n) => m.replies(n.id))].sort(byTime).map((n) => {
       const c = n.ctx || {};
       return [n.id, iso(n.createdAt), n.name, n.role, n.kind, n.text, n.parent || '', Object.keys(n.plus || {}).length, n.resolved ? 'yes' : '', n.resolvedBy || '',
         n.version, VIEW_NAMES[n.view] || n.view, n.pname || n.pid || '', n.anchorLabel, n.x == null ? '' : n.x.toFixed(3), n.y == null ? '' : n.y.toFixed(3),
-        c.order, c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current'];
+        c.order, c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || ''];
     });
     const csv = [head, ...rows].map((r) => r.map(cell).join(',')).join('\r\n');
     const d = new Date(), pad = (v) => String(v).padStart(2, '0');

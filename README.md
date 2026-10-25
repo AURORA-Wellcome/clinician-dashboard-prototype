@@ -58,7 +58,7 @@ Reviewers can pin notes to any part of the v2 and v3 mockups. Click **Notes** at
 - **Who sees what:** reviewers see others' notes on a page once they have added one there, so the first notes don't steer the rest. The facilitator link shows every note.
 - **Access:** notes are shared through a Firebase project (Firestore, with anonymous sign-in). The site is public, so access comes from the invite link, which carries a private board id: `AURORA%20Dashboard%20v3.dc.html?board=<board id>`. Add `&facilitator=1` for the facilitator link. The board id is not in this repo: `firestore.rules` is the template for the project's rules, with the id left out.
 - **Without the link,** notes are saved in that browser only. The Firebase web config in `notes.js` is public by design; the rules are what protect the notes.
-- **What a note records:** the version, page, patient, part of the page, and the settings in use (section style, text size, icons, caseload order, time format). **Download notes (CSV)** exports them.
+- **What a note records:** the version, page, patient, part of the page, and the settings in use (section style, text size, icons, caseload order, time format, look). It also records the site build the page was loaded from (`build.json`, which GitHub Pages fills in with the commit and build time on each deploy), so a note written in a tab opened before an update is matched to what the reviewer saw. **Download notes (CSV)** exports them.
 - Notes are review scaffolding, like the review strip: they don't print, and the note form asks reviewers to leave out patient information.
 
 ## Other files
@@ -66,7 +66,7 @@ Reviewers can pin notes to any part of the v2 and v3 mockups. Click **Notes** at
 - `DESIGN.md`: design rules (principles, word budget, tokens, components, redesign procedure). Draft for CWG review.
 - `design/landing/`: the screenshots `index.html` shows, one per version. They are rendered at 2× without the review strip. Regenerate them when a version's caseload or patient page changes.
 - `design/`: dated before/after screenshots for each redesign round. Content audits quote the planning meetings, so they stay out of this public repo (`.gitignore`). `design/type-check.html` lists the words at each rendered text size. Serve the repo first (`python3 -m http.server 8767`), then open `http://localhost:8767/design/type-check.html`.
-- `notes.js`: review notes (see above), loaded by v2 and v3. `firestore.rules`: the template for its Firebase access rules.
+- `notes.js`: review notes (see above), loaded by v2 and v3. `firestore.rules`: the template for its Firebase access rules. `build.json`: the site build, filled in on deploy.
 - `support.js`: the shared runtime the pages load. Keep it alongside the HTML files.
   - In a page's template, write tables with the runtime's raw tags (`sc-raw-table`, `sc-raw-thead`, `sc-raw-tbody`, `sc-raw-tr`, `sc-raw-th`, `sc-raw-td`); they render as ordinary tables. With plain `<table>` tags, the browser moves `<sc-for>` loops out of the table. The runtime repairs that only when the page is served, so a page opened straight from disk shows an empty table.
 - `archive/`: earlier versions (Industry and Classical design systems), kept for reference only. They render unstyled, because the `_ds/` design-system bundles they reference aren't in this repo.
