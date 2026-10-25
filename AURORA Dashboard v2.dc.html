@@ -737,7 +737,7 @@ class Component extends DCLogic {
     this.onHash = () => this.setState(this.readHash());
     window.addEventListener('hashchange', this.onHash);
     // Escape closes hover content anywhere (WCAG 1.4.13: dismissible)
-    this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, menuOpen: false, tip: null, tipPinned: false }); } };
+    this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, menuOpen: false, tip: null, tipPinned: false, factsOpen: false }); } };
     window.addEventListener('keydown', this.onEsc);
     // A click or tap outside an open ⓘ tip closes it
     this.onDown = (e) => { if (this.state.tip && !(e.target.closest && e.target.closest('.tt-wrap'))) this.setState({ tip: null, tipPinned: false }); };
