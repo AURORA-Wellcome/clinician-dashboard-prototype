@@ -4,7 +4,7 @@ Three versions are kept side by side so the working group can compare them; the 
 
 ## v3: progress-focused
 
-`AURORA Dashboard v3.dc.html` · October 24, 2026, with additions on October 25.
+`AURORA Dashboard v3.dc.html`, October 24, 2026, with additions on October 25.
 
 v2, changed to follow the theoretical model (`Theoretical model/` in the project folder) and the off-track rules in `Study design/Measurement/AURORA_additional_data_collection.md`. The rules are in the v3 section of DESIGN.md.
 - **Off-track flag:** a two-branch flag on the AI estimate. "Not improving" (▬) is a new status for patients who aren't improving early in care, or who remain symptomatic after 3 months; "Stable or better" becomes "On track". In this trial only, when check-ins are too few for an estimate, the flag falls back on the PHQ-9 and says so.
@@ -23,7 +23,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
 
 ## v2: redesign
 
-`AURORA Dashboard v2.dc.html` · October 24, 2026.
+`AURORA Dashboard v2.dc.html`, October 24, 2026.
 
 The redesign, built to the rules in DESIGN.md. It has three pages:
 - **Caseload:** by next visit (the default), with a header for each day, or grouped by status. Safety-flagged patients come first in both.
@@ -47,9 +47,9 @@ What changed from v1:
 
 ## v1: clinical
 
-`AURORA Dashboard Clinical.dc.html` · August to September 2026.
+`AURORA Dashboard Clinical.dc.html`, August to September 2026.
 
-The first mockup, with a clinical/EHR look. It has three views (A · Caseload triage, B · Patient detail, C · Session prep), each with four review variants you switch between from the scaffold strip at the top.
+The first mockup, with a clinical/EHR look. It has three views (caseload triage, patient detail and session prep), each with four review variants you switch between from the scaffold strip at the top.
 
 ## Landing page
 
