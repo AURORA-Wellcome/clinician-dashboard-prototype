@@ -182,6 +182,9 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .chart .thr{stroke:var(--worse);stroke-width:1.2;stroke-dasharray:6 4}
 .chart .estband{fill:var(--ai-band)}
 .chart .est{fill:none;stroke:var(--ai);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+/* Each check-in's own estimate: faint, so the smoothed line stays the reading */
+.chart .ci-est{fill:var(--ai);fill-opacity:.45}
+.chart .hv-ci{fill:none;stroke:var(--ai);stroke-width:1.5}
 .chart .phq{fill:var(--ink);stroke:#fff;stroke-width:1.5}
 .chart .evt{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
 .chart .i9-pos{fill:var(--safety);font-weight:600}
@@ -520,6 +523,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
             <text x="{{ ch.endX }}" y="{{ ch.baseLabelY }}">{{ ch.baseLabel }}</text>
             <text class="thr-label" x="{{ ch.endX }}" y="{{ ch.thrLabelY }}">{{ ch.thrLabel }}</text>
             <polygon class="estband" points="{{ ch.band }}"></polygon>
+            <sc-for list="{{ ch.ciEst }}" as="c"><circle class="ci-est" cx="{{ c.cx }}" cy="{{ c.cy }}" r="2.6"></circle></sc-for>
             <polyline class="est" points="{{ ch.estPts }}"></polyline>
           </sc-if>
           <sc-if value="{{ ch.showPersist }}"><line class="persist" x1="{{ ch.L }}" x2="{{ ch.R }}" y1="{{ ch.persistY }}" y2="{{ ch.persistY }}"></line><text x="{{ ch.endX }}" y="{{ ch.persistLabelY }}">10: symptomatic</text></sc-if>
@@ -531,6 +535,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
           <sc-if value="{{ hv.show }}">
             <line class="guide" x1="{{ hv.x }}" x2="{{ hv.x }}" y1="{{ ch.T }}" y2="{{ ch.B }}"></line>
             <sc-if value="{{ hv.hasEst }}"><circle class="hv-est" cx="{{ hv.x }}" cy="{{ hv.estY }}" r="5"></circle></sc-if>
+            <sc-if value="{{ hv.hasCiDot }}"><circle class="hv-ci" cx="{{ hv.x }}" cy="{{ hv.ciY }}" r="5"></circle></sc-if>
             <sc-if value="{{ hv.hasPhqDot }}"><circle class="hv-phq" cx="{{ hv.x }}" cy="{{ hv.phqY }}" r="8"></circle></sc-if>
           </sc-if>
           <sc-for list="{{ ch.hits }}" as="w"><rect class="hit" x="{{ w.x }}" y="0" width="{{ w.w }}" height="300" onMouseEnter="{{ w.enter }}" onClick="{{ w.enter }}"></rect></sc-for>
@@ -548,7 +553,8 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
         </div>
         <p class="sr-only" aria-live="polite">{{ hv.aria }}</p>
         <div class="key">
-          <span><svg width="22" height="10" viewBox="0 0 22 10"><rect x="0" y="1" width="22" height="8" fill="rgba(198,127,0,.16)"></rect><line x1="0" y1="5" x2="22" y2="5" stroke="#C67F00" stroke-width="2.5"></line></svg>AI estimate; shading shows its uncertainty</span>
+          <span><svg width="22" height="10" viewBox="0 0 22 10"><rect x="0" y="1" width="22" height="8" fill="rgba(198,127,0,.16)"></rect><line x1="0" y1="5" x2="22" y2="5" stroke="#C67F00" stroke-width="2.5"></line></svg>AI estimate, smoothed; shading shows its uncertainty</span>
+          <span><svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="2.6" fill="#C67F00" fill-opacity=".45"></circle></svg>Each check-in’s own estimate</span>
           <span><svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4.5" fill="#1F2A33"></circle></svg>PHQ-9 (patient’s answers)</span>
           <span>Item 9: the PHQ-9 question on thoughts of death or self-harm, 0 to 3</span>
           <sc-if value="{{ ch.hasExp }}"><span><svg width="22" height="10" viewBox="0 0 22 10"><rect x="0" y="1" width="22" height="8" fill="rgba(91,107,120,.12)"></rect></svg>Expected range in the first 3 months of care</span></sc-if>
@@ -1090,6 +1096,33 @@ class Component extends DCLogic {
       if (j >= 0) return ciPat[j] === '1' ? 'completed' : 'missed';
       return (Math.abs(Math.sin((d + 1) * 12.9898 + seed * 78.233)) * 43758.5453) % 1 < P.cn / P.cd ? 'completed' : 'missed';
     };
+    // Each check-in's own AI estimate: the smoothed trend plus day-to-day change (carried over from day to day)
+    // and the reading's own error, sized from the detection-latency simulation (Theoretical model/Simulation):
+    // on the PHQ-9 scale, SDs of about 1.5 and 1.9. Most readings land within about 4 points of the line.
+    const trendAt = (d) => {
+      const i0 = Math.floor(d / 7), i1 = Math.min(last, i0 + 1), t = d / 7 - i0;
+      return est[i0] == null || est[i1] == null ? null : est[i0] + (est[i1] - est[i0]) * t;
+    };
+    const rnd = (d, k) => (Math.abs(Math.sin((d + 1) * 12.9898 + seed * 78.233 + k * 4.1414)) * 43758.5453) % 1;
+    const gauss = (d, k) => Math.sqrt(-2 * Math.log(1 - 0.999999 * rnd(d, k))) * Math.cos(2 * Math.PI * rnd(d, k + 1));
+    const ciEstAt = new Map();
+    if (est.length) {
+      let mood = 0, err = 0;
+      const readings = [];
+      for (let d = d0; d <= dLast; d++) {
+        mood = 0.7 * mood + 1.5 * Math.sqrt(1 - 0.7 ** 2) * gauss(d, 1);
+        if (checkinOn(d) !== 'completed' || trendAt(d) == null) continue;
+        err = 0.3 * err + 1.9 * Math.sqrt(1 - 0.3 ** 2) * gauss(d, 3);
+        readings.push({ d, dev: mood + err });
+      }
+      // Centred week by week, so the readings sit around the line the status rules read
+      for (let w = x0; w <= last; w++) {
+        const wk = readings.filter((r) => Math.floor(r.d / 7) === w);
+        const m = wk.reduce((a, r) => a + r.dev, 0) / (wk.length || 1);
+        wk.forEach((r) => ciEstAt.set(r.d, Math.round(Math.min(MAX, Math.max(0, trendAt(r.d) + r.dev - m)))));
+      }
+    }
+    ch.ciEst = [...ciEstAt].map(([d, v]) => ({ cx: f(XD(d)), cy: f(Y(v)) }));
     const hd = s.hoverDay != null && s.hoverDay >= d0 && s.hoverDay <= dLast ? s.hoverDay : null;
     const hv = { show: false, aria: '' };
     if (hd != null) {
@@ -1105,18 +1138,19 @@ class Component extends DCLogic {
       const k = hd % 7 === 0 ? PHQ_WEEKS.indexOf(hd / 7) : -1;
       const phq = k >= 0 ? P.phq[k] : null, i9 = k >= 0 ? P.item9[k] : null;
       const evs = (P.events || []).filter((ev) => Math.round(ev.week * 7) === hd);
-      const ci = checkinOn(hd);
+      const ci = checkinOn(hd), ciV = ciEstAt.has(hd) ? ciEstAt.get(hd) : null;
       const x = XD(hd);
       Object.assign(hv, {
         show: true, x: f(x), cls: 'tip ' + (x > 0.6 * 880 ? 'left' : 'right'), style: `left:${((100 * x) / 880).toFixed(2)}%`,
         title,
         hasEst: e != null, est: estText, estY: eRaw == null ? 0 : f(Y(eRaw)),
-        ci, ciCls: 'tip-v' + (ci === 'missed' ? '' : ' muted'),
+        ci: ciV != null ? `estimate ${ciV}` : ci, ciCls: 'tip-v' + (ci === 'missed' || ciV != null ? '' : ' muted'),
+        hasCiDot: ciV != null, ciY: ciV == null ? 0 : f(Y(ciV)),
         hasPhq: k >= 0, phq: phq == null ? 'not completed' : `${phq} · ${bandOf(phq)}`, phqCls: 'tip-v' + (phq == null ? ' muted' : ''),
         hasPhqDot: phq != null, phqY: phq == null ? 0 : f(Y(phq)),
         hasI9: i9 != null, i9: i9 == null ? '' : String(i9), i9Cls: 'tip-v' + (i9 > 0 ? ' i9-pos' : ''),
         events: evs.map((ev) => ({ label: ev.label, iconEl: icon(ev.icon) })),
-        aria: [title, e == null ? '' : `severity estimate ${estText.replace('±', 'plus or minus')}`, `check-in ${ci}`,
+        aria: [title, e == null ? '' : `severity estimate ${estText.replace('±', 'plus or minus')}`, ciV != null ? `check-in estimate ${ciV}` : `check-in ${ci}`,
           k < 0 ? '' : phq == null ? 'PHQ-9 not completed' : `PHQ-9 ${phq}, ${bandOf(phq)}`, i9 == null ? '' : `item 9 ${i9}`,
           ...evs.map((ev) => ev.label)].filter(Boolean).join('; ') + '.'
       });

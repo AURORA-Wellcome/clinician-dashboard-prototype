@@ -169,6 +169,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colours ar
 - **Chart:**
   - The y axis is the PHQ-9 scale, 0–27, with numeric ticks. Don't label severity bands next to lines, because baseline lines then read as severity cut-offs.
   - The AI estimate is a line in `ai-series` with an `ai-band` uncertainty band. The patient's PHQ-9 answers are ink dots.
+  - Each check-in's own estimate is a small, faint `ai-series` dot. The line is the smoothed estimate, which the status rules read, so one high or low reading doesn't change a patient's status. *(Mock data: the scatter follows the detection-latency simulation's assumptions, day-to-day change plus each reading's error, so most readings land within about 4 points of the line. To confirm with Deliberate AI and the WP3 idiographic study.)*
   - Baseline is dotted and baseline + 5 is dashed in `worse`, each labelled at the line end.
   - Item 9 answers are numbers under the PHQ-9 dates, in bold `safety` when above 0. Don't use badges.
   - Reported events are dashed verticals labelled with their source, e.g. "(AI)". The label sits right of the line, or left of it when it would run off the chart.
@@ -177,12 +178,12 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colours ar
   - **Hover readout:** it moves one day at a time. Pointing anywhere over the chart shows a guide line, a ring on the trend line (and on the dot, on a PHQ-9 day), and a small card:
     - the date;
     - the AI estimate with its uncertainty, read off the trend line;
-    - whether that day's check-in was completed, missed, or not scheduled;
+    - whether that day's check-in was completed (with that reading's own estimate), missed, or not scheduled;
     - on a PHQ-9 day, the PHQ-9 with its severity band (or "not completed"), and item 9, in `safety` when above 0;
     - any reported event that day.
 
     PHQ-9 and event days pull the pointer from one day either side, so the dots stay easy to hit.
-  - Between the weekly estimates, the line and so the readout are interpolated. If AI-COA updates its estimate after each check-in, the readout should show that day's estimate instead (to confirm with Deliberate AI).
+  - Between the weekly estimates, the line and so the readout are interpolated. Whether AI-COA reports a smoothed estimate, one per check-in, or both is to confirm with Deliberate AI.
   - The card is a popover, so it may have a shadow, and its text is `text-sm`. It flips to the left of the guide line in the right part of the chart.
   - The readout also works from the keyboard:
     - Tab to the chart;
