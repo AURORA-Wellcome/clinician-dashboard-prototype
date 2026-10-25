@@ -48,4 +48,4 @@ Reviewers can pin notes to any part of the v2 and v3 pages (`notes.js`). A note 
 ## Runtime quirks
 
 - **Tables:** in a page's template, write tables with the runtime's raw tags (`sc-raw-table`, `sc-raw-thead`, `sc-raw-tbody`, `sc-raw-tr`, `sc-raw-th`, `sc-raw-td`); they render as ordinary tables. With plain `<table>` tags, the browser moves `<sc-for>` loops out of the table. The runtime repairs that only when the page is served, so a page opened straight from disk shows an empty table.
-- **Chart labels** are SVG text, which can't hold HTML such as an ⓘ button. The "Baseline + 6" label is drawn in HTML over the chart instead, sized with the chart (see `.thr-tag`).
+- **Chart labels** are SVG text, which can't hold HTML such as an ⓘ button. The label on the baseline + 6 line ("Worse than baseline") is drawn in HTML over the chart instead, sized with the chart (see `.thr-tag`).

@@ -70,6 +70,8 @@ Interface words are labels, headers, notes and buttons, not patient data.
 - **American English** in everything a person reads: the interface, the patient handout, the landing page, these docs and code comments. For example: color, gray, center, behavior, labeled, license, toward, and -ize endings (summarize, prioritize).
 - **Dates and times** are US style too: see Times under Components.
 - **Quotations** keep their original spelling: meeting quotes, the titles of papers and guidance, and names of organizations.
+- **Lines and zones are named for what they mean,** in the words of the status they start, not their arithmetic: the line where Worse than baseline begins is labeled Worse than baseline.
+- **Don't call the AI estimate's changes "reliable".** In measurement the word means a change bigger than the measure's own error, which hasn't been measured for the estimate yet, and to a reader it can sound like "confirmed". The study design's "reliable deterioration" (the PHQ-9 rising 6 or more) is Worse than baseline on screen.
 
 ## Tokens
 
@@ -189,8 +191,8 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - The y axis is the PHQ-9 scale, 0–27, with numeric ticks. Don't label severity bands next to lines, because baseline lines then read as severity cut-offs.
   - The AI estimate is a line in `ai-series` with an `ai-band` uncertainty band. The patient's PHQ-9 answers are ink dots.
   - Each check-in's own estimate is a small, faint `ai-series` dot. The line is the smoothed estimate, which the status rules read, so one high or low reading doesn't change a patient's status. *(Mock data: the scatter follows the detection-latency simulation's assumptions, day-to-day change plus each reading's error, so most readings land within about 4 points of the line. To confirm with Deliberate AI and the WP3 idiographic study.)*
-  - Baseline is dotted and baseline + 5 is dashed in `worse`, each labeled at the line end.
-  - The baseline + 5 label (+ 6 in v3) has an ⓘ saying why the line stands out: it is where Worse than baseline begins, measured from the patient's own baseline, so it is not a severity cut-off; and the number is a placeholder. The label is drawn in HTML over the chart so it can hold the button, sized to match the chart's own labels. The ⓘ doesn't print.
+  - Baseline is dotted and baseline + 5 (+ 6 in v3) is dashed in `worse`, each labeled at the line end. v2 labels the dashed line "Baseline + 5"; v3 labels it with the status it starts, Worse than baseline.
+  - The dashed line's label has an ⓘ saying why the line stands out: it is where Worse than baseline begins, measured from the patient's own baseline, so it is not a severity cut-off; and the number is a placeholder. The label is drawn in HTML over the chart so it can hold the button, sized to match the chart's own labels. In v3 it takes two lines in the label column, its last word kept with the ⓘ. The ⓘ doesn't print.
   - Item 9 answers are numbers under the PHQ-9 dates, in bold `safety` when above 0. Don't use badges.
   - Reported events are dashed verticals labeled with their source, e.g. "(AI)". The label sits right of the line, or left of it when it would run off the chart.
   - The time axis runs from when the patient joined, up to 12 weeks.

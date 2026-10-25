@@ -265,10 +265,12 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .drv .evt{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
 /* Trend hover readout: one column per day; also by keyboard (focus the chart, arrow keys) */
 .chart-box{position:relative;container-type:inline-size;--chart-fs:13}
-/* "Baseline + 6" is drawn in HTML over the chart so it can carry an ⓘ. It sits where the SVG label did (x 750 of 880,
-   centered on the line) and scales with the chart like the SVG labels: --chart-fs follows their font sizes. */
-.thr-tag{position:absolute;left:calc(750 / 880 * 100%);display:flex;align-items:center;transform:translateY(-50%);font-size:calc(var(--chart-fs) * 100cqw / 880);line-height:1.2;color:var(--worse-text);white-space:nowrap}
+/* The line where Worse than baseline begins is labeled with that status's name, in HTML over the chart so it can carry
+   an ⓘ. It sits in the column of line labels (x 750 of 880), on two lines centered on the line, and scales with the
+   chart like the SVG labels: --chart-fs follows their font sizes. */
+.thr-tag{position:absolute;left:calc(750 / 880 * 100%);width:calc(128 / 880 * 100%);transform:translateY(-50%);font-size:calc(var(--chart-fs) * 100cqw / 880);line-height:1.2;color:var(--worse-text);text-wrap:balance}
 .thr-tag .tt-wrap{margin-left:4px}
+.thr-tag .thr-last{white-space:nowrap}
 .chart .hit{fill:transparent;cursor:crosshair}
 .chart .guide{stroke:var(--muted);stroke-width:1}
 .chart .hv-est{fill:var(--surface);stroke:var(--ai);stroke-width:2.5}
@@ -404,6 +406,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 @media screen and (max-width:60rem){
   .big .chart text{font-size:20px}
   .big .chart-box{--chart-fs:20}
+  .thr-tag .tt-wrap{margin-left:0}
   .big .chart .noest{font-size:22px}
   .list.by-status,.big .list.by-status{--cols:minmax(0,1.3fr) minmax(0,1.2fr) 5rem 5rem}
   .list.by-visit,.big .list.by-visit{--cols:5.5rem minmax(0,1.2fr) minmax(0,1.3fr) 5rem 5rem}
@@ -679,7 +682,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
           </sc-if>
           <sc-for list="{{ ch.hits }}" as="w"><rect class="hit" x="{{ w.x }}" y="0" width="{{ w.w }}" height="300" onMouseEnter="{{ w.enter }}" onClick="{{ w.click }}"></rect></sc-for>
         </svg>
-        <sc-if value="{{ ch.hasEst }}"><div class="thr-tag" style="{{ ch.thrTagStyle }}">{{ ch.thrText }}<span class="tt-wrap no-print" onMouseEnter="{{ tips.thr.enter }}" onMouseLeave="{{ tips.thr.leave }}"><button type="button" class="{{ tips.thr.btnCls }}" aria-label="About the baseline + {{ ch.thrN }} line" aria-describedby="tt-thr" onClick="{{ tips.thr.toggle }}" onFocus="{{ tips.thr.focus }}" onBlur="{{ tips.thr.blur }}">ⓘ</button><span id="tt-thr" role="tooltip" class="{{ tips.thr.cls }}"><sc-for list="{{ tips.thr.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></div></sc-if>
+        <sc-if value="{{ ch.hasEst }}"><div class="thr-tag" style="{{ ch.thrTagStyle }}">{{ ch.thrHead }}<span class="thr-last">{{ ch.thrTail }}<span class="tt-wrap no-print" onMouseEnter="{{ tips.thr.enter }}" onMouseLeave="{{ tips.thr.leave }}"><button type="button" class="{{ tips.thr.btnCls }}" aria-label="About the Worse than baseline line" aria-describedby="tt-thr" onClick="{{ tips.thr.toggle }}" onFocus="{{ tips.thr.focus }}" onBlur="{{ tips.thr.blur }}">ⓘ</button><span id="tt-thr" role="tooltip" class="{{ tips.thr.cls }}"><sc-for list="{{ tips.thr.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span></div></sc-if>
         <sc-if value="{{ hv.show }}">
           <div class="{{ hv.cls }}" style="{{ hv.style }}" aria-hidden="true">
             <div class="tip-head">{{ hv.title }}</div>
@@ -1542,9 +1545,10 @@ class Component extends DCLogic {
       thrY: P.baseline == null ? 0 : f(Y(P.baseline + RULES.deterioration)),
       baseLabelY: P.baseline == null ? 0 : f(Y(P.baseline) + 4),
       baseLabel: T(`Baseline ${P.baseline}`),
-      // The "Baseline + 6" label is HTML (see .thr-tag), placed by percentage of the chart's height
+      // The Worse than baseline label is HTML (see .thr-tag), placed by percentage of the chart's height
       thrTagStyle: P.baseline == null ? '' : `top:${((Y(P.baseline + RULES.deterioration) / 300) * 100).toFixed(2)}%`,
-      thrText: `Baseline + ${RULES.deterioration}`, thrN: String(RULES.deterioration),
+      // its last word stays with the ⓘ, so the two don't part on a narrow chart
+      thrHead: STATUS.worse.label.replace(/\S+$/, ''), thrTail: STATUS.worse.label.match(/\S+$/)[0],
       midX: f((L + R) / 2), noEstY: f(Y(22.5) + 5),
       showZone: s.distinct && est.length > 0 && P.baseline != null && P.baseline + RULES.deterioration < MAX,
       zoneW: f(R - L), zoneH: P.baseline == null ? 0 : f(Math.max(0, Y(P.baseline + RULES.deterioration) - TOP)),
@@ -1869,7 +1873,7 @@ class Component extends DCLogic {
       ]),
       // The check-in dots: pointer only, as the count and note beside them say the same in words
       dots: tipFor('dots', [pt.ciTitle]),
-      // Why the baseline + 6 line stands out in the chart
+      // Why the Worse than baseline line (baseline + 6) stands out in the chart
       thr: tipFor('thr', [
         { cls: 'tt-head', text: 'Why this line stands out:' },
         `When the AI estimate is ${RULES.deterioration} or more points above this patient’s baseline, the status becomes Worse than baseline.`,

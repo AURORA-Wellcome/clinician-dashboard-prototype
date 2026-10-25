@@ -10,7 +10,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
 - **Off-track flag:** a two-branch flag on the AI estimate. "Not improving" (▬) is a new status for patients who aren't improving early in care, or who remain symptomatic after 3 months; "Stable or better" becomes "On track". In this trial only, when check-ins are too few for an estimate, the flag falls back on the PHQ-9 and says so.
 - **Status line:** the patient page states the trend status, its source and the time in care.
 - **Tile order:** the patient's PHQ-9 comes first and at the same size as the AI estimate.
-- **Chart:** it draws the rule that applies (baseline + 6, the expected range early in care, or the 10 line). The baseline + 6 label has an ⓘ saying why the line stands out.
+- **Chart:** it draws the rule that applies (baseline + 6, the expected range early in care, or the 10 line). The baseline + 6 line is labeled with the status it starts, Worse than baseline, and has an ⓘ saying why it stands out.
 - **Drivers panel:** "Show sleep, activity and contact" opens phone-sensing measures on the trend's weeks.
 - **Mock patients:** two new ones, `haddad` (early in care, not improving) and `novak` (the PHQ-9 fallback).
 - **Refined look** (the default since October 25): status words in ink with colored shapes, finer type, soft shadows, an initials avatar, a dot on the latest estimate, quick fade-ins, and a greeting band with soft aurora art on the Patients page that follows the time of day. Opening a patient morphs the name into the page title, and the trend line draws in; motion is off with the reduced-motion setting. The review strip's Look switch still offers the Original look.
