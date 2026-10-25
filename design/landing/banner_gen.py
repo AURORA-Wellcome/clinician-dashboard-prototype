@@ -200,3 +200,40 @@ html = ('<div class="banner" aria-hidden="true">\n  ' + sky
         + '\n  <div class="bn-px bn-px-hills">' + hills + '</div>\n</div>')
 open(sys.argv[1], 'w').write(html)
 print(len(html), 'bytes')
+
+# The far-off plane's two crossings, as CSS keyframes (written when a second file is named: paste them over the
+# bn-plane-a and bn-plane-b keyframes in index.html). A straight, level flight seen in this wide view traces an arc: it
+# rises from low on one side, is highest where it passes nearest, then sinks toward the horizon, looking fastest and
+# brightest when nearest. The banner is treated as a panorama about 120 degrees wide and 18 tall, with the horizon at
+# 84% of its height (the ridges). Each crossing is sampled at even times, a steady ground speed, so the changes of
+# apparent speed come from the geometry alone.
+FOV_X, FOV_Y, HORIZON = 120, 18, 84
+
+def pct(v):
+    return f'{v:.2f}'.rstrip('0').rstrip('.') + '%'
+
+def plane_keyframes(name, start, end, nearest, peak, rightward=True, n=24):
+    """One crossing between start% and end% of the cycle. nearest: the bearing where the plane passes nearest
+    (0 = the middle of the banner, positive = right), in degrees; peak: its elevation there, in degrees."""
+    k = math.tan(math.radians(peak))  # altitude over the nearest distance
+    a0, a1 = -FOV_X / 2 - 3, FOV_X / 2 + 3  # just beyond either edge
+    if not rightward:
+        a0, a1 = a1, a0
+    s0, s1 = (math.tan(math.radians(a - nearest)) for a in (a0, a1))  # along the track, in nearest distances
+    frames = []
+    for i in range(n + 1):
+        sd = s0 + (s1 - s0) * i / n
+        r = math.hypot(1, sd)
+        x = 50 + (nearest + math.degrees(math.atan(sd))) / FOV_X * 100
+        y = HORIZON - math.degrees(math.atan(k / r)) / FOV_Y * 100
+        o = 0.35 + 0.65 * r ** -1.5  # dimmer when farther away
+        at = start + (end - start) * i / n
+        sel = f'0%,{pct(at)}' if i == 0 else f'{pct(at)},100%' if i == n else pct(at)
+        frames.append(f'{sel}{{transform:translate({pct(x)},{pct(y)});opacity:{o:.2f}}}')
+    return f'@keyframes {name}{{' + ''.join(frames) + '}'
+
+if len(sys.argv) > 2:
+    css = (plane_keyframes('bn-plane-a', 7, 29.5, nearest=-5, peak=11.2) + '\n'
+           + plane_keyframes('bn-plane-b', 57, 82, nearest=12, peak=8, rightward=False) + '\n')
+    open(sys.argv[2], 'w').write(css)
+    print(len(css), 'bytes of plane keyframes')

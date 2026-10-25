@@ -75,12 +75,10 @@ img{display:block;max-width:100%;height:auto}
 .bn-m3{left:16%;top:5%}
 .bn-m3 i{width:95px;transform:scaleX(-1) rotate(-25deg)}
 /* A far-off airliner now and then: only its red beacon shows, blinking about once a second as it crosses slowly. It is
-   much nearer than the aurora, so it passes in front of the curtains. The wrapper is as wide as the banner, so the
-   crossing can be set in percent of its width. (Hidden when still.) */
-.bn-plane{position:absolute;left:0;width:100%;height:0;opacity:0;pointer-events:none}
-.bn-plane-a{top:21%}
-.bn-plane-b{top:33%}
-.bn-plane i{position:absolute;left:0;top:-1.25px;width:2.5px;height:2.5px;border-radius:50%;background:#FF4A3D;box-shadow:0 0 4px 1.5px rgba(255,64,48,.55);opacity:.12}
+   much nearer than the aurora, so it passes in front of the curtains. The wrapper covers the banner, so its path can be
+   set in percent of the banner's width and height; the light sits at the wrapper's corner. (Hidden when still.) */
+.bn-plane{position:absolute;inset:0;opacity:0;pointer-events:none}
+.bn-plane i{position:absolute;left:0;top:0;margin:-1.25px 0 0 -1.25px;width:2.5px;height:2.5px;border-radius:50%;background:#FF4A3D;box-shadow:0 0 4px 1.5px rgba(255,64,48,.55);opacity:.12}
 /* Calm but visible motion: each curtain drifts (outer wrapper) and sways, its rays leaning and lengthening (inner
    wrapper); three ray patterns cross-fade, the bright lower edge pulses, and a few accent stars twinkle. Only transforms and
    opacity move, so the browser never redraws the filters. Still with the reduced-motion setting. */
@@ -98,9 +96,8 @@ img{display:block;max-width:100%;height:auto}
   .bn-m1{will-change:transform,opacity;animation:bn-meteor-1 30s linear infinite}
   .bn-m2{will-change:transform,opacity;animation:bn-meteor-2 30s linear infinite}
   .bn-m3{will-change:transform,opacity;animation:bn-meteor-3 30s linear infinite}
-  .bn-plane{opacity:1}
-  .bn-plane-a{will-change:transform;animation:bn-plane-a 200s linear infinite}
-  .bn-plane-b{will-change:transform;animation:bn-plane-b 200s linear infinite}
+  .bn-plane-a{will-change:transform,opacity;animation:bn-plane-a 200s linear infinite}
+  .bn-plane-b{will-change:transform,opacity;animation:bn-plane-b 200s linear infinite}
   .bn-plane i{will-change:opacity;animation:bn-beacon 1.2s linear infinite}
 }
 @keyframes bn-drift-a{from{transform:translateX(-3.5%)}to{transform:translateX(3.5%)}}
@@ -122,11 +119,12 @@ img{display:block;max-width:100%;height:auto}
 @keyframes bn-meteor-1{0%,10%{opacity:0;transform:translate(0,0)}11.7%{opacity:1}15.3%{opacity:.9}18.7%,100%{opacity:0;transform:translate(-380px,177px)}}
 @keyframes bn-meteor-3{0%,45%{opacity:0;transform:translate(0,0)}46.7%{opacity:.85}50%{opacity:.75}53.3%,100%{opacity:0;transform:translate(340px,158px)}}
 @keyframes bn-meteor-2{0%,75%{opacity:0;transform:translate(0,0)}76.7%{opacity:.85}80%{opacity:.75}83%,100%{opacity:0;transform:translate(-300px,140px)}}
-/* The plane: one 200 s cycle with two crossings of about 45 s, left to right from about 14 s, then back a little lower
-   from about 114 s. Each starts and ends just beyond the edge. The beacon flashes every 1.2 s; between flashes only a
-   faint steady red shows. */
-@keyframes bn-plane-a{0%,7%{transform:translate(-4%,0)}29.5%,100%{transform:translate(104%,-10px)}}
-@keyframes bn-plane-b{0%,57%{transform:translate(104%,0)}79.5%,100%{transform:translate(-4%,6px)}}
+/* The plane: one 200 s cycle with two crossings, left to right from about 14 s (45 s) and back, lower, from about
+   114 s (50 s). A straight, level flight in this wide view traces an arc: it rises from one side, is highest, fastest
+   and brightest where it passes nearest, then sinks toward the horizon. The keyframes are computed by
+   design/landing/banner_gen.py. The beacon flashes every 1.2 s; between flashes only a faint steady red shows. */
+@keyframes bn-plane-a{0%,7%{transform:translate(-2.5%,50.72%);opacity:0.60}7.94%{transform:translate(-0.04%,48.04%);opacity:0.63}8.88%{transform:translate(2.85%,45.03%);opacity:0.67}9.81%{transform:translate(6.26%,41.66%);opacity:0.71}10.75%{transform:translate(10.29%,37.97%);opacity:0.76}11.69%{transform:translate(15.07%,34.02%);opacity:0.81}12.62%{transform:translate(20.69%,30.04%);opacity:0.87}13.56%{transform:translate(27.19%,26.36%);opacity:0.93}14.5%{transform:translate(34.5%,23.48%);opacity:0.97}15.44%{transform:translate(42.4%,21.93%);opacity:1.00}16.38%{transform:translate(50.49%,22.07%);opacity:1.00}17.31%{transform:translate(58.32%,23.84%);opacity:0.97}18.25%{transform:translate(65.52%,26.88%);opacity:0.92}19.19%{transform:translate(71.89%,30.63%);opacity:0.86}20.12%{transform:translate(77.37%,34.63%);opacity:0.81}21.06%{transform:translate(82.03%,38.54%);opacity:0.75}22%{transform:translate(85.96%,42.19%);opacity:0.70}22.94%{transform:translate(89.28%,45.51%);opacity:0.66}23.88%{transform:translate(92.1%,48.47%);opacity:0.63}24.81%{transform:translate(94.51%,51.1%);opacity:0.60}25.75%{transform:translate(96.57%,53.43%);opacity:0.57}26.69%{transform:translate(98.36%,55.5%);opacity:0.55}27.62%{transform:translate(99.92%,57.33%);opacity:0.53}28.56%{transform:translate(101.29%,58.97%);opacity:0.51}29.5%,100%{transform:translate(102.5%,60.43%);opacity:0.50}}
+@keyframes bn-plane-b{0%,57%{transform:translate(102.5%,55.92%);opacity:0.67}58.04%{transform:translate(98.16%,52.91%);opacity:0.73}59.08%{transform:translate(92.82%,49.56%);opacity:0.79}60.12%{transform:translate(86.29%,46.06%);opacity:0.86}61.17%{transform:translate(78.46%,42.8%);opacity:0.93}62.21%{transform:translate(69.43%,40.41%);opacity:0.98}63.25%{transform:translate(59.67%,39.56%);opacity:1.00}64.29%{transform:translate(49.94%,40.53%);opacity:0.98}65.33%{transform:translate(40.98%,42.99%);opacity:0.93}66.38%{transform:translate(33.24%,46.29%);opacity:0.86}67.42%{transform:translate(26.79%,49.79%);opacity:0.79}68.46%{transform:translate(21.53%,53.12%);opacity:0.72}69.5%{transform:translate(17.24%,56.11%);opacity:0.67}70.54%{transform:translate(13.74%,58.72%);opacity:0.63}71.58%{transform:translate(10.86%,60.98%);opacity:0.59}72.62%{transform:translate(8.45%,62.93%);opacity:0.56}73.67%{transform:translate(6.43%,64.61%);opacity:0.54}74.71%{transform:translate(4.71%,66.07%);opacity:0.52}75.75%{transform:translate(3.23%,67.35%);opacity:0.50}76.79%{transform:translate(1.95%,68.46%);opacity:0.48}77.83%{transform:translate(0.83%,69.45%);opacity:0.47}78.88%{transform:translate(-0.15%,70.32%);opacity:0.46}79.92%{transform:translate(-1.02%,71.1%);opacity:0.45}80.96%{transform:translate(-1.8%,71.8%);opacity:0.44}82%,100%{transform:translate(-2.5%,72.43%);opacity:0.44}}
 @keyframes bn-beacon{0%,100%{opacity:.12}3%{opacity:1}14%{opacity:.12}}
 @media print{.banner{display:none}}
 
