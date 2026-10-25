@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AURORA clinician dashboard v3</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap');
+/* Tokens: DESIGN.md. Add a value there before using it here. */
+:root{
+  --font:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --fs-sm:13px;--lh-sm:18px;--fs-md:15px;--lh-md:22px;--fs-lg:19px;--lh-lg:26px;--fs-xl:30px;--lh-xl:36px;
+  --ink:#1F2A33;--muted:#5B6B78;--line:#E3E7EA;--surface:#FFFFFF;--page:#F7F8FA;--hover:#F2F5F7;
+  --accent:#0072B2;
+  --safety:#C0271A;
+  --worse:#D55E00;--worse-text:#9C4400;
+  --stable:#009E73;--stable-text:#00795A;
+  --nodata:#768692;--nodata-text:#4C6272;
+  --ai:#C67F00;--ai-band:rgba(198,127,0,.16);
+  --line-strong:#C5CDD4;--tint:#EEF2F6;
+  --safety-tint:rgba(192,39,26,.06);--worse-tint:rgba(213,94,0,.07);--nodata-tint:rgba(118,134,146,.09);--stable-tint:rgba(0,158,115,.07);--worse-zone:rgba(213,94,0,.06);
+  --expected:rgba(91,107,120,.12);
+  --r:6px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--font);font-size:var(--fs-md);line-height:var(--lh-md);-webkit-font-smoothing:antialiased}
+.app{font-size:var(--fs-md);line-height:var(--lh-md)}
+/* Larger text (DESIGN.md, Type): body 17px, nothing below 15px; rem so the browser text-size setting applies */
+.app.big{--fs-sm:.9375rem;--lh-sm:1.3125rem;--fs-md:1.0625rem;--lh-md:1.5rem;--fs-lg:1.3125rem;--lh-lg:1.75rem;--fs-xl:2rem;--lh-xl:2.5rem}
+a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoration:underline}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.ai{color:var(--muted);font-weight:400}
+/* ⓘ info tips (DESIGN.md, Components): open at once on hover or keyboard focus; a click or tap keeps one open */
+.tt-wrap{position:relative;display:inline-block}
+.info{display:inline-grid;place-items:center;min-width:24px;min-height:24px;margin:-4px -3px;padding:0;border:0;border-radius:50%;background:transparent;font:inherit;font-weight:400;line-height:1;color:var(--muted);cursor:help}
+.info:hover,.info.pinned{color:var(--ink)}
+.info:focus{outline:none}
+.info:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.tt{display:none;position:absolute;left:50%;top:calc(100% + 6px);z-index:30;width:max-content;max-width:min(22rem,calc(100vw - 24px));padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.12);color:var(--ink);font-size:var(--fs-sm);line-height:var(--lh-sm);font-weight:400;letter-spacing:0;text-align:left;text-transform:none;white-space:normal;transform:translateX(calc(-50% + var(--tt-dx,0px)))}
+.tt.open{display:block}
+/* Bridges the gap under the icon, so the pointer can move onto the tip */
+.tt::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:8px}
+.tt-line{display:block}
+.tt-line + .tt-line{margin-top:6px}
+.tt-head{font-weight:600}
+.tt-note{color:var(--muted)}
+.tt-wrap.dots-wrap{display:block;width:max-content}
+.nowrap{white-space:nowrap}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* Review controls: scaffolding for the clinical planning group, not part of the design */
+.review{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:8px 24px;font-size:13px;line-height:18px;background:repeating-linear-gradient(45deg,#F3EFE6,#F3EFE6 12px,#EFEAE0 12px,#EFEAE0 24px);border-bottom:1px dashed #C9BFA8}
+.review-label{font-size:13px;font-weight:600;color:#7A6A45}
+.seg{display:inline-flex;border:1px solid #C9BFA8;border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.seg button{font:inherit;font-size:13px;font-weight:600;padding:4px 12px;border:0;border-right:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button.on{background:#E8EEF3;color:var(--ink)}
+
+.topbar{display:flex;align-items:center;gap:24px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{font-size:var(--fs-lg);font-weight:600;letter-spacing:.04em}
+.crumbs{display:flex;align-items:center;gap:8px}
+.crumbs a{color:var(--muted)}.crumbs .cur{color:var(--ink);font-weight:600}
+.crumbs .sep{color:var(--line)}
+/* Account menu: the clinician's settings (time format) */
+.who-wrap{position:relative;margin-left:auto}
+.who{font:inherit;color:var(--muted);background:transparent;border:0;border-radius:var(--r);padding:6px 8px;cursor:pointer}
+.who:hover{background:var(--hover)}
+.caret{margin-left:6px}
+.menu-bg{position:fixed;inset:0;z-index:40}
+.menu{position:absolute;right:0;top:calc(100% + 6px);z-index:41;min-width:15rem;padding:12px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.menu-label{margin-bottom:4px;font-size:var(--fs-sm);line-height:var(--lh-sm);font-weight:600;color:var(--muted)}
+.menu-opt{display:flex;align-items:center;gap:8px;padding:4px 0;color:var(--ink);cursor:pointer}
+.menu-opt input{margin:0}
+.menu-opt .muted{margin-left:auto;padding-left:16px}
+
+.page{max-width:1040px;margin:0 auto;padding:32px 24px 48px}
+.h1{margin:0;font-size:var(--fs-xl);line-height:var(--lh-xl);font-weight:600}
+.sub{margin-top:4px;color:var(--muted)}
+.h2{margin:40px 0 12px;font-size:var(--fs-lg);line-height:var(--lh-lg);font-weight:600}
+.h2 .muted{font-size:var(--fs-md);font-weight:400;margin-left:8px}
+.foot{margin:16px 0 0;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
+
+/* Status: shape + colour + word. Base hues for shapes, -text hues for words. */
+.mk{width:10px;height:10px;flex:none;margin-right:8px;vertical-align:-1px}
+.st-safety{color:var(--safety)}.st-safety .mk,.mk.st-safety{color:var(--safety)}
+.st-worse{color:var(--worse-text)}.st-worse .mk,.mk.st-worse{color:var(--worse)}
+.st-stable{color:var(--stable-text)}.st-stable .mk,.mk.st-stable{color:var(--stable)}
+.st-notimp{color:var(--worse-text)}.st-notimp .mk,.mk.st-notimp{color:var(--worse)}
+.st-nodata{color:var(--nodata-text)}.st-nodata .mk,.mk.st-nodata{color:var(--nodata)}
+.status{display:inline-flex;align-items:center;font-weight:600}
+.flag-safety{color:var(--safety);font-weight:600}
+.up{color:var(--worse-text);font-weight:600}
+.down{color:var(--stable-text);font-weight:600}
+.low{font-weight:600}
+
+/* Caseload */
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.list.by-status{--cols:minmax(160px,1.2fr) 156px 100px 80px minmax(0,2.6fr)}
+.list.by-visit{--cols:84px minmax(130px,1fr) 170px 100px 80px minmax(0,2.4fr)}
+.lrow{display:grid;grid-template-columns:var(--cols);column-gap:16px;align-items:center;min-height:40px;padding:0 20px}
+.lhead{font-size:var(--fs-sm);font-weight:600;color:var(--muted);border-bottom:1px solid var(--line)}
+.grp{display:flex;align-items:center;padding:20px 20px 6px;font-size:var(--fs-sm);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.grp .count{margin-left:8px;color:var(--muted);font-weight:400;letter-spacing:0}
+.row{border-top:1px solid var(--line);cursor:pointer}
+.grp + .row{border-top:0}
+/* Day headers (by next visit): neutral, because colour means status */
+.grp .rel{margin-left:6px}
+.row:hover{background:var(--hover)}
+/* Row peek: a hover card with the trend and what changed. Rows are links, reachable by Tab. */
+.row{position:relative}
+.row:focus{outline:none}
+.row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.list > .row:last-child{border-radius:0 0 var(--r) var(--r)}
+.peek{position:absolute;left:12px;top:calc(100% - 4px);z-index:20;width:24rem;padding:12px 16px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.14);font-size:var(--fs-sm);line-height:var(--lh-sm);font-weight:400;cursor:pointer}
+.peek.above{top:auto;bottom:calc(100% - 4px)}
+.peek-head{color:var(--muted)}
+.peek-spark{display:block;width:100%;height:auto;margin:4px 0 10px}
+.peek-spark .pk-band{fill:var(--ai-band)}
+.peek-spark .pk-line{fill:none;stroke:var(--ai);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.peek-spark .pk-base{stroke:var(--muted);stroke-width:1;stroke-dasharray:2 3}
+.peek-spark .pk-axis{stroke:var(--line-strong);stroke-width:1}
+.peek-spark .pk-thr{stroke:var(--worse);stroke-width:1;stroke-dasharray:4 3}
+.peek-spark .pk-dot{fill:var(--ink)}
+.peek-row{display:flex;justify-content:space-between;gap:16px}
+.peek-k{color:var(--muted)}
+.peek-v{font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.peek-v.i9-pos{color:var(--safety)}
+.peek-changes{margin:10px 0 0;padding:8px 0 0;border-top:1px solid var(--line);list-style:none}
+.peek-changes li{display:flex;align-items:flex-start;padding:2px 0}
+.peek-changes .ic{margin-top:1px}
+.pt-name{font-weight:600}
+/* Numbers line up by place value: fixed-width, right-aligned slots */
+.sev{display:inline-block;min-width:2ch;text-align:right;font-weight:600}
+.chg{display:inline-block;min-width:3ch;margin-left:10px;text-align:right}
+.ci{display:inline-block;min-width:5ch;text-align:right}
+
+/* Patient page */
+.pt-title{display:flex;align-items:center;justify-content:space-between;gap:24px}
+.actions{display:flex;gap:4px}
+.btn{font:inherit;font-weight:600;padding:6px 12px;border:0;border-radius:var(--r);background:transparent;color:var(--accent);cursor:pointer}
+.btn:hover{background:var(--hover)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);margin-top:24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.stat{padding:16px 20px;border-left:1px solid var(--line)}.stat:first-child{border-left:0}
+.stat-label{font-size:var(--fs-sm);line-height:var(--lh-sm);font-weight:600;color:var(--muted)}
+.stat-value{display:flex;align-items:baseline;margin-top:8px;font-size:var(--fs-lg);line-height:var(--lh-xl);font-weight:600}
+.stat-value.hero{font-size:var(--fs-xl)}
+.stat-value .mk{align-self:center}
+.unc{font-size:var(--fs-md);font-weight:400;color:var(--muted);margin-left:8px}
+.stat-note{margin-top:2px;font-size:var(--fs-sm);line-height:var(--lh-sm)}
+.callout{margin:16px 0 0;padding:12px 16px;border-left:3px solid var(--worse);background:var(--surface)}
+.changes{margin:0;padding:0;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.change{padding:12px 20px;border-top:1px solid var(--line)}
+.change:first-child{border-top:0}
+.change-title{font-weight:600}
+.change-src{margin-top:2px;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
+.empty{margin:0;color:var(--muted)}
+.goals{margin:0;padding:0;list-style:none}
+.goal{padding:4px 0}
+/* Icons: say what kind of signal or goal it is; never urgency. Muted, one per item, always beside text. */
+.ic{display:inline-block;flex:none;color:var(--muted);vertical-align:-3px;margin-right:8px}
+.with-icons .change{display:grid;grid-template-columns:20px 1fr;column-gap:12px}
+.with-icons .change > .ic{grid-row:1 / span 2;margin:2px 0 0}
+.with-icons .change-title,.with-icons .change-src{grid-column:2}
+.chart .ic-chart{color:var(--muted)}
+.goal-text{font-style:italic}
+.chart-wrap{padding:16px 16px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.chart{display:block;width:100%;height:auto}
+.chart text{font-family:var(--font);font-size:13px;fill:var(--muted)}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .axis{stroke:var(--line-strong);stroke-width:1}
+.chart .thr-label{fill:var(--worse-text)}
+.chart .base{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:2 4}
+.chart .thr{stroke:var(--worse);stroke-width:1.2;stroke-dasharray:6 4}
+.chart .estband{fill:var(--ai-band)}
+.chart .est{fill:none;stroke:var(--ai);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.chart .phq{fill:var(--ink);stroke:#fff;stroke-width:1.5}
+.chart .evt{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+.chart .i9-pos{fill:var(--safety);font-weight:600}
+.chart .noest{font-size:15px}
+.key{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:8px;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.check{display:flex;align-items:center;gap:10px;margin-top:32px;padding:14px 20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);font-weight:600;cursor:pointer}
+.check input{width:16px;height:16px;margin:0}
+
+/* Patient page layout. Plain: one column. Distinct: summary band, two-column middle, full-width trend. */
+.band-inner{max-width:1040px;margin:0 auto;padding:32px 24px 0}
+.pt-page{padding-top:0}
+.pt-sections{display:flex;flex-direction:column}
+.pt-changes{order:1}.pt-trend{order:2}.pt-goals{order:3}
+.scale{display:flex;align-items:center;gap:6px;max-width:240px;margin-top:6px;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
+.scale svg{flex:1;min-width:0;width:100%;height:auto}
+.scale-track{stroke:var(--line-strong);stroke-width:3;stroke-linecap:round}
+.scale-tick{stroke:var(--line-strong);stroke-width:1.5}
+.scale-unc{fill:var(--ai-band)}
+.scale-base{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:2 2}
+.scale-now{fill:var(--ai);stroke:#fff;stroke-width:1.5}
+.dots{display:flex;gap:4px;margin-top:8px}
+.dot{width:9px;height:9px;border-radius:50%}
+.dot.on{background:var(--ink)}
+.dot.off{box-shadow:inset 0 0 0 1.5px var(--line-strong)}
+.distinct .pt-band{background:var(--surface);border-bottom:1px solid var(--line)}
+.distinct .band-inner{padding:28px 24px 24px}
+.distinct .pt-band .stats{margin-top:20px;border:0;background:transparent}
+.distinct .stat.flagged{background:var(--safety-tint);box-shadow:inset 3px 0 0 var(--safety);border-radius:var(--r)}
+.distinct .stat.flagged + .stat{border-left-color:transparent}
+.distinct .pt-page{padding-top:8px}
+.distinct .pt-sections{display:grid;grid-template-columns:minmax(0,1fr) 320px;grid-template-areas:"changes goals" "trend trend";column-gap:24px;align-items:start}
+.distinct .pt-changes{grid-area:changes}.distinct .pt-goals{grid-area:goals}.distinct .pt-trend{grid-area:trend}
+.distinct .goals-wrap{padding:12px 20px;background:var(--tint);border-radius:var(--r)}
+.distinct .goal{padding:6px 0}
+.distinct .goal-sep{display:none}
+.distinct .goal-status{display:block;font-size:var(--fs-sm);line-height:var(--lh-sm)}
+.distinct .goals.with-icons .goal{display:grid;grid-template-columns:20px 1fr;column-gap:12px}
+.distinct .goals.with-icons .goal > .ic{grid-row:1 / span 2;margin:3px 0 0}
+.distinct .goals.with-icons .goal-text,.distinct .goals.with-icons .goal-status{grid-column:2}
+.chart .zone{fill:var(--worse-zone)}
+/* v3: trend status line, expected range (first 3 months of care), persistence line, drivers panel */
+.pt-status{display:flex;align-items:center;flex-wrap:wrap;margin-top:10px;font-weight:600}
+.pt-status .muted{margin-left:6px;font-weight:400}
+.pt-status .tt-wrap{margin-left:5px}
+.chart .expband{fill:var(--expected)}
+.chart .persist{stroke:var(--muted);stroke-width:1.4;stroke-dasharray:1 3}
+.drv-toggle{margin-top:6px;padding-left:0;padding-right:0}
+.drivers{margin-top:4px}
+.drv-note{margin:0 0 6px;max-width:70ch;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
+.drv{display:block;width:100%;height:auto}
+.drv text{font-family:var(--font);font-size:13px;fill:var(--muted)}
+.big .drv text{font-size:14px}
+.drv .drv-name{fill:var(--ink);font-weight:600}
+.drv .drv-now-label{fill:var(--ink)}
+.drv .drv-line{fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.drv .drv-usual{stroke:var(--line-strong);stroke-width:1.2;stroke-dasharray:2 3}
+.drv .drv-now{fill:var(--ink)}
+.drv .drv-sep{stroke:var(--line)}
+.drv .evt{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+/* Trend hover readout: one column per day; also by keyboard (focus the chart, arrow keys) */
+.chart-box{position:relative}
+.chart .hit{fill:transparent;cursor:crosshair}
+.chart .guide{stroke:var(--muted);stroke-width:1}
+.chart .hv-est{fill:var(--surface);stroke:var(--ai);stroke-width:2.5}
+.chart .hv-phq{fill:none;stroke:var(--ink);stroke-width:1.5}
+.chart:focus{outline:none}
+.chart:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:var(--r)}
+.tip{position:absolute;top:13%;z-index:5;min-width:13rem;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.12);font-size:var(--fs-sm);line-height:var(--lh-sm);pointer-events:none;transition:left .08s linear}
+.tip.right{transform:translateX(14px)}
+.tip.left{transform:translateX(calc(-100% - 14px))}
+.tip-head{margin-bottom:4px;font-weight:600}
+.tip-row{display:flex;justify-content:space-between;gap:20px}
+.tip-k{color:var(--muted)}
+.tip-v{font-weight:600;font-variant-numeric:tabular-nums}
+.tip-v.muted{font-weight:400}
+.tip-v.i9-pos{color:var(--safety)}
+.tip-event{display:flex;align-items:flex-start;margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
+.tip-event .ic{margin-top:1px}
+/* Caseload group bands (distinct) */
+.distinct .grp{margin-top:8px;padding:8px 20px}
+.distinct .grp.st-safety{background:var(--safety-tint);box-shadow:inset 3px 0 0 var(--safety)}
+.distinct .grp.st-worse{background:var(--worse-tint);box-shadow:inset 3px 0 0 var(--worse)}
+.distinct .grp.st-notimp{background:var(--worse-tint);box-shadow:inset 3px 0 0 var(--worse)}
+.distinct .grp.st-nodata{background:var(--nodata-tint);box-shadow:inset 3px 0 0 var(--nodata)}
+.distinct .grp.st-stable{background:var(--stable-tint);box-shadow:inset 3px 0 0 var(--stable)}
+.distinct .grp.day{background:var(--tint)}
+/* Larger text: wider column and table columns, safety wording and footers at body size, lines kept short */
+.big .page,.big .band-inner{max-width:70rem}
+.big .list.by-status{--cols:minmax(170px,1.2fr) 184px 100px 96px minmax(0,2.6fr)}
+.big .list.by-visit{--cols:84px minmax(140px,1fr) 172px 100px 88px minmax(0,2.4fr)}
+.big.distinct .pt-sections{grid-template-columns:minmax(0,1fr) 21rem}
+.big .safety-note{font-size:var(--fs-md);line-height:var(--lh-md)}
+.big .foot{font-size:var(--fs-md);line-height:var(--lh-md);max-width:70ch}
+.big .chart text{font-size:14px}
+.big .chart .noest{font-size:16px}
+/* Chart labels scale with the chart: raise them as it narrows so they stay at least about 15px, and grow with zoom */
+@media screen and (max-width:66rem){.big .chart text{font-size:15px}}
+/* Narrow windows and 200% zoom (WCAG 1.4.4): flags drop to a second line, tiles go 2 x 2, one column */
+@media screen and (max-width:60rem){
+  .big .chart text{font-size:20px}
+  .big .chart .noest{font-size:22px}
+  .list.by-status,.big .list.by-status{--cols:minmax(0,1.3fr) minmax(0,1.2fr) 5rem 5rem}
+  .list.by-visit,.big .list.by-visit{--cols:5.5rem minmax(0,1.2fr) minmax(0,1.3fr) 5rem 5rem}
+  .lrow{row-gap:2px}
+  .row{padding-top:8px;padding-bottom:8px}
+  .lrow > span:last-child{grid-column:1 / -1}
+  .list.by-status .row > span:last-child{padding-left:18px}
+  .list.by-visit .row > span:last-child{grid-column:2 / -1}
+  .lhead > span:last-child{display:none}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stat:nth-child(odd){border-left:0}
+  .stat:nth-child(n+3){border-top:1px solid var(--line)}
+  .distinct .pt-sections,.big.distinct .pt-sections{display:flex;flex-direction:column;align-items:stretch}
+}
+
+/* Model Facts */
+.modal-bg{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:24px;background:rgba(31,42,51,.45)}
+.modal{width:min(560px,100%);padding:24px;background:var(--surface);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.modal h3{margin:0;font-size:var(--fs-lg);line-height:var(--lh-lg)}
+.facts{margin:8px 0 0}
+.facts dt{margin-top:12px;font-weight:600}
+.facts dd{margin:2px 0 0}
+.modal .actions{justify-content:flex-end;margin-top:20px}
+
+/* Patient handout: larger type for reading with the patient */
+.handout{max-width:760px;margin:0 auto;padding:40px 48px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.handout .h2{margin-top:32px}
+.handout p{margin:0 0 12px;font-size:var(--fs-lg);line-height:1.5}
+.handout .goal{padding:6px 0;font-size:var(--fs-lg);line-height:1.5}
+
+@media print{
+  /* The patient page prints as the one-page session brief */
+  :root{--fs-sm:10.5px;--lh-sm:14px;--fs-md:12px;--lh-md:17px;--fs-lg:14px;--lh-lg:19px;--fs-xl:22px;--lh-xl:26px}
+  .no-print{display:none!important}
+  body{background:#fff}
+  .page{max-width:none;padding:0}
+  .stats{margin-top:12px}
+  .stat{padding:8px 12px}
+  .stat-value{margin-top:2px}
+  .h2{margin:14px 0 6px}
+  .change{padding:6px 12px}
+  .goal{padding:1px 0}
+  .chart-wrap{padding:6px 8px}
+  .chart{max-height:205px}
+  .key{margin-top:2px}
+  .foot{margin-top:8px}
+  .handout{border:0;padding:0}
+  .stats,.changes,.chart-wrap{break-inside:avoid}
+  .band-inner,.distinct .band-inner{padding:0}
+  .distinct .pt-band{border:0}
+  /* Larger text in print: brief 10pt body, 9pt notes, chart labels about 9pt; handout in clear print (14pt) */
+  .app.big{--fs-sm:9pt;--lh-sm:12pt;--fs-md:10pt;--lh-md:13.5pt;--fs-lg:12pt;--lh-lg:16pt;--fs-xl:18pt;--lh-xl:22pt}
+  .big .page,.big .band-inner{max-width:none}
+  .big .chart{max-height:none}
+  .big .chart text{font-size:15px}
+  .big .handout .h1{font-size:20pt;line-height:26pt}
+  .big .handout .h2{font-size:15pt;line-height:20pt}
+  .big .handout .sub{font-size:12pt;line-height:16pt}
+  .big .handout p,.big .handout .goal{font-size:14pt;line-height:1.45}
+  .big .handout p{max-width:34em}
+  @page{margin:12mm}
+}
+</style>
+</helmet>
+
+<div class="{{ appCls }}">
+
+  <div class="review no-print">
+    <span class="review-label">Review controls · not part of the design</span>
+    <span class="seg"><sc-for list="{{ viewTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span>
+    <sc-if value="{{ onList }}"><span class="seg"><sc-for list="{{ orderTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></sc-if>
+    <span class="seg"><sc-for list="{{ styleTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span>
+    <span class="seg"><sc-for list="{{ iconTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span>
+    <span class="seg"><sc-for list="{{ textTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span>
+  </div>
+
+  <header class="topbar no-print">
+    <span class="brand">AURORA</span>
+    <nav class="crumbs">
+      <sc-if value="{{ onList }}"><span class="cur">Patients</span></sc-if>
+      <sc-if value="{{ !onList }}"><a onClick="{{ goList }}">Patients</a><span class="sep">/</span></sc-if>
+      <sc-if value="{{ onPatient }}"><span class="cur">{{ pt.name }}</span></sc-if>
+      <sc-if value="{{ onHandout }}"><a onClick="{{ goPatient }}">{{ pt.name }}</a><span class="sep">/</span><span class="cur">Patient handout</span></sc-if>
+    </nav>
+    <div class="who-wrap">
+      <button class="who" onClick="{{ toggleMenu }}" aria-haspopup="true" aria-expanded="{{ menuExpanded }}">Dr E. Okafor · Site 03<span class="caret" aria-hidden="true">▾</span></button>
+      <sc-if value="{{ menuOpen }}">
+        <div class="menu-bg" onClick="{{ closeMenu }}"></div>
+        <div class="menu" role="dialog" aria-label="Settings">
+          <div class="menu-label">Time format</div>
+          <sc-for list="{{ clockOpts }}" as="o"><label class="menu-opt"><input type="radio" name="clock" checked="{{ o.on }}" onChange="{{ o.pick }}"> {{ o.label }}<span class="muted num">{{ o.example }}</span></label></sc-for>
+        </div>
+      </sc-if>
+    </div>
+  </header>
+
+  <!-- CASELOAD -->
+  <sc-if value="{{ onList }}">
+  <main class="page" data-screen-label="Caseload">
+    <h1 class="sr-only">Patients</h1>
+    <div class="{{ listCls }}">
+      <div class="lrow lhead">
+        <sc-if value="{{ byVisit }}"><span>Time</span></sc-if>
+        <span>Patient</span>
+        <sc-if value="{{ byStatus }}"><span>Next visit</span></sc-if>
+        <sc-if value="{{ byVisit }}"><span>Status</span></sc-if>
+        <span>Severity <span class="ai">(AI)</span> <span class="tt-wrap" onMouseEnter="{{ tips.sev.enter }}" onMouseLeave="{{ tips.sev.leave }}"><button type="button" class="{{ tips.sev.btnCls }}" aria-label="About severity" aria-describedby="tt-sev" onClick="{{ tips.sev.toggle }}" onFocus="{{ tips.sev.focus }}" onBlur="{{ tips.sev.blur }}">ⓘ</button><span id="tt-sev" role="tooltip" class="{{ tips.sev.cls }}"><sc-for list="{{ tips.sev.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span>
+        <span>Check-ins <span class="tt-wrap" onMouseEnter="{{ tips.ci.enter }}" onMouseLeave="{{ tips.ci.leave }}"><button type="button" class="{{ tips.ci.btnCls }}" aria-label="About check-ins" aria-describedby="tt-ci" onClick="{{ tips.ci.toggle }}" onFocus="{{ tips.ci.focus }}" onBlur="{{ tips.ci.blur }}">ⓘ</button><span id="tt-ci" role="tooltip" class="{{ tips.ci.cls }}"><sc-for list="{{ tips.ci.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span>
+        <span>Flag</span>
+      </div>
+      <sc-for list="{{ groups }}" as="g">
+        <sc-if value="{{ byStatus }}">
+          <div class="grp {{ g.cls }}"><svg class="mk" viewBox="0 0 10 10"><path d="{{ g.shape }}" fill="currentColor" fill-rule="evenodd"></path><path d="{{ g.shape2 }}" fill="currentColor"></path></svg>{{ g.title }}<span class="count">{{ g.count }}</span></div>
+        </sc-if>
+        <sc-if value="{{ byVisit }}">
+          <div class="grp day">{{ g.title }}<sc-if value="{{ g.rel }}"><span class="rel">· {{ g.rel }}</span></sc-if><span class="count">{{ g.count }}</span></div>
+        </sc-if>
+        <sc-for list="{{ g.rows }}" as="p">
+          <div class="lrow row" onClick="{{ p.open }}" tabindex="0" role="link" onMouseEnter="{{ p.peekIn }}" onMouseLeave="{{ peekOut }}" onFocus="{{ p.peekFocus }}" onBlur="{{ peekOff }}" onKeyDown="{{ p.rowKey }}">
+            <sc-if value="{{ p.peekOn }}">
+              <div class="{{ peek.cls }}" aria-hidden="true">
+                <div class="peek-head">{{ peek.span }}</div>
+                <svg class="peek-spark" viewBox="0 0 280 64" aria-hidden="true" focusable="false">
+                  <sc-if value="{{ peek.hasEst }}"><polygon class="pk-band" points="{{ peek.band }}"></polygon><polyline class="pk-line" points="{{ peek.line }}"></polyline></sc-if>
+                  <line class="pk-axis" x1="4" x2="276" y1="58" y2="58"></line>
+                  <sc-if value="{{ peek.hasBase }}"><line class="pk-base" x1="4" x2="276" y1="{{ peek.baseY }}" y2="{{ peek.baseY }}"></line><line class="pk-thr" x1="4" x2="276" y1="{{ peek.thrY }}" y2="{{ peek.thrY }}"></line></sc-if>
+                  <sc-for list="{{ peek.dots }}" as="d"><circle class="pk-dot" cx="{{ d.cx }}" cy="{{ d.cy }}" r="2.6"></circle></sc-for>
+                </svg>
+                <div class="peek-row"><span class="peek-k">Severity <span class="ai">(AI)</span></span><span class="peek-v">{{ peek.sev }}</span></div>
+                <sc-if value="{{ peek.hasPhq }}"><div class="peek-row"><span class="peek-k">PHQ-9 <span class="ai">({{ peek.phqDate }})</span></span><span class="peek-v">{{ peek.phq }}</span></div></sc-if>
+                <div class="peek-row"><span class="peek-k">Item 9</span><span class="{{ peek.i9Cls }}">{{ peek.i9 }}</span></div>
+                <sc-if value="{{ peek.hasChanges }}"><ul class="peek-changes"><sc-for list="{{ peek.changes }}" as="c"><li>{{ c.iconEl }}<span class="{{ c.cls }}">{{ c.title }}</span></li></sc-for></ul></sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{ byVisit }}"><span class="num">{{ p.timeText }}</span></sc-if>
+            <span><sc-if value="{{ byStatus }}"><svg class="mk {{ p.stCls }}" viewBox="0 0 10 10"><path d="{{ p.shape }}" fill="currentColor" fill-rule="evenodd"></path><path d="{{ p.shape2 }}" fill="currentColor"></path></svg></sc-if><span class="pt-name">{{ p.name }}</span><sc-if value="{{ p.dx }}"> <span class="muted">{{ p.dx }}</span></sc-if></span>
+            <sc-if value="{{ byStatus }}"><span class="num {{ p.visitCls }}">{{ p.visitText }}</span></sc-if>
+            <sc-if value="{{ byVisit }}"><span class="status {{ p.stCls }}"><svg class="mk" viewBox="0 0 10 10"><path d="{{ p.shape }}" fill="currentColor" fill-rule="evenodd"></path><path d="{{ p.shape2 }}" fill="currentColor"></path></svg>{{ p.stLabel }}</span></sc-if>
+            <span class="num"><span class="sev">{{ p.sevText }}</span><span class="chg {{ p.deltaCls }}">{{ p.deltaText }}</span></span>
+            <span class="num {{ p.ciCls }}"><span class="ci">{{ p.checkins }}</span></span>
+            <span>{{ p.flagIconEl }}<span class="{{ p.flagCls }}">{{ p.flag }}</span><sc-if value="{{ p.flagSrc }}"><span class="ai">&nbsp;{{ p.flagSrc }}</span></sc-if><sc-if value="{{ p.flagNote }}"> <span class="muted nowrap">· {{ p.flagNote }}</span></sc-if></span>
+          </div>
+        </sc-for>
+      </sc-for>
+    </div>
+    <p class="sr-only" aria-live="polite">{{ peek.aria }}</p>
+    <p class="foot">Severity: AI estimate on the PHQ-9 scale; coloured changes are 6 or more points from the patient’s baseline. Not monitored in real time; PHQ-9 item 9 answers appear without study-team review. <a onClick="{{ openFacts }}">Model Facts</a></p>
+  </main>
+  </sc-if>
+
+  <!-- PATIENT PAGE: patient detail and session prep in one; prints as the session brief -->
+  <sc-if value="{{ onPatient }}">
+  <div class="pt-band" data-screen-label="Patient page">
+    <div class="band-inner">
+      <div class="pt-title">
+        <h1 class="h1">{{ pt.name }}</h1>
+        <div class="actions no-print">
+          <button class="btn" onClick="{{ goHandout }}">Patient handout</button>
+          <button class="btn" onClick="{{ doPrint }}">Print</button>
+        </div>
+      </div>
+      <div class="sub num">{{ pt.headSub }}</div>
+      <div class="{{ pt.statusCls }}"><svg class="mk" viewBox="0 0 10 10"><path d="{{ pt.statusShape }}" fill="currentColor" fill-rule="evenodd"></path><path d="{{ pt.statusShape2 }}" fill="currentColor"></path></svg>{{ pt.statusText }}<span class="muted">{{ pt.statusNote }}</span><span class="tt-wrap no-print" onMouseEnter="{{ tips.rule.enter }}" onMouseLeave="{{ tips.rule.leave }}"><button type="button" class="{{ tips.rule.btnCls }}" aria-label="About the trend status" aria-describedby="tt-rule" onClick="{{ tips.rule.toggle }}" onFocus="{{ tips.rule.focus }}" onBlur="{{ tips.rule.blur }}">ⓘ</button><span id="tt-rule" role="tooltip" class="{{ tips.rule.cls }}"><sc-for list="{{ tips.rule.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></div>
+      <div class="stats">
+        <div class="{{ pt.safetyTileCls }}">
+          <div class="stat-label">Safety</div>
+          <div class="stat-value {{ pt.safetyCls }}"><sc-if value="{{ pt.safety }}"><svg class="mk" viewBox="0 0 10 10"><path d="{{ safetyShape }}" fill="currentColor"></path></svg></sc-if>{{ pt.safetyHead }}</div>
+          <div class="stat-note safety-note muted">{{ pt.safetyNote }}</div>
+          <div class="stat-note muted">{{ pt.safetyWhen }}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">PHQ-9 <span class="ai">(patient, {{ pt.phqDate }})</span></div>
+          <div class="stat-value hero num">{{ pt.phqNow }}</div>
+          <div class="stat-note muted">{{ pt.phqBand }}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Severity <span class="ai">(AI estimate)</span></div>
+          <div class="stat-value hero num">{{ pt.sevNow }}<span class="unc">{{ pt.uncText }}</span></div>
+          <sc-if value="{{ sc.show }}">
+            <div class="scale" role="img" aria-label="{{ sc.aria }}">
+            <span aria-hidden="true">0</span>
+            <svg viewBox="0 0 200 24" aria-hidden="true" focusable="false">
+              <line class="scale-track" x1="4" x2="196" y1="12" y2="12"></line>
+              <sc-for list="{{ sc.ticks }}" as="k"><line class="scale-tick" x1="{{ k.x }}" x2="{{ k.x }}" y1="8" y2="16"></line></sc-for>
+              <rect class="scale-unc" x="{{ sc.uncX }}" y="7" width="{{ sc.uncW }}" height="10"></rect>
+              <line class="scale-base" x1="{{ sc.baseX }}" x2="{{ sc.baseX }}" y1="2" y2="22"></line>
+              <circle class="scale-now" cx="{{ sc.nowX }}" cy="12" r="5"></circle>
+            </svg>
+            <span aria-hidden="true">27</span>
+            </div>
+          </sc-if>
+          <div class="stat-note {{ pt.deltaCls }}">{{ pt.deltaLong }}</div>
+          <div class="stat-note no-print"><a onClick="{{ openFacts }}">Model Facts</a></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Check-ins <span class="ai">(14 days)</span></div>
+          <div class="stat-value num">{{ pt.checkins }}</div>
+          <sc-if value="{{ distinct }}"><div class="tt-wrap dots-wrap" aria-hidden="true" onMouseEnter="{{ tips.dots.enter }}" onMouseLeave="{{ tips.dots.leave }}"><div class="dots"><sc-for list="{{ pt.ciDots }}" as="d"><span class="{{ d }}"></span></sc-for></div><span id="tt-dots" class="{{ tips.dots.cls }}"><sc-for list="{{ tips.dots.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></div></sc-if>
+          <div class="stat-note muted">{{ pt.ciNote }}</div>
+        </div>
+      </div>
+      <sc-if value="{{ pt.discordant }}"><p class="callout">The patient’s PHQ-9 and the AI estimate differ by more than the estimate’s uncertainty. The estimate supplements the patient’s own account; it doesn’t replace it.</p></sc-if>
+    </div>
+  </div>
+
+  <main class="page pt-page">
+    <div class="pt-sections">
+      <section class="pt-changes">
+      <h2 class="h2">What changed</h2>
+      <sc-if value="{{ pt.hasChanges }}">
+        <ul class="{{ changesCls }}">
+          <sc-for list="{{ pt.changes }}" as="c">
+            <li class="change">{{ c.iconEl }}
+              <div class="change-title {{ c.cls }}">{{ c.title }}</div>
+              <div class="change-src">{{ c.src }}<sc-if value="{{ c.ai }}"> <span class="ai">(AI)</span></sc-if><sc-if value="{{ c.quote }}"> · “{{ c.quote }}”</sc-if><sc-if value="{{ c.goal }}"> · goal: “{{ c.goal }}”</sc-if><sc-if value="{{ c.link }}"><span class="no-print"> · <a onClick="{{ noop }}">{{ c.link }}</a></span></sc-if></div>
+            </li>
+          </sc-for>
+        </ul>
+      </sc-if>
+      <sc-if value="{{ !pt.hasChanges }}"><p class="empty">Nothing new since the last visit.</p></sc-if>
+      </section>
+      <section class="pt-trend">
+      <h2 class="h2">Trend<span class="muted">{{ pt.trendSub }}</span></h2>
+      <div class="chart-wrap">
+        <div class="chart-box" onMouseLeave="{{ hoverOff }}">
+        <svg class="chart" viewBox="0 0 880 300" role="img" aria-label="{{ ch.aria }}" tabindex="0" onKeyDown="{{ chartKey }}" onFocus="{{ chartFocus }}" onBlur="{{ hoverOff }}">
+          <sc-if value="{{ ch.showZone }}"><rect class="zone" x="{{ ch.L }}" y="{{ ch.T }}" width="{{ ch.zoneW }}" height="{{ ch.zoneH }}"></rect></sc-if>
+          <sc-if value="{{ ch.hasExp }}"><polygon class="expband" points="{{ ch.expPts }}"></polygon><text x="{{ ch.endX }}" y="{{ ch.expLabelY }}">Expected range</text></sc-if>
+          <sc-for list="{{ ch.ticks }}" as="k"><line class="{{ k.cls }}" x1="{{ ch.L }}" x2="{{ ch.R }}" y1="{{ k.y }}" y2="{{ k.y }}"></line><text x="{{ ch.tickX }}" y="{{ k.ty }}" text-anchor="end">{{ k.label }}</text></sc-for>
+          <text x="0" y="14">PHQ-9 scale</text>
+          <sc-for list="{{ ch.events }}" as="e"><line class="evt" x1="{{ e.x }}" x2="{{ e.x }}" y1="{{ ch.T }}" y2="{{ ch.B }}"></line>{{ e.iconEl }}<text x="{{ e.lx }}" y="{{ ch.evtY }}" text-anchor="{{ e.anchor }}">{{ e.label }}</text></sc-for>
+          <sc-if value="{{ ch.hasEst }}">
+            <line class="base" x1="{{ ch.L }}" x2="{{ ch.R }}" y1="{{ ch.baseY }}" y2="{{ ch.baseY }}"></line>
+            <line class="thr" x1="{{ ch.L }}" x2="{{ ch.R }}" y1="{{ ch.thrY }}" y2="{{ ch.thrY }}"></line>
+            <text x="{{ ch.endX }}" y="{{ ch.baseLabelY }}">{{ ch.baseLabel }}</text>
+            <text class="thr-label" x="{{ ch.endX }}" y="{{ ch.thrLabelY }}">{{ ch.thrLabel }}</text>
+            <polygon class="estband" points="{{ ch.band }}"></polygon>
+            <polyline class="est" points="{{ ch.estPts }}"></polyline>
+          </sc-if>
+          <sc-if value="{{ ch.showPersist }}"><line class="persist" x1="{{ ch.L }}" x2="{{ ch.R }}" y1="{{ ch.persistY }}" y2="{{ ch.persistY }}"></line><text x="{{ ch.endX }}" y="{{ ch.persistLabelY }}">10: symptomatic</text></sc-if>
+          <sc-if value="{{ !ch.hasEst }}"><text class="noest" x="{{ ch.midX }}" y="{{ ch.noEstY }}" text-anchor="middle">No estimate yet: too few check-ins</text></sc-if>
+          <sc-for list="{{ ch.phq }}" as="d"><circle class="phq" cx="{{ d.cx }}" cy="{{ d.cy }}" r="4.5"></circle></sc-for>
+          <text x="{{ ch.tickX }}" y="{{ ch.i9Y }}" text-anchor="end">Item 9</text>
+          <sc-for list="{{ ch.item9 }}" as="m"><text class="{{ m.cls }}" x="{{ m.x }}" y="{{ ch.i9Y }}" text-anchor="middle">{{ m.label }}</text></sc-for>
+          <sc-for list="{{ ch.dates }}" as="d"><text x="{{ d.x }}" y="{{ ch.dateY }}" text-anchor="middle">{{ d.label }}</text></sc-for>
+          <sc-if value="{{ hv.show }}">
+            <line class="guide" x1="{{ hv.x }}" x2="{{ hv.x }}" y1="{{ ch.T }}" y2="{{ ch.B }}"></line>
+            <sc-if value="{{ hv.hasEst }}"><circle class="hv-est" cx="{{ hv.x }}" cy="{{ hv.estY }}" r="5"></circle></sc-if>
+            <sc-if value="{{ hv.hasPhqDot }}"><circle class="hv-phq" cx="{{ hv.x }}" cy="{{ hv.phqY }}" r="8"></circle></sc-if>
+          </sc-if>
+          <sc-for list="{{ ch.hits }}" as="w"><rect class="hit" x="{{ w.x }}" y="0" width="{{ w.w }}" height="300" onMouseEnter="{{ w.enter }}" onClick="{{ w.enter }}"></rect></sc-for>
+        </svg>
+        <sc-if value="{{ hv.show }}">
+          <div class="{{ hv.cls }}" style="{{ hv.style }}" aria-hidden="true">
+            <div class="tip-head">{{ hv.title }}</div>
+            <sc-if value="{{ hv.hasEst }}"><div class="tip-row"><span class="tip-k">Severity <span class="ai">(AI)</span></span><span class="tip-v">{{ hv.est }}</span></div></sc-if>
+            <div class="tip-row"><span class="tip-k">Check-in</span><span class="{{ hv.ciCls }}">{{ hv.ci }}</span></div>
+            <sc-if value="{{ hv.hasPhq }}"><div class="tip-row"><span class="tip-k">PHQ-9</span><span class="{{ hv.phqCls }}">{{ hv.phq }}</span></div></sc-if>
+            <sc-if value="{{ hv.hasI9 }}"><div class="tip-row"><span class="tip-k">Item 9</span><span class="{{ hv.i9Cls }}">{{ hv.i9 }}</span></div></sc-if>
+            <sc-for list="{{ hv.events }}" as="e"><div class="tip-event">{{ e.iconEl }}<span>{{ e.label }}</span></div></sc-for>
+          </div>
+        </sc-if>
+        </div>
+        <p class="sr-only" aria-live="polite">{{ hv.aria }}</p>
+        <div class="key">
+          <span><svg width="22" height="10" viewBox="0 0 22 10"><rect x="0" y="1" width="22" height="8" fill="rgba(198,127,0,.16)"></rect><line x1="0" y1="5" x2="22" y2="5" stroke="#C67F00" stroke-width="2.5"></line></svg>AI estimate; shading shows its uncertainty</span>
+          <span><svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4.5" fill="#1F2A33"></circle></svg>PHQ-9 (patient’s answers)</span>
+          <span>Item 9: the PHQ-9 question on thoughts of death or self-harm, 0 to 3</span>
+          <sc-if value="{{ ch.hasExp }}"><span><svg width="22" height="10" viewBox="0 0 22 10"><rect x="0" y="1" width="22" height="8" fill="rgba(91,107,120,.12)"></rect></svg>Expected range in the first 3 months of care</span></sc-if>
+        </div>
+        <div class="no-print">
+          <button class="btn drv-toggle" onClick="{{ toggleDrivers }}" aria-expanded="{{ drv.expanded }}">{{ drv.toggleLabel }}</button>
+          <sc-if value="{{ drv.show }}">
+            <div class="drivers">
+              <p class="drv-note">From phone sensors, on the same weeks as the trend. Dotted lines show each measure’s usual level (its first 4 weeks). Changes that line up with symptoms are possible contributors, not causes.</p>
+              <svg class="drv" viewBox="{{ drv.viewBox }}" role="img" aria-label="{{ drv.aria }}">
+                <sc-for list="{{ drv.rows }}" as="r">
+                  <line class="drv-sep" x1="0" x2="880" y1="{{ r.top }}" y2="{{ r.top }}"></line>
+                  <text class="drv-name" x="0" y="{{ r.nameY }}">{{ r.name }}</text>
+                  <line class="drv-usual" x1="{{ drv.L }}" x2="{{ drv.R }}" y1="{{ r.usualY }}" y2="{{ r.usualY }}"></line>
+                  <polyline class="drv-line" points="{{ r.pts }}"></polyline>
+                  <circle class="drv-now" cx="{{ r.nowX }}" cy="{{ r.nowY }}" r="3.5"></circle>
+                  <text class="drv-now-label" x="{{ drv.endX }}" y="{{ r.nameY }}">{{ r.nowLabel }}</text>
+                  <text x="{{ drv.endX }}" y="{{ r.cmpY }}">{{ r.cmpLabel }}</text>
+                </sc-for>
+                <sc-for list="{{ drv.events }}" as="e"><line class="evt" x1="{{ e.x }}" x2="{{ e.x }}" y1="0" y2="{{ drv.h }}"></line></sc-for>
+              </svg>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+      </section>
+      <aside class="pt-goals">
+        <h2 class="h2">Goals<span class="muted">in the patient’s words</span></h2>
+        <div class="goals-wrap">
+        <sc-if value="{{ pt.hasGoals }}">
+          <ul class="{{ goalsCls }}">
+            <sc-for list="{{ pt.goals }}" as="g"><li class="goal">{{ g.iconEl }}<span class="goal-text">“{{ g.text }}”</span> <span class="goal-status muted"><span class="goal-sep">· </span>{{ g.status }}</span></li></sc-for>
+          </ul>
+        </sc-if>
+        <sc-if value="{{ !pt.hasGoals }}"><p class="empty">No goals recorded yet.</p></sc-if>
+        </div>
+      </aside>
+    </div>
+
+    <label class="check no-print"><input type="checkbox" checked="{{ discussed }}" onChange="{{ toggleDiscussed }}"> Discussed AURORA data with the patient at this visit</label>
+
+    <p class="foot">Not monitored in real time. The study team reviews AI-detected risk and emails you if it is urgent. PHQ-9 item 9 answers appear here without review.</p>
+  </main>
+  </sc-if>
+
+  <!-- PATIENT HANDOUT: plain language, goals first, no model internals -->
+  <sc-if value="{{ onHandout }}">
+  <main class="page" data-screen-label="Patient handout">
+    <div class="handout">
+      <h1 class="h1">{{ ho.title }}</h1>
+      <div class="sub">{{ ho.sub }}</div>
+      <sc-if value="{{ pt.hasGoals }}">
+        <h2 class="h2">Your goals</h2>
+        <ul class="goals"><sc-for list="{{ pt.goals }}" as="g"><li class="goal">{{ g.iconLgEl }}<span class="goal-text">“{{ g.text }}”</span> <span class="muted">· {{ g.handoutStatus }}</span></li></sc-for></ul>
+      </sc-if>
+      <h2 class="h2">Since your last visit</h2>
+      <sc-for list="{{ ho.paras }}" as="para"><p>{{ para }}</p></sc-for>
+    </div>
+    <div class="actions no-print" style="justify-content:center;margin-top:16px">
+      <button class="btn" onClick="{{ doPrint }}">Print</button>
+    </div>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ factsOpen }}">
+    <div class="modal-bg" onClick="{{ closeFacts }}">
+      <div class="modal" onClick="{{ stop }}">
+        <h3>Model Facts: AI-COA (Deliberate AI)</h3>
+        <dl class="facts">
+          <dt>Intended use</dt><dd>Supplementary severity context alongside the PHQ-9 and clinical judgment. Never a replacement for either.</dd>
+          <dt>Output</dt><dd>A severity score with an uncertainty interval, from check-in interviews and phone sensors, shown on the PHQ-9 scale (0–27).</dd>
+          <dt>Changes</dt><dd>A change is coloured when it is 6 or more points from the patient’s own baseline (their typical level in their first weeks in AURORA).</dd>
+          <dt>Regulatory status</dt><dd>FDA ISTAND letter of intent only. Not FDA-qualified.</dd>
+          <dt>Performance</dt><dd>ICC 0.82–0.92, reported by the company. Not independently verified; validation is ongoing.</dd>
+          <dt>Known limits</dt><dd>Less accurate below 9 of 12 check-ins in 14 days. Not validated for crisis assessment.</dd>
+        </dl>
+        <div class="actions"><button class="btn" onClick="{{ closeFacts }}">Close</button></div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;defaultView&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;list&quot;, &quot;options&quot;: [&quot;list&quot;, &quot;patient&quot;, &quot;handout&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}, &quot;defaultPatient&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;delgado&quot;, &quot;options&quot;: [&quot;osei&quot;, &quot;whitfield&quot;, &quot;delgado&quot;, &quot;fernandez&quot;, &quot;nguyen&quot;, &quot;mensah&quot;, &quot;santoso&quot;, &quot;kaur&quot;, &quot;brooks&quot;, &quot;ortiz&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}}">
+// Icons: Lucide v0.460.0 (lucide.dev), ISC licence. Geometry only.
+const ICONS = {"briefcase":[["path",{"d":"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"}],["rect",{"width":"20","height":"14","x":"2","y":"6","rx":"2"}]],"calendar":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}]],"clipboard-list":[["rect",{"width":"8","height":"4","x":"8","y":"2","rx":"1","ry":"1"}],["path",{"d":"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{"d":"M12 11h4"}],["path",{"d":"M12 16h4"}],["path",{"d":"M8 11h.01"}],["path",{"d":"M8 16h.01"}]],"dumbbell":[["path",{"d":"M14.4 14.4 9.6 9.6"}],["path",{"d":"M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"}],["path",{"d":"m21.5 21.5-1.4-1.4"}],["path",{"d":"M3.9 3.9 2.5 2.5"}],["path",{"d":"M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"}]],"footprints":[["path",{"d":"M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"}],["path",{"d":"M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"}],["path",{"d":"M16 17h4"}],["path",{"d":"M4 13h4"}]],"message-square":[["path",{"d":"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"}]],"moon":[["path",{"d":"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],"pill-bottle":[["path",{"d":"M18 11h-4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h4"}],["path",{"d":"M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"}],["rect",{"width":"16","height":"5","x":"4","y":"2","rx":"1"}]],"shield":[["path",{"d":"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"}]]};
+
+// Mock data: pseudo-realistic, no real patients. Weeks run Monday to Monday, May 25 to Aug 10; "today" is Wed, Aug 12.
+const WEEKS = ['May 25', 'Jun 1', 'Jun 8', 'Jun 15', 'Jun 22', 'Jun 29', 'Jul 6', 'Jul 13', 'Jul 20', 'Jul 27', 'Aug 3', 'Aug 10'];
+const PHQ_WEEKS = [1, 3, 5, 7, 9, 11]; // PHQ-9 every 2 weeks
+const U3 = Array(12).fill(3);
+const NOT_SCHEDULED = 99;
+const TODAY = new Date(2026, 7, 12); // Wed, Aug 12, 2026
+const DAY0 = new Date(2026, 4, 25); // Mon, May 25, 2026, the start of week 0
+const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_FULL = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MAX = 27;
+
+// Shapes keep status readable without colour: square, triangle, flat bar, half circle, circle
+const STATUS = {
+  safety: { label: 'Safety flag', cls: 'st-safety', shape: 'M0.5 0.5H9.5V9.5H0.5Z' },
+  worse: { label: 'Worse than baseline', cls: 'st-worse', shape: 'M5 0.4L9.8 9.6H0.2Z' },
+  notimp: { label: 'Not improving', cls: 'st-notimp', shape: 'M0.4 3.2H9.6V6.8H0.4Z' },
+  nodata: { label: 'Too few check-ins', cls: 'st-nodata', shape: 'M5 0A5 5 0 1 0 5 10A5 5 0 1 0 5 0ZM5 1.6A3.4 3.4 0 1 1 5 8.4A3.4 3.4 0 1 1 5 1.6Z', shape2: 'M5 1.6A3.4 3.4 0 0 0 5 8.4Z' },
+  stable: { label: 'On track', cls: 'st-stable', shape: 'M5 0A5 5 0 1 0 5 10A5 5 0 1 0 5 0Z' }
+};
+const GROUP_ORDER = ['safety', 'worse', 'notimp', 'nodata', 'stable'];
+
+// Safety flags follow the 19 Oct design: AI-detected risk is reviewed by the study team first
+// (moderate risk = flag here; high risk = email); a PHQ-9 item 9 of 1 or more arrives unreviewed.
+const PATIENTS = [
+  { id: 'osei', name: 'R. Osei', first: 'Ruth', dx: '+ GAD', status: 'safety',
+    tenure: 10,
+    visit: 'Thu, Aug 13, 09:00', visitDay: 'Thursday', visitRank: 1, weeksIn: 11,
+    baseline: 14, est: [14, 14, 15, 14, 15, 16, 17, 18, 18, 19, 20, 21], unc: U3,
+    phq: [14, 14, 16, 17, 19, 20], item9: [0, 0, 0, 1, 0, 0], checkins: '10/12',
+    flagIcon: 'shield', flag: 'Safety review: moderate risk', flagNote: 'today 09:40',
+    safety: { head: 'Moderate risk', note: 'Study team review', when: 'Today 09:40' },
+    changes: [
+      { icon: 'shield', title: 'Passive thoughts of death in Tuesday’s check-in', src: 'Study team review, today 09:40: moderate risk, no plan or intent; crisis contacts were shown', cls: 'flag-safety', link: 'review note' },
+      { icon: 'briefcase', title: 'Worry about losing her job came up in 4 check-ins', src: 'From check-in conversations', ai: true }
+    ],
+    goals: [{ icon: 'moon', text: 'Sleep without waking at 4 am', status: 'harder lately (last week)', handoutStatus: 'harder lately' }] },
+  { id: 'whitfield', name: 'J. Whitfield', first: 'James', dx: '', status: 'safety',
+    tenure: 14,
+    visit: 'Fri, Aug 14, 15:30', visitDay: 'Friday', visitRank: 4, weeksIn: 11,
+    baseline: 16, est: [16, 16, 17, 16, 17, 18, 19, 20, 22, 22, 24, 25], unc: U3,
+    phq: [16, 16, 18, 20, 22, 24], item9: [0, 0, 1, 1, 1, 2], checkins: '11/12',
+    flagIcon: 'clipboard-list', flag: 'PHQ-9 item 9 = 2', flagNote: 'not reviewed · Aug 10',
+    safety: { head: 'Item 9 = 2', note: 'Not reviewed by the study team', when: 'PHQ-9 of Mon, Aug 10' },
+    changes: [
+      { icon: 'clipboard-list', title: 'Thoughts of being better off dead or of hurting himself, on more than half the days', src: 'PHQ-9 item 9 = 2 on Mon, Aug 10 · not reviewed by the study team · above 0 at the last 4 PHQ-9s', cls: 'flag-safety' }
+    ],
+    goals: [{ icon: 'dumbbell', text: 'Keep going to the gym twice a week', status: 'not mentioned for 4 weeks', handoutStatus: 'not mentioned lately' }] },
+  { id: 'delgado', name: 'M. Delgado', first: 'Maria', dx: '', status: 'worse',
+    tenure: 2,
+    visit: 'Thu, Aug 13, 14:00', visitDay: 'Thursday', visitRank: 3, weeksIn: 11,
+    baseline: 12, est: [13, 12, 12, 11, 11, 12, 13, 15, 17, 18, 20, 21], unc: [3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4],
+    phq: [12, 11, 11, 14, 17, 20], item9: [0, 0, 0, 0, 0, 0], checkins: '9/12',
+    drivers: { sleep: [7.1, 7.0, 7.2, 7.0, 7.1, 6.9, 6.8, 6.6, 6.2, 5.9, 5.8, 5.6], steps: [7.5, 7.8, 7.2, 7.6, 7.4, 7.7, 7.1, 6.0, 4.1, 3.5, 3.2, 3.0], contact: [9, 8, 9, 10, 9, 9, 8, 8, 7, 7, 8, 7] },
+    flagIcon: 'pill-bottle', flag: 'Reports stopping sertraline', flagAi: true,
+    events: [{ icon: 'pill-bottle', week: 9.4, label: 'Reports stopping sertraline (AI)' }],
+    changes: [
+      { icon: 'pill-bottle', title: 'Reports stopping sertraline about 2 weeks ago', src: 'From a check-in conversation', ai: true, quote: 'made me feel flat', link: 'transcript' },
+      { icon: 'moon', title: 'Sleep more broken: 40% above usual, last 3 nights', src: 'Phone sensors', goal: 'Sleep through the night' },
+      { icon: 'footprints', title: 'Morning walks stopped 3 weeks ago', src: 'From check-ins', ai: true, goal: 'Get back to morning walks with Ana' }
+    ],
+    goals: [
+      { icon: 'moon', text: 'Sleep through the night', status: 'harder lately (2 weeks ago)', handoutStatus: 'harder lately' },
+      { icon: 'footprints', text: 'Get back to morning walks with Ana', status: 'on pause (3 weeks ago)', handoutStatus: 'on pause for now' },
+      { icon: 'briefcase', text: 'Feel like myself at work again', status: 'some better days (last week)', handoutStatus: 'some better days' }
+    ],
+    handout: ['The questionnaires you filled in suggest the last few weeks have been harder than the month before, especially sleep and morning energy. You mentioned stopping your medication; that’s the main thing to talk through on Thursday.'] },
+  { id: 'fernandez', name: 'A. Fernández', first: 'Alejandro', dx: '+ GAD', status: 'worse',
+    tenure: 6,
+    visit: 'Mon, Aug 17, 13:00', visitDay: 'Monday', visitRank: 5, weeksIn: 11,
+    baseline: 11, est: [10, 11, 11, 11, 12, 12, 13, 14, 15, 15, 16, 17], unc: U3,
+    phq: [11, 11, 12, 14, 15, 16], item9: [0, 0, 0, 0, 0, 0], checkins: '10/12',
+    flagIcon: 'pill-bottle', flag: 'Rising since medication change', flagAi: true,
+    events: [{ icon: 'pill-bottle', week: 7, label: 'Medication change (AI)' }],
+    changes: [{ icon: 'pill-bottle', title: 'Severity rising since a medication change 5 weeks ago', src: 'Reported in check-ins', ai: true }],
+    goals: [] },
+  { id: 'nguyen', name: 'T. Nguyen', first: 'Thanh', dx: '', status: 'worse',
+    tenure: 9,
+    visit: 'Wed, Aug 19, 10:30', visitDay: 'Wednesday', visitRank: 7, weeksIn: 11,
+    baseline: 13, est: [12, 13, 13, 13, 14, 15, 15, 16, 17, 17, 18, 19], unc: [4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5],
+    phq: [13, 13, 15, null, 17, null], item9: [0, 0, 0, null, 0, null], checkins: '6/12',
+    ciPattern: '111101100000', flagIcon: 'message-square', flag: 'Few check-ins',
+    drivers: { sleep: [6.9, 7.0, 6.8, 7.0, 6.9, 6.8, 6.9, 6.7, 6.8, 6.6, 6.7, 6.5], steps: [6.2, 6.0, 6.3, 6.1, 5.9, 6.0, 5.8, 5.9, 5.7, 5.8, 5.6, 5.7], contact: [9, 9, 10, 9, 8, 8, 7, 7, 6, 6, 5, 5] },
+    changes: [{ icon: 'message-square', title: 'Fewer check-ins: 6 of 12 in the last 14 days', src: 'Check-in log · the estimate is less certain, and the last PHQ-9 was missed' }],
+    goals: [] },
+  { id: 'mensah', name: 'K. Mensah', first: 'Kwame', dx: '', status: 'worse',
+    tenure: 20,
+    visit: 'Not scheduled', visitDay: '', visitRank: NOT_SCHEDULED, weeksIn: 11,
+    baseline: 10, est: [10, 10, 9, 10, 10, 11, 11, 12, 13, 14, 15, 16], unc: U3,
+    phq: [10, 10, 11, 12, 14, 15], item9: [0, 0, 0, 0, 0, 0], checkins: '11/12',
+    drivers: { sleep: [7.2, 7.3, 7.1, 7.2, 7.0, 7.2, 7.1, 6.9, 6.8, 6.5, 6.0, 5.7], steps: [5.1, 5.3, 5.0, 5.2, 5.1, 4.9, 5.0, 4.8, 4.9, 4.7, 4.6, 4.5], contact: [6, 6, 7, 6, 6, 6, 5, 6, 5, 5, 5, 5] },
+    flagIcon: 'moon', flag: 'Broken sleep, 3 nights',
+    changes: [
+      { icon: 'moon', title: 'Sleep more broken than usual for 3 nights', src: 'Phone sensors' },
+      { icon: 'calendar', title: 'No visit scheduled', src: 'Last visit 5 weeks ago' }
+    ],
+    goals: [] },
+  { id: 'santoso', name: 'P. Santoso', first: 'Putri', dx: '', status: 'nodata',
+    tenure: 5,
+    visit: 'Not scheduled', visitDay: '', visitRank: NOT_SCHEDULED, weeksIn: 3,
+    baseline: null, est: null, unc: null,
+    phq: [null, null, null, null, 11, null], item9: [null, null, null, null, 0, null], checkins: '2/12',
+    ciPattern: '110000000000', flagIcon: 'message-square', flag: 'No estimate yet',
+    changes: [{ icon: 'message-square', title: 'Only 2 of 12 check-ins in the last 14 days', src: 'Check-in log · no estimate until there are more check-ins' }],
+    goals: [] },
+  { id: 'kaur', name: 'S. Kaur', first: 'Simran', dx: '', status: 'stable',
+    tenure: 4,
+    visit: 'Thu, Aug 13, 11:15', visitDay: 'Thursday', visitRank: 2, weeksIn: 11,
+    baseline: 14, est: [14, 14, 13, 12, 11, 10, 9, 9, 8, 8, 7, 7], unc: U3,
+    phq: [14, 12, 10, 9, 8, 7], item9: [0, 0, 0, 0, 0, 0], checkins: '12/12',
+    flag: '', changes: [],
+    goals: [{ icon: 'briefcase', text: 'Back to full days at work', status: 'some better days (last week)', handoutStatus: 'some better days' }] },
+  { id: 'brooks', name: 'L. Brooks', first: 'Lena', dx: '', status: 'stable',
+    tenure: 30,
+    visit: 'Tue, Aug 18, 16:15', visitDay: 'Tuesday', visitRank: 6, weeksIn: 11,
+    baseline: 8, est: [8, 8, 7, 7, 8, 7, 6, 7, 6, 6, 7, 7], unc: U3,
+    phq: [8, 7, 7, 7, 6, 7], item9: [0, 0, 0, 0, 0, 0], checkins: '11/12',
+    flag: '', changes: [], goals: [] },
+  { id: 'ortiz', name: 'D. Ortiz', first: 'Diego', dx: '', status: 'stable',
+    tenure: 18,
+    visit: 'Fri, Aug 21, 09:30', visitDay: 'Friday', visitRank: 8, weeksIn: 11,
+    baseline: 12, est: [12, 12, 11, 12, 12, 11, 12, 11, 12, 11, 11, 11], unc: U3,
+    phq: [12, 12, 12, 11, 11, 11], item9: [0, 0, 0, 0, 0, 0], checkins: '12/12',
+    drivers: { sleep: [6.1, 6.0, 6.2, 6.1, 6.0, 6.1, 6.2, 6.0, 6.1, 6.0, 6.1, 6.0], steps: [3.2, 3.1, 3.3, 3.2, 3.0, 3.1, 3.2, 3.1, 3.0, 3.2, 3.1, 3.1], contact: [3, 3, 4, 3, 3, 3, 3, 4, 3, 3, 3, 3] },
+    flag: '', changes: [{ icon: 'clipboard-list', title: 'Symptoms steady around 11 for 12 weeks', src: 'AI estimate and PHQ-9 agree · 21 months in care' }], goals: [] },
+  { id: 'haddad', name: 'R. Haddad', first: 'Rana', dx: '', status: 'notimp',
+    tenure: 0.5,
+    visit: 'Mon, Aug 17, 09:30', visitDay: 'Monday', visitRank: 4.5, weeksIn: 8,
+    baseline: 18, est: [null, null, null, 18, 18, 17, 18, 17, 17, 18, 18, 17], unc: U3,
+    phq: [null, 18, 17, 18, 17, 17], item9: [null, 0, 0, 0, 0, 0], checkins: '11/12',
+    drivers: { sleep: [null, null, null, 6.4, 6.5, 6.3, 6.4, 6.4, 6.3, 6.5, 6.4, 6.3], steps: [null, null, null, 4.1, 4.0, 4.2, 3.9, 4.0, 4.1, 3.9, 4.0, 4.0], contact: [null, null, null, 5, 5, 6, 5, 5, 5, 4, 5, 5] },
+    flag: '', changes: [{ icon: 'clipboard-list', title: 'Little change since starting care 2 months ago', src: 'AI estimate and PHQ-9 · above the expected range for the first 3 months of care' }],
+    goals: [{ icon: 'briefcase', text: 'Get through a full week at work', status: 'no change yet', handoutStatus: 'no change yet' }] },
+  { id: 'novak', name: 'B. Novak', first: 'Bojan', dx: '', status: 'notimp',
+    tenure: 9,
+    visit: 'Wed, Aug 19, 15:00', visitDay: 'Wednesday', visitRank: 7.5, weeksIn: 6,
+    baseline: null, est: null, unc: null,
+    phq: [null, null, 15, 14, 16, 15], item9: [null, null, 0, 0, 0, 0], checkins: '2/12',
+    ciPattern: '100000000010',
+    flag: '', changes: [{ icon: 'message-square', title: 'Only 2 of 12 check-ins in the last 14 days', src: 'Check-in log · no AI estimate, so the trend is judged from the PHQ-9 in this trial' }],
+    goals: [] }
+];
+
+// Off-track rules (Study design/Measurement/AURORA_additional_data_collection.md, section 5), run on the AI estimate.
+// Under 3 months in care: above the expected range two weeks running, after a 4-week grace period.
+// From 3 months: 10 or more two weeks running. At any time: 6 or more above baseline. In this trial only,
+// if check-ins are too few for an estimate, the same rules run on the PHQ-9 (labelled, and logged by source).
+// Mock thresholds on the PHQ-9 scale: placeholders until set from the estimate's measured reliable change (bead aurora-dey).
+const RULES = { earlyMonths: 3, deterioration: 6, persistence: 10, graceWeeks: 4 };
+const expectedRange = (base, t) => { const mid = base * (1 - 0.4 * (1 - Math.exp(-t / 5))); return { mid, hi: Math.min(MAX, mid + 3), lo: Math.max(0, mid - 3) }; };
+function offTrack(p, cn, cd) {
+  const lastW = WEEKS.length - 1, x0 = Math.max(0, lastW - p.weeksIn);
+  const months = p.tenure + p.weeksIn / 4.35;
+  const branch = months < RULES.earlyMonths ? 'early' : 'established';
+  const useAI = !!p.est && cn / cd >= 0.25;
+  const series = useAI ? p.est.map((v, i) => [i, v]).filter(([i, v]) => i >= x0 && v != null)
+    : PHQ_WEEKS.map((w, k) => [w, p.phq[k]]).filter(([w, v]) => w >= x0 && v != null);
+  const res = { kind: null, branch, months, source: useAI ? 'AI' : 'PHQ-9', enough: series.length >= 2 };
+  if (!res.enough) return res;
+  const base = useAI ? p.baseline : series[0][1];
+  const [lw, lv] = series[series.length - 1], [pw, pv] = series[series.length - 2];
+  if (base != null && lv - base >= RULES.deterioration) return { ...res, kind: 'worse' };
+  if (branch === 'early') {
+    if (lw - x0 >= RULES.graceWeeks && lv > expectedRange(base, lw - x0).hi && pv > expectedRange(base, pw - x0).hi) return { ...res, kind: 'notimp', reason: 'Not improving as expected' };
+  } else if (lv >= RULES.persistence && pv >= RULES.persistence) {
+    return { ...res, kind: 'notimp', reason: 'Still symptomatic' };
+  }
+  return res;
+}
+// Phone-sensing drivers (weekly means). Patients without mock values get a steady pattern.
+const driversOf = (p) => {
+  if (p.drivers) return p.drivers;
+  const seed = [...p.id].reduce((a, c) => a + c.charCodeAt(0), 0);
+  const wave = (i, k) => Math.sin(i * 0.9 + seed * k);
+  return {
+    sleep: WEEKS.map((_, i) => +(7 + 0.25 * wave(i, 0.7)).toFixed(1)),
+    steps: WEEKS.map((_, i) => +(6.5 + 0.5 * wave(i, 1.3)).toFixed(1)),
+    contact: WEEKS.map((_, i) => Math.round(8 + 1.2 * wave(i, 2.1)))
+  };
+};
+
+const BANDS = [{ name: 'minimal', lo: 0 }, { name: 'mild', lo: 5 }, { name: 'moderate', lo: 10 }, { name: 'moderately severe', lo: 15 }, { name: 'severe', lo: 20 }];
+const bandOf = (v) => [...BANDS].reverse().find((b) => v >= b.lo).name;
+const lastIndex = (arr) => { for (let i = arr.length - 1; i >= 0; i--) if (arr[i] != null) return i; return -1; };
+const signed = (d) => (d > 0 ? '+' : d < 0 ? '−' : '') + Math.abs(d);
+
+class Component extends DCLogic {
+  state = { view: 'list', pid: 'delgado', order: 'status', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, factsOpen: false, discussed: false };
+
+  componentDidMount() {
+    const o = {};
+    if (this.props.defaultView) o.view = this.props.defaultView;
+    if (this.props.defaultPatient) o.pid = this.props.defaultPatient;
+    // Deep links for sharing a page with the group: #view=patient&p=delgado&order=visit
+    this.readHash = () => {
+      const h = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+      const r = {};
+      if (['list', 'patient', 'handout'].includes(h.get('view'))) r.view = h.get('view');
+      if (PATIENTS.some((p) => p.id === h.get('p'))) r.pid = h.get('p');
+      if (['status', 'visit'].includes(h.get('order'))) r.order = h.get('order');
+      if (['0', '1'].includes(h.get('icons'))) r.icons = h.get('icons') === '1';
+      if (['plain', 'distinct'].includes(h.get('style'))) r.distinct = h.get('style') === 'distinct';
+      if (['current', 'larger'].includes(h.get('text'))) r.big = h.get('text') === 'larger';
+      if (['12', '24'].includes(h.get('clock'))) r.clock24 = h.get('clock') === '24';
+      if (['0', '1'].includes(h.get('drivers'))) r.drivers = h.get('drivers') === '1';
+      return r;
+    };
+    Object.assign(o, this.readHash());
+    if (Object.keys(o).length) this.setState(o);
+    this.onHash = () => this.setState(this.readHash());
+    window.addEventListener('hashchange', this.onHash);
+    // Escape closes hover content anywhere (WCAG 1.4.13: dismissible)
+    this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, menuOpen: false, tip: null, tipPinned: false }); } };
+    window.addEventListener('keydown', this.onEsc);
+    // A click or tap outside an open ⓘ tip closes it
+    this.onDown = (e) => { if (this.state.tip && !(e.target.closest && e.target.closest('.tt-wrap'))) this.setState({ tip: null, tipPinned: false }); };
+    document.addEventListener('pointerdown', this.onDown);
+  }
+
+  componentDidUpdate() {
+    // Keep an open ⓘ tip inside the window
+    const el = this.state.tip && document.getElementById(`tt-${this.state.tip}`);
+    if (!el) return;
+    el.style.setProperty('--tt-dx', '0px');
+    const r = el.getBoundingClientRect(), pad = 12, w = document.documentElement.clientWidth;
+    const dx = r.left < pad ? pad - r.left : r.right > w - pad ? w - pad - r.right : 0;
+    if (dx) el.style.setProperty('--tt-dx', `${Math.round(dx)}px`);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('hashchange', this.onHash);
+    window.removeEventListener('keydown', this.onEsc);
+    document.removeEventListener('pointerdown', this.onDown);
+    clearTimeout(this.peekT);
+    clearTimeout(this.tipT);
+  }
+
+  go(o) {
+    const next = { ...this.state, ...o };
+    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}&order=${next.order}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}`); } catch (e) { /* sandboxed preview */ }
+    clearTimeout(this.peekT);
+    clearTimeout(this.tipT);
+    this.setState({ ...o, factsOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
+    try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
+  }
+
+  renderVals() {
+    const s = this.state;
+    // SVG <text> can't hold the runtime's <span> wrapper, so chart labels are passed as fragments
+    const T = (str) => React.createElement(React.Fragment, null, String(str));
+    const f = (v) => v.toFixed(1);
+    const noop = (e) => { if (e && e.preventDefault) e.preventDefault(); };
+    const iconKids = (name) => ICONS[name].map(([tag, attrs], i) => React.createElement(tag, { key: i, ...attrs }));
+    const svgAttrs = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true', focusable: 'false' };
+    const icon = (name, size = 16) => (!s.icons || !ICONS[name] ? null
+      : React.createElement('svg', { ...svgAttrs, className: 'ic', width: size, height: size, strokeWidth: 1.75 }, ...iconKids(name)));
+    const iconAt = (name, x, y, size = 14) => (!s.icons || !ICONS[name] ? null
+      : React.createElement('svg', { ...svgAttrs, className: 'ic-chart', x: f(x), y: f(y), width: size, height: size, strokeWidth: 2 }, ...iconKids(name)));
+
+    // Clock times: 12-hour by default ("2:00 PM"), 24-hour ("14:00") from the account menu
+    const tm = (str) => (str || '').replace(/\b(\d{1,2}):(\d{2})\b/g, (m, hh, mm) => {
+      const h = Number(hh);
+      return s.clock24 ? `${String(h).padStart(2, '0')}:${mm}` : `${h % 12 || 12}:${mm}\u00a0${h < 12 ? 'AM' : 'PM'}`;
+    });
+
+    const all = PATIENTS.map((p) => {
+      const estNow = p.est ? p.est[p.est.length - 1] : null;
+      const d = estNow == null ? null : estNow - p.baseline;
+      const [cn, cd] = p.checkins.split('/').map(Number);
+      // Trend status from the off-track rules; a safety flag outranks it in the caseload
+      const ot = offTrack(p, cn, cd);
+      const trend = ot.kind || (ot.source === 'PHQ-9' || !ot.enough ? 'nodata' : 'stable');
+      const status = p.safety ? 'safety' : trend;
+      const st = STATUS[status];
+      const autoFlag = !p.flag && ot.kind === 'notimp';
+      const marked = d != null && Math.abs(d) >= RULES.deterioration;
+      return {
+        ...p, estNow, d, cn, cd, ot, trend, status,
+        flag: autoFlag ? ot.reason : p.flag,
+        flagSrc: autoFlag ? `(${ot.source})` : p.flagAi ? '(AI)' : '',
+        stLabel: st.label, stCls: st.cls, shape: st.shape, shape2: st.shape2 || 'M0 0',
+        sevText: estNow == null ? '—' : String(estNow),
+        deltaText: d == null ? '' : signed(d),
+        deltaCls: !marked ? 'muted' : d > 0 ? 'up' : 'down',
+        ciCls: cn / cd < 0.7 ? 'low' : 'muted',
+        visitCls: p.visitRank === NOT_SCHEDULED ? 'muted' : '',
+        flagCls: p.status === 'safety' ? 'flag-safety' : '',
+        flagNote: autoFlag ? (ot.branch === 'early' ? 'early in care' : `${Math.round(ot.months)} months in care`) : tm(p.flagNote),
+        flagIconEl: icon(autoFlag ? (ot.source === 'PHQ-9' ? 'clipboard-list' : null) : p.flagIcon),
+        visitText: tm(p.visit),
+        dayKey: (p.visit.match(/^(.*), \d{1,2}:\d{2}$/) || ['', ''])[1], // 'Thu, Aug 13'
+        timeText: tm((p.visit.match(/\d{1,2}:\d{2}$/) || [''])[0]),
+        open: () => this.go({ view: 'patient', pid: p.id }),
+        // Peek: opens after a short hover, switches quickly once one is open, opens at once on keyboard focus
+        peekOn: s.peek === p.id,
+        peekIn: () => { clearTimeout(this.peekT); this.peekT = setTimeout(() => this.setState({ peek: p.id }), this.state.peek ? 120 : 400); },
+        peekFocus: () => { clearTimeout(this.peekT); this.setState({ peek: p.id }); },
+        rowKey: (ev) => { if (ev && ev.key === 'Enter') this.go({ view: 'patient', pid: p.id }); }
+      };
+    });
+
+    // Caseload: grouped by status (visit order inside each group), or one list in visit order
+    const byStatus = s.order === 'status';
+    const byVisitOrder = [...all].sort((a, b) => a.visitRank - b.visitRank);
+    // By next visit: one group per day, headed by the full date, and Today or Tomorrow; Not scheduled last
+    const dayHead = (key) => {
+      if (!key) return { title: 'Not scheduled', rel: '' };
+      const [wd, mon, dd] = key.replace(',', '').split(' ');
+      const diff = Math.round((new Date(2026, MONTHS.indexOf(mon), Number(dd)) - TODAY) / 864e5);
+      return { title: `${DAY_FULL[wd]}, ${MONTHS_FULL[MONTHS.indexOf(mon)]} ${dd}`, rel: diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : '' };
+    };
+    const groups = byStatus
+      ? GROUP_ORDER.map((k) => ({ cls: STATUS[k].cls, title: STATUS[k].label, shape: STATUS[k].shape, shape2: STATUS[k].shape2 || 'M0 0', rows: byVisitOrder.filter((p) => p.status === k) }))
+          .filter((g) => g.rows.length).map((g) => ({ ...g, count: String(g.rows.length) }))
+      : [...new Set(byVisitOrder.map((p) => p.dayKey))].map((k) => ({ ...dayHead(k), rows: byVisitOrder.filter((p) => p.dayKey === k) }))
+          .map((g) => ({ ...g, count: String(g.rows.length) }));
+
+    // Selected patient
+    const P = all.find((p) => p.id === s.pid) || all.find((p) => p.id === 'delgado');
+    const iPhq = lastIndex(P.phq);
+    const phqNow = iPhq >= 0 ? P.phq[iPhq] : null;
+    const i9Known = P.item9.filter((v) => v != null);
+    const i9Pos = i9Known.filter((v) => v > 0).length;
+    const uncNow = P.unc ? P.unc[P.unc.length - 1] : null;
+    const lo = P.estNow == null ? null : Math.max(0, P.estNow - uncNow);
+    const hi = P.estNow == null ? null : Math.min(MAX, P.estNow + uncNow);
+    // Check-ins over the last 14 days, oldest first (the tile's dots); misses spread out unless the mock data fixes them
+    const ciPat = P.ciPattern || (() => { const a = Array(P.cd).fill('1'); const miss = P.cd - P.cn; for (let k = 0; k < miss; k++) a[Math.round(((k + 1) * P.cd) / (miss + 1)) - 1] = '0'; return a.join(''); })();
+    const pt = {
+      ...P,
+      headSub: (P.visitRank === NOT_SCHEDULED ? 'No visit scheduled' : 'Next visit ' + tm(P.visit)) + ` · in AURORA ${P.weeksIn} weeks`,
+      sevNow: P.estNow == null ? '—' : String(P.estNow),
+      // Show ± unless the interval runs off the 0–27 scale; then show the clipped range
+      uncText: P.estNow == null ? '' : (hi - P.estNow === uncNow && P.estNow - lo === uncNow) ? `± ${uncNow}` : `range ${lo}–${hi}`,
+      deltaLong: P.d == null ? 'Withheld: too few check-ins'
+        : P.d === 0 ? `Same as baseline (${P.baseline})` : `${signed(P.d)} from baseline (${P.baseline})`,
+      deltaCls: P.d == null || Math.abs(P.d) < RULES.deterioration ? 'muted' : P.d > 0 ? 'up' : 'down',
+      // Trend status line: which rule applies, from which source, and how long in care
+      statusCls: 'pt-status ' + STATUS[P.trend].cls,
+      statusShape: STATUS[P.trend].shape, statusShape2: STATUS[P.trend].shape2 || 'M0 0',
+      statusText: P.ot.kind === 'notimp' ? P.ot.reason : STATUS[P.trend].label,
+      statusNote: P.trend === 'nodata' ? ' · too little data to judge the trend'
+        : ` · ${P.ot.source === 'PHQ-9' ? 'from the PHQ-9: too few check-ins for an AI estimate' : 'from the AI estimate'} · ${P.ot.branch === 'early' ? `early in care, ${Math.max(1, Math.round(P.ot.months))} months` : `${Math.round(P.ot.months)} months in care`}`,
+      phqNow: phqNow == null ? '—' : String(phqNow),
+      phqDate: iPhq >= 0 ? WEEKS[PHQ_WEEKS[iPhq]] : 'none yet',
+      phqBand: phqNow == null ? '' : bandOf(phqNow) + ' range',
+      ciNote: P.cn / P.cd < 0.25 ? 'too few for an estimate' : P.cn / P.cd < 0.7 ? 'estimate less certain' : 'enough for the estimate',
+      safetyHead: P.safety ? P.safety.head : 'No flags',
+      safetyCls: P.safety ? 'flag-safety' : '',
+      safetyNote: P.safety ? P.safety.note
+        : i9Known.length === 1 ? `Item 9 was ${i9Known[0]} at the one PHQ-9 so far`
+        : i9Pos === 0 ? `Item 9 was 0 at all ${i9Known.length} PHQ-9s` : `Item 9 above 0 at ${i9Pos} of ${i9Known.length} PHQ-9s`,
+      safetyWhen: P.safety ? tm(P.safety.when) : 'As of today',
+      discordant: P.estNow != null && phqNow != null && Math.abs(phqNow - P.estNow) > uncNow,
+      hasChanges: P.changes.length > 0,
+      hasGoals: P.goals.length > 0,
+      safetyTileCls: 'stat' + (P.safety ? ' flagged' : ''),
+      ciDots: ciPat.split('').map((c) => 'dot ' + (c === '1' ? 'on' : 'off')),
+      ciTitle: 'Each dot is one expected check-in in the last 14 days, oldest on the left. Filled: completed.',
+      changes: P.changes.map((c) => ({ ...c, src: tm(c.src), iconEl: icon(c.icon) })),
+      goals: P.goals.map((g) => ({ ...g, iconEl: icon(g.icon), iconLgEl: icon(g.icon, 20) })),
+      trendSub: P.weeksIn >= 11 ? 'last 12 weeks' : `since joining AURORA ${P.weeksIn} weeks ago`
+    };
+
+    // Severity scale bar for the tile: 0–27, baseline tick, uncertainty, current estimate
+    const SX = (v) => 4 + (v / MAX) * 192;
+    const sc = {
+      show: s.distinct && P.estNow != null,
+      ticks: [5, 10, 15, 20].map((v) => ({ x: f(SX(v)) })),
+      uncX: lo == null ? 0 : f(SX(lo)), uncW: lo == null ? 0 : f(SX(hi) - SX(lo)),
+      baseX: P.baseline == null ? 0 : f(SX(P.baseline)), nowX: P.estNow == null ? 0 : f(SX(P.estNow)),
+      aria: P.estNow == null ? '' : `Severity ${P.estNow} on the 0 to 27 scale, uncertainty ${lo} to ${hi}, baseline ${P.baseline}`
+    };
+
+    // Chart geometry: PHQ-9 scale 0–27 with a numeric axis, weekly AI estimates, PHQ-9 every 2 weeks.
+    // The time axis starts when the patient joined, up to the last 12 weeks.
+    const L = 72, R = 740, TOP = 32, BOT = 232;
+    const last = WEEKS.length - 1;
+    const x0 = Math.max(0, last - P.weeksIn);
+    const X = (i) => L + ((i - x0) * (R - L)) / (last - x0);
+    const Y = (v) => BOT - (v / MAX) * (BOT - TOP);
+    const inRange = (w) => w >= x0;
+    const est = P.est || [];
+    const pts = (fn) => est.map((v, i) => (v == null || !inRange(i) ? null : `${f(X(i))},${f(Y(fn(v, i)))}`)).filter(Boolean);
+    const upper = pts((v, i) => Math.min(MAX, v + P.unc[i]));
+    const lower = pts((v, i) => Math.max(0, v - P.unc[i])).reverse();
+    const ch = {
+      L, R, T: TOP, B: BOT, tickX: L - 12, endX: R + 10, evtY: TOP - 10,
+      aria: `Severity over ${pt.trendSub} for ${P.name}. Use the arrow keys to read each day.`,
+      ticks: [0, 5, 10, 15, 20, 25].map((v) => ({ y: f(Y(v)), ty: f(Y(v) + 4), label: T(v), cls: v === 0 ? 'axis' : 'grid' })),
+      hasEst: est.length > 0,
+      estPts: pts((v) => v).join(' '),
+      band: [...upper, ...lower].join(' '),
+      baseY: P.baseline == null ? 0 : f(Y(P.baseline)),
+      thrY: P.baseline == null ? 0 : f(Y(P.baseline + RULES.deterioration)),
+      baseLabelY: P.baseline == null ? 0 : f(Y(P.baseline) + 4),
+      thrLabelY: P.baseline == null ? 0 : f(Y(P.baseline + RULES.deterioration) + 4),
+      baseLabel: T(`Baseline ${P.baseline}`),
+      thrLabel: T(`Baseline + ${RULES.deterioration}`),
+      midX: f((L + R) / 2), noEstY: f(Y(22.5) + 5),
+      showZone: s.distinct && est.length > 0 && P.baseline != null && P.baseline + RULES.deterioration < MAX,
+      zoneW: f(R - L), zoneH: P.baseline == null ? 0 : f(Math.max(0, Y(P.baseline + RULES.deterioration) - TOP)),
+      // The chart draws the rule that applies: the expected range early in care; the 10 line once persistence fires
+      hasExp: P.ot.branch === 'early' && est.length > 0 && P.baseline != null,
+      expPts: P.ot.branch === 'early' && est.length > 0 && P.baseline != null ? (() => { const up = [], lo = []; for (let i = x0; i <= last; i++) { const e = expectedRange(P.baseline, i - x0); up.push(`${f(X(i))},${f(Y(e.hi))}`); lo.push(`${f(X(i))},${f(Y(e.lo))}`); } return [...up, ...lo.reverse()].join(' '); })() : '',
+      expLabelY: P.baseline == null ? 0 : f(Y(expectedRange(P.baseline, last - x0).mid) + 4),
+      showPersist: P.trend === 'notimp' && P.ot.branch === 'established',
+      persistY: f(Y(RULES.persistence)),
+      // keep the label clear of the baseline label when the two lines are close
+      persistLabelY: f(P.baseline != null && est.length && Math.abs(Y(P.baseline) - Y(RULES.persistence)) < 18
+        ? Y(P.baseline) + 4 + (Y(RULES.persistence) > Y(P.baseline) ? 18 : -18) : Y(RULES.persistence) + 4),
+      events: (P.events || []).filter((e) => inRange(e.week)).map((e) => {
+        // Labels run right of the line, or flip left if they would run off the chart (larger text)
+        const ex = X(e.week), gap = s.icons && e.icon ? 26 : 6;
+        const flip = ex + gap + e.label.length * 0.5 * (s.big ? 15 : 13) > 878;
+        return { x: f(ex), anchor: flip ? 'end' : 'start', lx: f(flip ? ex - gap : ex + gap),
+          iconEl: iconAt(e.icon, flip ? ex - 20 : ex + 6, TOP - 23), label: T(e.label) };
+      }),
+      phq: PHQ_WEEKS.map((w, k) => (P.phq[k] == null || !inRange(w) ? null : { cx: f(X(w)), cy: f(Y(P.phq[k])) })).filter(Boolean),
+      i9Y: 262,
+      item9: PHQ_WEEKS.map((w, k) => (P.item9[k] == null || !inRange(w) ? null : { x: f(X(w)), cls: P.item9[k] > 0 ? 'i9-pos' : '', label: T(P.item9[k]) })).filter(Boolean),
+      dateY: 290,
+      dates: (x0 > 0 ? [x0, ...PHQ_WEEKS.filter((w) => w > x0)] : PHQ_WEEKS).map((w) => ({ x: f(X(w)), label: T(WEEKS[w]) }))
+    };
+
+    // Trend hover readout, one day at a time. The AI value is read off the trend line; check-ins are daily;
+    // PHQ-9s and events show on their own day, and the pointer snaps to them from one day either side.
+    const d0 = x0 * 7, dLast = last * 7;
+    const XD = (d) => L + ((d - d0) * (R - L)) / (dLast - d0);
+    const keyDays = [...PHQ_WEEKS.filter((w) => w >= x0).map((w) => w * 7), ...(P.events || []).filter((ev) => inRange(ev.week)).map((ev) => Math.round(ev.week * 7))];
+    const snap = (d) => keyDays.filter((m) => Math.abs(m - d) <= 1).sort((a, b) => Math.abs(a - d) - Math.abs(b - d))[0] ?? d;
+    ch.hits = [];
+    for (let d = d0; d <= dLast; d++) {
+      const left = d === d0 ? L - 16 : XD(d - 0.5), right = d === dLast ? R + 16 : XD(d + 0.5), target = snap(d);
+      ch.hits.push({ x: f(left), w: f(right - left), enter: () => this.setState({ hoverDay: target }) });
+    }
+    // Daily check-ins: none on Sundays; the last 14 days match the tile's dots; earlier days follow the same rate
+    const todayD = Math.round((TODAY - DAY0) / 864e5);
+    const recent = [];
+    for (let d = todayD - 13; d <= todayD; d++) if (new Date(2026, 4, 25 + d).getDay() !== 0) recent.push(d);
+    const seed = [...P.id].reduce((a, c) => a + c.charCodeAt(0), 0);
+    const checkinOn = (d) => {
+      if (new Date(2026, 4, 25 + d).getDay() === 0) return 'none scheduled';
+      const j = recent.indexOf(d);
+      if (j >= 0) return ciPat[j] === '1' ? 'completed' : 'missed';
+      return (Math.abs(Math.sin((d + 1) * 12.9898 + seed * 78.233)) * 43758.5453) % 1 < P.cn / P.cd ? 'completed' : 'missed';
+    };
+    const hd = s.hoverDay != null && s.hoverDay >= d0 && s.hoverDay <= dLast ? s.hoverDay : null;
+    const hv = { show: false, aria: '' };
+    if (hd != null) {
+      const date = new Date(2026, 4, 25 + hd);
+      const title = `${DOW[date.getDay()]}, ${MONTHS[date.getMonth()]} ${date.getDate()}`;
+      const i0 = Math.floor(hd / 7), i1 = Math.min(last, i0 + 1), t = hd / 7 - i0;
+      const a0 = est.length ? est[i0] : null, a1 = est.length ? est[i1] : null;
+      const eRaw = a0 != null && a1 != null ? a0 + (a1 - a0) * t : null;
+      const e = eRaw == null ? null : Math.round(eRaw);
+      const u = eRaw == null ? null : Math.round(P.unc[i0] + (P.unc[i1] - P.unc[i0]) * t);
+      const elo = e == null ? null : Math.max(0, e - u), ehi = e == null ? null : Math.min(MAX, e + u);
+      const estText = e == null ? '' : elo === e - u && ehi === e + u ? `${e} ± ${u}` : `${e}, range ${elo}–${ehi}`;
+      const k = hd % 7 === 0 ? PHQ_WEEKS.indexOf(hd / 7) : -1;
+      const phq = k >= 0 ? P.phq[k] : null, i9 = k >= 0 ? P.item9[k] : null;
+      const evs = (P.events || []).filter((ev) => Math.round(ev.week * 7) === hd);
+      const ci = checkinOn(hd);
+      const x = XD(hd);
+      Object.assign(hv, {
+        show: true, x: f(x), cls: 'tip ' + (x > 0.6 * 880 ? 'left' : 'right'), style: `left:${((100 * x) / 880).toFixed(2)}%`,
+        title,
+        hasEst: e != null, est: estText, estY: eRaw == null ? 0 : f(Y(eRaw)),
+        ci, ciCls: 'tip-v' + (ci === 'missed' ? '' : ' muted'),
+        hasPhq: k >= 0, phq: phq == null ? 'not completed' : `${phq} · ${bandOf(phq)}`, phqCls: 'tip-v' + (phq == null ? ' muted' : ''),
+        hasPhqDot: phq != null, phqY: phq == null ? 0 : f(Y(phq)),
+        hasI9: i9 != null, i9: i9 == null ? '' : String(i9), i9Cls: 'tip-v' + (i9 > 0 ? ' i9-pos' : ''),
+        events: evs.map((ev) => ({ label: ev.label, iconEl: icon(ev.icon) })),
+        aria: [title, e == null ? '' : `severity estimate ${estText.replace('±', 'plus or minus')}`, `check-in ${ci}`,
+          k < 0 ? '' : phq == null ? 'PHQ-9 not completed' : `PHQ-9 ${phq}, ${bandOf(phq)}`, i9 == null ? '' : `item 9 ${i9}`,
+          ...evs.map((ev) => ev.label)].filter(Boolean).join('; ') + '.'
+      });
+    }
+
+    // Caseload peek card for the hovered or focused row
+    let peek = { cls: 'peek', aria: '' };
+    const PK = s.peek ? all.find((q) => q.id === s.peek) : null;
+    if (PK) {
+      const order = groups.flatMap((g) => g.rows.map((r) => r.id));
+      const lastW = WEEKS.length - 1, px0 = Math.max(0, lastW - PK.weeksIn);
+      const PX = (i) => 4 + ((i - px0) * 272) / (lastW - px0), PY = (v) => 58 - (v / MAX) * 52;
+      const pe = PK.est || [];
+      const ppts = (fn) => pe.map((v, i) => (v == null || i < px0 ? null : `${f(PX(i))},${f(PY(fn(v, i)))}`)).filter(Boolean);
+      const un = PK.unc ? PK.unc[PK.unc.length - 1] : null;
+      const plo = PK.estNow == null ? null : Math.max(0, PK.estNow - un), phi = PK.estNow == null ? null : Math.min(MAX, PK.estNow + un);
+      const kq = lastIndex(PK.phq);
+      const i9k = PK.item9.filter((v) => v != null), i9pos = i9k.filter((v) => v > 0).length, i9last = i9k.length ? i9k[i9k.length - 1] : null;
+      peek = {
+        cls: 'peek' + (order.indexOf(PK.id) >= order.length - 3 ? ' above' : ''),
+        span: PK.weeksIn >= 11 ? 'Last 12 weeks' : `Since joining AURORA, ${PK.weeksIn} weeks ago`,
+        hasEst: pe.length > 0, line: ppts((v) => v).join(' '),
+        band: [...ppts((v, i) => Math.min(MAX, v + PK.unc[i])), ...ppts((v, i) => Math.max(0, v - PK.unc[i])).reverse()].join(' '),
+        hasBase: PK.baseline != null, baseY: PK.baseline == null ? 0 : f(PY(PK.baseline)), thrY: PK.baseline == null ? 0 : f(PY(Math.min(MAX, PK.baseline + RULES.deterioration))),
+        dots: PHQ_WEEKS.map((w, k) => (PK.phq[k] == null || w < px0 ? null : { cx: f(PX(w)), cy: f(PY(PK.phq[k])) })).filter(Boolean),
+        sev: PK.estNow == null ? 'No estimate yet'
+          : `${PK.estNow} ${phi - PK.estNow === un && PK.estNow - plo === un ? `± ${un}` : `(range ${plo}–${phi})`} · baseline ${PK.baseline}`,
+        hasPhq: kq >= 0, phqDate: kq >= 0 ? WEEKS[PHQ_WEEKS[kq]] : '', phq: kq >= 0 ? `${PK.phq[kq]} · ${bandOf(PK.phq[kq])}` : '',
+        i9: !i9k.length ? 'no PHQ-9 yet' : i9pos === 0 ? (i9k.length === 1 ? '0 at the one PHQ-9 so far' : `0 at all ${i9k.length} PHQ-9s`)
+          : `${i9last} at the latest · above 0 at ${i9pos} of ${i9k.length}`,
+        i9Cls: 'peek-v' + (i9last > 0 ? ' i9-pos' : ''),
+        hasChanges: PK.changes.length > 0,
+        changes: PK.changes.slice(0, 3).map((c) => ({ title: c.title, cls: c.cls || '', iconEl: icon(c.icon) }))
+      };
+      peek.aria = [`${PK.name}`, `severity ${peek.sev.replace('±', 'plus or minus')}`, kq >= 0 ? `PHQ-9 on ${peek.phqDate}: ${PK.phq[kq]}, ${bandOf(PK.phq[kq])}` : '',
+        `item 9: ${peek.i9}`, ...PK.changes.slice(0, 3).map((c) => c.title)].filter(Boolean).join('; ') + '.';
+    }
+
+    // Drivers panel: sleep, activity and contact from phone sensing, on the trend's weeks (on demand)
+    const DRV = driversOf(P);
+    const signed1 = (v) => (v > 0.05 ? '+' : v < -0.05 ? '−' : '') + Math.abs(v).toFixed(1);
+    const drvDefs = [
+      { key: 'sleep', name: 'Sleep', fmt: (v) => `${v.toFixed(1)} h a night`, dfmt: (v) => `${signed1(v)} h vs usual` },
+      { key: 'steps', name: 'Activity', fmt: (v) => `${v.toFixed(1)}k steps a day`, dfmt: (v) => `${signed1(v)}k vs usual` },
+      { key: 'contact', name: 'Contact', fmt: (v) => `${Math.round(v)} contacts a day`, dfmt: (v) => `${signed(Math.round(v))} vs usual` }
+    ];
+    const drv = {
+      show: s.drivers, expanded: s.drivers ? 'true' : 'false',
+      toggleLabel: s.drivers ? 'Hide sleep, activity and contact' : 'Show sleep, activity and contact',
+      L, R, endX: f(R + 10), h: 56 * drvDefs.length, viewBox: `0 0 880 ${56 * drvDefs.length}`,
+      events: ch.events.map((e) => ({ x: e.x }))
+    };
+    const drvAria = [];
+    drv.rows = drvDefs.map((r, idx) => {
+      const vals = DRV[r.key].map((v, i) => (i >= x0 && v != null ? [i, v] : null)).filter(Boolean);
+      const first = vals.slice(0, 4);
+      const usual = first.reduce((a, [, v]) => a + v, 0) / first.length;
+      const vs = [...vals.map(([, v]) => v), usual];
+      const lo = Math.min(...vs), hi = Math.max(...vs), pad = (hi - lo) * 0.15 || 1;
+      const top = idx * 56, YY = (v) => top + 48 - ((v - (lo - pad)) / (hi - lo + 2 * pad)) * 36;
+      const [li, lv] = vals[vals.length - 1];
+      drvAria.push(`${r.name} ${r.fmt(lv)}, ${r.dfmt(lv - usual)}`);
+      return {
+        top: f(top + 0.5), nameY: f(top + 24), cmpY: f(top + 42), name: T(r.name),
+        pts: vals.map(([i, v]) => `${f(X(i))},${f(YY(v))}`).join(' '), usualY: f(YY(usual)),
+        nowX: f(X(li)), nowY: f(YY(lv)), nowLabel: T(r.fmt(lv)), cmpLabel: T(r.dfmt(lv - usual))
+      };
+    });
+    drv.aria = 'Phone sensing over the same weeks: ' + drvAria.join('; ');
+
+    // Patient handout
+    const hoDefault = P.trend === 'notimp' ? ['Your check-ins look much the same as they have for a while. That’s worth talking about at your next appointment.']
+      : P.status === 'nodata'
+      ? ['We only have a few check-ins from the last two weeks, so there isn’t enough yet to show a picture.']
+      : P.status === 'stable' && P.d <= -5 ? ['Your check-ins suggest things have been getting easier over the last few weeks.']
+      : P.status === 'stable' ? ['Your check-ins look about the same as usual.']
+      : ['Your check-ins suggest the last few weeks have been harder than usual. That’s worth talking about at your next appointment.'];
+    const ho = {
+      title: `${P.first}, here’s what your check-ins show`,
+      sub: `Last 4 weeks · for your ${P.visitDay ? P.visitDay + ' ' : 'next '}appointment with Dr Okafor`,
+      paras: [...(P.handout || hoDefault), `In the last two weeks you completed ${P.cn} of ${P.cd} check-ins. Thank you: the picture is clearer when there are more of them.`]
+    };
+
+    // ⓘ tips: open at once on hover or keyboard focus; a click or tap keeps one open until a second click, Escape or a click elsewhere
+    const tipFor = (key, lines) => {
+      const open = s.tip === key;
+      return {
+        // The trailing space keeps sentences apart when the lines are read out as one description
+        lines: lines.map((l) => (typeof l === 'string' ? { cls: 'tt-line', text: `${l} ` } : { cls: `tt-line ${l.cls}`, text: `${l.text} ` })),
+        cls: 'tt no-print' + (open ? ' open' : ''),
+        btnCls: 'info' + (open && s.tipPinned ? ' pinned' : ''),
+        enter: () => { this.tipHover = key; clearTimeout(this.tipT); if (this.state.tip !== key) this.setState({ tip: key, tipPinned: false }); },
+        leave: () => { this.tipHover = null; clearTimeout(this.tipT); this.tipT = setTimeout(() => { if (this.state.tip === key && !this.state.tipPinned) this.setState({ tip: null }); }, 120); },
+        focus: () => { clearTimeout(this.tipT); if (this.state.tip !== key) this.setState({ tip: key, tipPinned: false }); },
+        blur: () => { if (this.state.tip === key) this.setState(this.tipHover === key ? { tipPinned: false } : { tip: null, tipPinned: false }); },
+        toggle: () => { clearTimeout(this.tipT); this.setState(this.state.tip === key && this.state.tipPinned ? { tip: null, tipPinned: false } : { tip: key, tipPinned: true }); }
+      };
+    };
+    const tips = {
+      sev: tipFor('sev', ['AI estimate (AI-COA) of depression severity on the PHQ-9 scale, 0 to 27.', 'The number after it is the change from the patient’s own baseline, coloured when it is 6 or more points.']),
+      ci: tipFor('ci', ['Check-ins completed in the last 14 days. Below 9 of 12 the estimate is less certain.']),
+      rule: tipFor('rule', [
+        { cls: 'tt-head', text: 'How the trend is judged, from the AI estimate:' },
+        'In the first 3 months of care: above the expected range two weeks running, after the first 4 weeks.',
+        'After 3 months: 10 or more two weeks running.',
+        'At any time: 6 or more above baseline.',
+        'If check-ins are too few for an estimate, the same rules use the PHQ-9 (this trial only).',
+        { cls: 'tt-note', text: 'Thresholds are placeholders until set from the estimate’s measured reliability.' }
+      ]),
+      // The check-in dots: pointer only, as the count and note beside them say the same in words
+      dots: tipFor('dots', [pt.ciTitle])
+    };
+
+    const tab = (label, on, pick) => ({ label, cls: on ? 'on' : '', pick });
+    return {
+      onList: s.view === 'list', onPatient: s.view === 'patient', onHandout: s.view === 'handout',
+      viewTabs: [
+        tab('Patients', s.view === 'list', () => this.go({ view: 'list' })),
+        tab('Patient page', s.view === 'patient', () => this.go({ view: 'patient' })),
+        tab('Patient handout', s.view === 'handout', () => this.go({ view: 'handout' }))
+      ],
+      appCls: 'app' + (s.distinct ? ' distinct' : '') + (s.big ? ' big' : ''), distinct: s.distinct, sc,
+      textTabs: [
+        tab('Current text', !s.big, () => this.go({ big: false })),
+        tab('Larger text', s.big, () => this.go({ big: true }))
+      ],
+      goalsCls: 'goals' + (s.icons ? ' with-icons' : ''),
+      styleTabs: [
+        tab('Plain sections', !s.distinct, () => this.go({ distinct: false })),
+        tab('Distinct sections', s.distinct, () => this.go({ distinct: true }))
+      ],
+      iconTabs: [
+        tab('Icons on', s.icons, () => this.go({ icons: true })),
+        tab('Icons off', !s.icons, () => this.go({ icons: false }))
+      ],
+      changesCls: 'changes' + (s.icons ? ' with-icons' : ''),
+      orderTabs: [
+        tab('Grouped by status', byStatus, () => this.go({ order: 'status' })),
+        tab('By next visit', !byStatus, () => this.go({ order: 'visit' }))
+      ],
+      byStatus, byVisit: !byStatus, groups, peek,
+      peekOut: () => { clearTimeout(this.peekT); this.peekT = setTimeout(() => this.setState({ peek: null }), 150); },
+      peekOff: () => { clearTimeout(this.peekT); this.setState({ peek: null }); },
+      listCls: 'list ' + (byStatus ? 'by-status' : 'by-visit'),
+      tips,
+      drv, toggleDrivers: () => this.setState({ drivers: !s.drivers }),
+      safetyShape: STATUS.safety.shape,
+      pt, ch, ho,
+      goList: () => this.go({ view: 'list' }),
+      goPatient: () => this.go({ view: 'patient' }),
+      goHandout: () => this.go({ view: 'handout' }),
+      doPrint: () => { try { window.print(); } catch (e) { /* ignore */ } },
+      discussed: s.discussed, toggleDiscussed: () => this.setState({ discussed: !s.discussed }),
+      factsOpen: s.factsOpen,
+      menuOpen: s.menuOpen, menuExpanded: s.menuOpen ? 'true' : 'false',
+      toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }),
+      closeMenu: () => this.setState({ menuOpen: false }),
+      hv, hoverOff: () => this.setState({ hoverDay: null }),
+      chartFocus: () => { if (s.hoverDay == null) this.setState({ hoverDay: dLast }); },
+      // Keys as for a slider: arrows move a day, Shift + arrow or Page Up/Down a week, Home/End the ends, Escape closes
+      chartKey: (ev) => {
+        const k = ev && ev.key;
+        if (!['ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End', 'Escape'].includes(k)) return;
+        if (ev.preventDefault) ev.preventDefault();
+        const cur = hd == null ? dLast : hd, step = ev.shiftKey || k === 'PageUp' || k === 'PageDown' ? 7 : 1;
+        const next = k === 'ArrowLeft' || k === 'PageDown' ? cur - step : k === 'ArrowRight' || k === 'PageUp' ? cur + step : k === 'Home' ? d0 : k === 'End' ? dLast : null;
+        this.setState({ hoverDay: next == null ? null : Math.min(dLast, Math.max(d0, next)) });
+      },
+      clockOpts: [
+        { label: '12-hour', example: '2:00\u00a0PM', on: !s.clock24, pick: () => this.go({ clock24: false }) },
+        { label: '24-hour', example: '14:00', on: s.clock24, pick: () => this.go({ clock24: true }) }
+      ],
+      openFacts: (e) => { noop(e); this.setState({ factsOpen: true }); },
+      closeFacts: () => this.setState({ factsOpen: false }),
+      stop: (e) => { if (e && e.stopPropagation) e.stopPropagation(); },
+      noop
+    };
+  }
+}
+</script>
+</body>
+</html>

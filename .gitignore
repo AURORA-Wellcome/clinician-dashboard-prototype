@@ -1,0 +1,5 @@
+# Local Claude Code settings
+.claude/
+
+# Content audits quote the planning meetings by name: keep them out of this public repo
+design/*content audit*.md

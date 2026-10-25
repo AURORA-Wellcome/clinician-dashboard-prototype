@@ -3,11 +3,212 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AURORA clinician dashboard — UI mockups</title>
-<meta http-equiv="refresh" content="0; url=AURORA%20Dashboard%20Clinical.dc.html">
-<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#212B32;background:#F7F8FA;display:grid;place-items:center;min-height:100vh;margin:0}a{color:#0072B2}</style>
+<title>AURORA clinician dashboard: design mockups</title>
+<meta name="description" content="Interactive design mockups of the AURORA clinician dashboard, for review by the clinician working group. All patient data are fictional.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Tokens from DESIGN.md; type in rem so the browser's text-size setting applies */
+:root{
+  --ink:#1F2A33;--muted:#5B6B78;--line:#E3E7EA;--line-strong:#C5CDD4;--surface:#FFFFFF;--page:#F7F8FA;--tint:#EEF2F6;
+  --accent:#0072B2;--accent-dark:#005B8E;--r:6px;
+  --safety:#C0271A;--worse:#D55E00;--worse-text:#9C4400;--stable:#009E73;--stable-text:#00795A;--nodata:#768692;--nodata-text:#4C6272;
+  --safety-tint:rgba(192,39,26,.06);--worse-tint:rgba(213,94,0,.07);--nodata-tint:rgba(118,134,146,.09);--stable-tint:rgba(0,158,115,.07);
+  --shadow:0 1px 2px rgba(31,42,51,.06),0 10px 28px rgba(31,42,51,.09);
+  --shadow-lift:0 2px 4px rgba(31,42,51,.08),0 16px 40px rgba(31,42,51,.14);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--page);color:var(--ink);font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:1.0625rem;line-height:1.5rem;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+a:focus-visible,.button:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:var(--r)}
+img{display:block;max-width:100%;height:auto}
+.wrap{max-width:70rem;margin:0 auto;padding:0 24px}
+
+/* Top bar: the same wordmark as the dashboard */
+.top{background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:16px;height:56px}
+.brand{font-size:1.3125rem;font-weight:600;letter-spacing:.04em}
+.top-note{color:var(--muted)}
+.top-link{margin-left:auto;font-weight:600;text-decoration:none}
+.top-link:hover{text-decoration:underline}
+
+/* Hero */
+.hero{background:linear-gradient(180deg,var(--tint) 0%,var(--page) 100%);border-bottom:1px solid var(--line)}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:56px;align-items:center;padding-top:72px;padding-bottom:64px}
+/* Hero card: the five statuses, as the caseload shows them */
+.statuses{margin:0;padding:20px 20px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.statuses-title{margin:0 0 12px;font-weight:600}
+.statuses ul{margin:0;padding:0;list-style:none}
+.statuses li{display:grid;grid-template-columns:16px 1fr;column-gap:10px;margin-bottom:8px;padding:10px 14px;border-radius:var(--r)}
+.statuses svg{width:10px;height:10px;margin-top:6px}
+.statuses strong{display:block;font-weight:600}
+.statuses span{grid-column:2;color:var(--muted);font-size:.9375rem;line-height:1.3125rem}
+.st-safety{background:var(--safety-tint);box-shadow:inset 3px 0 0 var(--safety)}.st-safety svg{color:var(--safety)}.st-safety strong{color:var(--safety)}
+.st-worse,.st-notimp{background:var(--worse-tint);box-shadow:inset 3px 0 0 var(--worse)}.st-worse svg,.st-notimp svg{color:var(--worse)}.st-worse strong,.st-notimp strong{color:var(--worse-text)}
+.st-nodata{background:var(--nodata-tint);box-shadow:inset 3px 0 0 var(--nodata)}.st-nodata svg{color:var(--nodata)}.st-nodata strong{color:var(--nodata-text)}
+.st-stable{background:var(--stable-tint);box-shadow:inset 3px 0 0 var(--stable)}.st-stable svg{color:var(--stable)}.st-stable strong{color:var(--stable-text)}
+.statuses-note{margin:4px 0 0;color:var(--muted);font-size:.9375rem;line-height:1.3125rem}
+.kicker{margin:0;color:var(--muted);font-size:.9375rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+h1{margin:12px 0 0;max-width:20ch;font-size:2.875rem;line-height:3.375rem;font-weight:600;letter-spacing:-.01em}
+.lede{margin:20px 0 0;max-width:60ch;color:var(--muted);font-size:1.3125rem;line-height:2rem}
+.hero-meta{margin:20px 0 0;color:var(--muted);font-size:.9375rem}
+
+/* Screens: framed like a browser window */
+.frame{display:block;border:1px solid var(--line-strong);border-radius:var(--r);overflow:hidden;background:var(--surface);box-shadow:var(--shadow);transition:transform .2s ease,box-shadow .2s ease}
+.frame::before{content:"";display:block;height:22px;border-bottom:1px solid var(--line);background:radial-gradient(circle at 14px 11px,var(--line-strong) 3.5px,transparent 4px),radial-gradient(circle at 28px 11px,var(--line-strong) 3.5px,transparent 4px),radial-gradient(circle at 42px 11px,var(--line-strong) 3.5px,transparent 4px) var(--surface)}
+a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
+@media (prefers-reduced-motion:reduce){.frame{transition:none}a.frame:hover{transform:none}}
+
+.label{margin:0;color:var(--muted);font-size:.9375rem;line-height:1.3125rem}
+/* Version number: large badge beside the title; solid for the latest */
+.vhead{display:flex;align-items:center;gap:16px}
+.vnum{flex:none;display:grid;place-items:center;width:3.5rem;height:3.5rem;border:2px solid var(--accent);border-radius:50%;color:var(--accent);font-size:1.875rem;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.vnum.now{background:var(--accent);color:#fff}
+.latest{color:var(--accent);font-weight:600}
+
+/* Featured: the latest version */
+.featured{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:48px;align-items:center;margin-top:56px}
+.featured h2{margin:2px 0 0;font-size:2rem;line-height:2.5rem;font-weight:600}
+.summary{margin:12px 0 0;font-size:1.3125rem;line-height:1.875rem}
+.points{margin:20px 0 0;padding:0;list-style:none}
+.points li{position:relative;margin-top:10px;padding-left:22px}
+.featured .button{margin-top:28px}
+.points li::before{content:"";position:absolute;left:2px;top:.6rem;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.button{display:inline-block;padding:11px 22px;background:var(--accent);color:#fff;border-radius:var(--r);font-weight:600;text-decoration:none;transition:background .15s ease}
+.button:hover{background:var(--accent-dark)}
+
+/* Earlier versions */
+.section-title{margin:88px 0 0;font-size:1.3125rem;line-height:1.75rem;font-weight:600}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;margin-top:20px}
+.card .vhead{margin-top:20px}
+.card h3{margin:2px 0 0;font-size:1.5rem;line-height:2rem;font-weight:600}
+.card h3 a{text-decoration:none}
+.card h3 a:hover{text-decoration:underline}
+.card p.text{margin:12px 0 0;max-width:60ch}
+/* Cards in a row share a height; buttons sit on the same line at the bottom */
+.card{display:flex;flex-direction:column}
+.card .btn-row{margin-top:auto;padding-top:20px}
+
+/* How to review */
+.review{margin-top:88px;padding:32px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.review h2{margin:0;font-size:1.3125rem;line-height:1.75rem;font-weight:600}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px;margin:20px 0 0;padding:0;list-style:none;counter-reset:step}
+.steps li{counter-increment:step;display:grid;grid-template-columns:auto 1fr;column-gap:14px}
+.steps li::before{content:counter(step);display:grid;place-items:center;width:32px;height:32px;border:1.5px solid var(--accent);border-radius:50%;color:var(--accent);font-weight:600;line-height:1}
+.steps strong{display:block;font-weight:600}
+.steps span{color:var(--muted)}
+
+/* Footer */
+.foot{margin-top:64px;padding:28px 0 48px;border-top:1px solid var(--line);color:var(--muted);font-size:.9375rem;line-height:1.5rem}
+.foot p{margin:0 0 6px}
+
+@media (max-width:56rem){
+  .hero .wrap{grid-template-columns:1fr;gap:36px;padding-top:48px;padding-bottom:44px}
+  h1{font-size:2.25rem;line-height:2.75rem}
+  .featured{grid-template-columns:1fr;gap:28px}
+  .cards,.steps{grid-template-columns:1fr}
+  .top-note{display:none}
+}
+</style>
 </head>
 <body>
-<p>Opening the current mockup… If nothing happens, <a href="AURORA%20Dashboard%20Clinical.dc.html">open AURORA Dashboard Clinical</a>.</p>
+
+<header class="top">
+  <div class="wrap">
+    <span class="brand">AURORA</span>
+    <span class="top-note">Clinician dashboard</span>
+    <a class="top-link" href="https://github.com/AURORA-Wellcome/clinician-dashboard-prototype">GitHub</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+    <p class="kicker">Design mockups</p>
+    <h1>See how each patient is doing between visits.</h1>
+    <p class="lede">AURORA turns brief voice check-ins and phone sensing into a regular estimate of depression severity. These mockups explore how that picture could reach clinicians: who needs attention first, what has changed, and what is worth talking about with the patient.</p>
+    <p class="hero-meta">For review by the clinician working group · All patient data are fictional</p>
+    </div>
+    <figure class="statuses" aria-labelledby="statuses-title">
+      <p class="statuses-title" id="statuses-title">Who needs attention first?</p>
+      <ul>
+        <li class="st-safety"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M0.5 0.5H9.5V9.5H0.5Z" fill="currentColor"/></svg><strong>Safety flag</strong><span>A study-team risk review, or a PHQ-9 item 9 answer above 0</span></li>
+        <li class="st-worse"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0.4L9.8 9.6H0.2Z" fill="currentColor"/></svg><strong>Worse than baseline</strong><span>6 or more points above the patient’s own baseline</span></li>
+        <li class="st-notimp"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M0.4 3.2H9.6V6.8H0.4Z" fill="currentColor"/></svg><strong>Not improving</strong><span>Not improving as expected, or still symptomatic after 3 months of care</span></li>
+        <li class="st-nodata"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0A5 5 0 1 0 5 10A5 5 0 1 0 5 0ZM5 1.6A3.4 3.4 0 1 1 5 8.4A3.4 3.4 0 1 1 5 1.6Z" fill="currentColor" fill-rule="evenodd"/><path d="M5 1.6A3.4 3.4 0 0 0 5 8.4Z" fill="currentColor"/></svg><strong>Too few check-ins</strong><span>Too little data for an AI estimate</span></li>
+        <li class="st-stable"><svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="currentColor"/></svg><strong>On track</strong><span>None of the above</span></li>
+      </ul>
+      <figcaption class="statuses-note">The statuses in v3. Each has its own shape as well as its colour, so it still reads in greyscale.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<main class="wrap">
+
+  <section class="featured" aria-labelledby="v3-title">
+    <a class="frame" href="AURORA%20Dashboard%20v3.dc.html" tabindex="-1" aria-hidden="true"><img src="design/landing/v3.png" width="1600" height="1000" alt=""></a>
+    <div>
+      <div class="vhead">
+        <span class="vnum now" aria-hidden="true">3</span>
+        <div>
+          <p class="label">Version 3 · <span class="latest">Latest</span> · October 24, 2026</p>
+          <h2 id="v3-title">Theory-aligned</h2>
+        </div>
+      </div>
+      <p class="summary">v2, rebuilt around AURORA’s theory of how feedback improves care.</p>
+      <ul class="points">
+        <li>Flags patients who aren’t improving, not only those getting worse</li>
+        <li>Puts the patient’s own PHQ-9 first, beside the AI estimate</li>
+        <li>Shows sleep, activity and contact on the same weeks as the trend</li>
+      </ul>
+      <a class="button" href="AURORA%20Dashboard%20v3.dc.html">Open v3</a>
+    </div>
+  </section>
+
+  <h2 class="section-title">Earlier versions</h2>
+  <div class="cards">
+    <article class="card">
+      <a class="frame" href="AURORA%20Dashboard%20v2.dc.html" tabindex="-1" aria-hidden="true"><img src="design/landing/v2.png" width="1600" height="1000" alt="" loading="lazy"></a>
+      <div class="vhead">
+        <span class="vnum" aria-hidden="true">2</span>
+        <div>
+          <p class="label">Version 2 · October 24, 2026</p>
+          <h3><a href="AURORA%20Dashboard%20v2.dc.html">Redesign</a></h3>
+        </div>
+      </div>
+      <p class="text">A calmer caseload and one patient page that prints as the session brief, built to the design rules. Switches compare section styles, icons and text size.</p>
+      <div class="btn-row"><a class="button" href="AURORA%20Dashboard%20v2.dc.html">Open v2</a></div>
+    </article>
+    <article class="card">
+      <a class="frame" href="AURORA%20Dashboard%20Clinical.dc.html" tabindex="-1" aria-hidden="true"><img src="design/landing/v1.png" width="1600" height="1000" alt="" loading="lazy"></a>
+      <div class="vhead">
+        <span class="vnum" aria-hidden="true">1</span>
+        <div>
+          <p class="label">Version 1 · August to September 2026</p>
+          <h3><a href="AURORA%20Dashboard%20Clinical.dc.html">Clinical</a></h3>
+        </div>
+      </div>
+      <p class="text">The first mockup, with an EHR-style look: caseload triage, patient detail and session prep, each with four review variants.</p>
+      <div class="btn-row"><a class="button" href="AURORA%20Dashboard%20Clinical.dc.html">Open v1</a></div>
+    </article>
+  </div>
+
+  <section class="review" aria-labelledby="review-title">
+    <h2 id="review-title">How to review</h2>
+    <ol class="steps">
+      <li><div><strong>Open a version</strong><span>Each one starts on the caseload, the list of a clinician’s patients.</span></div></li>
+      <li><div><strong>Try the 5-second test</strong><span>Look at the caseload for five seconds. Who needs attention first?</span></div></li>
+      <li><div><strong>Switch options</strong><span>The striped strip at the top changes pages and design options. It isn’t part of the design.</span></div></li>
+    </ol>
+  </section>
+
+  <footer class="foot">
+    <p>What changed in each version: <a href="https://github.com/AURORA-Wellcome/clinician-dashboard-prototype/blob/main/README.md">README</a> · Design rules: <a href="https://github.com/AURORA-Wellcome/clinician-dashboard-prototype/blob/main/DESIGN.md">DESIGN.md</a> · Earlier explorations: the repo’s <code>archive/</code> folder</p>
+    <p>Part of the AURORA trial, funded by Wellcome. All patient data in these mockups are fictional.</p>
+  </footer>
+
+</main>
 </body>
 </html>

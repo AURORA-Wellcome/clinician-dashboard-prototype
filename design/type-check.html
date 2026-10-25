@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>AURORA dashboard: type check</title>
+<style>
+body{margin:24px;font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1F2A33}
+h1{margin:0 0 4px;font-size:20px}
+h2{margin:24px 0 4px;font-size:16px}
+p{margin:0 0 8px;max-width:70ch;color:#5B6B78}
+table{border-collapse:collapse}
+th,td{padding:3px 12px 3px 0;text-align:left;vertical-align:top;border-bottom:1px solid #E3E7EA}
+th{font-weight:600}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.warn{color:#C0271A;font-weight:600}
+.frames{position:absolute;left:-10000px;top:0}
+</style>
+</head>
+<body>
+<h1>Type check: words at each rendered text size</h1>
+<p>Checks the type rules in DESIGN.md. Serve the repo folder (<code>python3 -m http.server 8767</code>) and open <code>http://localhost:8767/design/type-check.html</code>. Opened straight from disk it can't read the dashboard frames.</p>
+<p>Each page is measured in a 1400 px window. The review strip, top bar and screen-reader-only text are left out. Chart text is measured at its rendered size. With larger text, any size below 15 px is marked in red. Print sizes are set in pt in the print CSS; check them in DESIGN.md.</p>
+<div id="out">Measuring…</div>
+<div class="frames" id="frames"></div>
+<script>
+const PAGE = '../AURORA%20Dashboard%20v2.dc.html#';
+const PAGES = [
+  ['Caseload, by status', 'view=list&order=status'],
+  ['Caseload, by visit', 'view=list&order=visit'],
+  ['Patient page, Delgado', 'view=patient&p=delgado'],
+  ['Patient page, Whitfield (safety flag)', 'view=patient&p=whitfield'],
+  ['Patient handout, Delgado', 'view=handout&p=delgado']
+];
+const RUNS = [];
+for (const text of ['larger', 'current']) for (const [name, hash] of PAGES) RUNS.push({ text, name, hash: `${hash}&style=distinct&text=${text}` });
+
+function measure(doc, win) {
+  const by = new Map();
+  const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
+  let node;
+  while ((node = walker.nextNode())) {
+    const text = node.textContent.trim();
+    const el = node.parentElement;
+    if (!text || !el || el.closest('.review, .topbar, .sr-only, style, script')) continue;
+    const cs = win.getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+    let px = parseFloat(cs.fontSize);
+    const svg = el.closest('svg');
+    if (svg && svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width) {
+      const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal;
+      px *= Math.min(r.width / vb.width, r.height / vb.height);
+    }
+    const key = Math.round(px * 10) / 10;
+    const row = by.get(key) || { words: 0, samples: [] };
+    row.words += text.split(/\s+/).length;
+    if (row.samples.length < 5) row.samples.push(text.length > 40 ? text.slice(0, 40) + '…' : text);
+    by.set(key, row);
+  }
+  return [...by.entries()].sort((a, b) => a[0] - b[0]);
+}
+
+function table(run, rows) {
+  const total = rows.reduce((n, [, r]) => n + r.words, 0);
+  const tr = rows.map(([px, r]) => {
+    const warn = run.text === 'larger' && px < 15 ? ' class="warn"' : '';
+    return `<tr><td class="num"${warn}>${px} px</td><td class="num">${r.words}</td><td class="num">${Math.round((100 * r.words) / total)}%</td><td>${r.samples.map((t) => t.replace(/</g, '&lt;')).join(' · ')}</td></tr>`;
+  }).join('');
+  return `<h2>${run.name} · ${run.text} text</h2><table><tr><th>Size</th><th>Words</th><th>Share</th><th>Examples</th></tr>${tr}</table>`;
+}
+
+const out = [];
+let i = 0;
+function next() {
+  if (i >= RUNS.length) { document.getElementById('out').innerHTML = out.join(''); document.body.dataset.done = '1'; return; }
+  const run = RUNS[i++];
+  const frame = document.createElement('iframe');
+  frame.style.width = '1400px'; frame.style.height = '1600px';
+  frame.src = PAGE + run.hash;
+  frame.onload = () => {
+    let doc;
+    try { doc = frame.contentDocument; doc.body; } catch (e) { doc = null; }
+    if (!doc) { document.getElementById('out').innerHTML = '<p class="warn">Can’t read the dashboard frame. Serve the repo over http (see above).</p>'; return; }
+    doc.fonts.ready.then(() => setTimeout(() => { out.push(table(run, measure(doc, frame.contentWindow))); frame.remove(); next(); }, 1500));
+  };
+  document.getElementById('frames').appendChild(frame);
+}
+next();
+</script>
+</body>
+</html>
