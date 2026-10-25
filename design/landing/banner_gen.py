@@ -6,7 +6,7 @@ SVGs inside drift and sway wrappers, so the page can move and cross-fade them ch
 without redrawing the blur and noise filters.
 Mostly blue-violet, with natural green and violet shimmer. (The dashboard itself keeps to cool hues: green means
 "on track" there.)"""
-import math, random, sys
+import math, os, random, sys
 W, H = 1600, 240
 rnd = random.Random(11)
 
@@ -209,6 +209,10 @@ cabin = (f'<g transform="translate({cx:g} {by:g}) scale({CABIN_K:g})">'
          + ''.join(f'<path d="M{x + 1.7:g},{y:g}v3.4M{x:g},{y + 1.7:g}h3.4"/>' for x, y in windows) + '</g></g>')
 # The forest and cabin are anchored at the bottom of the banner, so a wide banner crops sky rather than forest
 hills = layer('bn-hills', f'<path d="{far_forest}" fill="#0E1842"/><path d="{near_forest}" fill="#050A1F"/>{cabin}', cabin_defs, align='xMidYMax')
+# The forest's silhouette alone, as the mask that keeps the page's starlight on the trees (design/landing/forest.svg)
+forest_mask = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" preserveAspectRatio="xMidYMax slice">'
+               f'<path d="{far_forest}"/><path d="{near_forest}"/></svg>\n')
+open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'forest.svg'), 'w').write(forest_mask)
 # Where the page puts the smoke (the chimney top) and the firelight (between the windows), in percent of the scene
 chimney = (round(cx + 7.2 * CABIN_K, 2), round(by - 17.2 * CABIN_K, 2))
 hearth = (cx - 2.6 * CABIN_K, by - 4.7 * CABIN_K)

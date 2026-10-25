@@ -55,16 +55,16 @@ img{display:block;max-width:100%;height:auto}
 /* Sparkles the page adds near the pointer: a bright core with a faint four-point cross */
 .bn-glints{pointer-events:none}
 /* Starlight on the forest: when a star sparkles, the treetops below it brighten a little, more for a brighter star
-   lower in the sky. The glow blends with "lighten", which only lifts what is darker than the glow's own color: the
-   trees, never the sky. */
-.bn-treeglow{pointer-events:none}
+   lower in the sky. The glow is masked to the forest's silhouette (design/landing/forest.svg, placed like the forest
+   layer: covering the banner, anchored at the bottom), so it lights the trees and never the sky. */
+.bn-treeglow{pointer-events:none;-webkit-mask:url(design/landing/forest.svg) 50% 100%/cover no-repeat;mask:url(design/landing/forest.svg) 50% 100%/cover no-repeat}
 /* The cabin's smoke and firelight are laid over the drawing in its own units: .bn-scene matches the SVG layers' box
    (the 1600 x 240 scene, scaled to cover the banner and anchored at the bottom), so 1cqw is 16 of its units */
 .bn-scene{position:absolute;left:50%;bottom:0;width:max(100%,calc(var(--bn-h) * 1600 / 240));aspect-ratio:1600/240;transform:translateX(-50%);container-type:inline-size;pointer-events:none}
 .bn-smoke{position:absolute;width:0;height:0}
 .bn-smoke i{position:absolute;left:0;top:0;width:.3cqw;height:.3cqw;margin:-.15cqw 0 0 -.15cqw;border-radius:50%;background:radial-gradient(circle,rgba(200,209,234,.6),rgba(200,209,234,0) 70%);opacity:0}
 .bn-hearth{position:absolute;width:1.9cqw;height:.9cqw;margin:-.45cqw 0 0 -.95cqw;border-radius:50%;background:radial-gradient(closest-side,rgba(255,176,77,.32),rgba(255,176,77,0));opacity:.8}
-.bn-treeglow i{position:absolute;left:0;top:0;width:clamp(110px,15vw,230px);height:clamp(54px,6.5vw,96px);border-radius:50%;background:radial-gradient(closest-side,#18265C,rgba(24,38,92,0));mix-blend-mode:lighten;opacity:0;pointer-events:none}
+.bn-treeglow i{position:absolute;left:0;top:0;width:clamp(120px,16vw,250px);height:clamp(60px,7vw,110px);border-radius:50%;background:radial-gradient(closest-side,rgba(158,176,236,.5),rgba(158,176,236,0));opacity:0;pointer-events:none}
 .bn-glint{position:absolute;left:0;top:0;width:24px;height:24px;margin:-12px 0 0 -12px;opacity:0;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.95) 0 1.5px,rgba(220,232,255,.5) 2.5px,rgba(200,220,255,0) 7px),linear-gradient(90deg,rgba(240,245,255,0) 15%,rgba(240,245,255,.8) 50%,rgba(240,245,255,0) 85%) center/100% 1.2px no-repeat,linear-gradient(0deg,rgba(240,245,255,0) 15%,rgba(240,245,255,.8) 50%,rgba(240,245,255,0) 85%) center/1.2px 100% no-repeat}
 @media (prefers-reduced-motion:reduce){.bn-px{transform:none!important;transition:none}}
 .bn-layer{display:block}
@@ -415,10 +415,10 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     const g = tpool.find((p) => p.until <= now);
     if (!g) return;
     g.until = now + TREE_MS;
-    const bright = st.accent ? 1 : Math.min(1, Math.max(0.3, st.base / 0.85));
-    const low = Math.min(1, Math.max(0.35, (st.y / bh - 0.1) / 0.6));
-    g.el.style.transform = `translate(${st.x.toFixed(1)}px, ${(bh * 0.86).toFixed(1)}px) translate(-50%, -50%)`;
-    g.el.animate([{ opacity: 0, easing: 'cubic-bezier(.4,0,.3,1)' }, { opacity: +(0.5 * bright * low).toFixed(2), offset: 0.25, easing: 'cubic-bezier(.4,0,.5,1)' }, { opacity: 0 }], { duration: TREE_MS });
+    const bright = st.accent ? 1 : Math.min(1, Math.max(0.5, st.base / 0.85));
+    const low = Math.min(1, Math.max(0.55, (st.y / bh - 0.05) / 0.5));
+    g.el.style.transform = `translate(${st.x.toFixed(1)}px, ${(bh * 0.82).toFixed(1)}px) translate(-50%, -50%)`;
+    g.el.animate([{ opacity: 0, easing: 'cubic-bezier(.4,0,.3,1)' }, { opacity: +(0.6 * bright * low).toFixed(2), offset: 0.25, easing: 'cubic-bezier(.4,0,.5,1)' }, { opacity: 0 }], { duration: TREE_MS });
   };
   // Only a free glint is used, so no sparkle is cut short; a star waits until its last sparkle has settled
   const sparkle = (st, now) => {
