@@ -67,13 +67,19 @@ def layer(cls, body, defs=''):
     return (f'<svg class="bn-layer {cls}" viewBox="0 0 {W} {H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">'
             + (f'<defs>{defs}</defs>' if defs else '') + body + '</svg>')
 
-# Stars: a few twinkle slowly, each on its own beat (CSS animates .tw)
-star_svg = []
-for i, st in enumerate(stars):
-    star_svg.append(st.replace('<circle ', f'<circle class="tw" style="animation-delay:-{(i * 1.7) % 9:.1f}s" ', 1) if i % 5 == 0 else st)
+# Stars: most stay still. A few accent stars, a little larger, have a soft glow and a faint four-point sparkle,
+# and twinkle (CSS animates .acc), each on its own beat. The outer <g> places the star; the inner one twinkles.
+ACCENTS = [(140, 28, 1.0, 3.8, 0.0), (395, 52, 0.8, 2.6, 1.1), (610, 16, 1.1, 4.6, 2.3), (835, 40, 0.85, 3.2, 0.6),
+           (1080, 22, 1.0, 5.4, 3.0), (1290, 60, 0.8, 2.9, 1.7), (1505, 30, 0.95, 4.1, 0.9)]
+SPARKLE = 'M0-7L.45-.45L7 0L.45.45L0 7L-.45.45L-7 0L-.45-.45Z'
+accents = ''.join(
+    f'<g transform="translate({x} {y}) scale({k})"><g class="acc" style="animation-duration:{dur}s;animation-delay:-{delay}s">'
+    f'<circle r="6.5" fill="url(#bn-star-glow)"/><path d="{SPARKLE}" fill="#F4F7FF" opacity=".5"/><circle r="1.5" fill="#FFFFFF"/></g></g>'
+    for x, y, k, dur, delay in ACCENTS)
 
-sky = layer('bn-sky', f'<rect width="{W}" height="{H}" fill="url(#bn-sky)"/><g fill="#E8EEFF">{"".join(star_svg)}</g>',
-            '<linearGradient id="bn-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060D26"/><stop offset=".6" stop-color="#0F1B4B"/><stop offset=".86" stop-color="#1B2C6A"/><stop offset="1" stop-color="#26397E"/></linearGradient>')
+sky = layer('bn-sky', f'<rect width="{W}" height="{H}" fill="url(#bn-sky)"/><g fill="#E8EEFF">{"".join(stars)}</g>{accents}',
+            '<linearGradient id="bn-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060D26"/><stop offset=".6" stop-color="#0F1B4B"/><stop offset=".86" stop-color="#1B2C6A"/><stop offset="1" stop-color="#26397E"/></linearGradient>'
+            '<radialGradient id="bn-star-glow"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".9"/><stop offset=".25" stop-color="#DDE7FF" stop-opacity=".45"/><stop offset="1" stop-color="#C9D8FF" stop-opacity="0"/></radialGradient>')
 back_defs = ('<linearGradient id="bn-back" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#B7A4F1" stop-opacity=".6"/><stop offset=".45" stop-color="#9C88E8" stop-opacity=".25"/><stop offset="1" stop-color="#8873DD" stop-opacity="0"/></linearGradient>'
              + hfade('bn-hf-back', [(0, 0), (.15, .7), (.4, .35), (.6, .8), (.85, .45), (1, 0)])
              + f'<mask id="bn-m-back" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}"><rect width="{W}" height="{H}" fill="url(#bn-hf-back)"/></mask>'
