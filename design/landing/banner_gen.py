@@ -1,4 +1,4 @@
-"""Landing-page banner: a night sky with blue-violet aurora curtains over a low horizon (SVG, no animation).
+"""Landing-page banner: a night sky with blue-violet aurora curtains over a low, forested horizon (SVG, no animation).
 
 Usage: python3 design/landing/banner_gen.py banner.html   then paste the output over the <div class="banner"> in index.html.
 Layers (sky and stars, back curtain, three ray patterns and a bright edge for the main curtain, hills) are separate
@@ -50,8 +50,88 @@ for _ in range(110):
 main = curtain(182, 104, [(14, 190, 0.6), (7, 83, 1.9)], 70, 118, [(18, 140, 2.1), (8, 51, 0.7)])
 back = curtain(118, 150, [(12, 230, 2.4), (6, 97, 0.2)], 80, 60, [(14, 160, 1.3)])
 edge = curtain(183, 105, [(14, 190, 0.6), (7, 83, 1.9)], 12, 16, [(3, 70, 0.5)])
-far = ridge(197, [(8, 150, 0.4), (5, 66, 2.0), (3, 27, 1.1), (1.5, 11, 0.3)])
-near = ridge(219, [(7, 190, 2.6), (4, 74, 0.8), (2.2, 31, 1.9), (1, 13, 2.2)])
+FAR = (197, [(8, 150, 0.4), (5, 66, 2.0), (3, 27, 1.1), (1.5, 11, 0.3)])
+NEAR = (219, [(7, 190, 2.6), (4, 74, 0.8), (2.2, 31, 1.9), (1, 13, 2.2)])
+
+# Boreal forest on both ridges: black spruce in silhouette, as on the horizon in aurora country in northern Canada.
+# Each tree is a narrow, ragged spire of short drooping branch tiers, with a small clump near the crown. The near ridge's
+# trees are taller, the far ridge's small and close-packed, so the forest reads as going on for miles. Each ridge and its
+# trees become one skyline (the highest point of hill or tree at each x), which keeps the path small. The trees have
+# their own random generator, so the stars stay where they are when the forest changes.
+trnd = random.Random(29)
+
+def ridge_y(base, terms, x):
+    return base + sum(a * math.sin(x / f + p) for a, f, p in terms)
+
+def spruce(x, base, h, tiers_max):
+    """One black spruce as a closed zigzag: up the left side tier by tier, to the tip, then down the right side."""
+    tiers = max(1, min(tiers_max, round(h / 5)))
+    step = h * 0.86 / tiers
+    half0 = h * trnd.uniform(0.15, 0.21)
+    left, right = [], []
+    for i in range(tiers):
+        t = i / tiers
+        y = base - h * 0.08 - i * step
+        half = half0 * (1 - t) ** 0.8 * (1.3 if t > 0.65 else 1)
+        left += [(x - half * trnd.uniform(0.75, 1.15), y + step * 0.2), (x - half * 0.22, y - step * 0.6)]
+        right += [(x + half * trnd.uniform(0.75, 1.15), y + step * 0.2), (x + half * 0.22, y - step * 0.6)]
+    return [(x - 0.7, base + 3)] + left + [(x + trnd.uniform(-0.4, 0.4), base - h)] + right[::-1] + [(x + 0.7, base + 3)]
+
+def simplify(pts, tol):
+    """Ramer-Douglas-Peucker: drop points within tol of the line through their neighbors."""
+    keep, stack = [0, len(pts) - 1], [(0, len(pts) - 1)]
+    while stack:
+        a, b = stack.pop()
+        (ax, ay), (bx, by) = pts[a], pts[b]
+        dx, dy = bx - ax, by - ay
+        norm = math.hypot(dx, dy) or 1
+        best, idx = 0, None
+        for i in range(a + 1, b):
+            d = abs(dy * (pts[i][0] - ax) - dx * (pts[i][1] - ay)) / norm
+            if d > best:
+                best, idx = d, i
+        if idx is not None and best > tol:
+            keep.append(idx)
+            stack += [(a, idx), (idx, b)]
+    return [pts[i] for i in sorted(keep)]
+
+def num(v):
+    s = f'{v:.1f}'.rstrip('0').rstrip('.')
+    return s.replace('-0.', '-.').replace('0.', '.', 1) if s.lstrip('-').startswith('0.') else (s or '0')
+
+def skyline(ridge_def, spacing, height, clearing, tiers_max, x0=-34.0, x1=W + 34.0):
+    """A ridge and its trees as one filled shape: the highest point of hill or tree at each x."""
+    base, terms = ridge_def
+    trees, x = [], x0
+    while x < x1:
+        trees.append(spruce(x, ridge_y(base, terms, x) + 1.5, height(x), tiers_max))
+        x += trnd.uniform(*spacing)
+        if trnd.random() < clearing:
+            x += trnd.uniform(16, 60)
+    xs = sorted(set([x0 + k * 0.5 for k in range(int((x1 - x0) / 0.5) + 1)] + [p[0] for t in trees for p in t if x0 <= p[0] <= x1]))
+    top = {xx: ridge_y(base, terms, xx) for xx in xs}
+    for t in trees:
+        lo, hi = min(p[0] for p in t), max(p[0] for p in t)
+        edges = list(zip(t, t[1:] + t[:1]))
+        for xx in xs:
+            if xx < lo or xx > hi:
+                continue
+            for (ax, ay), (bx, by) in edges:
+                if ax != bx and min(ax, bx) <= xx <= max(ax, bx):
+                    yy = ay + (by - ay) * (xx - ax) / (bx - ax)
+                    if yy < top[xx]:
+                        top[xx] = yy
+    pts = simplify([(xx, top[xx]) for xx in xs], 0.1)
+    d = f'M{num(pts[0][0])},{num(pts[0][1])}l'
+    px, py = pts[0]
+    out = []
+    for qx, qy in pts[1:]:
+        out.append(f'{num(round(qx, 1) - round(px, 1))},{num(round(qy, 1) - round(py, 1))}')
+        px, py = round(qx, 1), round(qy, 1)
+    return d + ' '.join(out) + f'L{num(x1)},{H + 2}L{num(x0)},{H + 2}Z'
+
+far_forest = skyline(FAR, (1.4, 3.4), lambda x: (8 + 3 * math.sin(x / 110 + 2.1)) * trnd.uniform(0.6, 1.25), 0.03, 2)
+near_forest = skyline(NEAR, (2, 5), lambda x: (24 + 6 * math.sin(x / 160 + 1.3) + 3 * math.sin(x / 41 + 0.4)) * trnd.uniform(0.65, 1.2) + (10 if trnd.random() < 0.05 else 0), 0.012, 5)
 
 def hfade(id_, stops):
     return f'<linearGradient id="{id_}" x1="0" y1="0" x2="1" y2="0">' + ''.join(f'<stop offset="{o}" stop-color="#fff" stop-opacity="{a}"/>' for o, a in stops) + '</linearGradient>'
@@ -107,7 +187,7 @@ tint_defs = ('<linearGradient id="bn-green" x1="0" y1="1" x2="0" y2="0"><stop of
 tint_g = layer('bn-green', f'<g mask="url(#bn-m-green)"><path d="{main}" fill="url(#bn-green)" filter="url(#bn-glow)" opacity=".6"/><path d="{main}" fill="url(#bn-green)" filter="url(#bn-rays-g)"/></g>', tint_defs)
 tint_p = layer('bn-purple', f'<g mask="url(#bn-m-purple)"><path d="{main}" fill="url(#bn-purple)" filter="url(#bn-glow)" opacity=".6"/><path d="{main}" fill="url(#bn-purple)" filter="url(#bn-rays-p)"/></g>')
 edge_l = layer('bn-edge', f'<g mask="url(#bn-m-main)"><path d="{edge}" fill="url(#bn-edge)" filter="url(#bn-soft)" opacity=".75"/></g>')
-hills = layer('bn-hills', f'<path d="{far}" fill="#0E1842"/><path d="{near}" fill="#050A1F"/>')
+hills = layer('bn-hills', f'<path d="{far_forest}" fill="#0E1842"/><path d="{near_forest}" fill="#050A1F"/>')
 
 # Each moving layer sits in a .bn-px wrapper, which the page shifts a little with the pointer for depth (the stars
 # stay put; the hills, nearest, move most). .bn-glints holds the sparkles the page adds near the pointer.
