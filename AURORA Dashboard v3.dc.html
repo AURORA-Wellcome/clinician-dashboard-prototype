@@ -448,6 +448,9 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .ho-input{box-sizing:border-box;width:min(18rem,100%);font:inherit;font-weight:400;padding:6px 10px;color:var(--ink);border:1px solid var(--line-strong);border-radius:var(--r)}
 .ho-check{display:flex;gap:8px;align-items:center;margin:4px 0;cursor:pointer}
 .ho-check input{margin:0}
+.ho-langs{min-width:0;margin:0;padding:0;border:0}
+.ho-langs legend{margin:0 0 4px;padding:0;font-weight:600}
+.ho-langs .ho-check{display:inline-flex;margin-right:24px}
 .ho-prep .muted{margin:4px 0 14px}
 .handout{max-width:760px;margin:0 auto;padding:0 48px 32px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .handout p,.handout li{font-size:var(--fs-lg);line-height:1.5}
@@ -795,12 +798,19 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       <h2 class="h2">Before you print</h2>
       <label class="ho-field"><span>First name on the handout (optional)</span><input type="text" class="ho-input" placeholder="First name" value="{{ ho.name }}" onChange="{{ ho.setName }}"></label>
       <p class="muted">Not saved. You can also leave it blank and write it in by hand.</p>
+      <sc-if value="{{ ho.langs.many }}">
+        <fieldset class="ho-langs">
+          <legend>Language<span class="scaffold">{{ ho.langs.draft }}</span></legend>
+          <sc-for list="{{ ho.langs.list }}" as="l"><label class="ho-check"><input type="radio" name="ho-lang" checked="{{ l.on }}" onChange="{{ l.pick }}"> {{ l.label }}</label></sc-for>
+          <p class="muted">{{ ho.langs.note }}</p>
+        </fieldset>
+      </sc-if>
       <div class="ho-field"><span>Things to talk about</span></div>
       <sc-for list="{{ ho.talk }}" as="t"><label class="ho-check"><input type="checkbox" checked="{{ t.on }}" onChange="{{ t.toggle }}"> {{ t.text }}</label></sc-for>
       <p class="muted">Untick anything the patient wouldn’t want on paper. Read the handout through before printing: parts of it are written by AI.</p>
       <button class="btn" onClick="{{ doPrint }}">Print</button>
     </section>
-    <article class="handout">
+    <article class="handout" lang="{{ ho.lang }}">
       <header class="ho-head">
         <svg class="ho-art" viewBox="0 0 640 96" preserveAspectRatio="none" aria-hidden="true" focusable="false">
           <defs>
@@ -816,50 +826,50 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       </header>
       <sc-for list="{{ ho.paras }}" as="para"><p class="ho-lead">{{ para }}</p></sc-for>
       <section class="ho-sec ho-well">
-        <h2 class="h2">{{ ho.icons.sun }}What’s going well</h2>
+        <h2 class="h2">{{ ho.icons.sun }}{{ ho.t.wellHead }}</h2>
         <ul><sc-for list="{{ ho.well }}" as="w"><li>{{ w }}</li></sc-for></ul>
       </section>
       <sc-if value="{{ ho.hasGoals }}">
         <section class="ho-sec">
-          <h2 class="h2">Your goals</h2>
+          <h2 class="h2">{{ ho.t.goalsHead }}</h2>
           <ul class="ho-goals"><sc-for list="{{ ho.goals }}" as="g"><li class="ho-goal">{{ g.iconEl }}<div><div class="ho-goal-text">“{{ g.text }}”</div><div class="muted">{{ g.handoutStatus }}</div></div></li></sc-for></ul>
         </section>
       </sc-if>
       <sc-if value="{{ ho.chart.has }}">
         <section class="ho-sec ho-weeks">
-          <h2 class="h2">How your weeks have gone</h2>
+          <h2 class="h2">{{ ho.t.weeksHead }}</h2>
           <svg class="ho-chart" viewBox="0 0 600 152" role="img" aria-label="{{ ho.chart.aria }}">
             <line class="grid" x1="78" x2="578" y1="16" y2="16"></line><line class="grid" x1="78" x2="578" y1="120" y2="120"></line>
-            <text x="0" y="21">Harder</text><text x="0" y="125">Easier</text>
+            <text x="0" y="21">{{ ho.chart.harder }}</text><text x="0" y="125">{{ ho.chart.easier }}</text>
             <polyline class="ln" points="{{ ho.chart.line }}"></polyline>
             <sc-for list="{{ ho.chart.pts }}" as="q"><circle class="pt" cx="{{ q.cx }}" cy="{{ q.cy }}" r="5"></circle><text x="{{ q.x }}" y="146" text-anchor="middle">{{ q.date }}</text></sc-for>
           </svg>
-          <p class="muted">From the questionnaires you filled out. Higher on the chart means harder.</p>
+          <p class="muted">{{ ho.t.weeksNote }}</p>
         </section>
       </sc-if>
       <section class="ho-sec ho-talk">
         <h2 class="h2">{{ ho.icons.talk }}{{ ho.talkHead }}</h2>
-        <ul><sc-for list="{{ ho.talkOn }}" as="t"><li>{{ t.text }}</li></sc-for></ul>
-        <p>Something you’d like to add:</p>
+        <ul><sc-for list="{{ ho.talkOn }}" as="t"><li>{{ t }}</li></sc-for></ul>
+        <p>{{ ho.t.talkAdd }}</p>
         <div class="ho-line"></div>
       </section>
       <section class="ho-sec ho-next">
-        <h2 class="h2">{{ ho.icons.next }}Your next step</h2>
-        <p>One thing I’ll try before my next visit:</p>
+        <h2 class="h2">{{ ho.icons.next }}{{ ho.t.nextHead }}</h2>
+        <p>{{ ho.t.nextTry }}</p>
         <div class="ho-line"></div><div class="ho-line"></div>
-        <p>What might get in the way, and what could help:</p>
+        <p>{{ ho.t.nextWay }}</p>
         <div class="ho-line"></div>
       </section>
       <section class="ho-sec ho-help">
-        <h2 class="h2">{{ ho.icons.help }}If things get hard<span class="scaffold no-print">Example wording until the protocol sets it</span></h2>
-        <p>Call [site crisis line] at any time, day or night.</p>
-        <p>In the US, you can also call or text 988.</p>
+        <h2 class="h2">{{ ho.icons.help }}{{ ho.t.helpHead }}<span class="scaffold no-print" lang="en">Example wording until the protocol sets it</span></h2>
+        <p>{{ ho.t.helpCall }}</p>
+        <p>{{ ho.t.help988 }}</p>
       </section>
       <section class="ho-sec ho-about">
-        <h2 class="h2">About your check-ins<span class="scaffold no-print">Draft wording until the consent form sets it</span></h2>
-        <p>Your check-ins help you and Dr. Okafor see how you’re doing between visits. You can stop at any time: just tell Dr. Okafor or the study team.</p>
+        <h2 class="h2">{{ ho.t.aboutHead }}<span class="scaffold no-print" lang="en">Draft wording until the consent form sets it</span></h2>
+        <p>{{ ho.t.about }}</p>
       </section>
-      <footer class="ho-foot">This page is about your care. Keep it somewhere private.</footer>
+      <footer class="ho-foot">{{ ho.t.foot }}</footer>
     </article>
   </main>
   </sc-if>
@@ -989,7 +999,7 @@ const STATUS = {
 };
 const GROUP_ORDER = ['safety', 'worse', 'notimp', 'nodata', 'stable'];
 
-// Safety flags follow the 19 Oct design: AI-detected risk is reviewed by the study team first
+// Safety flags follow the October 19 design: AI-detected risk is reviewed by the study team first
 // (moderate risk = flag here; high risk = email); a PHQ-9 item 9 of 1 or more arrives unreviewed.
 const PATIENTS = [
   { id: 'osei', name: 'R. Osei', first: 'Ruth', dx: '+ GAD', status: 'safety',
@@ -1035,7 +1045,7 @@ const PATIENTS = [
     ],
     handout: ['The questionnaires you filled out suggest the last few weeks have been harder than the month before, especially with sleep and morning energy.'] },
   { id: 'fernandez', name: 'A. Fernández', first: 'Alejandro', dx: '+ GAD', status: 'worse',
-    tenure: 6,
+    tenure: 6, lang: 'es',
     visit: 'Mon, Aug 17, 13:00', visitDay: 'Monday', visitRank: 5, weeksIn: 11,
     baseline: 11, est: [10, 11, 11, 11, 12, 12, 13, 14, 15, 15, 16, 17], unc: U3,
     phq: [11, 11, 12, 14, 15, 16], item9: [0, 0, 0, 0, 0, 0], checkins: '10/12',
@@ -1334,9 +1344,95 @@ const CHECKIN_NOTES = {
 };
 const I9_WORDS = ['not at all', 'several days', 'more than half the days', 'nearly every day'];
 
+// The patient handout's wording. It prints in the patient's language, the one they chose for check-ins. The clinician
+// can switch to English to read it through first, so both versions say the same things. The Spanish is a draft for the
+// mockup: the study's translators would write the real wording. Spanish uses usted, lowercase weekdays and the day
+// before the month. It names the clinician "su terapeuta, E. Okafor" rather than with a title, because "Dr." or "Dra."
+// would assume the clinician's gender: the real handout would ask each clinician how to be named.
+const ES_DAYS = { Monday: 'lunes', Tuesday: 'martes', Wednesday: 'miércoles', Thursday: 'jueves', Friday: 'viernes', Saturday: 'sábado', Sunday: 'domingo' };
+const ES_MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'];
+const ES_MONTHS_FULL = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const esDate = (s, full) => { const [m, d] = s.split(' '), i = MONTHS.indexOf(m); return full ? `${d} de ${ES_MONTHS_FULL[i]}` : `${d} ${ES_MONTHS[i]}`; };
+const HO_TEXT = {
+  en: {
+    label: 'English',
+    greet: (name) => (name ? `${name}, here’s how the last few weeks have gone` : 'Here’s how the last few weeks have gone'),
+    sub: (day) => `For your ${day ? day + ' ' : 'next '}appointment with Dr. Okafor`,
+    // One summary line, chosen by how things are going
+    summary: {
+      notimp: 'Your check-ins have looked about the same for a while. That’s worth talking about at your next appointment.',
+      nodata: 'We have only a few check-ins from the last 2 weeks. That isn’t enough yet to see how things are going.',
+      easier: 'Your check-ins suggest things have been getting easier over the last few weeks.',
+      stable: 'Your check-ins look about the same as usual.',
+      harder: 'Your check-ins suggest the last few weeks have been harder than usual. That’s worth talking about at your next appointment.'
+    },
+    wellHead: 'What’s going well',
+    checkinsDone: (n, of) => `You did ${n} of ${of} check-ins in the last 2 weeks.`,
+    checkinsSome: (n) => `You did ${n} check-in${n === 1 ? '' : 's'} in the last 2 weeks. Each one helps.`,
+    goodGoal: /better|good|easier/,
+    easierLately: 'Your questionnaires show things getting easier.',
+    wellNone: 'You’re taking part in AURORA, and working with Dr. Okafor to feel better.',
+    goalsHead: 'Your goals',
+    weeksHead: 'How your weeks have gone',
+    harder: 'Harder', easier: 'Easier',
+    date: (w) => w,
+    chartAria: (from, to, move) => `Your questionnaires from ${from} to ${to}: ${move >= 3 ? 'harder lately' : move <= -3 ? 'easier lately' : 'about the same'}.`,
+    weeksNote: 'From the questionnaires you filled out. Higher on the chart means harder.',
+    talkHead: (day) => (day ? `Things to talk about on ${day}` : 'Things to talk about at your next visit'),
+    // A neutral topic for patients without written ones
+    talkDefault: { notimp: 'How things have been going', nodata: 'How the check-ins are going for you', easier: 'What has been helping', stable: 'What has been helping', harder: 'How the last few weeks have felt' },
+    talkAdd: 'Something you’d like to add:',
+    nextHead: 'Your next step',
+    nextTry: 'One thing I’ll try before my next visit:',
+    nextWay: 'What might get in the way, and what could help:',
+    helpHead: 'If things get hard',
+    helpCall: 'Call [site crisis line] at any time, day or night.',
+    help988: 'In the US, you can also call or text 988.',
+    aboutHead: 'About your check-ins',
+    about: 'Your check-ins help you and Dr. Okafor see how you’re doing between visits. You can stop at any time: just tell Dr. Okafor or the study team.',
+    foot: 'This page is about your care. Keep it somewhere private.'
+  },
+  es: {
+    label: 'Spanish',
+    greet: (name) => (name ? `${name}, así han ido las últimas semanas` : 'Así han ido las últimas semanas'),
+    sub: (day) => (day ? `Para su cita del ${ES_DAYS[day]} con su terapeuta, E. Okafor` : 'Para su próxima cita con su terapeuta, E. Okafor'),
+    summary: {
+      notimp: 'Según sus conversaciones con AURORA, parece que desde hace un tiempo las cosas no han cambiado mucho. Vale la pena hablarlo en su próxima cita.',
+      nodata: 'En las últimas 2 semanas ha habido pocas conversaciones con AURORA. Todavía no son suficientes para ver cómo van las cosas.',
+      easier: 'Según sus conversaciones con AURORA, parece que en las últimas semanas las cosas se le han hecho más fáciles.',
+      stable: 'Según sus conversaciones con AURORA, parece que las cosas siguen como de costumbre.',
+      harder: 'Según sus conversaciones con AURORA, parece que las últimas semanas han sido más difíciles de lo habitual. Vale la pena hablarlo en su próxima cita.'
+    },
+    wellHead: 'Lo que va bien',
+    checkinsDone: (n, of) => `En las últimas 2 semanas, completó ${n} de ${of} conversaciones con AURORA.`,
+    checkinsSome: (n) => `En las últimas 2 semanas, completó ${n} ${n === 1 ? 'conversación' : 'conversaciones'} con AURORA. Cada una cuenta.`,
+    goodGoal: /mejor|bien|fácil/,
+    easierLately: 'Sus cuestionarios muestran que las cosas se le están haciendo más fáciles.',
+    wellNone: 'Usted participa en AURORA y trabaja con su terapeuta para sentirse mejor.',
+    goalsHead: 'Sus metas',
+    weeksHead: 'Cómo han sido sus semanas',
+    harder: 'Más difícil', easier: 'Más fácil',
+    date: (w) => esDate(w),
+    chartAria: (from, to, move) => `Sus cuestionarios del ${esDate(from, true)} al ${esDate(to, true)} muestran que las cosas han estado ${move >= 3 ? 'más difíciles' : move <= -3 ? 'más fáciles' : 'más o menos igual'} últimamente.`,
+    weeksNote: 'Según los cuestionarios que completó. Cuanto más arriba en el gráfico, más difícil.',
+    talkHead: (day) => (day ? `Temas para hablar el ${ES_DAYS[day]}` : 'Temas para hablar en su próxima cita'),
+    talkDefault: { notimp: 'Cómo le han ido las cosas', nodata: 'Qué tal le van las conversaciones con AURORA', easier: 'Lo que le ha estado ayudando', stable: 'Lo que le ha estado ayudando', harder: 'Cómo se ha sentido en las últimas semanas' },
+    talkAdd: 'Algo más que quiera comentar:',
+    nextHead: 'Su próximo paso',
+    nextTry: 'Algo que voy a intentar antes de mi próxima cita:',
+    nextWay: 'Qué podría complicarlo y qué me podría ayudar:',
+    helpHead: 'Si las cosas se ponen difíciles',
+    helpCall: 'Llame a [línea de crisis del centro] a cualquier hora, de día o de noche.',
+    help988: 'En Estados Unidos, también puede llamar al 988 y marcar el 2 para hablar en español. O envíe un mensaje de texto con la palabra AYUDA al 988.',
+    aboutHead: 'Sobre sus conversaciones con AURORA',
+    about: 'Sus conversaciones con AURORA les ayudan a usted y a su terapeuta a ver cómo está entre una cita y otra. Puede dejarlas en cualquier momento: solo dígaselo a su terapeuta o al equipo del estudio.',
+    foot: 'Esta hoja tiene información personal sobre su tratamiento. Guárdela en un lugar seguro.'
+  }
+};
+
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, factsOpen: false, discussed: false, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [] };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, factsOpen: false, discussed: false, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null };
 
   componentDidMount() {
     const o = {};
@@ -1355,6 +1451,7 @@ class Component extends DCLogic {
       if (['0', '1'].includes(h.get('drivers'))) r.drivers = h.get('drivers') === '1';
       if (['current', 'refined'].includes(h.get('look'))) r.refined = h.get('look') === 'refined';
       if (['0', '1'].includes(h.get('hero'))) r.hero = h.get('hero') === '1';
+      if (Object.keys(HO_TEXT).includes(h.get('lang'))) r.hoLang = h.get('lang');
       return r;
     };
     // The check-in page always names a real check-in of the patient shown
@@ -1365,11 +1462,12 @@ class Component extends DCLogic {
     Object.assign(o, this.readHash());
     withDay(o);
     if (Object.keys(o).length) this.setState(o);
-    // A link to another page or check-in starts it fresh: transcript closed, nothing marked
+    // A link to another page or check-in starts it fresh: transcript closed, nothing marked, and the handout's name,
+    // ticks and language cleared
     this.onHash = () => {
       const r = withDay(this.readHash());
       const moved = ['view', 'pid', 'cday'].some((k) => k in r && r[k] !== this.state[k]);
-      this.setState(moved ? { ...r, tx: false, cAt: null, pAt: null, hoName: '', hoOff: [] } : r);
+      this.setState(moved ? { ...r, tx: false, cAt: null, pAt: null, hoName: '', hoOff: [], hoLang: r.hoLang || null } : r);
     };
     window.addEventListener('hashchange', this.onHash);
     // Escape closes hover content anywhere (WCAG 1.4.13: dismissible)
@@ -1417,7 +1515,9 @@ class Component extends DCLogic {
     try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}`); } catch (e) { /* sandboxed preview */ }
     clearTimeout(this.peekT);
     clearTimeout(this.tipT);
-    this.setState({ ...o, cday: next.cday, cAt: o.cAt || null, pAt: null, tx: false, factsOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
+    // The handout's name, ticks and language belong to one printout: another page or patient starts fresh
+    const fresh = next.view !== this.state.view || next.pid !== this.state.pid ? { hoName: '', hoOff: [], hoLang: null } : {};
+    this.setState({ ...o, ...fresh, cday: next.cday, cAt: o.cAt || null, pAt: null, tx: false, factsOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
     try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
   }
 
@@ -1933,49 +2033,60 @@ class Component extends DCLogic {
       }))
     };
 
-    // Patient handout
-    const hoDefault = P.trend === 'notimp' ? ['Your check-ins have looked about the same for a while. That’s worth talking about at your next appointment.']
-      : P.status === 'nodata'
-      ? ['We have only a few check-ins from the last 2 weeks. That isn’t enough yet to see how things are going.']
-      : P.status === 'stable' && P.d <= -5 ? ['Your check-ins suggest things have been getting easier over the last few weeks.']
-      : P.status === 'stable' ? ['Your check-ins look about the same as usual.']
-      : ['Your check-ins suggest the last few weeks have been harder than usual. That’s worth talking about at your next appointment.'];
-    // What a patient might want to talk about: written for some mock patients, a neutral line for the rest
+    // Patient handout, in the patient's language (HO_TEXT), or in English when the clinician switches to read it through
+    const hoLangs = P.lang && HO_TEXT[P.lang] && P.lang !== 'en' ? [P.lang, 'en'] : ['en'];
+    const hoL = hoLangs.includes(s.hoLang) ? s.hoLang : hoLangs[0], HO = HO_TEXT[hoL];
+    const hoTone = P.trend === 'notimp' ? 'notimp' : P.status === 'nodata' ? 'nodata'
+      : P.status === 'stable' ? (P.d <= -5 ? 'easier' : 'stable') : 'harder';
+    // What a patient might want to talk about: written for some mock patients, in each language they print in; a neutral
+    // line for the rest. The clinician ticks them in English, so the lists line up item by item.
     const HO_TALK = {
-      delgado: ['Stopping your medication', 'Your sleep', 'Getting back to morning walks with Ana'],
-      kaur: ['What has been helping', 'Getting back to full days at work'],
-      fernandez: ['How you’ve been feeling since the medication change']
+      delgado: { en: ['Stopping your medication', 'Your sleep', 'Getting back to morning walks with Ana'] },
+      kaur: { en: ['What has been helping', 'Getting back to full days at work'] },
+      fernandez: { en: ['How you’ve been feeling since the medication change', 'Your sleep'], es: ['Cómo se ha sentido desde el cambio en su medicación', 'Cómo está durmiendo'] }
     };
-    const talkAll = HO_TALK[P.id] || [P.trend === 'notimp' ? 'How things have been going'
-      : P.status === 'nodata' ? 'How the check-ins are going for you'
-      : P.status === 'stable' ? 'What has been helping' : 'How the last few weeks have felt'];
+    const talkIn = (l) => (HO_TALK[P.id] && HO_TALK[P.id][l]) || [HO_TEXT[l].talkDefault[hoTone]];
+    const talkEn = talkIn('en'), talkHo = talkIn(hoL);
     const off = s.hoOff || [];
-    const talk = talkAll.map((text, i) => ({ text, on: !off.includes(i), toggle: () => this.setState({ hoOff: off.includes(i) ? off.filter((k) => k !== i) : [...off, i] }) }));
+    const talk = talkEn.map((text, i) => ({ text, on: !off.includes(i), toggle: () => this.setState({ hoOff: off.includes(i) ? off.filter((k) => k !== i) : [...off, i] }) }));
     // The patient's own questionnaires, not the AI estimate: higher means harder
     const qs = PHQ_WEEKS.map((w, k) => ({ w, v: P.phq[k] })).filter((q) => q.v != null);
     const qW0 = qs.length ? qs[0].w : 0, qW1 = qs.length ? qs[qs.length - 1].w : 1;
     const QX = (w) => 78 + ((w - qW0) / Math.max(1, qW1 - qW0)) * 500, QY = (v) => 16 + (1 - v / MAX) * 104;
     const qMove = qs.length >= 2 ? qs[qs.length - 1].v - qs[0].v : 0;
     const well = [
-      P.cn >= P.cd * 0.75 ? `You did ${P.cn} of ${P.cd} check-ins in the last 2 weeks.` : P.cn > 0 ? `You did ${countOf(P.cn, 'check-in')} in the last 2 weeks. Each one helps.` : null,
-      ...P.goals.filter((g) => /better|good|easier/.test(g.handoutStatus)).map((g) => `“${g.text}”: ${g.handoutStatus}.`),
-      qMove <= -5 ? 'Your questionnaires show things getting easier.' : null
+      P.cn >= P.cd * 0.75 ? HO.checkinsDone(P.cn, P.cd) : P.cn > 0 ? HO.checkinsSome(P.cn) : null,
+      ...P.goals.filter((g) => HO.goodGoal.test(g.handoutStatus)).map((g) => `“${g.text}”: ${g.handoutStatus}.`),
+      qMove <= -5 ? HO.easierLately : null
     ].filter(Boolean);
     const hoName = (s.hoName || '').trim();
+    const setLang = (l) => {
+      this.setState({ hoLang: l });
+      try { const h = new URLSearchParams((location.hash || '').replace(/^#/, '')); h.set('lang', l); history.replaceState(null, '', '#' + h.toString()); } catch (e) { /* sandboxed preview */ }
+    };
     const ho = {
-      greet: hoName ? `${hoName}, here’s how the last few weeks have gone` : 'Here’s how the last few weeks have gone',
-      sub: `For your ${P.visitDay ? P.visitDay + ' ' : 'next '}appointment with Dr. Okafor`,
-      paras: P.handout || hoDefault,
-      well: well.length ? well : ['You’re taking part in AURORA, and working on this with Dr. Okafor.'],
+      lang: hoL, t: HO,
+      greet: HO.greet(hoName),
+      sub: HO.sub(P.visitDay),
+      // Patient-specific summaries are written in English for the mock; other languages use the standard line
+      paras: (hoL === 'en' && P.handout) || [HO.summary[hoTone]],
+      well: well.length ? well : [HO.wellNone],
       hasGoals: P.goals.length > 0, goals: P.goals.map((g) => ({ ...g, iconEl: icon(g.icon, 20) })),
       chart: {
-        has: qs.length >= 2,
+        has: qs.length >= 2, harder: T(HO.harder), easier: T(HO.easier),
         line: qs.map((q) => `${f(QX(q.w))},${f(QY(q.v))}`).join(' '),
-        pts: qs.map((q) => ({ cx: f(QX(q.w)), cy: f(QY(q.v)), x: f(QX(q.w)), date: T(WEEKS[q.w]) })),
-        aria: qs.length >= 2 ? `Your questionnaires from ${WEEKS[qW0]} to ${WEEKS[qW1]}: ${qMove >= 3 ? 'harder lately' : qMove <= -3 ? 'easier lately' : 'about the same'}.` : ''
+        pts: qs.map((q) => ({ cx: f(QX(q.w)), cy: f(QY(q.v)), x: f(QX(q.w)), date: T(HO.date(WEEKS[q.w])) })),
+        aria: qs.length >= 2 ? HO.chartAria(WEEKS[qW0], WEEKS[qW1], qMove) : ''
       },
-      talk, talkOn: talk.filter((t) => t.on),
-      talkHead: P.visitDay ? `Things to talk about on ${P.visitDay}` : 'Things to talk about at your next visit',
+      talk, talkOn: talkHo.filter((t, i) => !off.includes(i)),
+      talkHead: HO.talkHead(P.visitDay),
+      // Only for patients who print in another language
+      langs: {
+        many: hoLangs.length > 1,
+        list: hoLangs.map((l) => ({ label: HO_TEXT[l].label, on: l === hoL, pick: () => setLang(l) })),
+        note: `${HO_TEXT[hoLangs[0]].label} is the language of the patient’s check-ins. Switch to English to read the handout through first: both say the same things.`,
+        draft: `Draft ${HO_TEXT[hoLangs[0]].label} until the study’s translators write it`
+      },
       name: s.hoName || '', setName: (e) => this.setState({ hoName: e.target.value }),
       icons: { sun: icon('sun', 20), talk: icon('message-square', 20), next: icon('pencil', 20), help: icon('phone', 20) }
     };

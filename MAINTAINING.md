@@ -13,7 +13,7 @@ Notes for whoever edits the mockups. What they are is in the [README](README.md)
 A link can open a specific page and settings:
 - `#view=list&order=status` (`order=visit`, by next visit, is the default)
 - `#view=patient&p=delgado`
-- `#view=handout&p=delgado`
+- `#view=handout&p=delgado`; `#view=handout&p=fernandez&lang=en` (v3: the handout in English for a patient whose check-ins are in Spanish)
 - `#view=checkin&p=delgado&d=2026-08-10` (v3: one check-in; without `&d=`, the patient's example or latest check-in)
 - Add `&clock=24` for 24-hour times, `&drivers=1` to open the drivers panel (v3), `&look=current` for v3's Original look, and `&hero=0` to hide the greeting band.
 - Older links' `&style=`, `&text=` and `&icons=` settings are ignored: those choices are settled.
@@ -28,7 +28,7 @@ Reviewers can pin notes to any part of the v2 and v3 pages and the landing page.
 - **Entering the code by hand:** two places open a dialog for the access code (or a whole review link): the landing page's Leave notes step, and the Notes panel whenever notes aren't shared. The code is saved in the browser (`aurora-notes-board` in localStorage), so every page, the mockups and the landing page, then shares notes. The landing page can also remove it. If the browser already holds notes saved only there, the dialog offers to copy them to the shared board; the copy happens when the page next connects (`aurora-notes-carry`). A wrong code gets a plain-language message, and until a code works, new notes stay in the browser.
 - **The board id is not in this repo:** `firestore.rules` is the template for the project's rules, with the id left out. The Firebase web config in `notes.js` is public by design; the rules are what protect the notes.
 - **Without the link,** notes are saved in that browser only.
-- **What a note records:** the version, page, patient, part of the page, and the settings in use (section style, text size, icons, caseload order, time format, look); on the check-in page, which check-in. It also records the site build the page was loaded from (`build.json`, which GitHub Pages fills in with the commit and build time on each deploy), so a note written in a tab opened before an update is matched to what the reviewer saw. **Download notes (CSV)** exports them.
+- **What a note records:** the version, page, patient, part of the page, and the settings in use (section style, text size, icons, caseload order, time format, look); on the check-in page, which check-in; on the v3 handout, its language. It also records the site build the page was loaded from (`build.json`, which GitHub Pages fills in with the commit and build time on each deploy), so a note written in a tab opened before an update is matched to what the reviewer saw. **Download notes (CSV)** exports them.
 - Notes are review scaffolding, like the review strip: they don't print, and the note form asks reviewers to leave out patient information.
 
 ## Screenshots and images

@@ -73,6 +73,10 @@ Interface words are labels, headers, notes and buttons, not patient data.
 
 - **American English** in everything a person reads: the interface, the patient handout, the landing page, these docs and code comments. For example: color, gray, center, behavior, labeled, license, toward, and -ize endings (summarize, prioritize).
 - **Dates and times** are US style too: see Times under Components.
+- **Other languages** follow their own conventions. The patient handout can print in Spanish, which uses usted, lowercase weekdays and the day before the month ("10 ago").
+  - **The clinician's name:** Spanish titles show gender (Dr., Dra.), so the real handout needs each clinician's own choice of how to be named. Until then the mockup says "su terapeuta, E. Okafor".
+  - **Register:** the mock check-in voice says tú. An app in tú and a clinic handout in usted is a common split, but it should be a deliberate choice (bead aurora-18y).
+  - **The check-ins** are "conversaciones con AURORA", never bare "sus conversaciones", which could read as the patient's own phone calls. The app, its notifications, the consent form and the handout should use the same term.
 - **Written quotations** keep their original spelling: the titles of papers and guidance, passages quoted from them, and names of organizations.
 - **Quotes from meetings** use American spelling. Speech has no spelling: a transcript's spelling comes from the transcription software, not the speaker. The transcripts themselves stay as recorded.
 - **Lines and zones are named for what they mean,** in the words of the status they start, not their arithmetic: the line where Worse than baseline begins is labeled Worse than baseline.
@@ -360,7 +364,8 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 - **Not printed** with the session brief, and not part of the patient handout.
 
 **Patient handout.** A page to go through with the patient, then print. Its question is "what would the patient want to know?" It uses plain words, at about a 6th-to-8th-grade reading level, and the brand's blue-violet rather than status colors, so nothing on it reads as a judgment.
-- **Before you print** (on screen only): an optional first name, which isn't saved; a tick box for each topic, to leave out anything the patient wouldn't want on paper; and a reminder to read the handout through, because parts of it are written by AI.
+- **Before you print** (on screen only): an optional first name, which isn't saved; a tick box for each topic, to leave out anything the patient wouldn't want on paper; and a reminder to read the handout through, because parts of it are written by AI. Moving to another patient or page clears the name, ticks and language.
+- **Language:** the handout prints in the language the patient chose for check-ins (Spanish for A. Fernández in the mock). The clinician can switch to English to read it through, so both versions must say the same things: the study's translators write the fixed wording, and lines about the patient are translated from the English the clinician reads, not written separately. The panel stays in English. The mockup's Spanish is a draft, labeled as one.
 - **Content, in order:**
   - a soft aurora header and the greeting;
   - a short summary in plain words;
@@ -369,7 +374,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
   - How your weeks have gone: a simple line of the patient's own PHQ-9 answers, from "easier" to "harder", not the AI estimate;
   - Things to talk about at the next visit, with a line to add their own;
   - Your next step, with lines to fill in together;
-  - If things get hard: the site's crisis line, and 988 in the US (example wording until the protocol sets it);
+  - If things get hard: the site's crisis line, and 988 at US sites only (example wording until the protocol sets it). Each site supplies its line in each language as a whole phrase, because Spanish changes the words around a number ("al 024", "a la línea…");
   - About your check-ins (draft wording until the consent form sets it);
   - a privacy line.
 - **Printout rules.** The protocol and consent forms still need to describe the handout (bead aurora-ubn).

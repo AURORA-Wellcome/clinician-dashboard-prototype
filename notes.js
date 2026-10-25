@@ -219,11 +219,13 @@
     const parts = [...document.querySelectorAll('#dc-root .crumbs .crumb, #dc-root .crumbs .cur')].map(clean);
     return parts[1] || '';
   }
+  // The patient handout can print in the patient's language (v3), so a note on it records which one was on screen
+  const handoutLang = () => { const a = page.view === 'handout' && document.querySelector('#dc-root .handout'); return (a && a.getAttribute('lang')) || null; };
   function contextNow() {
     return {
       version: VERSION, view: page.view, pid: page.view === 'list' || STATIC ? null : page.pid, pname: STATIC ? '' : patientName(), pageKey: pageKey(),
       commit: BUILD.commit, built: BUILD.built,
-      ctx: STATIC ? {} : { order: page.order, style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null }
+      ctx: STATIC ? {} : { order: page.order, style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang() }
     };
   }
   // After posting: a reviewer sees others' notes on a page once they have added one there. Facilitators see all.
@@ -604,6 +606,7 @@
     });
     if (c.drivers) hp.set('drivers', '1');
     if (n.view === 'checkin' && c.day) hp.set('d', c.day);
+    if (n.view === 'handout' && c.lang) hp.set('lang', c.lang);
     hp.set('look', c.look || 'current');
     hp.set('hero', c.hero === false ? '0' : '1');
     ui.focus = n.id;
@@ -723,12 +726,12 @@
       return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const iso = (ms) => (ms ? new Date(ms).toISOString().replace('T', ' ').slice(0, 16) : '');
-    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day'];
+    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day', 'handout_language'];
     const rows = [...m.visible, ...m.visible.flatMap((n) => m.replies(n.id))].sort(byTime).map((n) => {
       const c = n.ctx || {};
       return [n.id, iso(n.createdAt), n.name, n.role, n.kind, n.text, n.parent || '', Object.keys(n.plus || {}).length, n.resolved ? 'yes' : '', n.resolvedBy || '',
         n.version, VIEW_NAMES[n.view] || n.view, n.pname || n.pid || '', n.anchorLabel, n.x == null ? '' : n.x.toFixed(3), n.y == null ? '' : n.y.toFixed(3),
-        c.order, c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || ''];
+        c.order, c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || '', c.lang || ''];
     });
     const csv = [head, ...rows].map((r) => r.map(cell).join(',')).join('\r\n');
     const d = new Date(), pad = (v) => String(v).padStart(2, '0');
