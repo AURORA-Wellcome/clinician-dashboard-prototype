@@ -11,7 +11,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
 - **Status line:** the patient page states the trend status, its source and the time in care.
 - **Tile order:** the patient's PHQ-9 comes first and at the same size as the AI estimate.
 - **Chart:** it draws the rule that applies: baseline + 6 always, plus the expected range early in care or, once the persistence rule fires, the "10: symptomatic" line. The baseline + 6 line is labeled with the status it starts, Worse than baseline, and has an ⓘ saying why it stands out.
-- **Drivers panel:** "Show sleep, activity and contact" opens phone-sensing measures on the trend's weeks.
+- **Drivers panel:** "Show sleep, activity and contact" opens phone-sensing measures on the trend's weeks. Since October 25, each measure has its icon and its own cool hue in the Refined look, with a smooth line and a soft wash showing how far it has moved from its usual level. Pointing at either chart shows that week's values in the panel.
 - **Mock patients:** two new ones, `haddad` (early in care, not improving) and `novak` (the PHQ-9 fallback).
 - **Refined look** (the default since October 25): status words in ink with colored shapes, finer type, soft shadows, an initials avatar, a dot on the latest estimate, quick fade-ins, and a greeting band on the Patients page, with soft aurora art that follows the time of day. Opening a patient morphs the name into the page title, and the trend line draws in; motion is off with the reduced-motion setting. The review strip's Look switch still offers the Original look.
 - **Improving:** a patient on track whose estimate has come down steadily gets a quiet note, "Improving for 11 weeks (AI)", in the caseload and on the status line.

@@ -236,10 +236,10 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
     - questionnaire (clipboard)
     - study-team safety review (shield)
     - scheduling (calendar)
-    - family and relationships (people; v3 check-in page)
+    - family, relationships and contact (people; v3 check-in page and drivers panel)
   - Never use icons for urgency (the status shapes and color do that), never color them, and never show one alone. Each sits next to its text and is hidden from screen readers.
   - At most one icon per row or item.
-  - Used in: caseload flags, "What changed" items (in a left gutter), chart events and goals.
+  - Used in: caseload flags, "What changed" items (in a left gutter), chart events, goals, and the drivers panel's titles (Refined look).
   - No emoji, illustrations or decorative graphics. The exceptions are the brand mark (below), the greeting band in the Refined look, and the patient handout's header.
   - **Landing banner:** outside the dashboard, the landing page opens with a banner. It sets the stage on a page where nobody is working, and it moves calmly but visibly. `design/landing/banner_gen.py` draws it as SVG layers.
     - **Scene:** a night sky with aurora curtains over a low horizon of boreal forest: black spruce on two ridges, as in northern Canada, with a log cabin in a clearing. The forest and cabin are anchored to the bottom of the banner, so a wide screen crops sky rather than forest.
@@ -258,7 +258,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
     - a soft glow of blue-violet, violet and a little teal behind the latest version's screenshot;
     - a blue-violet-to-violet gradient on the latest version's badge and the How to review step numbers;
     - a closing band of night over the spruce treeline, under a thin aurora line.
-  - **In the dashboard,** the motif is only a thin blue-violet-to-violet line under the top bar (Refined look). It never uses green, magenta or warm colors there, and it never appears in charts, statuses or the printed brief. Text never sits on a gradient, and motion stays in the banner.
+  - **In the dashboard,** the motif is only a thin blue-violet-to-violet line under the top bar (Refined look). It never uses green, magenta or warm colors there, and it never appears in charts, statuses or the printed brief. (The drivers panel's hues in the Refined look come from the same cool range, but they are identity colors, not the motif.) Text never sits on a gradient, and motion stays in the banner.
   - The capsule "pill" icon was replaced by the pill bottle because at 16 px it read as a hyperlink symbol.
 - **Brand mark:** a 24 px rounded square in a blue-to-violet gradient (`#2E6FD6` to `#7B5CC9`) with two level white aurora ribbons, the lower one shorter and fainter. It sits beside the AURORA wordmark in the top bar (v3 and the landing page) and is the browser-tab icon (`favicon.svg`). Cool hues only, like the greeting band, so it never reads as a status. The ribbons stay level: a rising line would read as rising severity, and two identical waves as "≈".
 - **Discussed checkbox:** "Discussed AURORA data with the patient at this visit". This feeds the discussion-rate measure in the supervisor audit-and-feedback (A&F) playbook.
@@ -322,7 +322,8 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 
 **Drivers panel.** On demand under the trend:
 - **Content:** sleep, activity and contact from phone sensing, on the trend's weeks. Each measure's usual level is dotted, and event lines run through.
-- **Color:** ink only, because color means status.
+- **Pointing:** pointing at the trend or the panel marks that week on each measure, and the values at the right switch to it under "Week of Jul 13" ("Latest week" at rest). Sensing is weekly, so a day shows the week it falls in. The trend's readout adds the week's sensing for screen readers, and a click opens a completed check-in, as on the trend.
+- **Color:** ink in the Original look. The Refined look gives each measure its own cool hue (see Refined look).
 - **Wording:** the note says these are possible contributors, not causes. This is the model's claim discipline for "shared understanding of symptom drivers".
 - **Print:** the panel is not printed.
 
@@ -395,10 +396,11 @@ A polish pass. Since 2026-10-25 it has been v3's default look; the review strip'
 - **Chart:** a dot marks the latest estimate. (A "Today" mark doesn't fit: the chart ends at the last weekly estimate.)
 - **Motion:** row hover eases in; peek cards, readouts and ⓘ tips fade in over 0.12 s. Motion with meaning:
   - **Name to title:** opening a patient from the list morphs the name in the row into the page title (0.34 s, View Transitions where the browser has them), and back again from the breadcrumb. The rest of the page cross-fades quickly (0.18 s). It keeps the clinician's eye on the patient across the change of page.
-  - **Trend draw-in:** on the patient page the smoothed line draws itself in once (0.7 s), the band and check-in dots fade in, and the end dot appears last.
+  - **Trend draw-in:** on the patient page the smoothed line draws itself in once (0.7 s), the band and check-in dots fade in, and the end dot appears last. The drivers panel's lines draw in the same way when it opens.
   - All motion is off when the reduced-motion setting is on, in the Original look, and in print.
+- **Drivers panel:** each measure has its icon (moon, footprints, people) and its own cool hue: night indigo for sleep, daylight blue for activity, violet for contact. The hues only say which measure is which. Warm hues and greens mean status and amber is the AI estimate, so these stay cool. They pass the data-viz palette checks for small multiples: color-blind separation across all pairs (worst ΔE 15, target 8), the normal-vision floor (19, floor 15) and 3:1 contrast on white. The lines are smooth but never overshoot a week's value (monotone curves), and a soft wash fills the gap between each line and its usual level. Each title sits on its own line above its chart, so the chart keeps the trend's left edge and the weeks line up. *(Amends the drivers panel's ink-only rule if adopted.)*
 - **Greeting band** (Patients page only; the review strip's Greeting switch or `&hero=0` hides it): "Good morning, Dr. Okafor", then the date, visits today or tomorrow, and patients with a safety flag. Two soft aurora curtains in pale blue and violet sit at the right, fading out before the text. They follow the time of day: these are the afternoon colors, and the curtains are paler in the morning and deeper in the evening. They use cool hues only, because warm hues and greens mean status. The band doesn't animate and isn't printed. It is the one exception to "no decorative graphics" in the dashboard itself.
-- **New values,** to add to Tokens once the CWG confirms the look: avatar `#E4EBF4` with `#3D4B57` text; curtains `#8FB0EE` and `#B3A2EA` (afternoon), `#A9C4F3` and `#CABEF2` (morning), `#6F8EE2` and `#9682DE` (evening); gridlines `#EEF1F4`; card shadow `0 1px 2px rgba(16,24,40,.05), 0 4px 12px rgba(16,24,40,.05)`.
+- **New values,** to add to Tokens once the CWG confirms the look: avatar `#E4EBF4` with `#3D4B57` text; curtains `#8FB0EE` and `#B3A2EA` (afternoon), `#A9C4F3` and `#CABEF2` (morning), `#6F8EE2` and `#9682DE` (evening); drivers `#2C4F94` (sleep), `#2DA1C2` (activity) and `#8254EE` (contact), washes at 12% opacity; gridlines `#EEF1F4`; card shadow `0 1px 2px rgba(16,24,40,.05), 0 4px 12px rgba(16,24,40,.05)`.
 
 ## Procedure for each redesign round
 

@@ -267,6 +267,18 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .drv .drv-now{fill:var(--ink)}
 .drv .drv-sep{stroke:var(--line)}
 .drv .evt{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+.drv .hit{fill:transparent;cursor:crosshair}
+.drv .drv-hv{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+/* Refined look: each measure in its own cool hue, for identity only, with its icon and a soft wash between its line
+   and its usual level. Warm hues and greens mean status and amber is the AI estimate, so these stay cool: night indigo
+   for sleep, daylight blue for activity, violet for contact (checked with the data-viz palette validator). */
+.drv-sleep{--drv:#2C4F94}.drv-steps{--drv:#2DA1C2}.drv-contact{--drv:#8254EE}
+.refined .drv .drv-line{stroke:var(--drv);stroke-width:2}
+.refined .drv .drv-wash{fill:var(--drv);fill-opacity:.12}
+.refined .drv .drv-usual{stroke:var(--drv);stroke-opacity:.55}
+.refined .drv .drv-now{fill:var(--drv);stroke:var(--surface);stroke-width:2;paint-order:stroke}
+.refined .drv .drv-hv{stroke:var(--drv)}
+.drv .ic-chart{color:var(--muted)}
 /* Trend hover readout: one column per day; also by keyboard (focus the chart, arrow keys) */
 .chart-box{position:relative;container-type:inline-size;--chart-fs:13}
 /* The line where Worse than baseline begins is labeled with that status's name, in HTML over the chart so it can carry
@@ -394,6 +406,9 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
   .refined .chart .est{stroke-dasharray:1;stroke-dashoffset:1;animation:est-draw .7s cubic-bezier(.3,.7,.3,1) .05s forwards}
   .refined .chart .estband,.refined .chart .ci-est{animation:rf-fade .5s ease-out both}
   .refined .chart .est-end{animation:rf-fade .25s ease-out .65s both}
+  .refined .drv .drv-line{stroke-dasharray:1;stroke-dashoffset:1;animation:est-draw .7s cubic-bezier(.3,.7,.3,1) .05s forwards}
+  .refined .drv .drv-wash{animation:rf-fade .5s ease-out .2s both}
+  .refined .drv .drv-now{animation:rf-fade .25s ease-out .65s both}
 }
 @keyframes est-draw{to{stroke-dashoffset:0}}
 @media print{.refined .list,.refined .changes,.refined .chart-wrap,.refined .ci-tx{box-shadow:none;border-color:var(--line)}}
@@ -753,18 +768,25 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
           <button class="btn drv-toggle" onClick="{{ toggleDrivers }}" aria-expanded="{{ drv.expanded }}">{{ drv.toggleLabel }}</button>
           <sc-if value="{{ drv.show }}">
             <div class="drivers">
-              <p class="drv-note">From phone sensors, over the same weeks as the trend. Dotted lines show each measure’s usual level (its average over the first 4 weeks). Changes that line up with symptoms are possible contributors, not causes.</p>
-              <svg class="drv" viewBox="{{ drv.viewBox }}" role="img" aria-label="{{ drv.aria }}">
+              <p class="drv-note">{{ drv.note }}</p>
+              <svg class="drv" viewBox="{{ drv.viewBox }}" role="img" aria-label="{{ drv.aria }}" onMouseLeave="{{ hoverOff }}">
+                <text class="drv-when" x="{{ drv.endX }}" y="13">{{ drv.when }}</text>
                 <sc-for list="{{ drv.rows }}" as="r">
-                  <line class="drv-sep" x1="0" x2="880" y1="{{ r.top }}" y2="{{ r.top }}"></line>
-                  <text class="drv-name" x="0" y="{{ r.nameY }}">{{ r.name }}</text>
-                  <line class="drv-usual" x1="{{ drv.L }}" x2="{{ drv.R }}" y1="{{ r.usualY }}" y2="{{ r.usualY }}"></line>
-                  <polyline class="drv-line" points="{{ r.pts }}"></polyline>
-                  <circle class="drv-now" cx="{{ r.nowX }}" cy="{{ r.nowY }}" r="3.5"></circle>
-                  <text class="drv-now-label" x="{{ drv.endX }}" y="{{ r.nameY }}">{{ r.nowLabel }}</text>
-                  <text x="{{ drv.endX }}" y="{{ r.cmpY }}">{{ r.cmpLabel }}</text>
+                  <g class="{{ r.cls }}">
+                    <line class="drv-sep" x1="0" x2="880" y1="{{ r.top }}" y2="{{ r.top }}"></line>
+                    {{ r.iconEl }}
+                    <text class="drv-name" x="{{ r.nameX }}" y="{{ r.nameY }}">{{ r.name }}</text>
+                    <sc-if value="{{ drv.refined }}"><path class="drv-wash" d="{{ r.wash }}"></path></sc-if>
+                    <line class="drv-usual" x1="{{ drv.L }}" x2="{{ drv.R }}" y1="{{ r.usualY }}" y2="{{ r.usualY }}"></line>
+                    <path class="drv-line" d="{{ r.d }}" pathLength="1"></path>
+                    <circle class="drv-now" cx="{{ r.nowX }}" cy="{{ r.nowY }}" r="{{ drv.dotR }}"></circle>
+                    <sc-if value="{{ r.hasHv }}"><circle class="drv-hv" cx="{{ r.hvX }}" cy="{{ r.hvY }}" r="4.5"></circle></sc-if>
+                    <text class="drv-now-label" x="{{ drv.endX }}" y="{{ r.valY }}">{{ r.nowLabel }}</text>
+                    <text x="{{ drv.endX }}" y="{{ r.cmpY }}">{{ r.cmpLabel }}</text>
+                  </g>
                 </sc-for>
-                <sc-for list="{{ drv.events }}" as="e"><line class="evt" x1="{{ e.x }}" x2="{{ e.x }}" y1="0" y2="{{ drv.h }}"></line></sc-for>
+                <sc-for list="{{ drv.events }}" as="e"><line class="evt" x1="{{ e.x }}" x2="{{ e.x }}" y1="{{ drv.head }}" y2="{{ drv.h }}"></line></sc-for>
+                <sc-for list="{{ drv.hits }}" as="w"><rect class="hit" x="{{ w.x }}" y="0" width="{{ w.w }}" height="{{ drv.h }}" onMouseEnter="{{ w.enter }}" onClick="{{ w.click }}"></rect></sc-for>
               </svg>
             </div>
           </sc-if>
@@ -1892,37 +1914,75 @@ class Component extends DCLogic {
         `item 9: ${peek.i9}`, ...PK.changes.slice(0, 3).map((c) => c.title)].filter(Boolean).join('; ') + '.';
     }
 
-    // Drivers panel: sleep, activity and contact from phone sensing, on the trend's weeks (on demand)
+    // Drivers panel: sleep, activity and contact from phone sensing, on the trend's weeks (on demand). In the Refined
+    // look each measure has its icon and its own cool hue, a smooth line, and a wash between the line and its usual level.
+    // Pointing at either chart shows that week's values: sensing is weekly, so a day shows the week it falls in.
     const DRV = driversOf(P);
     const signed1 = (v) => (v > 0.05 ? '+' : v < -0.05 ? '−' : '') + Math.abs(v).toFixed(1);
     const drvDefs = [
-      { key: 'sleep', name: 'Sleep', fmt: (v) => `${v.toFixed(1)} h a night`, dfmt: (v) => `${signed1(v)} h vs usual` },
-      { key: 'steps', name: 'Activity', fmt: (v) => `${v.toFixed(1)}k steps a day`, dfmt: (v) => `${signed1(v)}k vs usual` },
-      { key: 'contact', name: 'Contact', fmt: (v) => `${Math.round(v)} contacts a day`, dfmt: (v) => `${signed(Math.round(v))} vs usual` }
+      { key: 'sleep', name: 'Sleep', icon: 'moon', fmt: (v) => `${v.toFixed(1)} h a night`, dfmt: (v) => `${signed1(v)} h vs usual` },
+      { key: 'steps', name: 'Activity', icon: 'footprints', fmt: (v) => `${v.toFixed(1)}k steps a day`, dfmt: (v) => `${signed1(v)}k vs usual` },
+      { key: 'contact', name: 'Contact', icon: 'users', fmt: (v) => `${Math.round(v)} contacts a day`, dfmt: (v) => `${signed(Math.round(v))} vs usual` }
     ];
-    const drv = {
-      show: s.drivers, expanded: s.drivers ? 'true' : 'false',
-      toggleLabel: s.drivers ? 'Hide sleep, activity and contact' : 'Show sleep, activity and contact',
-      L, R, endX: f(R + 10), h: 56 * drvDefs.length, viewBox: `0 0 880 ${56 * drvDefs.length}`,
-      events: ch.events.map((e) => ({ x: e.x }))
+    // A smooth line that passes through every week and never overshoots one (monotone cubic, Fritsch–Butland)
+    const linePath = (p) => 'M' + p.map(([x, y]) => `${f(x)},${f(y)}`).join(' L');
+    const smoothPath = (p) => {
+      if (p.length < 3) return linePath(p);
+      const n = p.length, dx = [], m = [], t = [];
+      for (let i = 0; i < n - 1; i++) { dx[i] = p[i + 1][0] - p[i][0]; m[i] = (p[i + 1][1] - p[i][1]) / dx[i]; }
+      t[0] = m[0]; t[n - 1] = m[n - 2];
+      for (let i = 1; i < n - 1; i++) t[i] = m[i - 1] * m[i] <= 0 ? 0 : (3 * (dx[i - 1] + dx[i])) / ((2 * dx[i] + dx[i - 1]) / m[i - 1] + (dx[i] + 2 * dx[i - 1]) / m[i]);
+      let d = `M${f(p[0][0])},${f(p[0][1])}`;
+      for (let i = 0; i < n - 1; i++) {
+        const h = dx[i] / 3;
+        d += ` C${f(p[i][0] + h)},${f(p[i][1] + h * t[i])} ${f(p[i + 1][0] - h)},${f(p[i + 1][1] - h * t[i + 1])} ${f(p[i + 1][0])},${f(p[i + 1][1])}`;
+      }
+      return d;
     };
-    const drvAria = [];
+    const hw = hd == null ? null : Math.min(last, Math.floor(hd / 7));
+    const showHw = hw != null && hw >= x0;
+    // Refined look: each row has a title line (icon and name) over its chart, since an icon beside the name would crowd
+    // the chart's left edge, which stays the trend's so the weeks line up
+    const DHEAD = 20, DROW = s.refined ? 64 : 56, DPLOT = s.refined ? 26 : 12, DH = s.refined ? 34 : 36;
+    const drv = {
+      show: s.drivers, expanded: s.drivers ? 'true' : 'false', refined: s.refined,
+      toggleLabel: s.drivers ? 'Hide sleep, activity and contact' : 'Show sleep, activity and contact',
+      note: `From phone sensors, over the same weeks as the trend. Dotted lines show each measure’s usual level (its average over the first 4 weeks)${s.refined ? ', and the shading shows how far it has moved from it' : ''}. Point at either chart to see a week. Changes that line up with symptoms are possible contributors, not causes.`,
+      when: T(showHw ? `Week of ${WEEKS[hw]}` : 'Latest week'),
+      L, R, endX: f(R + 10), head: DHEAD, h: DHEAD + DROW * drvDefs.length, viewBox: `0 0 880 ${DHEAD + DROW * drvDefs.length}`, dotR: s.refined ? 4 : 3.5,
+      events: ch.events.map((e) => ({ x: e.x })),
+      // The same days as the trend's, so pointing here moves the trend's readout too, and a click opens a completed
+      // check-in as it does on the trend (its page shows that week's phone sensing)
+      hits: ch.hits
+    };
+    const drvAria = [], drvHvAria = [];
     drv.rows = drvDefs.map((r, idx) => {
       const vals = DRV[r.key].map((v, i) => (i >= x0 && v != null ? [i, v] : null)).filter(Boolean);
       const first = vals.slice(0, 4);
       const usual = first.reduce((a, [, v]) => a + v, 0) / first.length;
       const vs = [...vals.map(([, v]) => v), usual];
       const lo = Math.min(...vs), hi = Math.max(...vs), pad = (hi - lo) * 0.15 || 1;
-      const top = idx * 56, YY = (v) => top + 48 - ((v - (lo - pad)) / (hi - lo + 2 * pad)) * 36;
+      const top = DHEAD + idx * DROW, YY = (v) => top + DPLOT + DH - ((v - (lo - pad)) / (hi - lo + 2 * pad)) * DH;
       const [li, lv] = vals[vals.length - 1];
+      const pts = vals.map(([i, v]) => [X(i), YY(v)]);
+      const curve = s.refined ? smoothPath(pts) : linePath(pts);
+      const hvPt = showHw ? vals.find(([i]) => i === hw) : null;
+      const sv = hvPt ? hvPt[1] : lv;
       drvAria.push(`${r.name} ${r.fmt(lv)}, ${r.dfmt(lv - usual)}`);
+      if (hvPt) drvHvAria.push(`${r.name.toLowerCase()} ${r.fmt(sv)}, ${r.dfmt(sv - usual)}`);
       return {
-        top: f(top + 0.5), nameY: f(top + 24), cmpY: f(top + 42), name: T(r.name),
-        pts: vals.map(([i, v]) => `${f(X(i))},${f(YY(v))}`).join(' '), usualY: f(YY(usual)),
-        nowX: f(X(li)), nowY: f(YY(lv)), nowLabel: T(r.fmt(lv)), cmpLabel: T(r.dfmt(lv - usual))
+        cls: `drv-row drv-${r.key}`, name: T(r.name), iconEl: s.refined ? iconAt(r.icon, 0, top + 6.5, 15) : null,
+        top: f(top + 0.5), nameX: s.refined ? 21 : 0, nameY: f(top + (s.refined ? 19 : 24)),
+        valY: f(top + (s.refined ? 38 : 24)), cmpY: f(top + (s.refined ? 56 : 42)),
+        d: curve, wash: `${curve} L${f(X(li))},${f(YY(usual))} L${f(pts[0][0])},${f(YY(usual))} Z`, usualY: f(YY(usual)),
+        nowX: f(X(li)), nowY: f(YY(lv)),
+        hasHv: !!hvPt && hvPt[0] !== li, hvX: hvPt ? f(X(hvPt[0])) : 0, hvY: hvPt ? f(YY(hvPt[1])) : 0,
+        nowLabel: T(r.fmt(sv)), cmpLabel: T(r.dfmt(sv - usual))
       };
     });
     drv.aria = 'Phone sensing over the same weeks: ' + drvAria.join('; ');
+    // With the panel open, the trend's readout also says that week's phone sensing
+    if (s.drivers && hv.show && drvHvAria.length) hv.aria += ` Phone sensing, week of ${WEEKS[hw]}: ${drvHvAria.join('; ')}.`;
 
     // Check-in page (draft): one check-in, its safety status, estimate, AI summary, signals and transcript
     const cDay = ciList.includes(dayOfIso(s.cday)) ? dayOfIso(s.cday) : defaultCheckin(P);
