@@ -134,9 +134,9 @@ def skyline(ridge_def, spacing, height, clearing, tiers_max, x0=-34.0, x1=W + 34
     return d + ' '.join(out) + f'L{num(x1)},{H + 2}L{num(x0)},{H + 2}Z'
 
 far_forest = skyline(FAR, (1.4, 3.4), lambda x: (8 + 3 * math.sin(x / 110 + 2.1)) * trnd.uniform(0.6, 1.25), 0.03, 2)
-# A log cabin in a clearing on the near ridge, right of center, where narrow banners still show it
-CABIN_X = 1010
-near_forest = skyline(NEAR, (2, 5), lambda x: (24 + 6 * math.sin(x / 160 + 1.3) + 3 * math.sin(x / 41 + 0.4)) * trnd.uniform(0.65, 1.2) + (10 if trnd.random() < 0.05 else 0), 0.012, 5, keep_clear=(CABIN_X - 24, CABIN_X + 26))
+# A log cabin in a clearing on the near ridge, off to the right (banners narrower than about 430 px don't show it)
+CABIN_X = 1150
+near_forest = skyline(NEAR, (2, 5), lambda x: (24 + 6 * math.sin(x / 160 + 1.3) + 3 * math.sin(x / 41 + 0.4)) * trnd.uniform(0.65, 1.2) + (10 if trnd.random() < 0.05 else 0), 0.012, 5, keep_clear=(CABIN_X - 26, CABIN_X + 26))
 
 def hfade(id_, stops):
     return f'<linearGradient id="{id_}" x1="0" y1="0" x2="1" y2="0">' + ''.join(f'<stop offset="{o}" stop-color="#fff" stop-opacity="{a}"/>' for o, a in stops) + '</linearGradient>'
@@ -192,30 +192,34 @@ tint_defs = ('<linearGradient id="bn-green" x1="0" y1="1" x2="0" y2="0"><stop of
 tint_g = layer('bn-green', f'<g mask="url(#bn-m-green)"><path d="{main}" fill="url(#bn-green)" filter="url(#bn-glow)" opacity=".6"/><path d="{main}" fill="url(#bn-green)" filter="url(#bn-rays-g)"/></g>', tint_defs)
 tint_p = layer('bn-purple', f'<g mask="url(#bn-m-purple)"><path d="{main}" fill="url(#bn-purple)" filter="url(#bn-glow)" opacity=".6"/><path d="{main}" fill="url(#bn-purple)" filter="url(#bn-rays-p)"/></g>')
 edge_l = layer('bn-edge', f'<g mask="url(#bn-m-main)"><path d="{edge}" fill="url(#bn-edge)" filter="url(#bn-soft)" opacity=".75"/></g>')
-# The cabin: low log walls and a pitched roof in the forest's own dark, two windows lit warm from inside with a soft
-# halo, and a little of their light on the ground in front. Drawn around its base at (0, 0), then placed and scaled.
-# Its smoke and firelight are laid over it by the page (.bn-scene), which animates them.
+# The cabin, seen three-quarters on: its gable end faces right, and its long side recedes to the left, toward the
+# middle of the scene, with one larger window lit warm from inside, a soft halo, and a little of its light on the ground.
+# The roof edges catch a faint rim of skylight. Drawn around its base at (0, 0), then placed and scaled. Its smoke and
+# firelight are laid over it by the page (.bn-scene), which animates them.
 CABIN_K = 1.2
 cx, by = CABIN_X, round(ridge_y(*NEAR, CABIN_X) + 1, 1)
-windows = [(-8.6, -6.4), (3.4, -6.4)]
-win = ''.join(f'<rect x="{x:g}" y="{y:g}" width="3.4" height="3.4" rx=".3"/>' for x, y in windows)
+window = '-7.5,-2.45 -7.5,-6.35 -1.5,-6.6 -1.5,-2.3'
 cabin_defs = ('<filter id="bn-warm" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.6"/></filter>'
               '<filter id="bn-spill" x="-30%" y="-150%" width="160%" height="400%"><feGaussianBlur stdDeviation="2.5"/></filter>')
 cabin = (f'<g transform="translate({cx:g} {by:g}) scale({CABIN_K:g})">'
-         '<ellipse cx="-2" cy="3" rx="20" ry="3" fill="#FFB25A" opacity=".16" filter="url(#bn-spill)"/>'
-         '<path d="M-12,2V-8H12V2ZM-14,-7.6L-10.5,-13.5H10.5L14,-7.6ZM6,-11V-17.2H8.4V-11Z" fill="#050A1F"/>'
-         f'<g fill="#FFB04D" opacity=".85" filter="url(#bn-warm)">{win}</g><g fill="#FFD08A">{win}</g>'
-         '<g fill="none" stroke="#3A230C" stroke-width=".4" opacity=".7">'
-         + ''.join(f'<path d="M{x + 1.7:g},{y:g}v3.4M{x:g},{y + 1.7:g}h3.4"/>' for x, y in windows) + '</g></g>')
+         '<ellipse cx="-6" cy="2.8" rx="13" ry="2.4" fill="#FFB25A" opacity=".16" filter="url(#bn-spill)"/>'
+         '<path d="M-12,-.5V-8L4,-9V2H-12ZM-9.8,-12V-18.6H-7.4V-12ZM-10.2,-18.6H-7V-19.3H-10.2Z" fill="#050A1F"/>'
+         '<path d="M4,2V-9L9,-15L14,-9V2Z" fill="#08102C"/>'
+         '<path d="M9,-15L-8,-14.2L-12.8,-7.7L3.4,-8.8Z" fill="#060B22"/>'
+         '<path d="M3.4,-8.8L9,-15.2L14.6,-8.8" fill="none" stroke="#060B22" stroke-width=".9" stroke-linejoin="round"/>'
+         '<path d="M-8,-14.45L9,-15.45L14.8,-8.95" fill="none" stroke="#96AAE6" stroke-opacity=".28" stroke-width=".35"/>'
+         f'<polygon points="{window}" fill="#FFB04D" opacity=".85" filter="url(#bn-warm)"/>'
+         f'<polygon class="bn-win" points="{window}" fill="#FFD08A"/>'
+         '<path d="M-4.5,-6.48V-2.37M-7.5,-4.4L-1.5,-4.45" fill="none" stroke="#3A230C" stroke-width=".4" opacity=".7"/></g>')
 # The forest and cabin are anchored at the bottom of the banner, so a wide banner crops sky rather than forest
 hills = layer('bn-hills', f'<path d="{far_forest}" fill="#0E1842"/><path d="{near_forest}" fill="#050A1F"/>{cabin}', cabin_defs, align='xMidYMax')
 # The forest's silhouette alone, as the mask that keeps the page's starlight on the trees (design/landing/forest.svg)
 forest_mask = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" preserveAspectRatio="xMidYMax slice">'
                f'<path d="{far_forest}"/><path d="{near_forest}"/></svg>\n')
 open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'forest.svg'), 'w').write(forest_mask)
-# Where the page puts the smoke (the chimney top) and the firelight (between the windows), in percent of the scene
-chimney = (round(cx + 7.2 * CABIN_K, 2), round(by - 17.2 * CABIN_K, 2))
-hearth = (cx - 2.6 * CABIN_K, by - 4.7 * CABIN_K)
+# Where the page puts the smoke (the chimney top) and the firelight (on the window), in percent of the scene
+chimney = (round(cx - 8.6 * CABIN_K, 2), round(by - 19.3 * CABIN_K, 2))
+hearth = (cx - 4.5 * CABIN_K, by - 4.45 * CABIN_K)
 scene = (f'<div class="bn-scene"><div class="bn-hearth" style="left:{hearth[0] / W * 100:.3f}%;top:{hearth[1] / H * 100:.3f}%"></div>'
          f'<div class="bn-smoke" data-at="{chimney[0]:g},{chimney[1]:g}" style="left:{chimney[0] / W * 100:.3f}%;top:{chimney[1] / H * 100:.3f}%">'
          + '<i></i>' * 8 + '</div></div>')
