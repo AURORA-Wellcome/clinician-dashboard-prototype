@@ -342,9 +342,6 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
     <span class="review-label">Review controls · not part of the design</span>
     <span class="seg"><sc-for list="{{ viewTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span>
     <sc-if value="{{ onList }}"><span class="seg"><sc-for list="{{ orderTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></sc-if>
-    <span class="seg"><sc-for list="{{ styleTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span>
-    <span class="seg"><sc-for list="{{ iconTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span>
-    <span class="seg"><sc-for list="{{ textTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span>
   </div>
 
   <header class="topbar no-print">
@@ -735,9 +732,7 @@ class Component extends DCLogic {
       if (['list', 'patient', 'handout'].includes(h.get('view'))) r.view = h.get('view');
       if (PATIENTS.some((p) => p.id === h.get('p'))) r.pid = h.get('p');
       if (['status', 'visit'].includes(h.get('order'))) r.order = h.get('order');
-      if (['0', '1'].includes(h.get('icons'))) r.icons = h.get('icons') === '1';
-      if (['plain', 'distinct'].includes(h.get('style'))) r.distinct = h.get('style') === 'distinct';
-      if (['current', 'larger'].includes(h.get('text'))) r.big = h.get('text') === 'larger';
+      // Distinct sections, larger text and icons were settled on October 25, so old links' style, text and icons are ignored
       if (['12', '24'].includes(h.get('clock'))) r.clock24 = h.get('clock') === '24';
       return r;
     };
@@ -1100,19 +1095,7 @@ class Component extends DCLogic {
         tab('Patient handout', s.view === 'handout', () => this.go({ view: 'handout' }))
       ],
       appCls: 'app' + (s.distinct ? ' distinct' : '') + (s.big ? ' big' : ''), distinct: s.distinct, sc,
-      textTabs: [
-        tab('Current text', !s.big, () => this.go({ big: false })),
-        tab('Larger text', s.big, () => this.go({ big: true }))
-      ],
       goalsCls: 'goals' + (s.icons ? ' with-icons' : ''),
-      styleTabs: [
-        tab('Plain sections', !s.distinct, () => this.go({ distinct: false })),
-        tab('Distinct sections', s.distinct, () => this.go({ distinct: true }))
-      ],
-      iconTabs: [
-        tab('Icons on', s.icons, () => this.go({ icons: true })),
-        tab('Icons off', !s.icons, () => this.go({ icons: false }))
-      ],
       changesCls: 'changes' + (s.icons ? ' with-icons' : ''),
       orderTabs: [
         tab('Grouped by status', byStatus, () => this.go({ order: 'status' })),

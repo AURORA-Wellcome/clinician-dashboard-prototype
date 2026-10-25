@@ -397,9 +397,6 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
     <span class="review-label">Review · not part of the design</span>
     <span class="review-group"><span class="review-k">Page</span><span class="seg"><sc-for list="{{ viewTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
     <sc-if value="{{ onList }}"><span class="review-group"><span class="review-k">List</span><span class="seg"><sc-for list="{{ orderTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
-    <span class="review-group"><span class="review-k">Sections</span><span class="seg"><sc-for list="{{ styleTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
-    <span class="review-group"><span class="review-k">Icons</span><span class="seg"><sc-for list="{{ iconTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
-    <span class="review-group"><span class="review-k">Text</span><span class="seg"><sc-for list="{{ textTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
     <span class="review-group"><span class="review-k">Look</span><span class="seg"><sc-for list="{{ lookTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
     <sc-if value="{{ greetCtl }}"><span class="review-group"><span class="review-k">Greeting</span><span class="seg"><sc-for list="{{ heroTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
   </div>
@@ -899,9 +896,7 @@ class Component extends DCLogic {
       if (['list', 'patient', 'handout'].includes(h.get('view'))) r.view = h.get('view');
       if (PATIENTS.some((p) => p.id === h.get('p'))) r.pid = h.get('p');
       if (['status', 'visit'].includes(h.get('order'))) r.order = h.get('order');
-      if (['0', '1'].includes(h.get('icons'))) r.icons = h.get('icons') === '1';
-      if (['plain', 'distinct'].includes(h.get('style'))) r.distinct = h.get('style') === 'distinct';
-      if (['current', 'larger'].includes(h.get('text'))) r.big = h.get('text') === 'larger';
+      // Distinct sections, larger text and icons were settled on October 25, so old links' style, text and icons are ignored
       if (['12', '24'].includes(h.get('clock'))) r.clock24 = h.get('clock') === '24';
       if (['0', '1'].includes(h.get('drivers'))) r.drivers = h.get('drivers') === '1';
       if (['current', 'refined'].includes(h.get('look'))) r.refined = h.get('look') === 'refined';
@@ -1348,19 +1343,7 @@ class Component extends DCLogic {
         tab('Handout', s.view === 'handout', () => this.go({ view: 'handout' }))
       ],
       appCls: 'app' + (s.distinct ? ' distinct' : '') + (s.big ? ' big' : '') + (s.refined ? ' refined' : ''), distinct: s.distinct, sc,
-      textTabs: [
-        tab('Current', !s.big, () => this.go({ big: false })),
-        tab('Larger', s.big, () => this.go({ big: true }))
-      ],
       goalsCls: 'goals' + (s.icons ? ' with-icons' : ''),
-      styleTabs: [
-        tab('Plain', !s.distinct, () => this.go({ distinct: false })),
-        tab('Distinct', s.distinct, () => this.go({ distinct: true }))
-      ],
-      iconTabs: [
-        tab('On', s.icons, () => this.go({ icons: true })),
-        tab('Off', !s.icons, () => this.go({ icons: false }))
-      ],
       changesCls: 'changes' + (s.icons ? ' with-icons' : ''),
       orderTabs: [
         tab('By status', byStatus, () => this.go({ order: 'status' })),

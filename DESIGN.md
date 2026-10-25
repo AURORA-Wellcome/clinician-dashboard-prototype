@@ -225,7 +225,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colours ar
   - The ⓘ is drawn at text size, but its hit area is 24 × 24 px (the WCAG 2.2 minimum target size).
   - Screen readers hear the tip as the button's description. Tips don't print.
   - The check-in dots have the same tip, for the pointer only, because the count and note beside them say the same in words.
-- **Section styles** *(under review: the review strip switches between Plain and Distinct)*. Plain stacks every section in one column, as white panels on the grey page. Distinct makes each section recognisable at a glance:
+- **Section styles:** Distinct, settled on October 25, 2026, along with the larger text and the icons. The alternatives (Plain, one column of white panels; the earlier, smaller text; no icons) were clearly weaker, so they are no longer offered for review, to save reviewers' attention for open questions. Distinct makes each section recognisable at a glance:
   - **Summary band:** the patient's name, next visit and the four tiles sit on a full-width white band. Details follow on the grey page.
   - **Tile graphics** repeat a number that is already shown; they never add new data.
     - Severity: a 0–27 scale bar under the hero number, with unlabelled ticks at 5, 10, 15 and 20. The baseline is a dotted tick, and the AI estimate is an `ai-series` dot on its `ai-band` range.
@@ -299,7 +299,7 @@ A polish pass, switched in the review strip (Look: Current or Refined; deep link
 1. **Audit content** for the page against its question: keep, move or cut. Get CWG decisions on flagged items. Audits quote the planning meetings, so they stay out of this public repo.
 2. **Restyle one page at a time**, using only these tokens.
 3. **Screenshot loop.** Serve the repo folder (`python3 -m http.server 8767`) and take headless Chrome screenshots at 1400 px wide.
-   - v2 supports deep links, e.g. `AURORA%20Dashboard%20v2.dc.html#view=patient&p=delgado` or `#view=list&order=status`. Add `&style=plain` or `&style=distinct` for the section style, `&text=current` for the earlier text sizes, `&clock=24` for 24-hour times, and `&icons=0` to hide icons.
+   - v2 supports deep links, e.g. `AURORA%20Dashboard%20v2.dc.html#view=patient&p=delgado` or `#view=list&order=status`. Add `&clock=24` for 24-hour times. (Links that still carry `&style=`, `&text=` or `&icons=` are ignored: those choices are settled.)
    - Check the printed patient page is one page (`--print-to-pdf`).
    - Save before/after shots to `design/screenshots/` with dated names.
 4. **Independent critique.** Give a second model, or a fresh agent, only the screenshots and this file, and ask what to remove. The Gemini CLI on this Mac needs `GOOGLE_CLOUD_PROJECT` set before it will run.

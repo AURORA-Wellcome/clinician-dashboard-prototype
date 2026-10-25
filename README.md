@@ -16,7 +16,7 @@ v2 changed to follow the theoretical model (`Theoretical model/`) and the off-tr
 - **Drivers panel:** "Show sleep, activity and contact" opens phone-sensing measures on the trend's weeks.
 - **Mock patients:** two new ones, `haddad` (early in care, not improving) and `novak` (the PHQ-9 fallback). Add `&drivers=1` to a link to open the drivers panel.
 - **Refined look:** switched in the review strip (Look). Status words in ink with coloured shapes, finer type, soft shadows, an initials avatar, a dot on the latest estimate, quick fade-ins, and a greeting band with soft aurora art on the Patients page. Details are in `DESIGN.md`. Add `&look=refined` to a link, and `&hero=0` to hide the greeting band.
-- **Review strip:** v3's settings are grouped with short labels (Page, List, Sections, Icons, Text, Look, and Greeting on the Refined Patients page), so the strip stays compact.
+- **Review strip:** v3's settings are grouped with short labels (Page, List, Look, and Greeting on the Refined Patients page). Section style, text size and icons are settled (Distinct, Larger, on), so they are no longer switches.
 
 ### v2: `AURORA Dashboard v2.dc.html`
 
@@ -31,9 +31,9 @@ What changed from v1:
 - MRN, diagnosis code and medication list are removed, because AURORA won't have EHR data.
 - The text describes what changed rather than prescribing actions.
 - The mock data has 10 patients, with visits spread over two weeks.
-- Muted line icons mark the kind of signal (medication, sleep, check-ins, and so on). The review strip has an Icons on/off switch for comparison. The icons are from [Lucide](https://lucide.dev), under the ISC licence.
-- Two section styles, switched in the review strip. **Distinct** (the default) adds a white summary band on the patient page, small graphics in the severity and check-in tiles, a tinted Safety tile when there is a flag, "What changed" beside the goals, a shaded zone on the chart above baseline + 5, and tinted status bands on the caseload. **Plain** is the one-column version.
-- Two text sizes, also switched in the review strip. **Larger** (the default) follows the type rules in `DESIGN.md`: 17 px body text, nothing below 15 px, safety wording at body size, and print sizes of at least 9 pt (the handout prints at 14 pt). **Current** is the earlier, smaller scale, kept for comparison.
+- Muted line icons mark the kind of signal (medication, sleep, check-ins, and so on). The icons are from [Lucide](https://lucide.dev), under the ISC licence.
+- **Distinct** sections (settled on October 25; the one-column **Plain** style is no longer offered) add a white summary band on the patient page, small graphics in the severity and check-in tiles, a tinted Safety tile when there is a flag, "What changed" beside the goals, a shaded zone on the chart above baseline + 5, and tinted status bands on the caseload.
+- **Larger** text (settled; the earlier, smaller scale is no longer offered) follows the type rules in `DESIGN.md`: 17 px body text, nothing below 15 px, safety wording at body size, and print sizes of at least 9 pt (the handout prints at 14 pt).
 - On the patients list, resting on a row for a moment shows a peek card: a small trend, severity with its uncertainty and baseline, the latest PHQ-9, item 9, and what changed. Rows are reachable by Tab, and Enter opens the patient.
 - The ⓘ icons open their explanation at once, when pointed at or reached by Tab, instead of the browser's delayed tooltip. A click or tap keeps it open; Escape or a click elsewhere closes it.
 - On the patient page, pointing at the trend chart shows each day's values: the AI estimate and range, whether that day's check-in was done and what it estimated, the PHQ-9 and item 9 on PHQ-9 days, and any event. From the keyboard, Tab to the chart and use the arrow keys (Shift for a week at a time). In the mock data, check-ins are expected Monday to Saturday, so 12 in 14 days. The last 14 days match each patient's check-in dots, and earlier days follow the same rate.
@@ -44,7 +44,7 @@ Deep links open a specific page:
 - `#view=patient&p=delgado`
 - `#view=list&order=status`
 - `#view=handout&p=delgado`
-- Add `&style=plain` or `&style=distinct` for the section style, `&text=current` or `&text=larger` for the text size, `&clock=24` for 24-hour times, and `&icons=0` to hide the icons.
+- Add `&clock=24` for 24-hour times. Older links' `&style=`, `&text=` and `&icons=` settings are ignored.
 
 Patient ids: `osei`, `whitfield`, `delgado`, `fernandez`, `nguyen`, `mensah`, `santoso`, `kaur`, `brooks`, `ortiz`.
 
