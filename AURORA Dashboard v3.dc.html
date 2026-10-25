@@ -196,7 +196,6 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .chart text{font-family:var(--font);font-size:13px;fill:var(--muted)}
 .chart .grid{stroke:var(--line);stroke-width:1}
 .chart .axis{stroke:var(--line-strong);stroke-width:1}
-.chart .thr-label{fill:var(--worse-text)}
 .chart .base{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:2 4}
 .chart .thr{stroke:var(--worse);stroke-width:1.2;stroke-dasharray:6 4}
 .chart .estband{fill:var(--ai-band)}
@@ -265,7 +264,11 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .drv .drv-sep{stroke:var(--line)}
 .drv .evt{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
 /* Trend hover readout: one column per day; also by keyboard (focus the chart, arrow keys) */
-.chart-box{position:relative}
+.chart-box{position:relative;container-type:inline-size;--chart-fs:13}
+/* "Baseline + 6" is drawn in HTML over the chart so it can carry an ⓘ. It sits where the SVG label did (x 750 of 880,
+   centred on the line) and scales with the chart like the SVG labels: --chart-fs follows their font sizes. */
+.thr-tag{position:absolute;left:calc(750 / 880 * 100%);display:flex;align-items:center;transform:translateY(-50%);font-size:calc(var(--chart-fs) * 100cqw / 880);line-height:1.2;color:var(--worse-text);white-space:nowrap}
+.thr-tag .tt-wrap{margin-left:4px}
 .chart .hit{fill:transparent;cursor:crosshair}
 .chart .guide{stroke:var(--muted);stroke-width:1}
 .chart .hv-est{fill:var(--surface);stroke:var(--ai);stroke-width:2.5}
@@ -356,6 +359,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .big .safety-note{font-size:var(--fs-md);line-height:var(--lh-md)}
 .big .foot{font-size:var(--fs-md);line-height:var(--lh-md);max-width:70ch}
 .big .chart text{font-size:14px}
+.big .chart-box{--chart-fs:14}
 .big .chart .noest{font-size:16px}
 /* Chart labels scale with the chart: raise them as it narrows so they stay at least about 15px, and grow with zoom */
 /* Refined look (under review, DESIGN.md): calmer colour, finer type, softer structure, a human touch */
@@ -383,10 +387,11 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .greet-text{position:relative}
 .greet-hello{font-size:var(--fs-lg);line-height:var(--lh-lg);font-weight:600;letter-spacing:-.005em}
 .greet-sub{margin-top:2px;color:var(--muted)}
-@media screen and (max-width:66rem){.big .chart text{font-size:15px}}
+@media screen and (max-width:66rem){.big .chart text{font-size:15px}.big .chart-box{--chart-fs:15}}
 /* Narrow windows and 200% zoom (WCAG 1.4.4): flags drop to a second line, tiles go 2 x 2, one column */
 @media screen and (max-width:60rem){
   .big .chart text{font-size:20px}
+  .big .chart-box{--chart-fs:20}
   .big .chart .noest{font-size:22px}
   .list.by-status,.big .list.by-status{--cols:minmax(0,1.3fr) minmax(0,1.2fr) 5rem 5rem}
   .list.by-visit,.big .list.by-visit{--cols:5.5rem minmax(0,1.2fr) minmax(0,1.3fr) 5rem 5rem}
@@ -445,6 +450,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
   .big .page,.big .band-inner{max-width:none}
   .big .chart{max-height:none}
   .big .chart text{font-size:15px}
+  .big .chart-box{--chart-fs:15}
   .big .handout .h1{font-size:20pt;line-height:26pt}
   .big .handout .h2{font-size:15pt;line-height:20pt}
   .big .handout .sub{font-size:12pt;line-height:16pt}
@@ -642,7 +648,6 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
             <line class="base" x1="{{ ch.L }}" x2="{{ ch.R }}" y1="{{ ch.baseY }}" y2="{{ ch.baseY }}"></line>
             <line class="thr" x1="{{ ch.L }}" x2="{{ ch.R }}" y1="{{ ch.thrY }}" y2="{{ ch.thrY }}"></line>
             <text x="{{ ch.endX }}" y="{{ ch.baseLabelY }}">{{ ch.baseLabel }}</text>
-            <text class="thr-label" x="{{ ch.endX }}" y="{{ ch.thrLabelY }}">{{ ch.thrLabel }}</text>
             <polygon class="estband" points="{{ ch.band }}"></polygon>
             <sc-for list="{{ ch.ciEst }}" as="c"><circle class="ci-est" cx="{{ c.cx }}" cy="{{ c.cy }}" r="2.6"></circle></sc-for>
             <polyline class="est" points="{{ ch.estPts }}"></polyline>
@@ -662,6 +667,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
           </sc-if>
           <sc-for list="{{ ch.hits }}" as="w"><rect class="hit" x="{{ w.x }}" y="0" width="{{ w.w }}" height="300" onMouseEnter="{{ w.enter }}" onClick="{{ w.click }}"></rect></sc-for>
         </svg>
+        <sc-if value="{{ ch.hasEst }}"><div class="thr-tag" style="{{ ch.thrTagStyle }}">{{ ch.thrText }}<span class="tt-wrap no-print" onMouseEnter="{{ tips.thr.enter }}" onMouseLeave="{{ tips.thr.leave }}"><button type="button" class="{{ tips.thr.btnCls }}" aria-label="About the baseline + {{ ch.thrN }} line" aria-describedby="tt-thr" onClick="{{ tips.thr.toggle }}" onFocus="{{ tips.thr.focus }}" onBlur="{{ tips.thr.blur }}">ⓘ</button><span id="tt-thr" role="tooltip" class="{{ tips.thr.cls }}"><sc-for list="{{ tips.thr.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></div></sc-if>
         <sc-if value="{{ hv.show }}">
           <div class="{{ hv.cls }}" style="{{ hv.style }}" aria-hidden="true">
             <div class="tip-head">{{ hv.title }}</div>
@@ -1468,9 +1474,10 @@ class Component extends DCLogic {
       baseY: P.baseline == null ? 0 : f(Y(P.baseline)),
       thrY: P.baseline == null ? 0 : f(Y(P.baseline + RULES.deterioration)),
       baseLabelY: P.baseline == null ? 0 : f(Y(P.baseline) + 4),
-      thrLabelY: P.baseline == null ? 0 : f(Y(P.baseline + RULES.deterioration) + 4),
       baseLabel: T(`Baseline ${P.baseline}`),
-      thrLabel: T(`Baseline + ${RULES.deterioration}`),
+      // The "Baseline + 6" label is HTML (see .thr-tag), placed by percentage of the chart's height
+      thrTagStyle: P.baseline == null ? '' : `top:${((Y(P.baseline + RULES.deterioration) / 300) * 100).toFixed(2)}%`,
+      thrText: `Baseline + ${RULES.deterioration}`, thrN: String(RULES.deterioration),
       midX: f((L + R) / 2), noEstY: f(Y(22.5) + 5),
       showZone: s.distinct && est.length > 0 && P.baseline != null && P.baseline + RULES.deterioration < MAX,
       zoneW: f(R - L), zoneH: P.baseline == null ? 0 : f(Math.max(0, Y(P.baseline + RULES.deterioration) - TOP)),
@@ -1794,7 +1801,15 @@ class Component extends DCLogic {
         { cls: 'tt-note', text: 'Thresholds are placeholders until set from the estimate’s measured reliability.' }
       ]),
       // The check-in dots: pointer only, as the count and note beside them say the same in words
-      dots: tipFor('dots', [pt.ciTitle])
+      dots: tipFor('dots', [pt.ciTitle]),
+      // Why the baseline + 6 line stands out in the chart
+      thr: tipFor('thr', [
+        { cls: 'tt-head', text: 'Why this line stands out:' },
+        `When the AI estimate is ${RULES.deterioration} or more points above this patient’s baseline, the status becomes Worse than baseline.`,
+        'The baseline is the patient’s own typical level in their first weeks in AURORA, so the line is personal, not a severity cut-off.',
+        ...(ch.showZone ? ['The shading above it marks that zone.'] : []),
+        { cls: 'tt-note', text: `${RULES.deterioration} is a placeholder until it is set from the estimate’s measured reliability.` }
+      ])
     };
 
     const tab = (label, on, pick) => ({ label, cls: on ? 'on' : '', pick });

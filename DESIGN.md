@@ -184,6 +184,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colours ar
   - The AI estimate is a line in `ai-series` with an `ai-band` uncertainty band. The patient's PHQ-9 answers are ink dots.
   - Each check-in's own estimate is a small, faint `ai-series` dot. The line is the smoothed estimate, which the status rules read, so one high or low reading doesn't change a patient's status. *(Mock data: the scatter follows the detection-latency simulation's assumptions, day-to-day change plus each reading's error, so most readings land within about 4 points of the line. To confirm with Deliberate AI and the WP3 idiographic study.)*
   - Baseline is dotted and baseline + 5 is dashed in `worse`, each labelled at the line end.
+  - The baseline + 5 label (+ 6 in v3) has an ⓘ saying why the line stands out: it is where Worse than baseline begins, measured from the patient's own baseline, so it is not a severity cut-off; and the number is a placeholder. The label is drawn in HTML over the chart so it can hold the button, sized to match the chart's own labels. The ⓘ doesn't print.
   - Item 9 answers are numbers under the PHQ-9 dates, in bold `safety` when above 0. Don't use badges.
   - Reported events are dashed verticals labelled with their source, e.g. "(AI)". The label sits right of the line, or left of it when it would run off the chart.
   - The time axis runs from when the patient joined, up to 12 weeks.
