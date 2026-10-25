@@ -58,60 +58,60 @@ a{color:#0072B2;text-underline-offset:3px}a:hover{color:#005E94}
         </sc-for>
       </div>
       <div style="background:#fff;border:1px solid #D8DDE0;border-radius:4px;overflow:hidden">
-        <table style="width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums">
-          <thead><tr style="border-bottom:1px solid #D8DDE0">
-            <th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:7px 10px;width:130px">Status</th>
-            <th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:7px 10px">Patient<div style="font-size:11px;font-weight:400;color:#768692">MDD unless noted</div></th>
-            <th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:7px 10px;width:150px">Est. severity <span style="{{ aiPill }}">AI</span><div style="font-size:11px;font-weight:400;color:#768692">PHQ-9 scale · <a href="#" onClick="{{ openFacts }}">Model Facts</a></div></th>
-            <th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:7px 10px;width:150px">Since last visit<div style="font-size:11px;font-weight:400;color:#768692">▲▼ = reliable change (≥5)</div></th>
-            <th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:7px 10px;width:80px">Check-ins<div style="font-size:11px;font-weight:400;color:#768692">14 d</div></th>
-            <th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:7px 10px">Flag</th>
-            <th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:7px 10px;width:95px">Visit</th>
-          </tr></thead>
-          <tbody>
+        <sc-raw-table style="width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums">
+          <sc-raw-thead><sc-raw-tr style="border-bottom:1px solid #D8DDE0">
+            <sc-raw-th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:7px 10px;width:130px">Status</sc-raw-th>
+            <sc-raw-th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:7px 10px">Patient<div style="font-size:11px;font-weight:400;color:#768692">MDD unless noted</div></sc-raw-th>
+            <sc-raw-th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:7px 10px;width:150px">Est. severity <span style="{{ aiPill }}">AI</span><div style="font-size:11px;font-weight:400;color:#768692">PHQ-9 scale · <a href="#" onClick="{{ openFacts }}">Model Facts</a></div></sc-raw-th>
+            <sc-raw-th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:7px 10px;width:150px">Since last visit<div style="font-size:11px;font-weight:400;color:#768692">▲▼ = reliable change (≥5)</div></sc-raw-th>
+            <sc-raw-th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:7px 10px;width:80px">Check-ins<div style="font-size:11px;font-weight:400;color:#768692">14 d</div></sc-raw-th>
+            <sc-raw-th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:7px 10px">Flag</sc-raw-th>
+            <sc-raw-th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:7px 10px;width:95px">Visit</sc-raw-th>
+          </sc-raw-tr></sc-raw-thead>
+          <sc-raw-tbody>
             <sc-for list="{{ patients }}" as="p" hint-placeholder-count="8">
-              <tr onClick="{{ p.open }}" style="cursor:pointer;border-bottom:1px solid #EAEEF1" style-hover="background:#F0F4F5">
-                <td style="padding:4px 10px"><span style="{{ p.chip }}"><svg width="10" height="10" viewBox="0 0 10 10"><path d="{{ p.shape }}" fill="{{ p.color }}" fill-rule="evenodd"></path><path d="{{ p.shape2 }}" fill="{{ p.color }}"></path></svg>{{ p.statusLabel }}</span></td>
-                <td style="padding:4px 10px"><a href="#" onClick="{{ p.open }}" style="font-weight:600;text-decoration:none;color:#0072B2">{{ p.name }}</a> <span style="color:#4C6272;font-size:12px">{{ p.meta }}</span></td>
-                <td style="padding:4px 10px;white-space:nowrap"><span style="display:inline-block;min-width:24px;font-weight:600;color:#8A5F00">{{ p.aiLast }}</span><sc-if value="{{ p.hasSpark }}"><span title="{{ p.sparkTitle }}"><svg width="80" height="24" viewBox="0 0 80 24" style="vertical-align:middle;margin-left:6px"><polyline points="{{ p.spark }}" fill="none" stroke="#C67F00" stroke-width="1.75" stroke-linejoin="round"></polyline><circle cx="78" cy="{{ p.sparkEndY }}" r="2.5" fill="#C67F00"></circle></svg></span></sc-if></td>
-                <td style="padding:4px 10px"><span style="{{ p.trendChip }}" title="{{ p.trendTitle }}">{{ p.trendLabel }}</span></td>
-                <td style="padding:4px 10px"><span style="{{ p.adhStyle }}">{{ p.adherence }}</span></td>
-                <td style="padding:4px 10px;color:#4C6272;font-size:12.5px">{{ p.flag }}<sc-if value="{{ p.flagAi }}"> <span style="{{ aiPill }}">AI</span></sc-if></td>
-                <td style="padding:4px 10px;font-size:12.5px">{{ p.appt }}</td>
-              </tr>
+              <sc-raw-tr onClick="{{ p.open }}" style="cursor:pointer;border-bottom:1px solid #EAEEF1" style-hover="background:#F0F4F5">
+                <sc-raw-td style="padding:4px 10px"><span style="{{ p.chip }}"><svg width="10" height="10" viewBox="0 0 10 10"><path d="{{ p.shape }}" fill="{{ p.color }}" fill-rule="evenodd"></path><path d="{{ p.shape2 }}" fill="{{ p.color }}"></path></svg>{{ p.statusLabel }}</span></sc-raw-td>
+                <sc-raw-td style="padding:4px 10px"><a href="#" onClick="{{ p.open }}" style="font-weight:600;text-decoration:none;color:#0072B2">{{ p.name }}</a> <span style="color:#4C6272;font-size:12px">{{ p.meta }}</span></sc-raw-td>
+                <sc-raw-td style="padding:4px 10px;white-space:nowrap"><span style="display:inline-block;min-width:24px;font-weight:600;color:#8A5F00">{{ p.aiLast }}</span><sc-if value="{{ p.hasSpark }}"><span title="{{ p.sparkTitle }}"><svg width="80" height="24" viewBox="0 0 80 24" style="vertical-align:middle;margin-left:6px"><polyline points="{{ p.spark }}" fill="none" stroke="#C67F00" stroke-width="1.75" stroke-linejoin="round"></polyline><circle cx="78" cy="{{ p.sparkEndY }}" r="2.5" fill="#C67F00"></circle></svg></span></sc-if></sc-raw-td>
+                <sc-raw-td style="padding:4px 10px"><span style="{{ p.trendChip }}" title="{{ p.trendTitle }}">{{ p.trendLabel }}</span></sc-raw-td>
+                <sc-raw-td style="padding:4px 10px"><span style="{{ p.adhStyle }}">{{ p.adherence }}</span></sc-raw-td>
+                <sc-raw-td style="padding:4px 10px;color:#4C6272;font-size:12.5px">{{ p.flag }}<sc-if value="{{ p.flagAi }}"> <span style="{{ aiPill }}">AI</span></sc-if></sc-raw-td>
+                <sc-raw-td style="padding:4px 10px;font-size:12.5px">{{ p.appt }}</sc-raw-td>
+              </sc-raw-tr>
             </sc-for>
-          </tbody>
-        </table>
+          </sc-raw-tbody>
+        </sc-raw-table>
       </div>
     </sc-if>
 
     <sc-if value="{{ isA2 }}">
       <div style="margin:0 0 10px;font-size:12.5px;color:#4C6272;font-variant-numeric:tabular-nums"><b style="color:#C0271A">2</b> crisis · <b style="color:#9C4400">4</b> review or outreach · <b style="color:#00795A">2</b> stable · check-in completeness <b style="color:#212B32">74%</b> · <b style="color:#212B32">3</b> HAM-D overdue</div>
       <div style="background:#fff;border:1px solid #D8DDE0;border-radius:4px;overflow:hidden">
-        <table style="width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums">
-          <thead><tr style="border-bottom:1px solid #D8DDE0">
-            <th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:6px 10px;width:125px">Status</th>
-            <th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:6px 10px">Patient<div style="font-size:11px;font-weight:400;color:#768692">MDD unless noted</div></th>
-            <th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:6px 10px;width:150px">Est. severity <span style="{{ aiPill }}">AI</span><div style="font-size:11px;font-weight:400;color:#768692">PHQ-9 scale · <a href="#" onClick="{{ openFacts }}">Model Facts</a></div></th>
-            <th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:6px 10px;width:140px">Since last visit<div style="font-size:11px;font-weight:400;color:#768692">▲▼ = reliable change (≥5)</div></th>
-            <th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:6px 10px;width:75px">Check-ins<div style="font-size:11px;font-weight:400;color:#768692">14 d</div></th>
-            <th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:6px 10px">Flag</th>
-            <th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:6px 10px;width:90px">Visit</th>
-          </tr></thead>
-          <tbody>
+        <sc-raw-table style="width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums">
+          <sc-raw-thead><sc-raw-tr style="border-bottom:1px solid #D8DDE0">
+            <sc-raw-th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:6px 10px;width:125px">Status</sc-raw-th>
+            <sc-raw-th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:6px 10px">Patient<div style="font-size:11px;font-weight:400;color:#768692">MDD unless noted</div></sc-raw-th>
+            <sc-raw-th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:6px 10px;width:150px">Est. severity <span style="{{ aiPill }}">AI</span><div style="font-size:11px;font-weight:400;color:#768692">PHQ-9 scale · <a href="#" onClick="{{ openFacts }}">Model Facts</a></div></sc-raw-th>
+            <sc-raw-th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:6px 10px;width:140px">Since last visit<div style="font-size:11px;font-weight:400;color:#768692">▲▼ = reliable change (≥5)</div></sc-raw-th>
+            <sc-raw-th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:6px 10px;width:75px">Check-ins<div style="font-size:11px;font-weight:400;color:#768692">14 d</div></sc-raw-th>
+            <sc-raw-th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:6px 10px">Flag</sc-raw-th>
+            <sc-raw-th style="text-align:left;vertical-align:bottom;font-size:12px;font-weight:600;color:#4C6272;padding:6px 10px;width:90px">Visit</sc-raw-th>
+          </sc-raw-tr></sc-raw-thead>
+          <sc-raw-tbody>
             <sc-for list="{{ patients }}" as="p" hint-placeholder-count="8">
-              <tr onClick="{{ p.open }}" style="cursor:pointer;border-bottom:1px solid #EAEEF1" style-hover="background:#F0F4F5">
-                <td style="padding:3px 10px"><span style="{{ p.chipSm }}"><svg width="8" height="8" viewBox="0 0 10 10"><path d="{{ p.shape }}" fill="{{ p.color }}" fill-rule="evenodd"></path><path d="{{ p.shape2 }}" fill="{{ p.color }}"></path></svg>{{ p.statusLabel }}</span></td>
-                <td style="padding:3px 10px"><a href="#" onClick="{{ p.open }}" style="font-weight:600;text-decoration:none;color:#0072B2">{{ p.name }}</a> <span style="color:#4C6272;font-size:12px">{{ p.meta }}</span></td>
-                <td style="padding:3px 10px;font-weight:600;color:#8A5F00">{{ p.aiLast }}</td>
-                <td style="padding:3px 10px"><span style="{{ p.trendChipSm }}" title="{{ p.trendTitle }}">{{ p.trendLabel }}</span></td>
-                <td style="padding:3px 10px"><span style="{{ p.adhStyle }}">{{ p.adherence }}</span></td>
-                <td style="padding:3px 10px;color:#4C6272;font-size:12.5px">{{ p.flag }}<sc-if value="{{ p.flagAi }}"> <span style="{{ aiPill }}">AI</span></sc-if></td>
-                <td style="padding:3px 10px;font-size:12.5px">{{ p.appt }}</td>
-              </tr>
+              <sc-raw-tr onClick="{{ p.open }}" style="cursor:pointer;border-bottom:1px solid #EAEEF1" style-hover="background:#F0F4F5">
+                <sc-raw-td style="padding:3px 10px"><span style="{{ p.chipSm }}"><svg width="8" height="8" viewBox="0 0 10 10"><path d="{{ p.shape }}" fill="{{ p.color }}" fill-rule="evenodd"></path><path d="{{ p.shape2 }}" fill="{{ p.color }}"></path></svg>{{ p.statusLabel }}</span></sc-raw-td>
+                <sc-raw-td style="padding:3px 10px"><a href="#" onClick="{{ p.open }}" style="font-weight:600;text-decoration:none;color:#0072B2">{{ p.name }}</a> <span style="color:#4C6272;font-size:12px">{{ p.meta }}</span></sc-raw-td>
+                <sc-raw-td style="padding:3px 10px;font-weight:600;color:#8A5F00">{{ p.aiLast }}</sc-raw-td>
+                <sc-raw-td style="padding:3px 10px"><span style="{{ p.trendChipSm }}" title="{{ p.trendTitle }}">{{ p.trendLabel }}</span></sc-raw-td>
+                <sc-raw-td style="padding:3px 10px"><span style="{{ p.adhStyle }}">{{ p.adherence }}</span></sc-raw-td>
+                <sc-raw-td style="padding:3px 10px;color:#4C6272;font-size:12.5px">{{ p.flag }}<sc-if value="{{ p.flagAi }}"> <span style="{{ aiPill }}">AI</span></sc-if></sc-raw-td>
+                <sc-raw-td style="padding:3px 10px;font-size:12.5px">{{ p.appt }}</sc-raw-td>
+              </sc-raw-tr>
             </sc-for>
-          </tbody>
-        </table>
+          </sc-raw-tbody>
+        </sc-raw-table>
       </div>
     </sc-if>
 
