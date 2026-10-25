@@ -32,6 +32,7 @@ a{color:#0072B2;text-underline-offset:3px}a:hover{color:#005E94}
       <sc-for list="{{ variantTabs }}" as="t" hint-placeholder-count="4"><div style="{{ t.style }}" onClick="{{ t.pick }}">{{ t.label }}</div></sc-for>
     </div>
     <sc-if value="{{ viewA }}"><span onClick="{{ replayCrisis }}" style="font-size:11.5px;font-weight:600;color:#7A6A45;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Replay Tier-1 crisis alert</span></sc-if>
+    <a href="index.html" style="margin-left:auto;font-size:12px;color:#7A6A45;text-decoration:underline;text-underline-offset:3px">All versions</a>
   </div>
 
   <sc-if value="{{ crisisBanner }}" hint-placeholder-val="{{ true }}">

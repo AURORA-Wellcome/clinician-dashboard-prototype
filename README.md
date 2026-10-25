@@ -4,7 +4,7 @@ Interactive HTML mockups for the AURORA clinician dashboard, prepared for clinic
 
 ## Viewing
 
-Open any `.dc.html` file in a browser; there is no build step. Three versions are kept side by side so the group can compare them. `index.html` links to all three, with a short description of each. It is also the landing page of the published site, https://aurora-wellcome.github.io/clinician-dashboard-prototype/, which updates when `main` is pushed.
+Open any `.dc.html` file in a browser; there is no build step. Three versions are kept side by side so the group can compare them. `index.html` links to all three, with a short description of each, and each version's review strip has a quiet **All versions** link back to it. It is also the landing page of the published site, https://aurora-wellcome.github.io/clinician-dashboard-prototype/, which updates when `main` is pushed.
 
 ### v3: `AURORA Dashboard v3.dc.html`
 

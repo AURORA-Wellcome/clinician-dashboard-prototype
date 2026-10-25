@@ -55,6 +55,10 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 /* Review controls: scaffolding for the clinical planning group, not part of the design */
 .review{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:8px 24px;font-size:13px;line-height:18px;background:repeating-linear-gradient(45deg,#F3EFE6,#F3EFE6 12px,#EFEAE0 12px,#EFEAE0 24px);border-bottom:1px dashed #C9BFA8}
 .review-label{font-size:13px;font-weight:600;color:#7A6A45}
+/* A quiet way back to the list of versions (index.html), at the far right; not a call to action */
+.review-link{margin-left:auto;color:#7A6A45;text-decoration:underline;text-underline-offset:3px}
+.review-link:hover{color:#5F5235}
+.review-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
 .seg{display:inline-flex;border:1px solid #C9BFA8;border-radius:var(--r);overflow:hidden;background:var(--surface)}
 .seg button{font:inherit;font-size:13px;font-weight:600;padding:4px 12px;border:0;border-right:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}
 .seg button:last-child{border-right:0}
@@ -342,6 +346,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
     <span class="review-label">Review controls · not part of the design</span>
     <span class="seg"><sc-for list="{{ viewTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span>
     <sc-if value="{{ onList }}"><span class="seg"><sc-for list="{{ orderTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></sc-if>
+    <a class="review-link" href="index.html">All versions</a>
   </div>
 
   <header class="topbar no-print">
