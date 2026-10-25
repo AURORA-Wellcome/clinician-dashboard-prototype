@@ -72,6 +72,10 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .seg button.on{background:#E8EEF3;color:var(--ink)}
 
 .topbar{display:flex;align-items:center;gap:24px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+/* The landing banner's aurora motif, in the dashboard only as this: a thin blue-violet-to-violet line under the top bar
+   (Refined look). Never green, magenta or warm colors here, and nothing in charts or statuses. */
+.refined .topbar{position:relative}
+.refined .topbar::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:linear-gradient(90deg,#5B7BE0,#8C78E6 55%,#B98BEF);pointer-events:none}
 /* Brand mark: two aurora ribbons in the blue-violet of the greeting band; cool hues only, since warm hues and greens mean status */
 .brand{display:inline-flex;align-items:center;gap:10px;font-size:var(--fs-lg);font-weight:600;letter-spacing:.04em}
 .brand .logo{display:block;flex:none;width:24px;height:24px}

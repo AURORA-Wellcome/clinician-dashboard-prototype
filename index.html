@@ -187,13 +187,19 @@ h1{margin:12px 0 0;max-width:22ch;font-size:2.875rem;line-height:3.375rem;font-w
 .frame::before{content:"";display:block;height:22px;border-bottom:1px solid var(--line);background:radial-gradient(circle at 14px 11px,var(--line-strong) 3.5px,transparent 4px),radial-gradient(circle at 28px 11px,var(--line-strong) 3.5px,transparent 4px),radial-gradient(circle at 42px 11px,var(--line-strong) 3.5px,transparent 4px) var(--surface)}
 a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
 @media (prefers-reduced-motion:reduce){.frame{transition:none}a.frame:hover{transform:none}}
+/* The aurora motif. The latest version's screenshot sits in a soft glow of the banner's blue-violet, violet and a
+   little teal, as if under the same night sky. */
+.glow{position:relative;isolation:isolate}
+.glow::before{content:"";position:absolute;inset:-10% -8% -14%;z-index:-1;border-radius:48px;background:radial-gradient(closest-side at 26% 36%,rgba(91,123,224,.72),rgba(91,123,224,0)),radial-gradient(closest-side at 72% 52%,rgba(156,110,230,.6),rgba(156,110,230,0)),radial-gradient(closest-side at 50% 90%,rgba(80,200,175,.4),rgba(80,200,175,0));filter:blur(24px);pointer-events:none}
 
 .label{margin:0;color:var(--muted);font-size:.9375rem;line-height:1.3125rem}
 /* Version number: large badge beside the title; solid for the latest */
 /* The whole heading (number, label and title) is one link: the title's link stretches over it, so there is still one Tab stop */
 .vhead{position:relative;display:flex;align-items:center;gap:16px}
 .vnum{flex:none;display:grid;place-items:center;width:3.5rem;height:3.5rem;border:2px solid var(--accent);border-radius:50%;color:var(--accent);font-size:1.875rem;font-weight:600;line-height:1;font-variant-numeric:tabular-nums;transition:background-color .15s ease,border-color .15s ease,color .15s ease}
-.vnum.now{background:var(--accent);color:#fff}
+/* The latest version's badge fades from the banner's blue-violet to violet (white text, at least 4.9:1 on both) */
+.vnum.now{background:linear-gradient(135deg,#4A68D4,#7A5BD6) border-box;border-color:transparent;color:#fff}
+.vhead:hover .vnum.now{background:linear-gradient(135deg,#3F5CC4,#6B4CC6) border-box;border-color:transparent;color:#fff}
 .latest{color:var(--accent);font-weight:600}
 .vlink{text-decoration:none}
 .vlink::after{content:"";position:absolute;inset:0}
@@ -236,7 +242,8 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
 .review h2{margin:0;font-size:1.3125rem;line-height:1.75rem;font-weight:600}
 .steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;margin:20px 0 0;padding:0;list-style:none;counter-reset:step}
 .steps li{counter-increment:step;display:grid;grid-template-columns:auto 1fr;column-gap:14px}
-.steps li::before{content:counter(step);display:grid;place-items:center;width:32px;height:32px;border:1.5px solid var(--accent);border-radius:50%;color:var(--accent);font-weight:600;line-height:1}
+/* Step numbers sit in a ring of the same gradient; the number itself is a solid color */
+.steps li::before{content:counter(step);display:grid;place-items:center;width:32px;height:32px;border:1.5px solid transparent;border-radius:50%;background:linear-gradient(var(--surface),var(--surface)) padding-box,linear-gradient(135deg,#4A68D4,#7A5BD6) border-box;color:#4F5BCF;font-weight:600;line-height:1}
 .steps strong{display:block;font-weight:600}
 .steps span{color:var(--muted)}
 
@@ -260,6 +267,12 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
 /* Footer */
 .foot{margin-top:64px;padding:28px 0 48px;border-top:1px solid var(--line);color:var(--muted);font-size:.9375rem;line-height:1.5rem}
 .foot p{margin:0 0 6px}
+/* The page closes on the banner's scene: a thin aurora line, then the night over the spruce treeline (the forest's
+   silhouette, design/landing/forest.svg, placed like the banner's forest). Decorative, and still. */
+.nightfoot{position:relative;height:88px;overflow:hidden;background:radial-gradient(70% 140% at 50% 115%,rgba(111,142,226,.45),rgba(111,142,226,0) 70%),linear-gradient(180deg,#0F1B4B,#1B2C6A 70%,#26397E)}
+.nightfoot::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#5B7BE0,#8C78E6 30%,#B98BEF 52%,#D96AE8 68%,#62C9B8 86%,#5B7BE0)}
+.nightfoot::after{content:"";position:absolute;inset:0;background:#050A1F;-webkit-mask:url(design/landing/forest.svg) 50% 100%/cover no-repeat;mask:url(design/landing/forest.svg) 50% 100%/cover no-repeat}
+@media print{.nightfoot{display:none}}
 
 @media (max-width:56rem){
   .hero .wrap{grid-template-columns:1fr;gap:36px;padding-top:48px;padding-bottom:44px}
@@ -326,7 +339,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
 <main class="wrap">
 
   <section class="featured" aria-labelledby="v3-title">
-    <a class="frame" href="AURORA%20Dashboard%20v3.dc.html" tabindex="-1" aria-hidden="true"><img src="design/landing/v3.png" width="1600" height="1000" alt=""></a>
+    <div class="glow"><a class="frame" href="AURORA%20Dashboard%20v3.dc.html" tabindex="-1" aria-hidden="true"><img src="design/landing/v3.png" width="1600" height="1000" alt=""></a></div>
     <div>
       <div class="vhead">
         <span class="vnum now" aria-hidden="true">3</span>
@@ -393,6 +406,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   </footer>
 
 </main>
+<div class="nightfoot" aria-hidden="true"></div>
 <script>
 // Banner, for a mouse or pen: stars near the pointer brighten with a soft sparkle, and the layers shift a little
 // with the pointer for depth. Decorative only; nothing happens on touch or with the reduced-motion setting.
