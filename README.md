@@ -70,7 +70,7 @@ Reviewers can pin notes to any part of the v2 and v3 mockups. Click **Notes** at
 ## Other files
 
 - `DESIGN.md`: design rules (principles, word budget, tokens, components, redesign procedure). Draft for CWG review.
-- `design/landing/`: the screenshots `index.html` shows, one per version. They are rendered at 2× without the review strip. Regenerate them when a version's caseload or patient page changes. `banner_gen.py` draws the landing page's aurora banner (`python3 design/landing/banner_gen.py banner.svg`, then paste the SVG into `index.html`).
+- `design/landing/`: the screenshots `index.html` shows, one per version. They are rendered at 2× without the review strip. Regenerate them when a version's caseload or patient page changes. `banner_gen.py` draws the landing page's aurora banner as layers the page animates slowly (`python3 design/landing/banner_gen.py banner.html`, then paste the output over the banner in `index.html`).
 - `design/`: dated before/after screenshots for each redesign round. Content audits quote the planning meetings, so they stay out of this public repo (`.gitignore`). `design/type-check.html` lists the words at each rendered text size. Serve the repo first (`python3 -m http.server 8767`), then open `http://localhost:8767/design/type-check.html`.
 - `notes.js`: review notes (see above), loaded by v2 and v3. `firestore.rules`: the template for its Firebase access rules. `build.json`: the site build, filled in on deploy.
 - `favicon.svg`: the AURORA mark, used as the browser-tab icon and beside the wordmark in v3 and on the landing page.
