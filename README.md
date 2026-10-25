@@ -15,6 +15,8 @@ v2 changed to follow the theoretical model (`Theoretical model/`) and the off-tr
 - **Chart:** it draws the rule that applies (baseline + 6, the expected range early in care, or the 10 line).
 - **Drivers panel:** "Show sleep, activity and contact" opens phone-sensing measures on the trend's weeks.
 - **Mock patients:** two new ones, `haddad` (early in care, not improving) and `novak` (the PHQ-9 fallback). Add `&drivers=1` to a link to open the drivers panel.
+- **Refined look:** switched under Review options. Status words in ink with coloured shapes, finer type, soft shadows, an initials avatar, a dot on the latest estimate, quick fade-ins, and a greeting band with soft aurora art on the Patients page. Details are in `DESIGN.md`. Add `&look=refined` to a link, and `&hero=0` to hide the greeting band.
+- **Review options:** v3's review controls sit behind a Review options button at bottom left, so the top of the page shows only the design.
 
 ### v2: `AURORA Dashboard v2.dc.html`
 

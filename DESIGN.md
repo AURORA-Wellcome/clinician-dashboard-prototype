@@ -275,6 +275,18 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 - between-visit outreach for off-track flags (aurora-12g);
 - the logging spec (aurora-1w3).
 
+## Refined look *(v3, under review)*
+
+A polish pass, switched under Review options (Look: Current or Refined; deep link `&look=refined`). Beauty here comes from calm and precision, not decoration: fewer colours on screen at once, a clearer type hierarchy, softer structure, and one focal point per page.
+- **Colour:** status words are in `ink`; the shape keeps the status colour. Safety wording stays in `safety`. Shape, colour and word all remain. *(Amends the Status marker rule if adopted.)*
+- **Type:** the patient's name is tracked in slightly (−0.01 em); tile numbers are weight 500, tracked in −0.02 em; group and day headers are in sentence case at `text-md`; section headings have 48 px above them.
+- **Structure:** the patients list, What changed and the trend chart sit on a soft two-layer shadow instead of a border, with 10 px corners. Chart gridlines are lighter, as is the uncertainty band. Print keeps plain borders. *(Amends "shadows only on popovers" if adopted.)*
+- **Human touch:** an initials avatar (48 px circle) sits beside the name on the patient page, on screen only. Not photos: AURORA doesn't collect them, and they would raise privacy questions.
+- **Chart:** a dot marks the latest estimate. (A "Today" mark doesn't fit: the chart ends at the last weekly estimate.)
+- **Motion:** row hover eases in; peek cards, readouts and ⓘ tips fade in over 0.12 s, and only when the reduced-motion setting is off.
+- **Greeting band** (Patients page only; switchable, `&hero=0` hides it): "Good morning, Dr Okafor", then the date, visits today or tomorrow, and patients with a safety flag. Two soft aurora curtains in pale blue and violet sit at the right, fading out before the text. Cool hues only, because warm hues and greens mean status; no animation; not printed. It is the one exception to "no decorative graphics".
+- **New values,** to add to Tokens if adopted: avatar `#E4EBF4` with `#3D4B57` text; curtains `#8FB0EE` and `#B3A2EA`; gridlines `#EEF1F4`; card shadow `0 1px 2px rgba(16,24,40,.05), 0 4px 12px rgba(16,24,40,.05)`.
+
 ## Procedure for each redesign round
 
 1. **Audit content** for the page against its question: keep, move or cut. Get CWG decisions on flagged items. Audits quote the planning meetings, so they stay out of this public repo.

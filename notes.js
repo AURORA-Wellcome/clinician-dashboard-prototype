@@ -20,7 +20,7 @@
   const KINDS = [['idea', 'Idea'], ['problem', 'Problem'], ['question', 'Question'], ['like', 'Like']];
   const ROLES = ['Clinician', 'Supervisor', 'Researcher', 'Lived experience', 'Technology team', 'Other'];
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const DEFAULT_STATE = { view: 'list', pid: 'delgado', order: 'visit', distinct: true, big: true, icons: true, clock24: false, drivers: false };
+  const DEFAULT_STATE = { view: 'list', pid: 'delgado', order: 'visit', distinct: true, big: true, icons: true, clock24: false, drivers: false, refined: false, hero: true };
   const VERSION = (document.currentScript && document.currentScript.dataset.version) || '';
 
   // localStorage can throw in private windows
@@ -88,6 +88,7 @@
     { k: 'group', sel: '.list > .grp', id: (el) => without(el, '.count, .rel'), label: (id) => `Group: ${id}` },
     { k: 'columns', sel: '.list > .lhead', label: () => 'Column headings' },
     { k: 'list', sel: '.list', label: () => 'Patients list' },
+    { k: 'greet', sel: '.greet', label: () => 'Greeting band' },
     { k: 'tile', sel: '.stats > .stat', id: (el) => clean(el.querySelector('.stat-label')).replace(/\s*\(.*$/, ''), label: (id) => `Tile: ${id}` },
     { k: 'status', sel: '.pt-status', label: () => 'Status line' },
     { k: 'title', sel: '.pt-title', label: () => 'Name and actions' },
@@ -155,7 +156,7 @@
   function contextNow() {
     return {
       version: VERSION, view: page.view, pid: page.view === 'list' ? null : page.pid, pname: patientName(), pageKey: pageKey(),
-      ctx: { order: page.order, style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers }
+      ctx: { order: page.order, style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false }
     };
   }
   // After posting: a reviewer sees others' notes on a page once they have added one there. Facilitators see all.
@@ -471,6 +472,8 @@
       style: c.style || 'distinct', text: c.text || 'larger', clock: String(c.clock || 12)
     });
     if (c.drivers) hp.set('drivers', '1');
+    hp.set('look', c.look || 'current');
+    hp.set('hero', c.hero === false ? '0' : '1');
     ui.focus = n.id;
     if (n.version !== VERSION && PAGE_FILES[n.version]) { location.href = `${PAGE_FILES[n.version]}${location.search}#${hp}&note=${n.id}`; return; }
     pendingScroll = n.id;
@@ -494,7 +497,7 @@
     hl.hidden = true;
     render(true);
   }
-  const ours = (t) => !!(t && t.closest && t.closest('.an-ui, .an-pins, .review'));
+  const ours = (t) => !!(t && t.closest && t.closest('.an-ui, .an-pins, .review, .review-dock'));
   // While adding, a click places the note instead of acting on the page; the review strip still works
   function intercept(e) {
     if (!ui.adding || ours(e.target)) return;
@@ -586,12 +589,12 @@
       return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const iso = (ms) => (ms ? new Date(ms).toISOString().replace('T', ' ').slice(0, 16) : '');
-    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'style', 'text_size', 'icons', 'clock', 'drivers_open'];
+    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look'];
     const rows = [...m.visible, ...m.visible.flatMap((n) => m.replies(n.id))].sort(byTime).map((n) => {
       const c = n.ctx || {};
       return [n.id, iso(n.createdAt), n.name, n.role, n.kind, n.text, n.parent || '', Object.keys(n.plus || {}).length, n.resolved ? 'yes' : '', n.resolvedBy || '',
         n.version, VIEW_NAMES[n.view] || n.view, n.pname || n.pid || '', n.anchorLabel, n.x == null ? '' : n.x.toFixed(3), n.y == null ? '' : n.y.toFixed(3),
-        c.order, c.style, c.text, c.icons, c.clock, c.drivers];
+        c.order, c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current'];
     });
     const csv = [head, ...rows].map((r) => r.map(cell).join(',')).join('\r\n');
     const d = new Date(), pad = (v) => String(v).padStart(2, '0');

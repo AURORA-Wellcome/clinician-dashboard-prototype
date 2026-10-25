@@ -10,7 +10,7 @@
 <x-dc>
 <helmet>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 /* Tokens: DESIGN.md. Add a value there before using it here. */
 :root{
   --font:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -55,7 +55,14 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
 /* Review controls: scaffolding for the clinical planning group, not part of the design */
-.review{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:8px 24px;font-size:13px;line-height:18px;background:repeating-linear-gradient(45deg,#F3EFE6,#F3EFE6 12px,#EFEAE0 12px,#EFEAE0 24px);border-bottom:1px dashed #C9BFA8}
+/* A button at bottom left opens them, so the top of the page shows only the design */
+.review-dock{position:fixed;left:16px;bottom:16px;z-index:59;font-size:13px;line-height:18px}
+.review-btn{padding:10px 16px;font:600 15px/20px var(--font);color:#4A3B12;background:repeating-linear-gradient(45deg,#F3EFE6,#F3EFE6 12px,#EFEAE0 12px,#EFEAE0 24px);border:1px dashed #A8986F;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.16);cursor:pointer}
+.review-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.review-panel{position:absolute;left:0;bottom:calc(100% + 8px);width:max-content;max-width:calc(100vw - 32px);padding:12px 14px 14px;background:#FBF8F1;border:1px dashed #A8986F;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.16)}
+.review-row{display:grid;grid-template-columns:7rem auto;align-items:center;gap:12px;margin-top:8px}
+.review-k{font-weight:600;color:#7A6A45}
+.review-row .seg{justify-self:start}
 .review-label{font-size:13px;font-weight:600;color:#7A6A45}
 .seg{display:inline-flex;border:1px solid #C9BFA8;border-radius:var(--r);overflow:hidden;background:var(--surface)}
 .seg button{font:inherit;font-size:13px;font-weight:600;padding:4px 12px;border:0;border-right:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}
@@ -282,6 +289,31 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .big .chart text{font-size:14px}
 .big .chart .noest{font-size:16px}
 /* Chart labels scale with the chart: raise them as it narrows so they stay at least about 15px, and grow with zoom */
+/* Refined look (under review, DESIGN.md): calmer colour, finer type, softer structure, a human touch */
+.refined{--r:10px}
+.refined .status.st-worse,.refined .status.st-notimp,.refined .status.st-stable,.refined .status.st-nodata,
+.refined .grp.st-worse,.refined .grp.st-notimp,.refined .grp.st-stable,.refined .grp.st-nodata,
+.refined .pt-status.st-worse,.refined .pt-status.st-notimp,.refined .pt-status.st-stable,.refined .pt-status.st-nodata{color:var(--ink)}
+.refined .h1{letter-spacing:-.01em}
+.refined .stat-value.hero{font-weight:500;letter-spacing:-.02em}
+.refined .grp{font-size:var(--fs-md);letter-spacing:0;text-transform:none}
+.refined .h2{margin-top:48px}
+.refined .list,.refined .changes,.refined .chart-wrap{border-color:transparent;box-shadow:0 1px 2px rgba(16,24,40,.05),0 4px 12px rgba(16,24,40,.05)}
+.refined .chart .grid{stroke:#EEF1F4}
+.refined .chart .estband{fill:rgba(198,127,0,.12)}
+.chart .est-end{fill:var(--ai);stroke:var(--surface);stroke-width:2}
+.refined .row{transition:background-color .12s ease}
+@media (prefers-reduced-motion:no-preference){.refined .peek,.refined .tip,.refined .tt.open{animation:rf-fade .12s ease-out}}
+@keyframes rf-fade{from{opacity:0}to{opacity:1}}
+@media print{.refined .list,.refined .changes,.refined .chart-wrap{box-shadow:none;border-color:var(--line)}}
+.pt-who{display:flex;align-items:center;gap:14px;min-width:0}
+.avatar{display:grid;place-items:center;flex:none;width:48px;height:48px;border-radius:50%;background:#E4EBF4;color:#3D4B57;font-size:var(--fs-md);font-weight:600;letter-spacing:.02em}
+/* Greeting band: two soft aurora curtains in cool hues only, because warm hues and greens mean status here */
+.greet{position:relative;overflow:hidden;margin:0 0 20px;padding:18px 24px;background:var(--surface);border-radius:var(--r);box-shadow:0 1px 2px rgba(16,24,40,.05),0 4px 12px rgba(16,24,40,.05)}
+.greet-art{position:absolute;top:0;right:0;width:60%;height:100%;filter:blur(2px);-webkit-mask-image:linear-gradient(to right,transparent,#000 45%);mask-image:linear-gradient(to right,transparent,#000 45%)}
+.greet-text{position:relative}
+.greet-hello{font-size:var(--fs-lg);line-height:var(--lh-lg);font-weight:600;letter-spacing:-.005em}
+.greet-sub{margin-top:2px;color:var(--muted)}
 @media screen and (max-width:66rem){.big .chart text{font-size:15px}}
 /* Narrow windows and 200% zoom (WCAG 1.4.4): flags drop to a second line, tiles go 2 x 2, one column */
 @media screen and (max-width:60rem){
@@ -353,13 +385,20 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 
 <div class="{{ appCls }}">
 
-  <div class="review no-print">
-    <span class="review-label">Review controls · not part of the design</span>
-    <span class="seg"><sc-for list="{{ viewTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span>
-    <sc-if value="{{ onList }}"><span class="seg"><sc-for list="{{ orderTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></sc-if>
-    <span class="seg"><sc-for list="{{ styleTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span>
-    <span class="seg"><sc-for list="{{ iconTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span>
-    <span class="seg"><sc-for list="{{ textTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span>
+  <div class="review-dock no-print">
+    <sc-if value="{{ reviewOpen }}">
+      <div id="review-panel" class="review-panel" role="group" aria-label="Review options">
+        <div class="review-label">Review options · not part of the design</div>
+        <div class="review-row"><span class="review-k">Page</span><span class="seg"><sc-for list="{{ viewTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></div>
+        <sc-if value="{{ onList }}"><div class="review-row"><span class="review-k">Patients list</span><span class="seg"><sc-for list="{{ orderTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></div></sc-if>
+        <div class="review-row"><span class="review-k">Sections</span><span class="seg"><sc-for list="{{ styleTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></div>
+        <div class="review-row"><span class="review-k">Icons</span><span class="seg"><sc-for list="{{ iconTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></div>
+        <div class="review-row"><span class="review-k">Text size</span><span class="seg"><sc-for list="{{ textTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></div>
+        <div class="review-row"><span class="review-k">Look</span><span class="seg"><sc-for list="{{ lookTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></div>
+        <sc-if value="{{ refined }}"><div class="review-row"><span class="review-k">Greeting band</span><span class="seg"><sc-for list="{{ heroTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></div></sc-if>
+      </div>
+    </sc-if>
+    <button class="review-btn" onClick="{{ toggleReview }}" aria-expanded="{{ reviewExpanded }}" aria-controls="review-panel">Review options</button>
   </div>
 
   <header class="topbar no-print">
@@ -386,6 +425,19 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
   <sc-if value="{{ onList }}">
   <main class="page" data-screen-label="Caseload">
     <h1 class="sr-only">Patients</h1>
+    <sc-if value="{{ heroOn }}">
+      <section class="greet no-print" aria-label="Summary">
+        <svg class="greet-art" viewBox="0 0 640 96" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <defs>
+            <linearGradient id="greet-a" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#8FB0EE" stop-opacity=".75"></stop><stop offset=".9" stop-color="#8FB0EE" stop-opacity="0"></stop></linearGradient>
+            <linearGradient id="greet-b" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#B3A2EA" stop-opacity=".6"></stop><stop offset=".9" stop-color="#B3A2EA" stop-opacity="0"></stop></linearGradient>
+          </defs>
+          <path fill="url(#greet-b)" d="M0,0 H640 V46 C580,62 520,34 450,48 C370,64 300,38 230,52 C170,64 110,50 60,58 C35,62 15,60 0,60 Z"></path>
+          <path fill="url(#greet-a)" d="M0,0 H640 V64 C570,82 500,52 420,68 C340,84 270,58 200,72 C140,84 80,70 0,78 Z"></path>
+        </svg>
+        <div class="greet-text"><div class="greet-hello">{{ hero.hello }}</div><div class="greet-sub">{{ hero.sub }}</div></div>
+      </section>
+    </sc-if>
     <div class="{{ listCls }}">
       <div class="lrow lhead">
         <sc-if value="{{ byVisit }}"><span>Time</span></sc-if>
@@ -441,7 +493,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
   <div class="pt-band" data-screen-label="Patient page">
     <div class="band-inner">
       <div class="pt-title">
-        <h1 class="h1">{{ pt.name }}</h1>
+        <div class="pt-who"><sc-if value="{{ refined }}"><span class="avatar no-print" aria-hidden="true">{{ pt.initials }}</span></sc-if><h1 class="h1">{{ pt.name }}</h1></div>
         <div class="actions no-print">
           <button class="btn" onClick="{{ goHandout }}">Patient handout</button>
           <button class="btn" onClick="{{ doPrint }}">Print</button>
@@ -525,6 +577,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
             <polygon class="estband" points="{{ ch.band }}"></polygon>
             <sc-for list="{{ ch.ciEst }}" as="c"><circle class="ci-est" cx="{{ c.cx }}" cy="{{ c.cy }}" r="2.6"></circle></sc-for>
             <polyline class="est" points="{{ ch.estPts }}"></polyline>
+            <sc-if value="{{ ch.showEnd }}"><circle class="est-end" cx="{{ ch.endDotX }}" cy="{{ ch.endDotY }}" r="5"></circle></sc-if>
           </sc-if>
           <sc-if value="{{ ch.showPersist }}"><line class="persist" x1="{{ ch.L }}" x2="{{ ch.R }}" y1="{{ ch.persistY }}" y2="{{ ch.persistY }}"></line><text x="{{ ch.endX }}" y="{{ ch.persistLabelY }}">10: symptomatic</text></sc-if>
           <sc-if value="{{ !ch.hasEst }}"><text class="noest" x="{{ ch.midX }}" y="{{ ch.noEstY }}" text-anchor="middle">No estimate yet: too few check-ins</text></sc-if>
@@ -830,7 +883,7 @@ const lastIndex = (arr) => { for (let i = arr.length - 1; i >= 0; i--) if (arr[i
 const signed = (d) => (d > 0 ? '+' : d < 0 ? '−' : '') + Math.abs(d);
 
 class Component extends DCLogic {
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, factsOpen: false, discussed: false };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: false, hero: true, reviewOpen: false, factsOpen: false, discussed: false };
 
   componentDidMount() {
     const o = {};
@@ -848,6 +901,8 @@ class Component extends DCLogic {
       if (['current', 'larger'].includes(h.get('text'))) r.big = h.get('text') === 'larger';
       if (['12', '24'].includes(h.get('clock'))) r.clock24 = h.get('clock') === '24';
       if (['0', '1'].includes(h.get('drivers'))) r.drivers = h.get('drivers') === '1';
+      if (['current', 'refined'].includes(h.get('look'))) r.refined = h.get('look') === 'refined';
+      if (['0', '1'].includes(h.get('hero'))) r.hero = h.get('hero') === '1';
       return r;
     };
     Object.assign(o, this.readHash());
@@ -855,7 +910,7 @@ class Component extends DCLogic {
     this.onHash = () => this.setState(this.readHash());
     window.addEventListener('hashchange', this.onHash);
     // Escape closes hover content anywhere (WCAG 1.4.13: dismissible)
-    this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, menuOpen: false, tip: null, tipPinned: false }); } };
+    this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, menuOpen: false, tip: null, tipPinned: false, reviewOpen: false }); } };
     window.addEventListener('keydown', this.onEsc);
     // A click or tap outside an open ⓘ tip closes it
     this.onDown = (e) => { if (this.state.tip && !(e.target.closest && e.target.closest('.tt-wrap'))) this.setState({ tip: null, tipPinned: false }); };
@@ -885,7 +940,7 @@ class Component extends DCLogic {
 
   go(o) {
     const next = { ...this.state, ...o };
-    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}&order=${next.order}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}`); } catch (e) { /* sandboxed preview */ }
+    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}&order=${next.order}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}`); } catch (e) { /* sandboxed preview */ }
     clearTimeout(this.peekT);
     clearTimeout(this.tipT);
     this.setState({ ...o, factsOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
@@ -966,6 +1021,19 @@ class Component extends DCLogic {
       : [statusGroup('safety', pinned), ...dayGroups(byVisitOrder.filter((p) => p.status !== 'safety'))])
       .filter((g) => g.rows.length).map((g) => ({ ...g, count: String(g.rows.length) }));
 
+    // Greeting band (Refined look): a greeting, then today's date and the caseload in one line
+    const hour = new Date().getHours();
+    const countOf = (n, one) => `${n} ${one}${n === 1 ? '' : 's'}`;
+    const todayN = all.filter((p) => p.dayKey && dayHead(p.dayKey).rel === 'Today').length;
+    const tomorrowN = all.filter((p) => p.dayKey && dayHead(p.dayKey).rel === 'Tomorrow').length;
+    const safetyN = all.filter((p) => p.status === 'safety').length;
+    const hero = {
+      hello: `${hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'}, Dr Okafor`,
+      sub: [`${DAY_FULL[DOW[TODAY.getDay()]]}, ${MONTHS_FULL[TODAY.getMonth()]} ${TODAY.getDate()}`,
+        todayN ? `${countOf(todayN, 'visit')} today` : '', tomorrowN ? `${countOf(tomorrowN, 'visit')} tomorrow` : '',
+        safetyN ? `${countOf(safetyN, 'patient')} with a safety flag` : ''].filter(Boolean).join(' · ')
+    };
+
     // Selected patient
     const P = all.find((p) => p.id === s.pid) || all.find((p) => p.id === 'delgado');
     const iPhq = lastIndex(P.phq);
@@ -979,6 +1047,7 @@ class Component extends DCLogic {
     const ciPat = P.ciPattern || (() => { const a = Array(P.cd).fill('1'); const miss = P.cd - P.cn; for (let k = 0; k < miss; k++) a[Math.round(((k + 1) * P.cd) / (miss + 1)) - 1] = '0'; return a.join(''); })();
     const pt = {
       ...P,
+      initials: P.name.replace(/\./g, '').split(/\s+/).filter(Boolean).map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
       headSub: (P.visitRank === NOT_SCHEDULED ? 'No visit scheduled' : 'Next visit ' + tm(P.visit)) + ` · in AURORA ${P.weeksIn} weeks`,
       sevNow: P.estNow == null ? '—' : String(P.estNow),
       // Show ± unless the interval runs off the 0–27 scale; then show the clipped range
@@ -1040,6 +1109,9 @@ class Component extends DCLogic {
       aria: `Severity over ${pt.trendSub} for ${P.name}. Use the arrow keys to read each day.`,
       ticks: [0, 5, 10, 15, 20, 25].map((v) => ({ y: f(Y(v)), ty: f(Y(v) + 4), label: T(v), cls: v === 0 ? 'axis' : 'grid' })),
       hasEst: est.length > 0,
+      // Refined look: a dot marks the latest estimate
+      showEnd: s.refined && est.length > 0 && est[last] != null,
+      endDotX: f(X(last)), endDotY: est.length && est[last] != null ? f(Y(est[last])) : 0,
       estPts: pts((v) => v).join(' '),
       band: [...upper, ...lower].join(' '),
       baseY: P.baseline == null ? 0 : f(Y(P.baseline)),
@@ -1272,19 +1344,19 @@ class Component extends DCLogic {
         tab('Patient page', s.view === 'patient', () => this.go({ view: 'patient' })),
         tab('Patient handout', s.view === 'handout', () => this.go({ view: 'handout' }))
       ],
-      appCls: 'app' + (s.distinct ? ' distinct' : '') + (s.big ? ' big' : ''), distinct: s.distinct, sc,
+      appCls: 'app' + (s.distinct ? ' distinct' : '') + (s.big ? ' big' : '') + (s.refined ? ' refined' : ''), distinct: s.distinct, sc,
       textTabs: [
-        tab('Current text', !s.big, () => this.go({ big: false })),
-        tab('Larger text', s.big, () => this.go({ big: true }))
+        tab('Current', !s.big, () => this.go({ big: false })),
+        tab('Larger', s.big, () => this.go({ big: true }))
       ],
       goalsCls: 'goals' + (s.icons ? ' with-icons' : ''),
       styleTabs: [
-        tab('Plain sections', !s.distinct, () => this.go({ distinct: false })),
-        tab('Distinct sections', s.distinct, () => this.go({ distinct: true }))
+        tab('Plain', !s.distinct, () => this.go({ distinct: false })),
+        tab('Distinct', s.distinct, () => this.go({ distinct: true }))
       ],
       iconTabs: [
-        tab('Icons on', s.icons, () => this.go({ icons: true })),
-        tab('Icons off', !s.icons, () => this.go({ icons: false }))
+        tab('On', s.icons, () => this.go({ icons: true })),
+        tab('Off', !s.icons, () => this.go({ icons: false }))
       ],
       changesCls: 'changes' + (s.icons ? ' with-icons' : ''),
       orderTabs: [
@@ -1292,6 +1364,10 @@ class Component extends DCLogic {
         tab('By next visit', !byStatus, () => this.go({ order: 'visit' }))
       ],
       byStatus, byVisit: !byStatus, groups, peek,
+      hero, heroOn: s.refined && s.hero && s.view === 'list', refined: s.refined,
+      lookTabs: [tab('Current', !s.refined, () => this.go({ refined: false })), tab('Refined', s.refined, () => this.go({ refined: true }))],
+      heroTabs: [tab('On', s.hero, () => this.go({ hero: true })), tab('Off', !s.hero, () => this.go({ hero: false }))],
+      reviewOpen: s.reviewOpen, reviewExpanded: s.reviewOpen ? 'true' : 'false', toggleReview: () => this.setState({ reviewOpen: !s.reviewOpen }),
       peekOut: () => { clearTimeout(this.peekT); this.peekT = setTimeout(() => this.setState({ peek: null }), 150); },
       peekOff: () => { clearTimeout(this.peekT); this.setState({ peek: null }); },
       listCls: 'list ' + (byStatus ? 'by-status' : 'by-visit'),
