@@ -18,7 +18,7 @@
   const PAGE_FILES = { v2: 'AURORA%20Dashboard%20v2.dc.html', v3: 'AURORA%20Dashboard%20v3.dc.html' };
   const VIEW_NAMES = { list: 'Patients list', patient: 'Patient page', handout: 'Patient handout' };
   const KINDS = [['idea', 'Idea'], ['problem', 'Problem'], ['question', 'Question'], ['like', 'Like']];
-  const ROLES = ['Clinician', 'Supervisor', 'Researcher', 'Lived experience', 'Other'];
+  const ROLES = ['Clinician', 'Supervisor', 'Researcher', 'Lived experience', 'Technology team', 'Other'];
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const DEFAULT_STATE = { view: 'list', pid: 'delgado', order: 'visit', distinct: true, big: true, icons: true, clock24: false, drivers: false };
   const VERSION = (document.currentScript && document.currentScript.dataset.version) || '';
