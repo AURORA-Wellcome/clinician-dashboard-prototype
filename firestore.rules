@@ -1,0 +1,35 @@
+// Firestore rules for review notes (notes.js). Paste into Firebase console > Firestore > Rules.
+// Replace BOARD_ID with the private board id from the invite link; keep the real id out of this public repo.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /boards/{board}/notes/{note} {
+      function member() {
+        return board == 'BOARD_ID' && request.auth != null;
+      }
+      function valid(d) {
+        return d.uid is string && d.text is string && d.text.size() > 0
+          && d.text.size() <= 4000 && d.name is string && d.name.size() <= 80
+          && d.plus is map;
+      }
+      allow read: if member();
+      // Reviewers add notes as themselves, with no +1s yet
+      allow create: if member() && valid(request.resource.data)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.plus.size() == 0;
+      allow update: if member() && valid(request.resource.data) && (
+        // authors edit their own notes
+        (resource.data.uid == request.auth.uid
+          && request.resource.data.uid == resource.data.uid)
+        // anyone adds or removes their own +1
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['plus'])
+          && request.resource.data.plus.diff(resource.data.plus).affectedKeys()
+               .hasOnly([request.auth.uid]))
+        // anyone resolves or reopens a note
+        || request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['resolved', 'resolvedBy', 'updatedAt'])
+      );
+      allow delete: if member() && resource.data.uid == request.auth.uid;
+    }
+  }
+}

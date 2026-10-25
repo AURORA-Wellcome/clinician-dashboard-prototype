@@ -736,9 +736,12 @@ class Component extends DCLogic {
     // A click or tap outside an open ⓘ tip closes it
     this.onDown = (e) => { if (this.state.tip && !(e.target.closest && e.target.closest('.tt-wrap'))) this.setState({ tip: null, tipPinned: false }); };
     document.addEventListener('pointerdown', this.onDown);
+    // Review notes (notes.js) follow the page's state
+    window.dispatchEvent(new CustomEvent('dc:render', { detail: this.state }));
   }
 
   componentDidUpdate() {
+    window.dispatchEvent(new CustomEvent('dc:render', { detail: this.state }));
     // Keep an open ⓘ tip inside the window
     const el = this.state.tip && document.getElementById(`tt-${this.state.tip}`);
     if (!el) return;
@@ -1111,5 +1114,7 @@ class Component extends DCLogic {
   }
 }
 </script>
+<!-- Review notes: scaffolding for the review, not part of the design -->
+<script src="./notes.js" data-version="v2"></script>
 </body>
 </html>
