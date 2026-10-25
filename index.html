@@ -366,7 +366,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       <li><div><strong>Open v3</strong><span>The latest version starts on the caseload, the list of a clinician’s patients.</span></div></li>
       <li><div><strong>Try the 5-second test</strong><span>Look at the caseload for five seconds. Who needs attention first?</span></div></li>
       <li><div><strong>Switch options</strong><span>The striped strip at the top changes pages and design options. It isn’t part of the design. Its “All versions” link brings you back here.</span></div></li>
-      <li><div><strong>Leave notes</strong><span id="notes-step">Notes are shared only through the private review link from the study team, which has an access code in it. On this public site, notes stay in your browser.</span> <button type="button" class="linkbtn" id="code-open">Enter an access code</button></div></li>
+      <li><div><strong>Leave notes</strong><span id="notes-step">Click Notes at bottom right, here or in a mockup. Notes are shared only through the private review link from the study team, which has an access code in it. On this public site, they stay in your browser.</span> <button type="button" class="linkbtn" id="code-open">Enter an access code</button></div></li>
     </ol>
   </section>
   <section class="history" aria-labelledby="history-title">
@@ -523,12 +523,13 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const step = $('notes-step'), open = $('code-open'), dlg = $('code-dialog'), input = $('code-input'), err = $('code-err'), carry = $('code-carry');
   const render = () => {
     const on = !!get('aurora-notes-board');
-    step.textContent = on ? 'Shared notes are on in this browser: notes you add in the mockups go to the group.'
-      : 'Notes are shared only through the private review link from the study team, which has an access code in it. On this public site, notes stay in your browser.';
+    step.textContent = on ? 'Click Notes at bottom right, here or in a mockup. Shared notes are on in this browser, so the notes you add go to the group.'
+      : 'Click Notes at bottom right, here or in a mockup. Notes are shared only through the private review link from the study team, which has an access code in it. On this public site, they stay in your browser.';
     open.textContent = on ? 'Remove the code' : 'Enter an access code';
   };
   open.addEventListener('click', () => {
-    if (get('aurora-notes-board')) { set('aurora-notes-board', null); set('aurora-notes-facilitator', null); render(); return; }
+    // notes.js on this page reads the code when it starts, so the page reloads after a change
+    if (get('aurora-notes-board')) { set('aurora-notes-board', null); set('aurora-notes-facilitator', null); location.reload(); return; }
     const n = localCount();
     carry.hidden = !n;
     carry.querySelector('span').textContent = `Copy the ${n} note${n === 1 ? '' : 's'} saved in this browser to the shared notes`;
@@ -544,12 +545,13 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     set('aurora-notes-invited', '1');
     set('aurora-notes-carry', !carry.hidden && carry.querySelector('input').checked ? '1' : null);
     dlg.close();
-    render();
+    location.reload();
   });
   $('code-cancel').addEventListener('click', () => dlg.close());
   dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); }); // a click on the backdrop
   render();
 })();
 </script>
+<script src="./notes.js" data-version="landing" data-page="landing"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-/* AURORA review notes: post-it notes pinned to parts of the dashboard mockups, shared through Firebase.
+/* AURORA review notes: post-it notes pinned to parts of the dashboard mockups and the landing page, shared through Firebase.
    Review scaffolding, like the review strip: not part of the design. MAINTAINING.md ("Review notes") covers the
    invite link, the facilitator link and the Firebase project; firestore.rules is the access template. */
 (function () {
@@ -15,13 +15,16 @@
     appId: '1:279283200593:web:5b407fb0d9d4b8e65f3e70'
   };
   const SDK = 'https://www.gstatic.com/firebasejs/13.1.0/';
-  const PAGE_FILES = { v2: 'AURORA%20Dashboard%20v2.dc.html', v3: 'AURORA%20Dashboard%20v3.dc.html' };
-  const VIEW_NAMES = { list: 'Patients list', patient: 'Patient page', handout: 'Patient handout', checkin: 'Check-in' };
+  const PAGE_FILES = { v2: 'AURORA%20Dashboard%20v2.dc.html', v3: 'AURORA%20Dashboard%20v3.dc.html', landing: 'index.html' };
+  const VIEW_NAMES = { list: 'Patients list', patient: 'Patient page', handout: 'Patient handout', checkin: 'Check-in', landing: 'Landing page' };
   const KINDS = [['idea', 'Idea'], ['problem', 'Problem'], ['question', 'Question'], ['like', 'Like']];
   const ROLES = ['Clinician', 'Supervisor', 'Researcher', 'Lived experience', 'Technology team', 'Other'];
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const DEFAULT_STATE = { view: 'list', pid: 'delgado', order: 'visit', distinct: true, big: true, icons: true, clock24: false, drivers: false, refined: false, hero: true, cday: null };
-  const VERSION = (document.currentScript && document.currentScript.dataset.version) || '';
+  const CS = document.currentScript;
+  const VERSION = (CS && CS.dataset.version) || '';
+  // A plain page such as the landing page names itself (data-page) and has no mockup state: no patient or settings
+  const STATIC = (CS && CS.dataset.page) || '';
 
   // localStorage can throw in private windows
   const LS = (() => { try { return window.localStorage; } catch (e) { return null; } })();
@@ -36,7 +39,7 @@
   const FACILITATOR = lsGet('aurora-notes-facilitator') === '1';
   const EMULATOR = query.get('emulator') === '1'; // tests against the Firebase emulator on this machine
 
-  let page = { ...DEFAULT_STATE }; // the mockup's state, from its dc:render events
+  let page = { ...DEFAULT_STATE, ...(STATIC ? { view: STATIC } : {}) }; // the mockup's state, from its dc:render events
   // The site build this page was loaded from: GitHub Pages fills in build.json on each deploy. Locally it stays blank.
   let BUILD = { commit: '', built: '' };
   fetch('build.json', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((b) => {
@@ -99,7 +102,7 @@
     return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
   }
   const kindName = (k) => (KINDS.find(([v]) => v === k) || [k, k])[1];
-  const pageName = (key) => { const [v, view] = key.split(':'); return `${v} · ${VIEW_NAMES[view] || view}`; };
+  const pageName = (key) => { const [v, view] = key.split(':'); return v === view ? VIEW_NAMES[view] || view : `${v} · ${VIEW_NAMES[view] || view}`; };
 
   /* ---------- Parts of the page a note can be pinned to ---------- */
   // Innermost first. id() tells repeated parts apart (rows, tiles, goals).
@@ -141,12 +144,31 @@
     { k: 'band', sel: '.pt-band', label: () => 'Summary band' },
     { k: 'topbar', sel: '.topbar', label: () => 'Top bar' }
   ];
-  const dcRoot = () => document.getElementById('dc-root');
+  // The landing page's parts, innermost first
+  const LANDING_SECTIONS = [
+    { k: 'l-headline', sel: '.hero h1', label: () => 'Headline' },
+    { k: 'l-intro', sel: '.hero .lede', label: () => 'Introduction' },
+    { k: 'l-status', sel: '.statuses li', id: (el) => clean(el.querySelector('strong')), label: (id) => `Status: ${id}` },
+    { k: 'l-statuses', sel: '.statuses', label: () => 'Statuses card' },
+    { k: 'l-hero', sel: '.hero', label: () => 'Hero' },
+    { k: 'l-shot', sel: '.featured .frame', label: () => 'v3 screenshot' },
+    { k: 'l-v3', sel: '.featured', label: () => 'v3 card' },
+    { k: 'l-step', sel: '.steps li', id: (el) => clean(el.querySelector('strong')), label: (id) => `Step: ${id}` },
+    { k: 'l-review', sel: '.review', label: () => 'How to review' },
+    { k: 'l-card', sel: '.cards .card', id: (el) => clean(el.querySelector('h3')), label: (id) => `Earlier version: ${id}` },
+    { k: 'l-history', sel: '.history', label: () => 'How we got here' },
+    { k: 'l-banner', sel: '.banner', label: () => 'Banner' },
+    { k: 'l-foot', sel: '.foot', label: () => 'Footer' },
+    { k: 'l-night', sel: '.nightfoot', label: () => 'Treeline band' },
+    { k: 'l-top', sel: 'header.top', label: () => 'Header' }
+  ];
+  const PARTS = STATIC ? LANDING_SECTIONS : SECTIONS;
+  const dcRoot = () => (STATIC ? document.body : document.getElementById('dc-root'));
   const keyOf = (s, el) => { const id = s.id ? s.id(el) : ''; return { key: s.k + (id ? ':' + id : ''), label: s.label(id) }; };
   function sectionOf(target) {
     const root = dcRoot();
     for (let el = target; el && el !== root && el !== document.body; el = el.parentElement) {
-      const s = SECTIONS.find((x) => el.matches(x.sel));
+      const s = PARTS.find((x) => el.matches(x.sel));
       if (s) return { el, ...keyOf(s, el) };
     }
     return root ? { el: root, key: 'page', label: 'Whole page' } : null;
@@ -156,7 +178,7 @@
     if (!root || !key) return null;
     if (key === 'page') return root;
     const i = key.indexOf(':'), k = i < 0 ? key : key.slice(0, i), id = i < 0 ? '' : key.slice(i + 1);
-    const s = SECTIONS.find((x) => x.k === k);
+    const s = PARTS.find((x) => x.k === k);
     if (!s) return null;
     for (const el of root.querySelectorAll(s.sel)) if (!s.id || s.id(el) === id) return el;
     return null;
@@ -166,7 +188,7 @@
     const root = dcRoot();
     if (!root) return [];
     const seen = new Set(), out = [];
-    for (const s of SECTIONS) {
+    for (const s of PARTS) {
       for (const el of root.querySelectorAll(s.sel)) {
         const r = el.getBoundingClientRect();
         if (!r.width || !r.height) continue;
@@ -189,9 +211,9 @@
   }
   function contextNow() {
     return {
-      version: VERSION, view: page.view, pid: page.view === 'list' ? null : page.pid, pname: patientName(), pageKey: pageKey(),
+      version: VERSION, view: page.view, pid: page.view === 'list' || STATIC ? null : page.pid, pname: STATIC ? '' : patientName(), pageKey: pageKey(),
       commit: BUILD.commit, built: BUILD.built,
-      ctx: { order: page.order, style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null }
+      ctx: STATIC ? {} : { order: page.order, style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null }
     };
   }
   // After posting: a reviewer sees others' notes on a page once they have added one there. Facilitators see all.
@@ -462,7 +484,7 @@
     },
     h('div', { class: 'an-meta' }, h('span', { class: 'an-num', 'aria-hidden': 'true' }, String(m.num.get(n.id))),
       h('span', { class: 'an-who' }, n.name + (n.role ? ' · ' + n.role : '')), h('span', { class: 'an-when' }, ago(n.createdAt))),
-    h('div', { class: 'an-where' }, `${n.version} · ${where}`, shownHere ? null : [' · ', tool('Show', () => goTo(n), { class: 'an-tool an-inline' })]),
+    h('div', { class: 'an-where' }, n.version === n.view ? where : `${n.version} · ${where}`, shownHere ? null : [' · ', tool('Show', () => goTo(n), { class: 'an-tool an-inline' })]),
     n.kind ? h('div', { class: 'an-kind' }, kindName(n.kind)) : null,
     ui.edit === n.id ? editBox(n) : h('p', { class: 'an-text' }, n.text),
     n.resolved ? h('div', { class: 'an-where' }, `Resolved${n.resolvedBy ? ' by ' + n.resolvedBy : ''}`) : null,
@@ -577,7 +599,7 @@
     ui.focus = n.id;
     if (n.version !== VERSION && PAGE_FILES[n.version]) { location.href = `${PAGE_FILES[n.version]}${location.search}#${hp}&note=${n.id}`; return; }
     pendingScroll = n.id;
-    location.hash = '#' + hp.toString();
+    if (!STATIC) location.hash = '#' + hp.toString();
     render(true);
   }
   function onAdd(e) {
@@ -597,7 +619,9 @@
     hl.hidden = true;
     render(true);
   }
-  const ours = (t) => !!(t && t.closest && t.closest('.an-ui, .an-pins, .review, .review-dock, .review-note'));
+  // The notes' own interface, and on the mockups their review strip (the landing page's How to review is a part)
+  const OURS = '.an-ui, .an-pins, .review-dock, .review-note' + (STATIC ? '' : ', .review');
+  const ours = (t) => !!(t && t.closest && t.closest(OURS));
   // While adding, a click places the note instead of acting on the page; the review strip still works
   function intercept(e) {
     if (!ui.adding || ours(e.target)) return;
@@ -790,7 +814,7 @@
 .an-hl{position:fixed;z-index:58;box-sizing:border-box;pointer-events:none;border:2px dashed #B8860B;border-radius:6px;background:rgba(255,213,74,.14)}
 .an-hl-label{position:absolute;left:-2px;bottom:100%;margin-bottom:4px;padding:2px 8px;font:600 15px/21px var(--font,system-ui,sans-serif);color:#fff;background:#4A3B12;border-radius:4px;white-space:nowrap}
 .an-hl.below .an-hl-label{top:100%;bottom:auto;margin:4px 0 0}
-.an-adding #dc-root,.an-adding #dc-root *{cursor:crosshair!important}
+.an-adding #dc-root,.an-adding #dc-root *,.an-adding.an-static :not(.an-ui,.an-ui *){cursor:crosshair!important}
 .an-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media print{.an-fab,.an-panel,.an-pins,.an-composer,.an-hl,.an-sr{display:none!important}body.an-open{padding-right:0!important}}
 `;
@@ -799,6 +823,7 @@
   function init() {
     document.head.append(h('style', { id: 'an-style' }, CSS));
     document.body.append(pins, hl, fab, panel, live);
+    if (STATIC) document.body.classList.add('an-static');
     const hq = new URLSearchParams(location.hash.slice(1));
     if (hq.get('note')) { ui.focus = hq.get('note'); ui.open = true; pendingScroll = ui.focus; }
     document.body.classList.toggle('an-open', ui.open);

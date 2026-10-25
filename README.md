@@ -22,7 +22,7 @@ v2 and v1 stay available for comparison from the landing page. What changed in e
 - **Use the striped strip at the top** to switch pages and options. It isn't part of the design. Its "All versions" link goes back to the landing page.
 - **Point at an ⓘ**, or reach it with Tab, for what a scale or rule means.
 - **Leave notes:** notes are shared only through a private review link, which has an access code in it. Ask the study team for it, and please don't pass it on outside the group.
-  - From that link, click **Notes** at bottom right, then **Add a note**, then the part of the page the note is about.
+  - From that link, click **Notes** at bottom right, then **Add a note**, then the part of the page the note is about. This works on the landing page as well as the mockups.
   - Have the access code but not the link? Enter it under How to review on the landing page, or in the Notes panel.
   - On the public link, notes stay in your own browser and no one else sees them; the Notes panel says so.
   - Please leave out patient information.
