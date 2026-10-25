@@ -13,12 +13,12 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
 - **Chart:** it draws the rule that applies (baseline + 6, the expected range early in care, or the 10 line). The baseline + 6 label has an ⓘ saying why the line stands out.
 - **Drivers panel:** "Show sleep, activity and contact" opens phone-sensing measures on the trend's weeks.
 - **Mock patients:** two new ones, `haddad` (early in care, not improving) and `novak` (the PHQ-9 fallback).
-- **Refined look** (the default since October 25): status words in ink with coloured shapes, finer type, soft shadows, an initials avatar, a dot on the latest estimate, quick fade-ins, and a greeting band with soft aurora art on the Patients page that follows the time of day. Opening a patient morphs the name into the page title, and the trend line draws in; motion is off with the reduced-motion setting. The review strip's Look switch still offers the Original look.
+- **Refined look** (the default since October 25): status words in ink with colored shapes, finer type, soft shadows, an initials avatar, a dot on the latest estimate, quick fade-ins, and a greeting band with soft aurora art on the Patients page that follows the time of day. Opening a patient morphs the name into the page title, and the trend line draws in; motion is off with the reduced-motion setting. The review strip's Look switch still offers the Original look.
 - **Improving:** a patient on track whose estimate has come down steadily gets a quiet note, "Improving for 11 weeks (AI)", in the caseload and on the status line.
 - **Review strip:** settings are grouped with short labels (Page, List, Look, and Greeting on the Refined Patients page). Section style, text size and icons are settled (Distinct, Larger, on), so they are no longer switches.
 - **Check-in page** (draft, October 25): what happened at one check-in, and how much weight to give it. It opens from the trend chart (click a day with a check-in, or press Enter in the keyboard readout), from the Check-ins tile (a filled dot, or Latest check-in), from the Safety tile's "What the protocol asks" link, and from What changed items that cite one.
   - **Content:** the safety status first, with the protocol's response steps in example wording (timing and the site's number left blank); this check-in's estimate beside the trend, with a note when the recording weakens it; an AI summary of what came up, with the patient's own words; symptoms and that week's phone sensing; and the transcript, collapsed. Previous and Next step through the patient's check-ins.
-  - **Draft:** what clinicians may see of the conversations waits on an IRB decision, so the page is labelled as a draft, and only the examples have written conversations.
+  - **Draft:** what clinicians may see of the conversations waits on an IRB decision, so the page is labeled as a draft, and only the examples have written conversations.
   - **Examples:** the review strip's Example group opens seven states: worsening, a reviewed safety flag, a check-in awaiting review, a PHQ-9 item 9 answer, Spanish with translation, a routine check-in, and one too short for an estimate.
 
 ## v2: redesign
@@ -36,7 +36,7 @@ What changed from v1:
 - MRN, diagnosis code and medication list are removed, because AURORA won't have EHR data.
 - The text describes what changed rather than prescribing actions.
 - The mock data has 10 patients, with visits spread over two weeks.
-- Muted line icons mark the kind of signal (medication, sleep, check-ins, and so on). The icons are from [Lucide](https://lucide.dev), under the ISC licence.
+- Muted line icons mark the kind of signal (medication, sleep, check-ins, and so on). The icons are from [Lucide](https://lucide.dev), under the ISC license.
 - **Distinct** sections (settled on October 25; the one-column **Plain** style is no longer offered) add a white summary band on the patient page, small graphics in the severity and check-in tiles, a tinted Safety tile when there is a flag, "What changed" beside the goals, a shaded zone on the chart above baseline + 5, and tinted status bands on the caseload.
 - **Larger** text (settled; the earlier, smaller scale is no longer offered) follows the type rules in DESIGN.md: 17 px body text, nothing below 15 px, safety wording at body size, and print sizes of at least 9 pt (the handout prints at 14 pt).
 - On the patients list, resting on a row for a moment shows a peek card: a small trend, severity with its uncertainty and baseline, the latest PHQ-9, item 9, and what changed. Rows are reachable by Tab, and Enter opens the patient.

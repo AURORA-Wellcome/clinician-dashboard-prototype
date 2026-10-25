@@ -551,7 +551,7 @@ class Component extends DCLogic {
     const aiOf = (p) => p.phq.map((v, i) => Math.min(27, Math.max(0, v + (i % 3 === 0 ? 1 : i % 3 === 1 ? 2 : -1) + (i === p.phq.length - 1 ? 2 : 0))));
     // Smooth series ending at the displayed estimate (the check-in PHQ-9 trace sits 1 below the estimate at the last point)
     const seriesOf = (p) => { const ai = aiOf(p); return p.est || p.phq.map(v => Math.min(27, v + (ai[ai.length - 1] - p.phq[p.phq.length - 1]))); };
-    // Sparklines share one vertical scale (points per pixel) so slopes compare across rows; each is centred on its own range
+    // Sparklines share one vertical scale (points per pixel) so slopes compare across rows; each is centered on its own range
     const SW = 80, SH = 24;
     const sparkSpan = Math.max(8, ...raw.filter(p => p.st !== 'nodata').map(p => { const v = seriesOf(p); return Math.max(...v) - Math.min(...v); }));
     const sparkY = (v, mid) => (SH / 2 - (v - mid) * ((SH - 6) / sparkSpan)).toFixed(1);

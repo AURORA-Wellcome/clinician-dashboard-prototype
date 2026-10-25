@@ -105,7 +105,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .h2 .muted{font-size:var(--fs-md);font-weight:400;margin-left:8px}
 .foot{margin:16px 0 0;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
 
-/* Status: shape + colour + word. Base hues for shapes, -text hues for words. */
+/* Status: shape + color + word. Base hues for shapes, -text hues for words. */
 .mk{width:10px;height:10px;flex:none;margin-right:8px;vertical-align:-1px}
 .st-safety{color:var(--safety)}.st-safety .mk,.mk.st-safety{color:var(--safety)}
 .st-worse{color:var(--worse-text)}.st-worse .mk,.mk.st-worse{color:var(--worse)}
@@ -128,7 +128,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .grp .count{margin-left:8px;color:var(--muted);font-weight:400;letter-spacing:0}
 .row{border-top:1px solid var(--line);cursor:pointer}
 .grp + .row{border-top:0}
-/* Day headers (by next visit): neutral, because colour means status */
+/* Day headers (by next visit): neutral, because color means status */
 .grp .rel{margin-left:6px}
 /* By next visit, flagged patients are pinned above the day headers, so their rows carry the visit date */
 .pin-date{display:block}
@@ -266,7 +266,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 /* Trend hover readout: one column per day; also by keyboard (focus the chart, arrow keys) */
 .chart-box{position:relative;container-type:inline-size;--chart-fs:13}
 /* "Baseline + 6" is drawn in HTML over the chart so it can carry an ⓘ. It sits where the SVG label did (x 750 of 880,
-   centred on the line) and scales with the chart like the SVG labels: --chart-fs follows their font sizes. */
+   centered on the line) and scales with the chart like the SVG labels: --chart-fs follows their font sizes. */
 .thr-tag{position:absolute;left:calc(750 / 880 * 100%);display:flex;align-items:center;transform:translateY(-50%);font-size:calc(var(--chart-fs) * 100cqw / 880);line-height:1.2;color:var(--worse-text);white-space:nowrap}
 .thr-tag .tt-wrap{margin-left:4px}
 .chart .hit{fill:transparent;cursor:crosshair}
@@ -362,7 +362,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .big .chart-box{--chart-fs:14}
 .big .chart .noest{font-size:16px}
 /* Chart labels scale with the chart: raise them as it narrows so they stay at least about 15px, and grow with zoom */
-/* Refined look (under review, DESIGN.md): calmer colour, finer type, softer structure, a human touch */
+/* Refined look (under review, DESIGN.md): calmer color, finer type, softer structure, a human touch */
 .refined{--r:10px}
 .refined .status.st-worse,.refined .status.st-notimp,.refined .status.st-stable,.refined .status.st-nodata,
 .refined .grp.st-worse,.refined .grp.st-notimp,.refined .grp.st-stable,.refined .grp.st-nodata,
@@ -569,7 +569,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       </sc-for>
     </div>
     <p class="sr-only" aria-live="polite">{{ peek.aria }}</p>
-    <p class="foot">Severity: AI estimate on the PHQ-9 scale; coloured changes are 6 or more points from the patient’s baseline. Not monitored in real time; PHQ-9 item 9 answers appear without study-team review. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></p>
+    <p class="foot">Severity: AI estimate on the PHQ-9 scale; colored changes are 6 or more points from the patient’s baseline. Not monitored in real time; PHQ-9 item 9 answers appear without study-team review. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></p>
   </main>
   </sc-if>
 
@@ -846,7 +846,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
         <dl class="facts">
           <dt>Intended use</dt><dd>Supplementary severity context alongside the PHQ-9 and clinical judgment. Never a replacement for either.</dd>
           <dt>Output</dt><dd>A severity score with an uncertainty interval, from check-in interviews and phone sensors, shown on the PHQ-9 scale (0–27).</dd>
-          <dt>Changes</dt><dd>A change is coloured when it is 6 or more points from the patient’s own baseline (their typical level in their first weeks in AURORA).</dd>
+          <dt>Changes</dt><dd>A change is colored when it is 6 or more points from the patient’s own baseline (their typical level in their first weeks in AURORA).</dd>
           <dt>Regulatory status</dt><dd>FDA ISTAND letter of intent only. Not FDA-qualified.</dd>
           <dt>Performance</dt><dd>ICC 0.82–0.92, reported by the company. Not independently verified; validation is ongoing.</dd>
           <dt>Known limits</dt><dd>Less accurate below 9 of 12 check-ins in 14 days. Not validated for crisis assessment.</dd>
@@ -859,7 +859,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;defaultView&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;list&quot;, &quot;options&quot;: [&quot;list&quot;, &quot;patient&quot;, &quot;handout&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}, &quot;defaultPatient&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;delgado&quot;, &quot;options&quot;: [&quot;osei&quot;, &quot;whitfield&quot;, &quot;delgado&quot;, &quot;fernandez&quot;, &quot;nguyen&quot;, &quot;mensah&quot;, &quot;santoso&quot;, &quot;kaur&quot;, &quot;brooks&quot;, &quot;ortiz&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}}">
-// Icons: Lucide v0.460.0 (lucide.dev), ISC licence. Geometry only.
+// Icons: Lucide v0.460.0 (lucide.dev), ISC license. Geometry only.
 const ICONS = {"briefcase":[["path",{"d":"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"}],["rect",{"width":"20","height":"14","x":"2","y":"6","rx":"2"}]],"calendar":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}]],"clipboard-list":[["rect",{"width":"8","height":"4","x":"8","y":"2","rx":"1","ry":"1"}],["path",{"d":"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{"d":"M12 11h4"}],["path",{"d":"M12 16h4"}],["path",{"d":"M8 11h.01"}],["path",{"d":"M8 16h.01"}]],"dumbbell":[["path",{"d":"M14.4 14.4 9.6 9.6"}],["path",{"d":"M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"}],["path",{"d":"m21.5 21.5-1.4-1.4"}],["path",{"d":"M3.9 3.9 2.5 2.5"}],["path",{"d":"M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"}]],"footprints":[["path",{"d":"M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"}],["path",{"d":"M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"}],["path",{"d":"M16 17h4"}],["path",{"d":"M4 13h4"}]],"message-square":[["path",{"d":"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"}]],"moon":[["path",{"d":"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],"pill-bottle":[["path",{"d":"M18 11h-4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h4"}],["path",{"d":"M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"}],["rect",{"width":"16","height":"5","x":"4","y":"2","rx":"1"}]],"shield":[["path",{"d":"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"}]],"users":[["path",{"d":"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"}],["circle",{"cx":"9","cy":"7","r":"4"}],["path",{"d":"M22 21v-2a4 4 0 0 0-3-3.87"}],["path",{"d":"M16 3.13a4 4 0 0 1 0 7.75"}]]};
 
 // Mock data: pseudo-realistic, no real patients. Weeks run Monday to Monday, May 25 to Aug 10; "today" is Wed, Aug 12.
@@ -875,7 +875,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const MAX = 27;
 
-// Shapes keep status readable without colour: square, triangle, flat bar, half circle, circle
+// Shapes keep status readable without color: square, triangle, flat bar, half circle, circle
 const STATUS = {
   safety: { label: 'Safety flag', cls: 'st-safety', shape: 'M0.5 0.5H9.5V9.5H0.5Z' },
   worse: { label: 'Worse than baseline', cls: 'st-worse', shape: 'M5 0.4L9.8 9.6H0.2Z' },
@@ -1009,7 +1009,7 @@ const PATIENTS = [
 // Off-track rules (Study design/Measurement/AURORA_additional_data_collection.md, section 5), run on the AI estimate.
 // Under 3 months in care: above the expected range two weeks running, after a 4-week grace period.
 // From 3 months: 10 or more two weeks running. At any time: 6 or more above baseline. In this trial only,
-// if check-ins are too few for an estimate, the same rules run on the PHQ-9 (labelled, and logged by source).
+// if check-ins are too few for an estimate, the same rules run on the PHQ-9 (labeled, and logged by source).
 // Mock thresholds on the PHQ-9 scale: placeholders until set from the estimate's measured reliable change (bead aurora-dey).
 const RULES = { earlyMonths: 3, deterioration: 6, persistence: 10, graceWeeks: 4 };
 const expectedRange = (base, t) => { const mid = base * (1 - 0.4 * (1 - Math.exp(-t / 5))); return { mid, hi: Math.min(MAX, mid + 3), lo: Math.max(0, mid - 3) }; };
@@ -1607,7 +1607,7 @@ class Component extends DCLogic {
         err = 0.3 * err + 1.9 * Math.sqrt(1 - 0.3 ** 2) * gauss(d, 3);
         readings.push({ d, dev: mood + err });
       }
-      // Centred week by week, so the readings sit around the line the status rules read
+      // Centered week by week, so the readings sit around the line the status rules read
       for (let w = x0; w <= last; w++) {
         const wk = readings.filter((r) => Math.floor(r.d / 7) === w);
         const m = wk.reduce((a, r) => a + r.dev, 0) / (wk.length || 1);
@@ -1857,7 +1857,7 @@ class Component extends DCLogic {
       };
     };
     const tips = {
-      sev: tipFor('sev', ['AI estimate (AI-COA) of depression severity on the PHQ-9 scale, 0 to 27.', 'The number after it is the change from the patient’s own baseline, coloured when it is 6 or more points.']),
+      sev: tipFor('sev', ['AI estimate (AI-COA) of depression severity on the PHQ-9 scale, 0 to 27.', 'The number after it is the change from the patient’s own baseline, colored when it is 6 or more points.']),
       ci: tipFor('ci', ['Check-ins completed in the last 14 days. Below 9 of 12 the estimate is less certain.']),
       rule: tipFor('rule', [
         { cls: 'tt-head', text: 'How the trend is judged, from the AI estimate:' },

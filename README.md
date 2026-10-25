@@ -29,7 +29,7 @@ v2 and v1 stay available for comparison from the landing page. What changed in e
 
 ## Design rules
 
-[DESIGN.md](DESIGN.md) sets out the rules every screen follows: principles, type and colour, components, and a review checklist.
+[DESIGN.md](DESIGN.md) sets out the rules every screen follows: principles, type and color, components, and a review checklist.
 
 ## For maintainers
 

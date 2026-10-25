@@ -704,7 +704,7 @@
     a.remove();
   }
 
-  /* ---------- Styles: review scaffolding, in the review strip's colours ---------- */
+  /* ---------- Styles: review scaffolding, in the review strip's colors ---------- */
   const CSS = `
 .an-fab{position:fixed;right:16px;bottom:16px;z-index:60;display:flex;align-items:center;gap:8px;padding:10px 16px;font:600 15px/20px var(--font,system-ui,sans-serif);color:#4A3B12;background:repeating-linear-gradient(45deg,#F3EFE6,#F3EFE6 12px,#EFEAE0 12px,#EFEAE0 24px);border:1px dashed #A8986F;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.16);cursor:pointer}
 .an-fab:focus-visible,.an-panel button:focus-visible,.an-composer button:focus-visible,.an-pin:focus-visible{outline:2px solid #0072B2;outline-offset:2px}

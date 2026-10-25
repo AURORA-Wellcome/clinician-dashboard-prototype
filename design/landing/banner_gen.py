@@ -89,8 +89,8 @@ main_grad = ('<linearGradient id="bn-main" x1="0" y1="1" x2="0" y2="0"><stop off
 main_a = layer('bn-rays-a', f'<g mask="url(#bn-m-main)"><path d="{main}" fill="url(#bn-main)" filter="url(#bn-glow)" opacity=".7"/><path d="{main}" fill="url(#bn-main)" filter="url(#bn-rays-1)"/></g>', main_grad)
 main_b = layer('bn-rays-b', f'<g mask="url(#bn-m-main)"><path d="{main}" fill="url(#bn-main)" filter="url(#bn-rays-2)"/></g>')
 main_c = layer('bn-rays-c', f'<g mask="url(#bn-m-main)"><path d="{main}" fill="url(#bn-main)" filter="url(#bn-rays-3)"/></g>')
-# Natural colour: oxygen green just above the bright lower edge, and a violet fringe at the edge and the tops.
-# Each comes in patches along the curtain (a horizontal mask), so drifting the layer makes the colour wander.
+# Natural color: oxygen green just above the bright lower edge, and a violet fringe at the edge and the tops.
+# Each comes in patches along the curtain (a horizontal mask), so drifting the layer makes the color wander.
 tint_defs = ('<linearGradient id="bn-green" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#9CF7A6" stop-opacity=".3"/><stop offset=".14" stop-color="#62EB86" stop-opacity=".85"/><stop offset=".42" stop-color="#3FD46A" stop-opacity=".4"/><stop offset="1" stop-color="#2FBF5E" stop-opacity="0"/></linearGradient>'
              '<linearGradient id="bn-purple" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#E0A2F2" stop-opacity=".45"/><stop offset=".12" stop-color="#C79CF5" stop-opacity=".06"/><stop offset=".5" stop-color="#B58BEF" stop-opacity=".22"/><stop offset=".85" stop-color="#A77FEA" stop-opacity=".6"/><stop offset="1" stop-color="#9A72E4" stop-opacity="0"/></linearGradient>'
              + hfade('bn-hf-green', [(0, 0), (.12, 0), (.22, .85), (.36, .2), (.5, .7), (.64, .95), (.76, .25), (.88, .6), (1, 0)])
