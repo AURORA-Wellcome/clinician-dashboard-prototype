@@ -31,7 +31,7 @@ The redesign, built to the rules in DESIGN.md. It has three pages:
 - **Patient handout:** a plain-language page for the patient.
 
 What changed from v1:
-- Safety flags follow the 19 October safety design: no crisis banner or Respond buttons.
+- Safety flags follow the October 19 safety design: no crisis banner or Respond buttons.
 - HAM-D is removed, pending `aurora-bxi`.
 - MRN, diagnosis code and medication list are removed, because AURORA won't have EHR data.
 - The text describes what changed rather than prescribing actions.

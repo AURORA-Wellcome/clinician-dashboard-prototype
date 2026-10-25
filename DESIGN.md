@@ -8,7 +8,7 @@ The rules every mockup screen follows. Give this file, and the reference screens
 
 1. **One question per page.**
    - **Caseload:** *which of my patients need attention, and in what order?*
-   - **Patient page:** *how is this patient doing, and what has changed?* This page merges v1's patient detail and session prep, following the group's "one simple page" (16 July). It prints as the session brief.
+   - **Patient page:** *how is this patient doing, and what has changed?* This page merges v1's patient detail and session prep, following the group's "one simple page" (July 16). It prints as the session brief.
    - **Patient handout:** *what would the patient want to know?* Plain language, no model internals.
    - **Check-in** (v3, draft): *what happened at this check-in, and how much weight should I give it?* It is detail on demand: nothing on it is needed for the 3-minute workflow.
    - Anything that doesn't serve the page's question moves elsewhere.
@@ -21,16 +21,16 @@ The rules every mockup screen follows. Give this file, and the reference screens
 4. **Whitespace before borders.** Separate things with space and alignment. Panels hold groups of content; no bordered chips or pills anywhere.
 5. **Status is always triple-encoded** as shape + color + word: ■ Safety flag, ▲ Worse than baseline, ● Stable or better, ◐ Too few check-ins. This survives color blindness and grayscale printing. Every shape must differ: v1's octagon for crisis looked like a circle at 10 px.
 6. **Safety flags lead, but the dashboard is not a crisis channel.**
-   - Under the safety design agreed on 19 October, the study team reviews AI-detected risk and emails the clinician if it is urgent. Risk information doesn't reach the treating clinician in real time (13 August).
+   - Under the safety design agreed on October 19, the study team reviews AI-detected risk and emails the clinician if it is urgent. Risk information doesn't reach the treating clinician in real time (August 13).
    - Safety flags come first: first group in the caseload, first tile on the patient page.
    - They are dated and in the `safety` color, and they say who has or hasn't reviewed them.
    - Never imply that no email means safe: PHQ-9 item 9 answers arrive without study-team review.
    - No banners, pop-ups or Respond buttons.
-7. **Show detail on demand.** Overview rows show the few things needed to decide. Explanation lives in ⓘ, hover, or the next page: the drill-down clinicians asked for (16 July).
+7. **Show detail on demand.** Overview rows show the few things needed to decide. Explanation lives in ⓘ, hover, or the next page: the drill-down clinicians asked for (July 16).
 8. **Describe; suggest only softly and on demand.**
    - Say what changed ("What changed", "Worse than baseline", "Few check-ins").
    - Never tell clinicians which technique or treatment to use ("Act now", "Next step: assess adherence", "Switch medication").
-   - The source is clinical planning, 16 July:
+   - The source is clinical planning, July 16:
      - Clinicians "don't want to be told what to do", but naming an issue as one that "might be worth addressing" is acceptable.
      - The study team proposed recommendations with a "why" the clinician can open, audit and disagree with, and suggested exploring with clinicians how far recommendations should go.
    - The theoretical model includes a clinical support layer ("recommended next steps"), so how far to go is an open question for the working group (bead aurora-04b).
@@ -38,7 +38,7 @@ The rules every mockup screen follows. Give this file, and the reference screens
      - These are the study's procedure, set for each review outcome by the IRB safety text, not AI advice. The same steps go in the email.
      - Clinicians ask for this: in focus groups on suicide-risk models, hospital providers named clear workflows and training among what would help (Bentley et al. 2022, doi:10.2196/30946).
      - Until the IRB safety text is written, the check-in page shows example wording, marked as such (bead aurora-c6i).
-   - *Corrected 2026-10-24:* an earlier version of this principle also banned "Worth discussing", which goes further than the 16 July discussion did.
+   - *Corrected 2026-10-24:* an earlier version of this principle also banned "Worth discussing", which goes further than the July 16 discussion did.
 9. **Readable at arm's length, at a glance.** Size text for the oldest clinician who will use the dashboard, glancing at a laptop between sessions, and for the patient reading the handout. Usability guidance agrees: Nielsen Norman Group says to "use a reasonably large default font size and allow users to change the font size", because what counts as tiny grows with age.
    - Body text is 17 px. Nothing on screen is smaller than 15 px, and 15 px is only for text a clinician can skip.
    - Safety wording is never in the smallest size.
@@ -273,7 +273,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 | Too few check-ins | ◐ half circle | `nodata` | no AI estimate, and the PHQ-9 fallback hasn't fired |
 | On track | ● circle | `stable` | none of the above (was "Stable or better") |
 
-- **The rules run on the AI estimate.** This was decided on 24 October: the PHQ-9 is mainly for validation, and the simulation puts the AI flag about a week earlier.
+- **The rules run on the AI estimate.** This was decided on October 24: the PHQ-9 is mainly for validation, and the simulation puts the AI flag about a week earlier.
 - **PHQ-9 fallback:** in this trial only, when check-ins are too few for an estimate, the same rules run on the PHQ-9. The flag says so ("Still symptomatic (PHQ-9)"), and every flag's source is logged (bead aurora-dey).
 - **Time in care** comes from the baseline treatment-history item (§6), plus time since enrollment.
 - **Placeholders:** the thresholds (6, 10, 4 weeks and the expected range) hold until they are set from the estimate's measured reliability.
@@ -344,7 +344,7 @@ A polish pass. Since 2026-10-25 it is v3's default look; the review strip's Look
   - **Name to title:** opening a patient from the list morphs the name in the row into the page title (0.34 s, View Transitions where the browser has them), and back again from the breadcrumb. The rest of the page cross-fades quickly (0.18 s). It keeps the clinician's eye on the patient across the change of page.
   - **Trend draw-in:** on the patient page the smoothed line draws itself in once (0.7 s), the band and check-in dots fade in, and the end dot appears last.
   - All motion is off when the reduced-motion setting is on, in the Original look, and in print.
-- **Greeting band** (Patients page only; switchable, `&hero=0` hides it): "Good morning, Dr Okafor", then the date, visits today or tomorrow, and patients with a safety flag. Two soft aurora curtains in pale blue and violet sit at the right, fading out before the text. They follow the time of day: paler in the morning, as above in the afternoon, deeper in the evening. Cool hues only, because warm hues and greens mean status; no animation; not printed. It is the one exception to "no decorative graphics" in the dashboard itself.
+- **Greeting band** (Patients page only; switchable, `&hero=0` hides it): "Good morning, Dr. Okafor", then the date, visits today or tomorrow, and patients with a safety flag. Two soft aurora curtains in pale blue and violet sit at the right, fading out before the text. They follow the time of day: paler in the morning, as above in the afternoon, deeper in the evening. Cool hues only, because warm hues and greens mean status; no animation; not printed. It is the one exception to "no decorative graphics" in the dashboard itself.
 - **New values,** to add to Tokens once the CWG confirms the look: avatar `#E4EBF4` with `#3D4B57` text; curtains `#8FB0EE` and `#B3A2EA` (afternoon), `#A9C4F3` and `#CABEF2` (morning), `#6F8EE2` and `#9682DE` (evening); gridlines `#EEF1F4`; card shadow `0 1px 2px rgba(16,24,40,.05), 0 4px 12px rgba(16,24,40,.05)`.
 
 ## Procedure for each redesign round

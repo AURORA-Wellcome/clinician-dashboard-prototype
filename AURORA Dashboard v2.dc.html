@@ -364,7 +364,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       <sc-if value="{{ onHandout }}"><button type="button" class="crumb" onClick="{{ goPatient }}">{{ pt.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">Patient handout</span></sc-if>
     </nav>
     <div class="who-wrap">
-      <button class="who" onClick="{{ toggleMenu }}" aria-haspopup="true" aria-expanded="{{ menuExpanded }}">Dr E. Okafor · Site 03<span class="caret" aria-hidden="true">▾</span></button>
+      <button class="who" onClick="{{ toggleMenu }}" aria-haspopup="true" aria-expanded="{{ menuExpanded }}">Dr. E. Okafor · Site 03<span class="caret" aria-hidden="true">▾</span></button>
       <sc-if value="{{ menuOpen }}">
         <div class="menu-bg" onClick="{{ closeMenu }}"></div>
         <div class="menu" role="dialog" aria-label="Settings">
@@ -1071,7 +1071,7 @@ class Component extends DCLogic {
       : ['Your check-ins suggest the last few weeks have been harder than usual. That’s worth talking about at your next appointment.'];
     const ho = {
       title: `${P.first}, here’s what your check-ins show`,
-      sub: `Last 4 weeks · for your ${P.visitDay ? P.visitDay + ' ' : 'next '}appointment with Dr Okafor`,
+      sub: `Last 4 weeks · for your ${P.visitDay ? P.visitDay + ' ' : 'next '}appointment with Dr. Okafor`,
       paras: [...(P.handout || hoDefault), `In the last two weeks you completed ${P.cn} of ${P.cd} check-ins. Thank you: the picture is clearer when there are more of them.`]
     };
 
