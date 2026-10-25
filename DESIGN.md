@@ -41,7 +41,7 @@ The rules every mockup screen follows. Give this file, and the reference screens
    - Clinicians can enlarge the text: sizes are in rem, and the pages still work at 200% zoom.
    - The sizes, and where they come from, are under Type.
 10. **Open and close from the same place.** A control that opens something also closes it, from the same spot, so opening and closing take no pointer travel (Fitts's law: the time to hit a target grows with its distance).
-   - The account menu, ⓘ tips, the drivers panel, Review options and the Notes button all toggle in place; the Notes button reads "Close notes" while the panel is open.
+   - The account menu, ⓘ tips, the drivers panel and the Notes button all toggle in place; the Notes button reads "Close notes" while the panel is open.
    - Escape closes too, and a second way to close, such as a × in the panel, is fine.
    - Dialogs that cover the page, such as Model Facts, are the exception: they close from their own button, Escape, or a click outside.
 
@@ -281,7 +281,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 
 ## Refined look *(v3, under review)*
 
-A polish pass, switched under Review options (Look: Current or Refined; deep link `&look=refined`). Beauty here comes from calm and precision, not decoration: fewer colours on screen at once, a clearer type hierarchy, softer structure, and one focal point per page.
+A polish pass, switched in the review strip (Look: Current or Refined; deep link `&look=refined`). Beauty here comes from calm and precision, not decoration: fewer colours on screen at once, a clearer type hierarchy, softer structure, and one focal point per page.
 - **Colour:** status words are in `ink`; the shape keeps the status colour. Safety wording stays in `safety`. Shape, colour and word all remain. *(Amends the Status marker rule if adopted.)*
 - **Type:** the patient's name is tracked in slightly (−0.01 em); tile numbers are weight 500, tracked in −0.02 em; group and day headers are in sentence case at `text-md`; section headings have 48 px above them.
 - **Structure:** the patients list, What changed and the trend chart sit on a soft two-layer shadow instead of a border, with 10 px corners. Chart gridlines are lighter, as is the uncertainty band. Print keeps plain borders. *(Amends "shadows only on popovers" if adopted.)*

@@ -55,14 +55,11 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
 /* Review controls: scaffolding for the clinical planning group, not part of the design */
-/* A button at bottom left opens them, so the top of the page shows only the design */
-.review-dock{position:fixed;left:16px;bottom:16px;z-index:59;font-size:13px;line-height:18px}
-.review-btn{padding:10px 16px;font:600 15px/20px var(--font);color:#4A3B12;background:repeating-linear-gradient(45deg,#F3EFE6,#F3EFE6 12px,#EFEAE0 12px,#EFEAE0 24px);border:1px dashed #A8986F;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.16);cursor:pointer}
-.review-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.review-panel{position:absolute;left:0;bottom:calc(100% + 8px);width:max-content;max-width:calc(100vw - 32px);padding:12px 14px 14px;background:#FBF8F1;border:1px dashed #A8986F;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.16)}
-.review-row{display:grid;grid-template-columns:7rem auto;align-items:center;gap:12px;margin-top:8px}
+/* Always visible at the top, so any setting is one click away; grouped with short labels to stay compact */
+.review{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 20px;font-size:13px;line-height:18px;background:repeating-linear-gradient(45deg,#F3EFE6,#F3EFE6 12px,#EFEAE0 12px,#EFEAE0 24px);border-bottom:1px dashed #C9BFA8}
+.review-group{display:inline-flex;align-items:center;gap:6px}
 .review-k{font-weight:600;color:#7A6A45}
-.review-row .seg{justify-self:start}
+.review .seg button{padding:3px 8px}
 .review-label{font-size:13px;font-weight:600;color:#7A6A45}
 .seg{display:inline-flex;border:1px solid #C9BFA8;border-radius:var(--r);overflow:hidden;background:var(--surface)}
 .seg button{font:inherit;font-size:13px;font-weight:600;padding:4px 12px;border:0;border-right:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}
@@ -385,20 +382,15 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 
 <div class="{{ appCls }}">
 
-  <div class="review-dock no-print">
-    <sc-if value="{{ reviewOpen }}">
-      <div id="review-panel" class="review-panel" role="group" aria-label="Review options">
-        <div class="review-label">Review options · not part of the design</div>
-        <div class="review-row"><span class="review-k">Page</span><span class="seg"><sc-for list="{{ viewTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></div>
-        <sc-if value="{{ onList }}"><div class="review-row"><span class="review-k">Patients list</span><span class="seg"><sc-for list="{{ orderTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></div></sc-if>
-        <div class="review-row"><span class="review-k">Sections</span><span class="seg"><sc-for list="{{ styleTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></div>
-        <div class="review-row"><span class="review-k">Icons</span><span class="seg"><sc-for list="{{ iconTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></div>
-        <div class="review-row"><span class="review-k">Text size</span><span class="seg"><sc-for list="{{ textTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></div>
-        <div class="review-row"><span class="review-k">Look</span><span class="seg"><sc-for list="{{ lookTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></div>
-        <sc-if value="{{ refined }}"><div class="review-row"><span class="review-k">Greeting band</span><span class="seg"><sc-for list="{{ heroTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></div></sc-if>
-      </div>
-    </sc-if>
-    <button class="review-btn" onClick="{{ toggleReview }}" aria-expanded="{{ reviewExpanded }}" aria-controls="review-panel">Review options</button>
+  <div class="review no-print">
+    <span class="review-label">Review · not part of the design</span>
+    <span class="review-group"><span class="review-k">Page</span><span class="seg"><sc-for list="{{ viewTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
+    <sc-if value="{{ onList }}"><span class="review-group"><span class="review-k">List</span><span class="seg"><sc-for list="{{ orderTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
+    <span class="review-group"><span class="review-k">Sections</span><span class="seg"><sc-for list="{{ styleTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
+    <span class="review-group"><span class="review-k">Icons</span><span class="seg"><sc-for list="{{ iconTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
+    <span class="review-group"><span class="review-k">Text</span><span class="seg"><sc-for list="{{ textTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
+    <span class="review-group"><span class="review-k">Look</span><span class="seg"><sc-for list="{{ lookTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
+    <sc-if value="{{ greetCtl }}"><span class="review-group"><span class="review-k">Greeting</span><span class="seg"><sc-for list="{{ heroTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
   </div>
 
   <header class="topbar no-print">
@@ -883,7 +875,7 @@ const lastIndex = (arr) => { for (let i = arr.length - 1; i >= 0; i--) if (arr[i
 const signed = (d) => (d > 0 ? '+' : d < 0 ? '−' : '') + Math.abs(d);
 
 class Component extends DCLogic {
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: false, hero: true, reviewOpen: false, factsOpen: false, discussed: false };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: false, hero: true, factsOpen: false, discussed: false };
 
   componentDidMount() {
     const o = {};
@@ -910,7 +902,7 @@ class Component extends DCLogic {
     this.onHash = () => this.setState(this.readHash());
     window.addEventListener('hashchange', this.onHash);
     // Escape closes hover content anywhere (WCAG 1.4.13: dismissible)
-    this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, menuOpen: false, tip: null, tipPinned: false, factsOpen: false, reviewOpen: false }); } };
+    this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, menuOpen: false, tip: null, tipPinned: false, factsOpen: false }); } };
     window.addEventListener('keydown', this.onEsc);
     // A click or tap outside an open ⓘ tip closes it
     this.onDown = (e) => { if (this.state.tip && !(e.target.closest && e.target.closest('.tt-wrap'))) this.setState({ tip: null, tipPinned: false }); };
@@ -1342,7 +1334,7 @@ class Component extends DCLogic {
       viewTabs: [
         tab('Patients', s.view === 'list', () => this.go({ view: 'list' })),
         tab('Patient page', s.view === 'patient', () => this.go({ view: 'patient' })),
-        tab('Patient handout', s.view === 'handout', () => this.go({ view: 'handout' }))
+        tab('Handout', s.view === 'handout', () => this.go({ view: 'handout' }))
       ],
       appCls: 'app' + (s.distinct ? ' distinct' : '') + (s.big ? ' big' : '') + (s.refined ? ' refined' : ''), distinct: s.distinct, sc,
       textTabs: [
@@ -1360,14 +1352,14 @@ class Component extends DCLogic {
       ],
       changesCls: 'changes' + (s.icons ? ' with-icons' : ''),
       orderTabs: [
-        tab('Grouped by status', byStatus, () => this.go({ order: 'status' })),
+        tab('By status', byStatus, () => this.go({ order: 'status' })),
         tab('By next visit', !byStatus, () => this.go({ order: 'visit' }))
       ],
       byStatus, byVisit: !byStatus, groups, peek,
       hero, heroOn: s.refined && s.hero && s.view === 'list', refined: s.refined,
       lookTabs: [tab('Current', !s.refined, () => this.go({ refined: false })), tab('Refined', s.refined, () => this.go({ refined: true }))],
       heroTabs: [tab('On', s.hero, () => this.go({ hero: true })), tab('Off', !s.hero, () => this.go({ hero: false }))],
-      reviewOpen: s.reviewOpen, reviewExpanded: s.reviewOpen ? 'true' : 'false', toggleReview: () => this.setState({ reviewOpen: !s.reviewOpen }),
+      greetCtl: s.refined && s.view === 'list',
       peekOut: () => { clearTimeout(this.peekT); this.peekT = setTimeout(() => this.setState({ peek: null }), 150); },
       peekOff: () => { clearTimeout(this.peekT); this.setState({ peek: null }); },
       listCls: 'list ' + (byStatus ? 'by-status' : 'by-visit'),
