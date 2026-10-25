@@ -4,7 +4,8 @@ Usage: python3 design/landing/banner_gen.py banner.html   then paste the output 
 Layers (sky and stars, back curtain, three ray patterns and a bright edge for the main curtain, hills) are separate
 SVGs inside drift and sway wrappers, so the page can move and cross-fade them cheaply with CSS transforms and opacity,
 without redrawing the blur and noise filters.
-Cool hues only: green means "on track" in the dashboard."""
+Mostly blue-violet, with natural green and violet shimmer. (The dashboard itself keeps to cool hues: green means
+"on track" there.)"""
 import math, random, sys
 W, H = 1600, 240
 rnd = random.Random(11)
@@ -88,12 +89,24 @@ main_grad = ('<linearGradient id="bn-main" x1="0" y1="1" x2="0" y2="0"><stop off
 main_a = layer('bn-rays-a', f'<g mask="url(#bn-m-main)"><path d="{main}" fill="url(#bn-main)" filter="url(#bn-glow)" opacity=".7"/><path d="{main}" fill="url(#bn-main)" filter="url(#bn-rays-1)"/></g>', main_grad)
 main_b = layer('bn-rays-b', f'<g mask="url(#bn-m-main)"><path d="{main}" fill="url(#bn-main)" filter="url(#bn-rays-2)"/></g>')
 main_c = layer('bn-rays-c', f'<g mask="url(#bn-m-main)"><path d="{main}" fill="url(#bn-main)" filter="url(#bn-rays-3)"/></g>')
+# Natural colour: oxygen green just above the bright lower edge, and a violet fringe at the edge and the tops.
+# Each comes in patches along the curtain (a horizontal mask), so drifting the layer makes the colour wander.
+tint_defs = ('<linearGradient id="bn-green" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#9CF7A6" stop-opacity=".3"/><stop offset=".14" stop-color="#62EB86" stop-opacity=".85"/><stop offset=".42" stop-color="#3FD46A" stop-opacity=".4"/><stop offset="1" stop-color="#2FBF5E" stop-opacity="0"/></linearGradient>'
+             '<linearGradient id="bn-purple" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#E0A2F2" stop-opacity=".45"/><stop offset=".12" stop-color="#C79CF5" stop-opacity=".06"/><stop offset=".5" stop-color="#B58BEF" stop-opacity=".22"/><stop offset=".85" stop-color="#A77FEA" stop-opacity=".6"/><stop offset="1" stop-color="#9A72E4" stop-opacity="0"/></linearGradient>'
+             + hfade('bn-hf-green', [(0, 0), (.12, 0), (.22, .85), (.36, .2), (.5, .7), (.64, .95), (.76, .25), (.88, .6), (1, 0)])
+             + hfade('bn-hf-purple', [(0, 0), (.1, .6), (.25, .15), (.42, .8), (.58, .3), (.72, .7), (.9, .2), (1, 0)])
+             + f'<mask id="bn-m-green" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}"><rect width="{W}" height="{H}" fill="url(#bn-hf-green)"/></mask>'
+             + f'<mask id="bn-m-purple" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}"><rect width="{W}" height="{H}" fill="url(#bn-hf-purple)"/></mask>'
+             + rays_filter('bn-rays-g', 51) + rays_filter('bn-rays-p', 77))
+tint_g = layer('bn-green', f'<g mask="url(#bn-m-green)"><path d="{main}" fill="url(#bn-green)" filter="url(#bn-glow)" opacity=".6"/><path d="{main}" fill="url(#bn-green)" filter="url(#bn-rays-g)"/></g>', tint_defs)
+tint_p = layer('bn-purple', f'<g mask="url(#bn-m-purple)"><path d="{main}" fill="url(#bn-purple)" filter="url(#bn-glow)" opacity=".6"/><path d="{main}" fill="url(#bn-purple)" filter="url(#bn-rays-p)"/></g>')
 edge_l = layer('bn-edge', f'<g mask="url(#bn-m-main)"><path d="{edge}" fill="url(#bn-edge)" filter="url(#bn-soft)" opacity=".75"/></g>')
 hills = layer('bn-hills', f'<path d="{far}" fill="#0E1842"/><path d="{near}" fill="#050A1F"/>')
 
 html = ('<div class="banner" aria-hidden="true">\n  ' + sky
         + '\n  <div class="bn-back"><div class="bn-sway-b">\n    ' + back_svg + '\n  </div></div>'
-        + '\n  <div class="bn-main"><div class="bn-sway">\n    ' + main_a + '\n    ' + main_b + '\n    ' + main_c + '\n    ' + edge_l + '\n  </div></div>\n  '
+        + '\n  <div class="bn-main"><div class="bn-sway">\n    ' + main_a + '\n    ' + main_b + '\n    ' + main_c + '\n    ' + tint_g + '\n    ' + tint_p + '\n    ' + edge_l + '\n  </div></div>'
+        + '\n  <div class="bn-meteor bn-m1"><i></i></div><div class="bn-meteor bn-m2"><i></i></div>\n  '
         + hills + '\n</div>')
 open(sys.argv[1], 'w').write(html)
 print(len(html), 'bytes')
