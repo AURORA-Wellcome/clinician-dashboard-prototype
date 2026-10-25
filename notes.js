@@ -43,7 +43,7 @@
   let composer = null, pendingPanel = false, pendingScroll = null, timer = 0;
   const ui = { open: lsGet('aurora-notes-open') === '1', adding: false, filter: 'page', showResolved: false, focus: null, reply: null, edit: null, me: false, error: '' };
   // The first visit from an invite link opens the panel, so reviewers find it
-  if (query.get('board') && !lsGet('aurora-notes-welcomed')) { ui.open = true; lsSet('aurora-notes-welcomed', '1'); }
+  if (query.get('board') && !lsGet('aurora-notes-welcomed')) { ui.open = true; lsSet('aurora-notes-open', '1'); lsSet('aurora-notes-welcomed', '1'); }
 
   // The mockup announces each render with its state (componentDidMount and componentDidUpdate)
   window.addEventListener('dc:render', (e) => { page = { ...DEFAULT_STATE, ...(e.detail || {}) }; schedule(); });
