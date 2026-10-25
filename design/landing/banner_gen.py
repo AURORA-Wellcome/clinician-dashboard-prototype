@@ -189,15 +189,17 @@ tint_p = layer('bn-purple', f'<g mask="url(#bn-m-purple)"><path d="{main}" fill=
 edge_l = layer('bn-edge', f'<g mask="url(#bn-m-main)"><path d="{edge}" fill="url(#bn-edge)" filter="url(#bn-soft)" opacity=".75"/></g>')
 hills = layer('bn-hills', f'<path d="{far_forest}" fill="#0E1842"/><path d="{near_forest}" fill="#050A1F"/>')
 
-# Each moving layer sits in a .bn-px wrapper, which the page shifts a little with the pointer for depth (the stars
-# stay put; the hills, nearest, move most). .bn-glints holds the sparkles the page adds near the pointer.
+# The curtains sit in .bn-px wrappers, which the page shifts a little with the pointer for depth. The stars and the
+# forest (.bn-ground) stay put: a moving foreground can bring on motion sickness. .bn-glints holds the sparkles the
+# page adds near the pointer, and .bn-treeglow, above the forest, the faint starlight it adds to the treetops.
 html = ('<div class="banner" aria-hidden="true">\n  ' + sky
         + '\n  <div class="bn-px bn-px-back"><div class="bn-back"><div class="bn-sway-b">\n    ' + back_svg + '\n  </div></div></div>'
         + '\n  <div class="bn-px bn-px-main"><div class="bn-main"><div class="bn-sway">\n    ' + main_a + '\n    ' + main_b + '\n    ' + main_c + '\n    ' + tint_g + '\n    ' + tint_p + '\n    ' + edge_l + '\n  </div></div></div>'
         + '\n  <div class="bn-meteor bn-m1"><i></i></div><div class="bn-meteor bn-m2"><i></i></div><div class="bn-meteor bn-m3"><i></i></div>'
         + '\n  <div class="bn-plane bn-plane-a"><i></i></div><div class="bn-plane bn-plane-b"><i></i></div>'
         + '\n  <div class="bn-glints"></div>'
-        + '\n  <div class="bn-px bn-px-hills">' + hills + '</div>\n</div>')
+        + '\n  <div class="bn-ground">' + hills + '</div>'
+        + '\n  <div class="bn-treeglow"></div>\n</div>')
 open(sys.argv[1], 'w').write(html)
 print(len(html), 'bytes')
 
