@@ -438,11 +438,47 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .facts dd{margin:2px 0 0}
 .modal .actions{justify-content:flex-end;margin-top:20px}
 
-/* Patient handout: larger type for reading with the patient */
-.handout{max-width:760px;margin:0 auto;padding:40px 48px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
-.handout .h2{margin-top:32px}
-.handout p{margin:0 0 12px;font-size:var(--fs-lg);line-height:1.5}
-.handout .goal{padding:6px 0;font-size:var(--fs-lg);line-height:1.5}
+/* Patient handout: a page to go through with the patient, then print in clear print (14 pt). Plain words, and nothing
+   that identifies the patient unless the clinician adds a first name when printing. The brand's blue-violet, not
+   status colors: nothing on it should read as a judgment. */
+.ho-prep{max-width:760px;margin:0 auto 20px;padding:20px 24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.ho-prep .h2{margin:0 0 12px}
+.ho-field{display:block;margin:0 0 4px;font-weight:600}
+.ho-field > span{display:block;margin-bottom:4px}
+.ho-input{box-sizing:border-box;width:min(18rem,100%);font:inherit;font-weight:400;padding:6px 10px;color:var(--ink);border:1px solid var(--line-strong);border-radius:var(--r)}
+.ho-check{display:flex;gap:8px;align-items:center;margin:4px 0;cursor:pointer}
+.ho-check input{margin:0}
+.ho-prep .muted{margin:4px 0 14px}
+.handout{max-width:760px;margin:0 auto;padding:0 48px 32px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.handout p,.handout li{font-size:var(--fs-lg);line-height:1.5}
+.handout p{margin:0 0 10px}
+.ho-head{position:relative;margin:0 -48px 18px;padding:26px 48px 20px}
+/* The art sits at the right and fades out before the text, as in the patient list's greeting band */
+.ho-art{position:absolute;top:0;right:0;width:62%;height:100%;-webkit-mask-image:linear-gradient(to right,transparent,#000 45%);mask-image:linear-gradient(to right,transparent,#000 45%)}
+.ho-brand,.ho-head .h1,.ho-head .sub{position:relative}
+.ho-brand{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-weight:600;letter-spacing:.04em}
+.ho-sec{margin-top:24px}
+.ho-sec .h2{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+.ho-sec .h2 .ic,.ho-goal .ic{flex:none;color:#5560D2}
+.ho-sec ul{margin:0 0 6px;padding:0;list-style:none}
+.ho-sec li{margin:4px 0}
+/* Bullets drawn as text: Chrome prints its own list markers as slivers */
+.ho-sec ul:not(.ho-goals) > li{position:relative;padding-left:1.1em}
+.ho-sec ul:not(.ho-goals) > li::before{content:"•";position:absolute;left:.15em;color:#5560D2;font-weight:700}
+.ho-well{padding:14px 18px;background:#F3F3FC;border-radius:var(--r);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ho-goals{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:0!important;list-style:none}
+.ho-goal{display:flex;gap:10px;align-items:flex-start;margin:0!important;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r)}
+.ho-goal .ic{margin-top:3px}
+.ho-goal-text{font-style:italic}
+.ho-chart{display:block;width:100%;height:auto;max-height:180px}
+.ho-chart .grid{stroke:var(--line);stroke-width:1}
+.ho-chart .ln{fill:none;stroke:#5560D2;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.ho-chart .pt{fill:#5560D2;stroke:#fff;stroke-width:1.5}
+.ho-chart text{font-size:14px;fill:var(--muted)}
+.ho-line{height:1.9em;margin-bottom:6px;border-bottom:1.5px solid var(--line-strong)}
+.ho-help{padding:14px 18px;border:1.5px solid #B9BCEB;border-radius:var(--r)}
+.ho-help p{margin:0 0 4px}
+.ho-foot{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted)}
 
 @media print{
   /* The patient page prints as the one-page session brief */
@@ -460,7 +496,9 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
   .chart{max-height:205px}
   .key{margin-top:2px}
   .foot{margin-top:8px}
-  .handout{border:0;padding:0}
+  .handout{border:0;padding:0;max-width:none}
+  .ho-head{margin:0 0 14px;padding:16px 0 14px}
+  .ho-sec{break-inside:avoid}
   .stats,.changes,.chart-wrap{break-inside:avoid}
   .band-inner,.distinct .band-inner{padding:0}
   .distinct .pt-band{border:0}
@@ -473,8 +511,9 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
   .big .handout .h1{font-size:20pt;line-height:26pt}
   .big .handout .h2{font-size:15pt;line-height:20pt}
   .big .handout .sub{font-size:12pt;line-height:16pt}
-  .big .handout p,.big .handout .goal{font-size:14pt;line-height:1.45}
+  .big .handout p,.big .handout li,.big .ho-foot{font-size:14pt;line-height:1.45}
   .big .handout p{max-width:34em}
+  .big .ho-chart text{font-size:13px}
   @page{margin:12mm}
 }
 </style>
@@ -751,19 +790,77 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
   <!-- PATIENT HANDOUT: plain language, goals first, no model internals -->
   <sc-if value="{{ onHandout }}">
   <main class="page" data-screen-label="Patient handout">
-    <div class="handout">
-      <h1 class="h1">{{ ho.title }}</h1>
-      <div class="sub">{{ ho.sub }}</div>
-      <sc-if value="{{ pt.hasGoals }}">
-        <h2 class="h2">Your goals</h2>
-        <ul class="goals"><sc-for list="{{ pt.goals }}" as="g"><li class="goal">{{ g.iconLgEl }}<span class="goal-text">“{{ g.text }}”</span> <span class="muted">· {{ g.handoutStatus }}</span></li></sc-for></ul>
-      </sc-if>
-      <h2 class="h2">Since your last visit</h2>
-      <sc-for list="{{ ho.paras }}" as="para"><p>{{ para }}</p></sc-for>
-    </div>
-    <div class="actions no-print" style="justify-content:center;margin-top:16px">
+    <!-- For the clinician, before printing: never printed -->
+    <section class="ho-prep no-print" aria-label="Before you print">
+      <h2 class="h2">Before you print</h2>
+      <label class="ho-field"><span>First name on the handout (optional)</span><input type="text" class="ho-input" placeholder="First name" value="{{ ho.name }}" onChange="{{ ho.setName }}"></label>
+      <p class="muted">Not saved. You can also leave it blank and write it in by hand.</p>
+      <div class="ho-field"><span>Things to talk about</span></div>
+      <sc-for list="{{ ho.talk }}" as="t"><label class="ho-check"><input type="checkbox" checked="{{ t.on }}" onChange="{{ t.toggle }}"> {{ t.text }}</label></sc-for>
+      <p class="muted">Untick anything the patient wouldn’t want on paper. Read the handout through before printing: parts of it are written by AI.</p>
       <button class="btn" onClick="{{ doPrint }}">Print</button>
-    </div>
+    </section>
+    <article class="handout">
+      <header class="ho-head">
+        <svg class="ho-art" viewBox="0 0 640 96" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <defs>
+            <linearGradient id="ho-a" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#8FB0EE" stop-opacity=".55"></stop><stop offset=".9" stop-color="#8FB0EE" stop-opacity="0"></stop></linearGradient>
+            <linearGradient id="ho-b" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#B3A2EA" stop-opacity=".5"></stop><stop offset=".9" stop-color="#B3A2EA" stop-opacity="0"></stop></linearGradient>
+          </defs>
+          <path fill="url(#ho-b)" d="M0,0 H640 V46 C580,62 520,34 450,48 C370,64 300,38 230,52 C170,64 110,50 60,58 C35,62 15,60 0,60 Z"></path>
+          <path fill="url(#ho-a)" d="M0,0 H640 V64 C570,82 500,52 420,68 C340,84 270,58 200,72 C140,84 80,70 0,78 Z"></path>
+        </svg>
+        <div class="ho-brand"><img class="logo" src="favicon.svg" width="22" height="22" alt="">AURORA</div>
+        <h1 class="h1">{{ ho.greet }}</h1>
+        <div class="sub">{{ ho.sub }}</div>
+      </header>
+      <sc-for list="{{ ho.paras }}" as="para"><p class="ho-lead">{{ para }}</p></sc-for>
+      <section class="ho-sec ho-well">
+        <h2 class="h2">{{ ho.icons.sun }}What’s going well</h2>
+        <ul><sc-for list="{{ ho.well }}" as="w"><li>{{ w }}</li></sc-for></ul>
+      </section>
+      <sc-if value="{{ ho.hasGoals }}">
+        <section class="ho-sec">
+          <h2 class="h2">Your goals</h2>
+          <ul class="ho-goals"><sc-for list="{{ ho.goals }}" as="g"><li class="ho-goal">{{ g.iconEl }}<div><div class="ho-goal-text">“{{ g.text }}”</div><div class="muted">{{ g.handoutStatus }}</div></div></li></sc-for></ul>
+        </section>
+      </sc-if>
+      <sc-if value="{{ ho.chart.has }}">
+        <section class="ho-sec ho-weeks">
+          <h2 class="h2">How your weeks have gone</h2>
+          <svg class="ho-chart" viewBox="0 0 600 152" role="img" aria-label="{{ ho.chart.aria }}">
+            <line class="grid" x1="78" x2="578" y1="16" y2="16"></line><line class="grid" x1="78" x2="578" y1="120" y2="120"></line>
+            <text x="0" y="21">Harder</text><text x="0" y="125">Easier</text>
+            <polyline class="ln" points="{{ ho.chart.line }}"></polyline>
+            <sc-for list="{{ ho.chart.pts }}" as="q"><circle class="pt" cx="{{ q.cx }}" cy="{{ q.cy }}" r="5"></circle><text x="{{ q.x }}" y="146" text-anchor="middle">{{ q.date }}</text></sc-for>
+          </svg>
+          <p class="muted">From the questionnaires you filled out. Higher on the chart means harder.</p>
+        </section>
+      </sc-if>
+      <section class="ho-sec ho-talk">
+        <h2 class="h2">{{ ho.icons.talk }}{{ ho.talkHead }}</h2>
+        <ul><sc-for list="{{ ho.talkOn }}" as="t"><li>{{ t.text }}</li></sc-for></ul>
+        <p>Something you’d like to add:</p>
+        <div class="ho-line"></div>
+      </section>
+      <section class="ho-sec ho-next">
+        <h2 class="h2">{{ ho.icons.next }}Your next step</h2>
+        <p>One thing I’ll try before my next visit:</p>
+        <div class="ho-line"></div><div class="ho-line"></div>
+        <p>What might get in the way, and what could help:</p>
+        <div class="ho-line"></div>
+      </section>
+      <section class="ho-sec ho-help">
+        <h2 class="h2">{{ ho.icons.help }}If things get hard<span class="scaffold no-print">Example wording until the protocol sets it</span></h2>
+        <p>Call [site crisis line] at any time, day or night.</p>
+        <p>In the US, you can also call or text 988.</p>
+      </section>
+      <section class="ho-sec ho-about">
+        <h2 class="h2">About your check-ins<span class="scaffold no-print">Draft wording until the consent form sets it</span></h2>
+        <p>Your check-ins help you and Dr. Okafor see how you’re doing between visits. You can stop at any time: just tell Dr. Okafor or the study team.</p>
+      </section>
+      <footer class="ho-foot">This page is about your care. Keep it somewhere private.</footer>
+    </article>
   </main>
   </sc-if>
 
@@ -867,7 +964,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;defaultView&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;list&quot;, &quot;options&quot;: [&quot;list&quot;, &quot;patient&quot;, &quot;handout&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}, &quot;defaultPatient&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;delgado&quot;, &quot;options&quot;: [&quot;osei&quot;, &quot;whitfield&quot;, &quot;delgado&quot;, &quot;fernandez&quot;, &quot;nguyen&quot;, &quot;mensah&quot;, &quot;santoso&quot;, &quot;kaur&quot;, &quot;brooks&quot;, &quot;ortiz&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}}">
 // Icons: Lucide v0.460.0 (lucide.dev), ISC license. Geometry only.
-const ICONS = {"briefcase":[["path",{"d":"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"}],["rect",{"width":"20","height":"14","x":"2","y":"6","rx":"2"}]],"calendar":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}]],"clipboard-list":[["rect",{"width":"8","height":"4","x":"8","y":"2","rx":"1","ry":"1"}],["path",{"d":"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{"d":"M12 11h4"}],["path",{"d":"M12 16h4"}],["path",{"d":"M8 11h.01"}],["path",{"d":"M8 16h.01"}]],"dumbbell":[["path",{"d":"M14.4 14.4 9.6 9.6"}],["path",{"d":"M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"}],["path",{"d":"m21.5 21.5-1.4-1.4"}],["path",{"d":"M3.9 3.9 2.5 2.5"}],["path",{"d":"M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"}]],"footprints":[["path",{"d":"M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"}],["path",{"d":"M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"}],["path",{"d":"M16 17h4"}],["path",{"d":"M4 13h4"}]],"message-square":[["path",{"d":"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"}]],"moon":[["path",{"d":"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],"pill-bottle":[["path",{"d":"M18 11h-4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h4"}],["path",{"d":"M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"}],["rect",{"width":"16","height":"5","x":"4","y":"2","rx":"1"}]],"shield":[["path",{"d":"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"}]],"users":[["path",{"d":"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"}],["circle",{"cx":"9","cy":"7","r":"4"}],["path",{"d":"M22 21v-2a4 4 0 0 0-3-3.87"}],["path",{"d":"M16 3.13a4 4 0 0 1 0 7.75"}]]};
+const ICONS = {"briefcase":[["path",{"d":"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"}],["rect",{"width":"20","height":"14","x":"2","y":"6","rx":"2"}]],"calendar":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}]],"clipboard-list":[["rect",{"width":"8","height":"4","x":"8","y":"2","rx":"1","ry":"1"}],["path",{"d":"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{"d":"M12 11h4"}],["path",{"d":"M12 16h4"}],["path",{"d":"M8 11h.01"}],["path",{"d":"M8 16h.01"}]],"dumbbell":[["path",{"d":"M14.4 14.4 9.6 9.6"}],["path",{"d":"M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"}],["path",{"d":"m21.5 21.5-1.4-1.4"}],["path",{"d":"M3.9 3.9 2.5 2.5"}],["path",{"d":"M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"}]],"footprints":[["path",{"d":"M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"}],["path",{"d":"M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"}],["path",{"d":"M16 17h4"}],["path",{"d":"M4 13h4"}]],"message-square":[["path",{"d":"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"}]],"moon":[["path",{"d":"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],"pill-bottle":[["path",{"d":"M18 11h-4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h4"}],["path",{"d":"M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"}],["rect",{"width":"16","height":"5","x":"4","y":"2","rx":"1"}]],"shield":[["path",{"d":"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"}]],"users":[["path",{"d":"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"}],["circle",{"cx":"9","cy":"7","r":"4"}],["path",{"d":"M22 21v-2a4 4 0 0 0-3-3.87"}],["path",{"d":"M16 3.13a4 4 0 0 1 0 7.75"}]],"sun":[["circle",{"cx":"12","cy":"12","r":"4"}],["path",{"d":"M12 2v2"}],["path",{"d":"M12 20v2"}],["path",{"d":"m4.93 4.93 1.41 1.41"}],["path",{"d":"m17.66 17.66 1.41 1.41"}],["path",{"d":"M2 12h2"}],["path",{"d":"M20 12h2"}],["path",{"d":"m6.34 17.66-1.41 1.41"}],["path",{"d":"m19.07 4.93-1.41 1.41"}]],"phone":[["path",{"d":"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"}]],"pencil":[["path",{"d":"M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"}],["path",{"d":"m15 5 4 4"}]]};
 
 // Mock data: pseudo-realistic, no real patients. Weeks run Monday to Monday, May 25 to Aug 10; "today" is Wed, Aug 12.
 const WEEKS = ['May 25', 'Jun 1', 'Jun 8', 'Jun 15', 'Jun 22', 'Jun 29', 'Jul 6', 'Jul 13', 'Jul 20', 'Jul 27', 'Aug 3', 'Aug 10'];
@@ -936,7 +1033,7 @@ const PATIENTS = [
       { icon: 'footprints', text: 'Get back to morning walks with Ana', status: 'on pause (3 weeks ago)', handoutStatus: 'on pause for now' },
       { icon: 'briefcase', text: 'Feel like myself at work again', status: 'some better days (last week)', handoutStatus: 'some better days' }
     ],
-    handout: ['The questionnaires you filled out suggest the last few weeks have been harder than the month before, especially with sleep and morning energy. You mentioned stopping your medication. That’s the main thing to talk through on Thursday.'] },
+    handout: ['The questionnaires you filled out suggest the last few weeks have been harder than the month before, especially with sleep and morning energy.'] },
   { id: 'fernandez', name: 'A. Fernández', first: 'Alejandro', dx: '+ GAD', status: 'worse',
     tenure: 6,
     visit: 'Mon, Aug 17, 13:00', visitDay: 'Monday', visitRank: 5, weeksIn: 11,
@@ -1239,7 +1336,7 @@ const I9_WORDS = ['not at all', 'several days', 'more than half the days', 'near
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, factsOpen: false, discussed: false, cday: null, cAt: null, pAt: null, tx: false };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, factsOpen: false, discussed: false, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [] };
 
   componentDidMount() {
     const o = {};
@@ -1272,7 +1369,7 @@ class Component extends DCLogic {
     this.onHash = () => {
       const r = withDay(this.readHash());
       const moved = ['view', 'pid', 'cday'].some((k) => k in r && r[k] !== this.state[k]);
-      this.setState(moved ? { ...r, tx: false, cAt: null, pAt: null } : r);
+      this.setState(moved ? { ...r, tx: false, cAt: null, pAt: null, hoName: '', hoOff: [] } : r);
     };
     window.addEventListener('hashchange', this.onHash);
     // Escape closes hover content anywhere (WCAG 1.4.13: dismissible)
@@ -1843,10 +1940,44 @@ class Component extends DCLogic {
       : P.status === 'stable' && P.d <= -5 ? ['Your check-ins suggest things have been getting easier over the last few weeks.']
       : P.status === 'stable' ? ['Your check-ins look about the same as usual.']
       : ['Your check-ins suggest the last few weeks have been harder than usual. That’s worth talking about at your next appointment.'];
+    // What a patient might want to talk about: written for some mock patients, a neutral line for the rest
+    const HO_TALK = {
+      delgado: ['Stopping your medication', 'Your sleep', 'Getting back to morning walks with Ana'],
+      kaur: ['What has been helping', 'Getting back to full days at work'],
+      fernandez: ['How you’ve been feeling since the medication change']
+    };
+    const talkAll = HO_TALK[P.id] || [P.trend === 'notimp' ? 'How things have been going'
+      : P.status === 'nodata' ? 'How the check-ins are going for you'
+      : P.status === 'stable' ? 'What has been helping' : 'How the last few weeks have felt'];
+    const off = s.hoOff || [];
+    const talk = talkAll.map((text, i) => ({ text, on: !off.includes(i), toggle: () => this.setState({ hoOff: off.includes(i) ? off.filter((k) => k !== i) : [...off, i] }) }));
+    // The patient's own questionnaires, not the AI estimate: higher means harder
+    const qs = PHQ_WEEKS.map((w, k) => ({ w, v: P.phq[k] })).filter((q) => q.v != null);
+    const qW0 = qs.length ? qs[0].w : 0, qW1 = qs.length ? qs[qs.length - 1].w : 1;
+    const QX = (w) => 78 + ((w - qW0) / Math.max(1, qW1 - qW0)) * 500, QY = (v) => 16 + (1 - v / MAX) * 104;
+    const qMove = qs.length >= 2 ? qs[qs.length - 1].v - qs[0].v : 0;
+    const well = [
+      P.cn >= P.cd * 0.75 ? `You did ${P.cn} of ${P.cd} check-ins in the last 2 weeks.` : P.cn > 0 ? `You did ${countOf(P.cn, 'check-in')} in the last 2 weeks. Each one helps.` : null,
+      ...P.goals.filter((g) => /better|good|easier/.test(g.handoutStatus)).map((g) => `“${g.text}”: ${g.handoutStatus}.`),
+      qMove <= -5 ? 'Your questionnaires show things getting easier.' : null
+    ].filter(Boolean);
+    const hoName = (s.hoName || '').trim();
     const ho = {
-      title: `${P.first}, here’s what your check-ins show`,
-      sub: `Last 4 weeks · for your ${P.visitDay ? P.visitDay + ' ' : 'next '}appointment with Dr. Okafor`,
-      paras: [...(P.handout || hoDefault), `In the last 2 weeks, you completed ${P.cn} of ${P.cd} check-ins. Thank you. Each one helps make the picture clearer.`]
+      greet: hoName ? `${hoName}, here’s how the last few weeks have gone` : 'Here’s how the last few weeks have gone',
+      sub: `For your ${P.visitDay ? P.visitDay + ' ' : 'next '}appointment with Dr. Okafor`,
+      paras: P.handout || hoDefault,
+      well: well.length ? well : ['You’re taking part in AURORA, and working on this with Dr. Okafor.'],
+      hasGoals: P.goals.length > 0, goals: P.goals.map((g) => ({ ...g, iconEl: icon(g.icon, 20) })),
+      chart: {
+        has: qs.length >= 2,
+        line: qs.map((q) => `${f(QX(q.w))},${f(QY(q.v))}`).join(' '),
+        pts: qs.map((q) => ({ cx: f(QX(q.w)), cy: f(QY(q.v)), x: f(QX(q.w)), date: T(WEEKS[q.w]) })),
+        aria: qs.length >= 2 ? `Your questionnaires from ${WEEKS[qW0]} to ${WEEKS[qW1]}: ${qMove >= 3 ? 'harder lately' : qMove <= -3 ? 'easier lately' : 'about the same'}.` : ''
+      },
+      talk, talkOn: talk.filter((t) => t.on),
+      talkHead: P.visitDay ? `Things to talk about on ${P.visitDay}` : 'Things to talk about at your next visit',
+      name: s.hoName || '', setName: (e) => this.setState({ hoName: e.target.value }),
+      icons: { sun: icon('sun', 20), talk: icon('message-square', 20), next: icon('pencil', 20), help: icon('phone', 20) }
     };
 
     // ⓘ tips: open at once on hover or keyboard focus; a click or tap keeps one open until a second click, Escape or a click elsewhere

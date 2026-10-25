@@ -236,7 +236,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - Never use icons for urgency (the status shapes and color do that), never color them, and never show one alone. Each sits next to its text and is hidden from screen readers.
   - At most one icon per row or item.
   - Used in: caseload flags, "What changed" items (in a left gutter), chart events and goals.
-  - No emoji, illustrations or decorative graphics. The exceptions are the brand mark (below) and, in the Refined look, the greeting band.
+  - No emoji, illustrations or decorative graphics. The exceptions are the brand mark (below), the greeting band in the Refined look, and the patient handout's header.
   - **Landing banner:** outside the dashboard, the landing page opens with a banner. It sets the stage on a page where nobody is working, and it moves calmly but visibly. `design/landing/banner_gen.py` draws it as SVG layers.
     - **Scene:** a night sky with aurora curtains over a low horizon of boreal forest: black spruce on two ridges, as in northern Canada, with a log cabin in a clearing. The forest and cabin are anchored to the bottom of the banner, so a wide screen crops sky rather than forest.
     - **Aurora:** the curtains drift (26 and 34 s) and sway, their rays leaning and lengthening (11 and 15 s). The sway only ever lengthens the curtains, so it never uncovers the top edge. Three ray patterns cross-fade every few seconds, and the bright lower edge pulses. Patches of natural green, violet and magenta wander along the main curtain, brightening and fading. As in strong displays, the magenta is a pink border along the lower edge and a faint orchid in the upper rays.
@@ -358,6 +358,27 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 - **Transcript:** collapsed under "Show transcript", which becomes "Hide transcript" in the same place. Opening it is logged. Speakers are "AURORA" and "Patient". A reviewed flagged passage is marked ■ Flagged in `safety`, and lines not in English carry their AI translation.
 - **Footer:** the dashboard isn't monitored in real time; the study team reviews flagged check-ins within one business day and emails you if the risk is urgent; AI summaries and translations can be wrong, and the patient's own account comes first.
 - **Not printed** with the session brief, and not part of the patient handout.
+
+**Patient handout.** A page to go through with the patient, then print. Its question is "what would the patient want to know?" It uses plain words, at about a 6th-to-8th-grade reading level, and the brand's blue-violet rather than status colors, so nothing on it reads as a judgment.
+- **Before you print** (on screen only): an optional first name, which isn't saved; a tick box for each topic, to leave out anything the patient wouldn't want on paper; and a reminder to read the handout through, because parts of it are written by AI.
+- **Content, in order:**
+  - a soft aurora header and the greeting;
+  - a short summary in plain words;
+  - What's going well: check-ins done, goals with better days, and the questionnaires if they show things getting easier;
+  - the goals as cards, in the patient's words;
+  - How your weeks have gone: a simple line of the patient's own PHQ-9 answers, from "easier" to "harder", not the AI estimate;
+  - Things to talk about at the next visit, with a line to add their own;
+  - Your next step, with lines to fill in together;
+  - If things get hard: the site's crisis line, and 988 in the US (example wording until the protocol sets it);
+  - About your check-ins (draft wording until the consent form sets it);
+  - a privacy line.
+- **Printout rules.** The protocol and consent forms still need to describe the handout (bead aurora-ubn).
+  - Nothing that identifies the patient: no full name, date of birth, study ID, medical record number, address or site. A first name appears only if the clinician adds it when printing; otherwise the patient can write it in. How names reach the dashboard at all is still open (bead aurora-il5).
+  - Nothing about safety flags, PHQ-9 item 9 or transcripts.
+  - No AI numbers or labels, and time spans stated plainly ("in the last 2 weeks").
+  - Nothing that reads as blame: "You did 9 of 12 check-ins", not "you missed 3".
+  - A privacy line: "This page is about your care. Keep it somewhere private."
+- **Print:** clear print at 14 pt, on two pages at most. The clinician's panel and the draft labels don't print.
 
 ## Refined look *(v3, the default since 2026-10-25; under review)*
 
