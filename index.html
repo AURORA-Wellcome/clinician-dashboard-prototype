@@ -143,18 +143,25 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
 .button{display:inline-block;padding:11px 22px;background:var(--accent);color:#fff;border-radius:var(--r);font-weight:600;text-decoration:none;transition:background .15s ease}
 .button:hover{background:var(--accent-dark)}
 
-/* Earlier versions */
-.section-title{margin:88px 0 0;font-size:1.3125rem;line-height:1.75rem;font-weight:600}
-.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;margin-top:20px}
-.card .vhead{margin-top:20px}
-.card h3{margin:2px 0 0;font-size:1.5rem;line-height:2rem;font-weight:600}
-.card p.text{margin:12px 0 0;max-width:60ch}
-/* Cards in a row share a height; buttons sit on the same line at the bottom */
+/* How we got here: earlier versions, kept for comparison and quieter than v3: smaller, grey badges, text links */
+.history{margin-top:88px}
+.history-title{margin:0;font-size:1.1875rem;line-height:1.625rem;font-weight:600;color:var(--muted)}
+.history-lede{margin:6px 0 0;max-width:60ch;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;max-width:52rem;margin-top:20px}
+.card .vhead{margin-top:16px;gap:12px}
+.card .vnum{width:2.5rem;height:2.5rem;font-size:1.25rem;border-color:var(--line-strong);color:var(--muted)}
+.card h3{margin:0;font-size:1.1875rem;line-height:1.625rem;font-weight:600}
+.card p.text{margin:10px 0 0;max-width:60ch;color:var(--muted);font-size:.9375rem;line-height:1.375rem}
+.card .frame{box-shadow:0 1px 2px rgba(31,42,51,.05),0 6px 16px rgba(31,42,51,.06)}
+.more-row{margin:12px 0 0}
+.more{font-weight:600;text-decoration:none}
+.more:hover{text-decoration:underline}
+/* Cards in a row share a height; the Open links sit on the same line at the bottom */
 .card{display:flex;flex-direction:column}
-.card .btn-row{margin-top:auto;padding-top:20px}
+.card .more-row{margin-top:auto;padding-top:12px}
 
 /* How to review */
-.review{margin-top:88px;padding:32px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.review{margin-top:72px;padding:32px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
 .review h2{margin:0;font-size:1.3125rem;line-height:1.75rem;font-weight:600}
 .steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;margin:20px 0 0;padding:0;list-style:none;counter-reset:step}
 .steps li{counter-increment:step;display:grid;grid-template-columns:auto 1fr;column-gap:14px}
@@ -264,42 +271,45 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     </div>
   </section>
 
-  <h2 class="section-title">Earlier versions</h2>
-  <div class="cards">
-    <article class="card">
-      <a class="frame" href="AURORA%20Dashboard%20v2.dc.html" tabindex="-1" aria-hidden="true"><img src="design/landing/v2.png" width="1600" height="1000" alt="" loading="lazy"></a>
-      <div class="vhead">
-        <span class="vnum" aria-hidden="true">2</span>
-        <div>
-          <p class="label">Version 2 · October 24, 2026</p>
-          <h3><a class="vlink" href="AURORA%20Dashboard%20v2.dc.html">Redesign</a></h3>
-        </div>
-      </div>
-      <p class="text">A calmer caseload and one patient page that prints as the session brief, built to the design rules. v3 builds on it.</p>
-      <div class="btn-row"><a class="button" href="AURORA%20Dashboard%20v2.dc.html">Open v2</a></div>
-    </article>
-    <article class="card">
-      <a class="frame" href="AURORA%20Dashboard%20Clinical.dc.html" tabindex="-1" aria-hidden="true"><img src="design/landing/v1.png" width="1600" height="1000" alt="" loading="lazy"></a>
-      <div class="vhead">
-        <span class="vnum" aria-hidden="true">1</span>
-        <div>
-          <p class="label">Version 1 · August to September 2026</p>
-          <h3><a class="vlink" href="AURORA%20Dashboard%20Clinical.dc.html">Clinical</a></h3>
-        </div>
-      </div>
-      <p class="text">The first mockup, with an EHR-style look: caseload triage, patient detail and session prep, each with four review variants.</p>
-      <div class="btn-row"><a class="button" href="AURORA%20Dashboard%20Clinical.dc.html">Open v1</a></div>
-    </article>
-  </div>
 
   <section class="review" aria-labelledby="review-title">
     <h2 id="review-title">How to review</h2>
     <ol class="steps">
-      <li><div><strong>Open a version</strong><span>Each one starts on the caseload, the list of a clinician’s patients.</span></div></li>
+      <li><div><strong>Open v3</strong><span>The latest version starts on the caseload, the list of a clinician’s patients.</span></div></li>
       <li><div><strong>Try the 5-second test</strong><span>Look at the caseload for five seconds. Who needs attention first?</span></div></li>
       <li><div><strong>Switch options</strong><span>The striped strip at the top changes pages and design options. It isn’t part of the design. Its “All versions” link brings you back here.</span></div></li>
       <li><div><strong>Leave notes</strong><span id="notes-step">Notes are shared only through the private review link from the study team, which has an access code in it. On this public site, notes stay in your browser.</span> <button type="button" class="linkbtn" id="code-open">Enter an access code</button></div></li>
     </ol>
+  </section>
+  <section class="history" aria-labelledby="history-title">
+    <h2 class="history-title" id="history-title">How we got here</h2>
+    <p class="history-lede">Earlier versions, kept for comparison. There’s no need to review them, but they show how far the design has come.</p>
+    <div class="cards">
+      <article class="card">
+        <a class="frame" href="AURORA%20Dashboard%20Clinical.dc.html" tabindex="-1" aria-hidden="true"><img src="design/landing/v1.png" width="1600" height="1000" alt="" loading="lazy"></a>
+        <div class="vhead">
+          <span class="vnum" aria-hidden="true">1</span>
+          <div>
+            <p class="label">Version 1 · August to September 2026</p>
+            <h3><a class="vlink" href="AURORA%20Dashboard%20Clinical.dc.html">Clinical</a></h3>
+          </div>
+        </div>
+        <p class="text">The first mockup, with an EHR-style look: caseload triage, patient detail and session prep, each with four review variants.</p>
+        <p class="more-row"><a class="more" href="AURORA%20Dashboard%20Clinical.dc.html">Open v1 <span aria-hidden="true">→</span></a></p>
+      </article>
+      <article class="card">
+        <a class="frame" href="AURORA%20Dashboard%20v2.dc.html" tabindex="-1" aria-hidden="true"><img src="design/landing/v2.png" width="1600" height="1000" alt="" loading="lazy"></a>
+        <div class="vhead">
+          <span class="vnum" aria-hidden="true">2</span>
+          <div>
+            <p class="label">Version 2 · October 24, 2026</p>
+            <h3><a class="vlink" href="AURORA%20Dashboard%20v2.dc.html">Redesign</a></h3>
+          </div>
+        </div>
+        <p class="text">A calmer caseload and one patient page that prints as the session brief, built to the design rules. v3 builds on it.</p>
+        <p class="more-row"><a class="more" href="AURORA%20Dashboard%20v2.dc.html">Open v2 <span aria-hidden="true">→</span></a></p>
+      </article>
+    </div>
   </section>
 
   <footer class="foot">
