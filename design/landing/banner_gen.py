@@ -99,12 +99,15 @@ def num(v):
     s = f'{v:.1f}'.rstrip('0').rstrip('.')
     return s.replace('-0.', '-.').replace('0.', '.', 1) if s.lstrip('-').startswith('0.') else (s or '0')
 
-def skyline(ridge_def, spacing, height, clearing, tiers_max, x0=-34.0, x1=W + 34.0):
-    """A ridge and its trees as one filled shape: the highest point of hill or tree at each x."""
+def skyline(ridge_def, spacing, height, clearing, tiers_max, x0=-34.0, x1=W + 34.0, keep_clear=None):
+    """A ridge and its trees as one filled shape: the highest point of hill or tree at each x. keep_clear: an x range
+    left without trees (each tree is still generated, so the rest of the forest doesn't change)."""
     base, terms = ridge_def
     trees, x = [], x0
     while x < x1:
-        trees.append(spruce(x, ridge_y(base, terms, x) + 1.5, height(x), tiers_max))
+        tree = spruce(x, ridge_y(base, terms, x) + 1.5, height(x), tiers_max)
+        if not (keep_clear and keep_clear[0] <= x <= keep_clear[1]):
+            trees.append(tree)
         x += trnd.uniform(*spacing)
         if trnd.random() < clearing:
             x += trnd.uniform(16, 60)
@@ -131,7 +134,9 @@ def skyline(ridge_def, spacing, height, clearing, tiers_max, x0=-34.0, x1=W + 34
     return d + ' '.join(out) + f'L{num(x1)},{H + 2}L{num(x0)},{H + 2}Z'
 
 far_forest = skyline(FAR, (1.4, 3.4), lambda x: (8 + 3 * math.sin(x / 110 + 2.1)) * trnd.uniform(0.6, 1.25), 0.03, 2)
-near_forest = skyline(NEAR, (2, 5), lambda x: (24 + 6 * math.sin(x / 160 + 1.3) + 3 * math.sin(x / 41 + 0.4)) * trnd.uniform(0.65, 1.2) + (10 if trnd.random() < 0.05 else 0), 0.012, 5)
+# A log cabin in a clearing on the near ridge, right of center, where narrow banners still show it
+CABIN_X = 1010
+near_forest = skyline(NEAR, (2, 5), lambda x: (24 + 6 * math.sin(x / 160 + 1.3) + 3 * math.sin(x / 41 + 0.4)) * trnd.uniform(0.65, 1.2) + (10 if trnd.random() < 0.05 else 0), 0.012, 5, keep_clear=(CABIN_X - 24, CABIN_X + 26))
 
 def hfade(id_, stops):
     return f'<linearGradient id="{id_}" x1="0" y1="0" x2="1" y2="0">' + ''.join(f'<stop offset="{o}" stop-color="#fff" stop-opacity="{a}"/>' for o, a in stops) + '</linearGradient>'
@@ -143,8 +148,8 @@ def rays_filter(id_, seed):
             '<feComposite in="SourceGraphic" in2="streaks" operator="in" result="rayed"/>'
             '<feGaussianBlur in="rayed" stdDeviation="1.4 7"/></filter>')
 
-def layer(cls, body, defs=''):
-    return (f'<svg class="bn-layer {cls}" viewBox="0 0 {W} {H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">'
+def layer(cls, body, defs='', align='xMidYMid'):
+    return (f'<svg class="bn-layer {cls}" viewBox="0 0 {W} {H}" preserveAspectRatio="{align} slice" aria-hidden="true" focusable="false">'
             + (f'<defs>{defs}</defs>' if defs else '') + body + '</svg>')
 
 # Stars: most stay still. A few accent stars, a little larger, have a soft glow and a faint four-point sparkle,
@@ -187,7 +192,29 @@ tint_defs = ('<linearGradient id="bn-green" x1="0" y1="1" x2="0" y2="0"><stop of
 tint_g = layer('bn-green', f'<g mask="url(#bn-m-green)"><path d="{main}" fill="url(#bn-green)" filter="url(#bn-glow)" opacity=".6"/><path d="{main}" fill="url(#bn-green)" filter="url(#bn-rays-g)"/></g>', tint_defs)
 tint_p = layer('bn-purple', f'<g mask="url(#bn-m-purple)"><path d="{main}" fill="url(#bn-purple)" filter="url(#bn-glow)" opacity=".6"/><path d="{main}" fill="url(#bn-purple)" filter="url(#bn-rays-p)"/></g>')
 edge_l = layer('bn-edge', f'<g mask="url(#bn-m-main)"><path d="{edge}" fill="url(#bn-edge)" filter="url(#bn-soft)" opacity=".75"/></g>')
-hills = layer('bn-hills', f'<path d="{far_forest}" fill="#0E1842"/><path d="{near_forest}" fill="#050A1F"/>')
+# The cabin: low log walls and a pitched roof in the forest's own dark, two windows lit warm from inside with a soft
+# halo, and a little of their light on the ground in front. Drawn around its base at (0, 0), then placed and scaled.
+# Its smoke and firelight are laid over it by the page (.bn-scene), which animates them.
+CABIN_K = 1.2
+cx, by = CABIN_X, round(ridge_y(*NEAR, CABIN_X) + 1, 1)
+windows = [(-8.6, -6.4), (3.4, -6.4)]
+win = ''.join(f'<rect x="{x:g}" y="{y:g}" width="3.4" height="3.4" rx=".3"/>' for x, y in windows)
+cabin_defs = ('<filter id="bn-warm" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.6"/></filter>'
+              '<filter id="bn-spill" x="-30%" y="-150%" width="160%" height="400%"><feGaussianBlur stdDeviation="2.5"/></filter>')
+cabin = (f'<g transform="translate({cx:g} {by:g}) scale({CABIN_K:g})">'
+         '<ellipse cx="-2" cy="3" rx="20" ry="3" fill="#FFB25A" opacity=".16" filter="url(#bn-spill)"/>'
+         '<path d="M-12,2V-8H12V2ZM-14,-7.6L-10.5,-13.5H10.5L14,-7.6ZM6,-11V-17.2H8.4V-11Z" fill="#050A1F"/>'
+         f'<g fill="#FFB04D" opacity=".85" filter="url(#bn-warm)">{win}</g><g fill="#FFD08A">{win}</g>'
+         '<g fill="none" stroke="#3A230C" stroke-width=".4" opacity=".7">'
+         + ''.join(f'<path d="M{x + 1.7:g},{y:g}v3.4M{x:g},{y + 1.7:g}h3.4"/>' for x, y in windows) + '</g></g>')
+# The forest and cabin are anchored at the bottom of the banner, so a wide banner crops sky rather than forest
+hills = layer('bn-hills', f'<path d="{far_forest}" fill="#0E1842"/><path d="{near_forest}" fill="#050A1F"/>{cabin}', cabin_defs, align='xMidYMax')
+# Where the page puts the smoke (the chimney top) and the firelight (between the windows), in percent of the scene
+chimney = (round(cx + 7.2 * CABIN_K, 2), round(by - 17.2 * CABIN_K, 2))
+hearth = (cx - 2.6 * CABIN_K, by - 4.7 * CABIN_K)
+scene = (f'<div class="bn-scene"><div class="bn-hearth" style="left:{hearth[0] / W * 100:.3f}%;top:{hearth[1] / H * 100:.3f}%"></div>'
+         f'<div class="bn-smoke" data-at="{chimney[0]:g},{chimney[1]:g}" style="left:{chimney[0] / W * 100:.3f}%;top:{chimney[1] / H * 100:.3f}%">'
+         + '<i></i>' * 8 + '</div></div>')
 
 # The curtains sit in .bn-px wrappers, which the page shifts a little with the pointer for depth. The stars and the
 # forest (.bn-ground) stay put: a moving foreground can bring on motion sickness. .bn-glints holds the sparkles the
@@ -199,7 +226,8 @@ html = ('<div class="banner" aria-hidden="true">\n  ' + sky
         + '\n  <div class="bn-plane bn-plane-a"><i></i></div><div class="bn-plane bn-plane-b"><i></i></div>'
         + '\n  <div class="bn-glints"></div>'
         + '\n  <div class="bn-ground">' + hills + '</div>'
-        + '\n  <div class="bn-treeglow"></div>\n</div>')
+        + '\n  <div class="bn-treeglow"></div>'
+        + '\n  ' + scene + '\n</div>')
 open(sys.argv[1], 'w').write(html)
 print(len(html), 'bytes')
 

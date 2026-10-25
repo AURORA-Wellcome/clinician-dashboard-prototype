@@ -34,7 +34,7 @@ Reviewers can pin notes to any part of the v2 and v3 pages (`notes.js`). A note 
 ## Screenshots and images
 
 - `design/landing/`: the screenshots `index.html` shows, one per version, rendered at 2× without the review strip. Regenerate them when a version's caseload or patient page changes.
-- `design/landing/banner_gen.py` draws the landing page's aurora banner as layers the page animates slowly: `python3 design/landing/banner_gen.py banner.html plane.css`, then paste `banner.html` over the banner in `index.html`, and `plane.css` over the `bn-plane-a` and `bn-plane-b` keyframes (the far-off plane's arcing paths).
+- `design/landing/banner_gen.py` draws the landing page's aurora banner as layers the page animates slowly: `python3 design/landing/banner_gen.py banner.html plane.css`, then paste `banner.html` over the banner in `index.html`, and `plane.css` over the `bn-plane-a` and `bn-plane-b` keyframes (the far-off plane's arcing paths). The banner HTML includes `.bn-scene`, which holds the cabin's smoke and firelight at positions computed from the drawing; it covers the same box as the forest layer, so its `cqw` units are the drawing's (1cqw is 16 units).
 - `design/screenshots/`: dated before/after screenshots for each redesign round.
 - Content audits quote the planning meetings, so they stay out of this public repo (`.gitignore`).
 - `design/type-check.html` lists the words at each rendered text size. Serve the repo first, then open `http://localhost:8767/design/type-check.html`.
