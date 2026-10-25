@@ -191,6 +191,15 @@ tint_defs = ('<linearGradient id="bn-green" x1="0" y1="1" x2="0" y2="0"><stop of
              + rays_filter('bn-rays-g', 51) + rays_filter('bn-rays-p', 77))
 tint_g = layer('bn-green', f'<g mask="url(#bn-m-green)"><path d="{main}" fill="url(#bn-green)" filter="url(#bn-glow)" opacity=".6"/><path d="{main}" fill="url(#bn-green)" filter="url(#bn-rays-g)"/></g>', tint_defs)
 tint_p = layer('bn-purple', f'<g mask="url(#bn-m-purple)"><path d="{main}" fill="url(#bn-purple)" filter="url(#bn-glow)" opacity=".6"/><path d="{main}" fill="url(#bn-purple)" filter="url(#bn-rays-p)"/></g>')
+# Magenta, as in strong displays: a pink border hugging the curtain's lower edge, and a faint orchid in the upper rays
+# where the violet is, both in patches of their own, so the magenta wanders apart from the green and violet
+mag_defs = ('<linearGradient id="bn-magenta" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#E86BE0" stop-opacity="0"/><stop offset=".45" stop-color="#DD6BE6" stop-opacity=".08"/><stop offset=".8" stop-color="#D96AE8" stop-opacity=".45"/><stop offset="1" stop-color="#D06AE6" stop-opacity="0"/></linearGradient>'
+            + hfade('bn-hf-magenta', [(0, 0), (.08, .2), (.2, .75), (.34, .15), (.47, .55), (.6, .1), (.7, .8), (.84, .3), (.94, .5), (1, 0)])
+            + f'<mask id="bn-m-magenta" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}"><rect width="{W}" height="{H}" fill="url(#bn-hf-magenta)"/></mask>'
+            + '<filter id="bn-border" x="-5%" y="-150%" width="110%" height="400%"><feGaussianBlur stdDeviation="2 3"/></filter>'
+            + rays_filter('bn-rays-m', 63))
+tint_m = layer('bn-magenta', f'<g mask="url(#bn-m-magenta)"><path d="{main}" fill="url(#bn-magenta)" filter="url(#bn-rays-m)"/>'
+               f'<path d="{edge}" transform="translate(0 4)" fill="#FF5CB8" opacity=".75" filter="url(#bn-border)"/></g>', mag_defs)
 edge_l = layer('bn-edge', f'<g mask="url(#bn-m-main)"><path d="{edge}" fill="url(#bn-edge)" filter="url(#bn-soft)" opacity=".75"/></g>')
 # The cabin, seen three-quarters on: its gable end faces right, and its long side recedes to the left, toward the
 # middle of the scene, with one larger window lit warm from inside, a soft halo, and a little of its light on the ground.
@@ -231,7 +240,7 @@ scene = (f'<div class="bn-scene"><div class="bn-hearth" style="left:{hearth[0] /
 # page adds near the pointer, and .bn-treeglow, above the forest, the faint starlight it adds to the treetops.
 html = ('<div class="banner" aria-hidden="true">\n  ' + sky
         + '\n  <div class="bn-px bn-px-back"><div class="bn-back"><div class="bn-sway-b">\n    ' + back_svg + '\n  </div></div></div>'
-        + '\n  <div class="bn-px bn-px-main"><div class="bn-main"><div class="bn-sway">\n    ' + main_a + '\n    ' + main_b + '\n    ' + main_c + '\n    ' + tint_g + '\n    ' + tint_p + '\n    ' + edge_l + '\n  </div></div></div>'
+        + '\n  <div class="bn-px bn-px-main"><div class="bn-main"><div class="bn-sway">\n    ' + main_a + '\n    ' + main_b + '\n    ' + main_c + '\n    ' + tint_g + '\n    ' + tint_p + '\n    ' + tint_m + '\n    ' + edge_l + '\n  </div></div></div>'
         + '\n  <div class="bn-meteor bn-m1"><i></i></div><div class="bn-meteor bn-m2"><i></i></div><div class="bn-meteor bn-m3"><i></i></div>'
         + '\n  <div class="bn-plane bn-plane-a"><i></i></div><div class="bn-plane bn-plane-b"><i></i></div>'
         + '\n  <div class="bn-glints"></div>'
