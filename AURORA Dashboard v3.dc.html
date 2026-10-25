@@ -111,6 +111,9 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .grp + .row{border-top:0}
 /* Day headers (by next visit): neutral, because colour means status */
 .grp .rel{margin-left:6px}
+/* By next visit, flagged patients are pinned above the day headers, so their rows carry the visit date */
+.pin-date{display:block}
+.row:has(.pin-date){padding-top:8px;padding-bottom:8px}
 .row:hover{background:var(--hover)}
 /* Row peek: a hover card with the trend and what changed. Rows are links, reachable by Tab. */
 .row{position:relative}
@@ -269,7 +272,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 /* Larger text: wider column and table columns, safety wording and footers at body size, lines kept short */
 .big .page,.big .band-inner{max-width:70rem}
 .big .list.by-status{--cols:minmax(170px,1.2fr) 184px 100px 96px minmax(0,2.6fr)}
-.big .list.by-visit{--cols:84px minmax(140px,1fr) 172px 100px 88px minmax(0,2.4fr)}
+.big .list.by-visit{--cols:90px minmax(140px,1fr) 172px 100px 88px minmax(0,2.4fr)}
 .big.distinct .pt-sections{grid-template-columns:minmax(0,1fr) 21rem}
 .big .safety-note{font-size:var(--fs-md);line-height:var(--lh-md)}
 .big .foot{font-size:var(--fs-md);line-height:var(--lh-md);max-width:70ch}
@@ -391,10 +394,10 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
         <span>Flag</span>
       </div>
       <sc-for list="{{ groups }}" as="g">
-        <sc-if value="{{ byStatus }}">
+        <sc-if value="{{ g.isStatus }}">
           <div class="grp {{ g.cls }}"><svg class="mk" viewBox="0 0 10 10"><path d="{{ g.shape }}" fill="currentColor" fill-rule="evenodd"></path><path d="{{ g.shape2 }}" fill="currentColor"></path></svg>{{ g.title }}<span class="count">{{ g.count }}</span></div>
         </sc-if>
-        <sc-if value="{{ byVisit }}">
+        <sc-if value="{{ g.isDay }}">
           <div class="grp day">{{ g.title }}<sc-if value="{{ g.rel }}"><span class="rel">· {{ g.rel }}</span></sc-if><span class="count">{{ g.count }}</span></div>
         </sc-if>
         <sc-for list="{{ g.rows }}" as="p">
@@ -414,7 +417,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
                 <sc-if value="{{ peek.hasChanges }}"><ul class="peek-changes"><sc-for list="{{ peek.changes }}" as="c"><li>{{ c.iconEl }}<span class="{{ c.cls }}">{{ c.title }}</span></li></sc-for></ul></sc-if>
               </div>
             </sc-if>
-            <sc-if value="{{ byVisit }}"><span class="num">{{ p.timeText }}</span></sc-if>
+            <sc-if value="{{ byVisit }}"><span class="num"><sc-if value="{{ p.pinDate }}"><span class="pin-date">{{ p.pinDate }}</span></sc-if>{{ p.timeText }}</span></sc-if>
             <span><sc-if value="{{ byStatus }}"><svg class="mk {{ p.stCls }}" viewBox="0 0 10 10"><path d="{{ p.shape }}" fill="currentColor" fill-rule="evenodd"></path><path d="{{ p.shape2 }}" fill="currentColor"></path></svg></sc-if><span class="pt-name">{{ p.name }}</span><sc-if value="{{ p.dx }}"> <span class="muted">{{ p.dx }}</span></sc-if></span>
             <sc-if value="{{ byStatus }}"><span class="num {{ p.visitCls }}">{{ p.visitText }}</span></sc-if>
             <sc-if value="{{ byVisit }}"><span class="status {{ p.stCls }}"><svg class="mk" viewBox="0 0 10 10"><path d="{{ p.shape }}" fill="currentColor" fill-rule="evenodd"></path><path d="{{ p.shape2 }}" fill="currentColor"></path></svg>{{ p.stLabel }}</span></sc-if>
@@ -821,7 +824,7 @@ const lastIndex = (arr) => { for (let i = arr.length - 1; i >= 0; i--) if (arr[i
 const signed = (d) => (d > 0 ? '+' : d < 0 ? '−' : '') + Math.abs(d);
 
 class Component extends DCLogic {
-  state = { view: 'list', pid: 'delgado', order: 'status', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, factsOpen: false, discussed: false };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, factsOpen: false, discussed: false };
 
   componentDidMount() {
     const o = {};
@@ -945,11 +948,14 @@ class Component extends DCLogic {
       const diff = Math.round((new Date(2026, MONTHS.indexOf(mon), Number(dd)) - TODAY) / 864e5);
       return { title: `${DAY_FULL[wd]}, ${MONTHS_FULL[MONTHS.indexOf(mon)]} ${dd}`, rel: diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : '' };
     };
-    const groups = byStatus
-      ? GROUP_ORDER.map((k) => ({ cls: STATUS[k].cls, title: STATUS[k].label, shape: STATUS[k].shape, shape2: STATUS[k].shape2 || 'M0 0', rows: byVisitOrder.filter((p) => p.status === k) }))
-          .filter((g) => g.rows.length).map((g) => ({ ...g, count: String(g.rows.length) }))
-      : [...new Set(byVisitOrder.map((p) => p.dayKey))].map((k) => ({ ...dayHead(k), rows: byVisitOrder.filter((p) => p.dayKey === k) }))
-          .map((g) => ({ ...g, count: String(g.rows.length) }));
+    const statusGroup = (k, rows) => ({ isStatus: true, cls: STATUS[k].cls, title: STATUS[k].label, shape: STATUS[k].shape, shape2: STATUS[k].shape2 || 'M0 0', rows });
+    const dayGroups = (rows) => [...new Set(rows.map((p) => p.dayKey))].map((k) => ({ ...dayHead(k), isDay: true, rows: rows.filter((p) => p.dayKey === k) }));
+    // By next visit, safety flags still come first: a Safety flag group above the day headers, its rows carrying the visit date
+    const pinned = byVisitOrder.filter((p) => p.status === 'safety').map((p) => ({ ...p, pinDate: p.dayKey || 'Not scheduled' }));
+    const groups = (byStatus
+      ? GROUP_ORDER.map((k) => statusGroup(k, byVisitOrder.filter((p) => p.status === k)))
+      : [statusGroup('safety', pinned), ...dayGroups(byVisitOrder.filter((p) => p.status !== 'safety'))])
+      .filter((g) => g.rows.length).map((g) => ({ ...g, count: String(g.rows.length) }));
 
     // Selected patient
     const P = all.find((p) => p.id === s.pid) || all.find((p) => p.id === 'delgado');

@@ -121,9 +121,9 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colours ar
 - **Change:** a signed number after the value ("21 +9"), measured from the patient's own baseline. It is coloured (`worse-text` or `stable-text`, weight 600) only when it is 5 or more points; otherwise muted. Don't use ▲▼ arrows: the triangle is already the worse-than-baseline status shape.
 - **Uncertainty:** "± 4", or the clipped range ("range 22–27") when the interval runs past the 0–27 scale.
 - **Caseload order:**
-  - **Grouped by status** (the default): Safety flag, Worse than baseline, Too few check-ins, Stable or better, with patients in visit order within each group.
-  - **By next visit:** one group per day. Each day has a full-width header giving the full date ("Thursday, August 13"), "Today" or "Tomorrow" where it applies, and the number of visits; "Not scheduled" comes last. The date is in the header, so the rows show only the time, under the column heading "Time".
+  - **By next visit** (the default): one group per day. Each day has a full-width header giving the full date ("Thursday, August 13"), "Today" or "Tomorrow" where it applies, and the number of visits; "Not scheduled" comes last. The date is in the header, so the rows show only the time, under the column heading "Time". Safety-flagged patients come first, in a Safety flag group pinned above the day headers; no day header covers those rows, so each gives the visit date above the time.
   - Day headers are neutral, because colour means status. In the distinct style they sit on the neutral `tint`, with no edge.
+  - **Grouped by status:** Safety flag, Worse than baseline, Too few check-ins, Stable or better, with patients in visit order within each group.
 - **Caseload columns:** the column you look patients up by comes first, then the rest in order of importance.
   - **Grouped by status:** Patient (with the status shape), Next visit (the order within each group), Severity, Check-ins, Flag.
   - **By next visit:** Time, Patient, Status, Severity, Check-ins, Flag. Time comes first, as in a day schedule. The Status column (shape and word) stands in for the status groups.
@@ -154,7 +154,8 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colours ar
   - No outlined buttons.
   - Caseload rows have no action buttons: the whole row opens the patient.
 - **Safety flag:**
-  - It is the first group in the caseload and the first tile on the patient page, with the marker and text in `safety`.
+  - It is the first tile on the patient page, with the marker and text in `safety`.
+  - It is the first group in the caseload in either order: grouped by status, or pinned above the day headers by next visit.
   - It shows the criterion that raised it, its review status and the date: "Safety review: moderate risk · today 9:40 AM", "PHQ-9 item 9 = 2 · not reviewed · Aug 10". Clinicians want to know the thresholds behind an output (Rai et al. 2025, doi:10.2196/78757).
   - Its notes, such as review status, are `text-md`: safety wording is never in the smallest size.
   - The footer, also `text-md`, says that item 9 answers appear without study-team review.
@@ -278,7 +279,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 1. **Audit content** for the page against its question: keep, move or cut. Get CWG decisions on flagged items. Audits quote the planning meetings, so they stay out of this public repo.
 2. **Restyle one page at a time**, using only these tokens.
 3. **Screenshot loop.** Serve the repo folder (`python3 -m http.server 8767`) and take headless Chrome screenshots at 1400 px wide.
-   - v2 supports deep links, e.g. `AURORA%20Dashboard%20v2.dc.html#view=patient&p=delgado` or `#view=list&order=visit`. Add `&style=plain` or `&style=distinct` for the section style, `&text=current` for the earlier text sizes, `&clock=24` for 24-hour times, and `&icons=0` to hide icons.
+   - v2 supports deep links, e.g. `AURORA%20Dashboard%20v2.dc.html#view=patient&p=delgado` or `#view=list&order=status`. Add `&style=plain` or `&style=distinct` for the section style, `&text=current` for the earlier text sizes, `&clock=24` for 24-hour times, and `&icons=0` to hide icons.
    - Check the printed patient page is one page (`--print-to-pdf`).
    - Save before/after shots to `design/screenshots/` with dated names.
 4. **Independent critique.** Give a second model, or a fresh agent, only the screenshots and this file, and ask what to remove. The Gemini CLI on this Mac needs `GOOGLE_CLOUD_PROJECT` set before it will run.

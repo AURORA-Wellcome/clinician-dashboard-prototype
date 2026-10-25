@@ -19,7 +19,7 @@ v2 changed to follow the theoretical model (`Theoretical model/`) and the off-tr
 ### v2: `AURORA Dashboard v2.dc.html`
 
 The redesign, built to the rules in `DESIGN.md`. It has three pages:
-- **Caseload:** grouped by status, or by next visit, with a header for each day.
+- **Caseload:** by next visit (the default), with a header for each day, or grouped by status. Safety-flagged patients come first in both.
 - **Patient page:** patient detail and session prep merged into one page, which prints as the one-page session brief.
 - **Patient handout:** a plain-language page for the patient.
 
@@ -39,7 +39,7 @@ What changed from v1:
 
 Deep links open a specific page:
 - `#view=patient&p=delgado`
-- `#view=list&order=visit`
+- `#view=list&order=status`
 - `#view=handout&p=delgado`
 - Add `&style=plain` or `&style=distinct` for the section style, `&text=current` or `&text=larger` for the text size, `&clock=24` for 24-hour times, and `&icons=0` to hide the icons.
 
