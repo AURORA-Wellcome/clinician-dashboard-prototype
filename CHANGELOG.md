@@ -2,7 +2,7 @@
 
 Three versions are kept side by side so the working group can compare them; the landing page links to all three. The rules they follow are in [DESIGN.md](DESIGN.md).
 
-## v3: theory-aligned
+## v3: progress-focused
 
 `AURORA Dashboard v3.dc.html` · October 24, 2026, with additions on October 25.
 
