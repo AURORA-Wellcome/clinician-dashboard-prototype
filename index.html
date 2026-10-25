@@ -80,8 +80,8 @@ img{display:block;max-width:100%;height:auto}
   .banner .acc{animation:bn-sparkle 4s ease-in-out infinite alternate}
   .bn-green{will-change:transform,opacity;animation:bn-dance-g 9s ease-in-out infinite alternate,bn-glow-g 4.2s ease-in-out infinite alternate}
   .bn-purple{will-change:transform,opacity;animation:bn-dance-p 12s ease-in-out infinite alternate,bn-glow-p 5.7s ease-in-out -1.5s infinite alternate}
-  .bn-m1{will-change:transform,opacity;animation:bn-meteor-1 11s linear infinite}
-  .bn-m2{will-change:transform,opacity;animation:bn-meteor-2 17s linear infinite}
+  .bn-m1{will-change:transform,opacity;animation:bn-meteor-1 20s linear infinite}
+  .bn-m2{will-change:transform,opacity;animation:bn-meteor-2 20s linear infinite}
 }
 @keyframes bn-drift-a{from{transform:translateX(-3.5%)}to{transform:translateX(3.5%)}}
 @keyframes bn-sway{from{transform:skewX(-4deg) scaleY(.92)}to{transform:skewX(4deg) scaleY(1.08)}}
@@ -97,9 +97,10 @@ img{display:block;max-width:100%;height:auto}
 @keyframes bn-glow-g{from{opacity:.2}to{opacity:.95}}
 @keyframes bn-dance-p{from{transform:translateX(6%)}to{transform:translateX(-4%)}}
 @keyframes bn-glow-p{from{opacity:.1}to{opacity:.75}}
-/* Each streak is visible for about 0.7 s of its cycle: first at about 3 s, then every 11 s; first at about 10 s, then every 17 s */
-@keyframes bn-meteor-1{0%,25%{opacity:0;transform:translate(0,0)}26.5%{opacity:1}30%{opacity:.9}31.5%,100%{opacity:0;transform:translate(-380px,177px)}}
-@keyframes bn-meteor-2{0%,59%{opacity:0;transform:translate(0,0)}60%{opacity:.85}62%{opacity:.75}63%,100%{opacity:0;transform:translate(-300px,140px)}}
+/* The two streaks take turns on one 20 s cycle, so they never cross together: one at about 3 s, the other at about 12 s.
+   Each glides for about 2.5 s, fading in quickly and out slowly. */
+@keyframes bn-meteor-1{0%,15%{opacity:0;transform:translate(0,0)}17.5%{opacity:1}23%{opacity:.9}28%,100%{opacity:0;transform:translate(-380px,177px)}}
+@keyframes bn-meteor-2{0%,62%{opacity:0;transform:translate(0,0)}64.5%{opacity:.85}69%{opacity:.75}74%,100%{opacity:0;transform:translate(-300px,140px)}}
 @media print{.banner{display:none}}
 
 /* Hero */
