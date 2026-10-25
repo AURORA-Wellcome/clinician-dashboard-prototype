@@ -223,7 +223,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colours ar
   - Never use icons for urgency (the status shapes and colour do that), never colour them, and never show one alone. Each sits next to its text and is hidden from screen readers.
   - At most one icon per row or item.
   - Used in: caseload flags, "What changed" items (in a left gutter), chart events and goals.
-  - No emoji, illustrations or decorative graphics. The exceptions are the brand mark (below) and, in the Refined look, the greeting band.
+  - No emoji, illustrations or decorative graphics. The exceptions are the brand mark (below) and, in the Refined look, the greeting band. Outside the dashboard, the landing page opens with a banner: a night sky with blue-violet aurora curtains over a low horizon (SVG, drawn by `design/landing/banner_gen.py`), which sets the stage where nobody is working.
   - The capsule "pill" icon was replaced by the pill bottle because at 16 px it read as a hyperlink symbol.
 - **Brand mark:** a 24 px rounded square in a blue-to-violet gradient (`#2E6FD6` to `#7B5CC9`) with two level white aurora ribbons, the lower one shorter and fainter. It sits beside the AURORA wordmark in the top bar (v3 and the landing page) and is the browser-tab icon (`favicon.svg`). Cool hues only, like the greeting band, so it never reads as a status. The ribbons stay level: a rising line would read as rising severity, and two identical waves as "≈".
 - **Discussed checkbox:** "Discussed AURORA data with the patient at this visit". This feeds the discussion-rate measure in the supervisor A&F playbook.
@@ -273,6 +273,10 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 
 **Patient page.**
 - **Status line:** under the next-visit line, it gives the status, its source and the time in care, with the rule in an ⓘ tooltip.
+- **Improving** (good news, noticed): for a patient On track whose AI estimate has come down steadily, the status line adds "improving for 11 weeks", and the caseload's Flag column says "Improving for 11 weeks (AI)".
+  - Rule (mock, to set with the estimate's measured reliability): the longest span of 4 or more weeks, ending now, with no weekly rise of more than 1 point and a net fall of 3 or more.
+  - In `ink`, never a status colour: it is a note, not a status. Never shown beside a flag of any kind, so it can't soften one.
+  - It describes; it doesn't tell the clinician what to do (principle 8).
 - **Tile order:** the patient's PHQ-9 comes first and at the same size as the AI estimate, so the estimate reads as an adjunct to the patient's account, not its arbiter. This follows the model's "feeling believed" node, where displacement is the evidenced risk.
 - **Disagreement:** when the PHQ-9 and the estimate differ, the callout puts the patient's account first: "The estimate supplements the patient's own account; it doesn't replace it."
 
@@ -320,17 +324,20 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 - **Footer:** the dashboard isn't monitored in real time; the study team reviews flagged check-ins within one business day and emails you if the risk is urgent; AI summaries and translations can be wrong, and the patient's own account comes first.
 - **Not printed** with the session brief, and not part of the patient handout.
 
-## Refined look *(v3, under review)*
+## Refined look *(v3, the default since 2026-10-25; under review)*
 
-A polish pass, switched in the review strip (Look: Current or Refined; deep link `&look=refined`). Beauty here comes from calm and precision, not decoration: fewer colours on screen at once, a clearer type hierarchy, softer structure, and one focal point per page.
+A polish pass. Since 2026-10-25 it is v3's default look; the review strip's Look switch still offers the Original look (deep link `&look=current`). Beauty here comes from calm and precision, not decoration: fewer colours on screen at once, a clearer type hierarchy, softer structure, and one focal point per page.
 - **Colour:** status words are in `ink`; the shape keeps the status colour. Safety wording stays in `safety`. Shape, colour and word all remain. *(Amends the Status marker rule if adopted.)*
 - **Type:** the patient's name is tracked in slightly (−0.01 em); tile numbers are weight 500, tracked in −0.02 em; group and day headers are in sentence case at `text-md`; section headings have 48 px above them.
 - **Structure:** the patients list, What changed and the trend chart sit on a soft two-layer shadow instead of a border, with 10 px corners. Chart gridlines are lighter, as is the uncertainty band. Print keeps plain borders. *(Amends "shadows only on popovers" if adopted.)*
 - **Human touch:** an initials avatar (48 px circle) sits beside the name on the patient page, on screen only. Not photos: AURORA doesn't collect them, and they would raise privacy questions.
 - **Chart:** a dot marks the latest estimate. (A "Today" mark doesn't fit: the chart ends at the last weekly estimate.)
-- **Motion:** row hover eases in; peek cards, readouts and ⓘ tips fade in over 0.12 s, and only when the reduced-motion setting is off.
-- **Greeting band** (Patients page only; switchable, `&hero=0` hides it): "Good morning, Dr Okafor", then the date, visits today or tomorrow, and patients with a safety flag. Two soft aurora curtains in pale blue and violet sit at the right, fading out before the text. Cool hues only, because warm hues and greens mean status; no animation; not printed. It is the one exception to "no decorative graphics".
-- **New values,** to add to Tokens if adopted: avatar `#E4EBF4` with `#3D4B57` text; curtains `#8FB0EE` and `#B3A2EA`; gridlines `#EEF1F4`; card shadow `0 1px 2px rgba(16,24,40,.05), 0 4px 12px rgba(16,24,40,.05)`.
+- **Motion:** row hover eases in; peek cards, readouts and ⓘ tips fade in over 0.12 s. Motion with meaning:
+  - **Name to title:** opening a patient from the list morphs the name in the row into the page title (0.34 s, View Transitions where the browser has them), and back again from the breadcrumb. The rest of the page cross-fades quickly (0.18 s). It keeps the clinician's eye on the patient across the change of page.
+  - **Trend draw-in:** on the patient page the smoothed line draws itself in once (0.7 s), the band and check-in dots fade in, and the end dot appears last.
+  - All motion is off when the reduced-motion setting is on, in the Original look, and in print.
+- **Greeting band** (Patients page only; switchable, `&hero=0` hides it): "Good morning, Dr Okafor", then the date, visits today or tomorrow, and patients with a safety flag. Two soft aurora curtains in pale blue and violet sit at the right, fading out before the text. They follow the time of day: paler in the morning, as above in the afternoon, deeper in the evening. Cool hues only, because warm hues and greens mean status; no animation; not printed. It is the one exception to "no decorative graphics" in the dashboard itself.
+- **New values,** to add to Tokens once the CWG confirms the look: avatar `#E4EBF4` with `#3D4B57` text; curtains `#8FB0EE` and `#B3A2EA` (afternoon), `#A9C4F3` and `#CABEF2` (morning), `#6F8EE2` and `#9682DE` (evening); gridlines `#EEF1F4`; card shadow `0 1px 2px rgba(16,24,40,.05), 0 4px 12px rgba(16,24,40,.05)`.
 
 ## Procedure for each redesign round
 

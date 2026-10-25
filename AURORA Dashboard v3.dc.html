@@ -378,6 +378,18 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .refined .row{transition:background-color .12s ease}
 @media (prefers-reduced-motion:no-preference){.refined .peek,.refined .tip,.refined .tt.open{animation:rf-fade .12s ease-out}}
 @keyframes rf-fade{from{opacity:0}to{opacity:1}}
+/* Refined look, motion with meaning: the patient's name morphs from the list into the page title (View Transitions),
+   and the trend line draws in once. All of it is off with the reduced-motion setting and in print. */
+.refined .pt-who .h1{view-transition-name:pt-title}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.18s}
+::view-transition-group(pt-title){animation-duration:.34s;animation-timing-function:cubic-bezier(.2,.8,.2,1)}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
+@media screen and (prefers-reduced-motion:no-preference){
+  .refined .chart .est{stroke-dasharray:1;stroke-dashoffset:1;animation:est-draw .7s cubic-bezier(.3,.7,.3,1) .05s forwards}
+  .refined .chart .estband,.refined .chart .ci-est{animation:rf-fade .5s ease-out both}
+  .refined .chart .est-end{animation:rf-fade .25s ease-out .65s both}
+}
+@keyframes est-draw{to{stroke-dashoffset:0}}
 @media print{.refined .list,.refined .changes,.refined .chart-wrap,.refined .ci-tx{box-shadow:none;border-color:var(--line)}}
 .pt-who{display:flex;align-items:center;gap:14px;min-width:0}
 .avatar{display:grid;place-items:center;flex:none;width:48px;height:48px;border-radius:50%;background:#E4EBF4;color:#3D4B57;font-size:var(--fs-md);font-weight:600;letter-spacing:.02em}
@@ -502,8 +514,8 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       <section class="greet no-print" aria-label="Summary">
         <svg class="greet-art" viewBox="0 0 640 96" preserveAspectRatio="none" aria-hidden="true" focusable="false">
           <defs>
-            <linearGradient id="greet-a" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#8FB0EE" stop-opacity=".75"></stop><stop offset=".9" stop-color="#8FB0EE" stop-opacity="0"></stop></linearGradient>
-            <linearGradient id="greet-b" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#B3A2EA" stop-opacity=".6"></stop><stop offset=".9" stop-color="#B3A2EA" stop-opacity="0"></stop></linearGradient>
+            <linearGradient id="greet-a" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="{{ hero.a }}" stop-opacity="{{ hero.aOp }}"></stop><stop offset=".9" stop-color="{{ hero.a }}" stop-opacity="0"></stop></linearGradient>
+            <linearGradient id="greet-b" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="{{ hero.b }}" stop-opacity="{{ hero.bOp }}"></stop><stop offset=".9" stop-color="{{ hero.b }}" stop-opacity="0"></stop></linearGradient>
           </defs>
           <path fill="url(#greet-b)" d="M0,0 H640 V46 C580,62 520,34 450,48 C370,64 300,38 230,52 C170,64 110,50 60,58 C35,62 15,60 0,60 Z"></path>
           <path fill="url(#greet-a)" d="M0,0 H640 V64 C570,82 500,52 420,68 C340,84 270,58 200,72 C140,84 80,70 0,78 Z"></path>
@@ -529,7 +541,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
           <div class="grp day">{{ g.title }}<sc-if value="{{ g.rel }}"><span class="rel">· {{ g.rel }}</span></sc-if><span class="count">{{ g.count }}</span></div>
         </sc-if>
         <sc-for list="{{ g.rows }}" as="p">
-          <div class="lrow row" onClick="{{ p.open }}" tabindex="0" role="link" onMouseEnter="{{ p.peekIn }}" onMouseLeave="{{ peekOut }}" onFocus="{{ p.peekFocus }}" onBlur="{{ peekOff }}" onKeyDown="{{ p.rowKey }}">
+          <div class="lrow row" data-pid="{{ p.id }}" onClick="{{ p.open }}" tabindex="0" role="link" onMouseEnter="{{ p.peekIn }}" onMouseLeave="{{ peekOut }}" onFocus="{{ p.peekFocus }}" onBlur="{{ peekOff }}" onKeyDown="{{ p.rowKey }}">
             <sc-if value="{{ p.peekOn }}">
               <div class="{{ peek.cls }}" aria-hidden="true">
                 <div class="peek-head">{{ peek.span }}</div>
@@ -650,7 +662,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
             <text x="{{ ch.endX }}" y="{{ ch.baseLabelY }}">{{ ch.baseLabel }}</text>
             <polygon class="estband" points="{{ ch.band }}"></polygon>
             <sc-for list="{{ ch.ciEst }}" as="c"><circle class="ci-est" cx="{{ c.cx }}" cy="{{ c.cy }}" r="2.6"></circle></sc-for>
-            <polyline class="est" points="{{ ch.estPts }}"></polyline>
+            <polyline class="est" points="{{ ch.estPts }}" pathLength="1"></polyline>
             <sc-if value="{{ ch.showEnd }}"><circle class="est-end" cx="{{ ch.endDotX }}" cy="{{ ch.endDotY }}" r="5"></circle></sc-if>
           </sc-if>
           <sc-if value="{{ ch.showPersist }}"><line class="persist" x1="{{ ch.L }}" x2="{{ ch.R }}" y1="{{ ch.persistY }}" y2="{{ ch.persistY }}"></line><text x="{{ ch.endX }}" y="{{ ch.persistLabelY }}">10: symptomatic</text></sc-if>
@@ -1020,6 +1032,20 @@ function offTrack(p, cn, cd) {
   }
   return res;
 }
+// Improving: weeks over which the AI estimate has come down steadily, ending now. The longest span of 4 or more
+// weeks with no weekly rise of more than 1 point and a net fall of 3 or more; 0 if none. Shown only for patients
+// on track, as a note, never as a status (mock rule, to set with the estimate's measured reliability).
+const improvingWeeks = (p) => {
+  if (!p.est) return 0;
+  const last = p.est.length - 1;
+  let best = 0;
+  for (let k = 1; k <= last; k++) {
+    const i = last - k;
+    if (p.est[i] == null || p.est[i + 1] - p.est[i] > 1) break;
+    if (k >= 4 && p.est[i] - p.est[last] >= 3) best = k;
+  }
+  return best;
+};
 // Phone-sensing drivers (weekly means). Patients without mock values get a steady pattern.
 const driversOf = (p) => {
   if (p.drivers) return p.drivers;
@@ -1206,7 +1232,7 @@ const I9_WORDS = ['not at all', 'several days', 'more than half the days', 'near
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: false, hero: true, factsOpen: false, discussed: false, cday: null, cAt: null, pAt: null, tx: false };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, factsOpen: false, discussed: false, cday: null, cAt: null, pAt: null, tx: false };
 
   componentDidMount() {
     const o = {};
@@ -1291,6 +1317,38 @@ class Component extends DCLogic {
     try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
   }
 
+  // Refined look: going from the patients list to a patient morphs the name in the row into the page title, and back
+  // again (View Transitions, where the browser has them). Off with the reduced-motion setting, and in the original look.
+  canMorph() {
+    return !!(this.state.refined && document.startViewTransition && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches));
+  }
+  // Runs go() inside a view transition, resolving once the page has redrawn (or after 400 ms, whichever comes first)
+  transition(o, after) {
+    const t = document.startViewTransition(() => new Promise((resolve) => {
+      let timer;
+      const done = () => { window.removeEventListener('dc:render', done); clearTimeout(timer); if (after) after(); resolve(); };
+      timer = setTimeout(done, 400);
+      window.addEventListener('dc:render', done);
+      this.go(o);
+    }));
+    return t.finished;
+  }
+  morph(o, nameEl) {
+    if (!this.canMorph() || !nameEl) { this.go(o); return; }
+    nameEl.style.viewTransitionName = 'pt-title';
+    this.transition(o).finally(() => { nameEl.style.viewTransitionName = ''; });
+  }
+  backToList() {
+    if (this.state.view !== 'patient' || !this.canMorph()) { this.go({ view: 'list' }); return; }
+    const pid = this.state.pid;
+    let nameEl = null;
+    this.transition({ view: 'list' }, () => {
+      const row = document.querySelector(`#dc-root .list .row[data-pid="${pid}"]`);
+      nameEl = row && row.querySelector('.pt-name');
+      if (nameEl) nameEl.style.viewTransitionName = 'pt-title';
+    }).finally(() => { if (nameEl) nameEl.style.viewTransitionName = ''; });
+  }
+
   // Opens a check-in (a day number), optionally at the summary point that cites a passage
   openCheckin(d, at) {
     if (at) this.scrollSel = '#dc-root .ci-topics .hl';
@@ -1327,10 +1385,12 @@ class Component extends DCLogic {
       const st = STATUS[status];
       const autoFlag = !p.flag && ot.kind === 'notimp';
       const marked = d != null && Math.abs(d) >= RULES.deterioration;
+      // Good news, noticed: a patient on track whose estimate has come down steadily
+      const impW = status === 'stable' && !p.flag ? improvingWeeks(p) : 0;
       return {
-        ...p, estNow, d, cn, cd, ot, trend, status,
-        flag: autoFlag ? ot.reason : p.flag,
-        flagSrc: autoFlag ? `(${ot.source})` : p.flagAi ? '(AI)' : '',
+        ...p, estNow, d, cn, cd, ot, trend, status, impW,
+        flag: autoFlag ? ot.reason : impW ? `Improving for ${impW} weeks` : p.flag,
+        flagSrc: autoFlag ? `(${ot.source})` : impW || p.flagAi ? '(AI)' : '',
         stLabel: st.label, stCls: st.cls, shape: st.shape, shape2: st.shape2 || 'M0 0',
         sevText: estNow == null ? '—' : String(estNow),
         deltaText: d == null ? '' : signed(d),
@@ -1343,12 +1403,12 @@ class Component extends DCLogic {
         visitText: tm(p.visit),
         dayKey: (p.visit.match(/^(.*), \d{1,2}:\d{2}$/) || ['', ''])[1], // 'Thu, Aug 13'
         timeText: tm((p.visit.match(/\d{1,2}:\d{2}$/) || [''])[0]),
-        open: () => this.go({ view: 'patient', pid: p.id }),
+        open: (ev) => this.morph({ view: 'patient', pid: p.id }, ev && ev.currentTarget && ev.currentTarget.querySelector('.pt-name')),
         // Peek: opens after a short hover, switches quickly once one is open, opens at once on keyboard focus
         peekOn: s.peek === p.id,
         peekIn: () => { clearTimeout(this.peekT); this.peekT = setTimeout(() => this.setState({ peek: p.id }), this.state.peek ? 120 : 400); },
         peekFocus: () => { clearTimeout(this.peekT); this.setState({ peek: p.id }); },
-        rowKey: (ev) => { if (ev && ev.key === 'Enter') this.go({ view: 'patient', pid: p.id }); }
+        rowKey: (ev) => { if (ev && ev.key === 'Enter') this.morph({ view: 'patient', pid: p.id }, ev.currentTarget && ev.currentTarget.querySelector('.pt-name')); }
       };
     });
 
@@ -1377,7 +1437,14 @@ class Component extends DCLogic {
     const todayN = all.filter((p) => p.dayKey && dayHead(p.dayKey).rel === 'Today').length;
     const tomorrowN = all.filter((p) => p.dayKey && dayHead(p.dayKey).rel === 'Tomorrow').length;
     const safetyN = all.filter((p) => p.status === 'safety').length;
+    // The band's curtains follow the time of day: paler in the morning, deeper in the evening. Cool hues only.
+    const BANDS_TOD = {
+      morning: { a: '#A9C4F3', aOp: '.7', b: '#CABEF2', bOp: '.55' },
+      afternoon: { a: '#8FB0EE', aOp: '.75', b: '#B3A2EA', bOp: '.6' },
+      evening: { a: '#6F8EE2', aOp: '.85', b: '#9682DE', bOp: '.75' }
+    };
     const hero = {
+      ...BANDS_TOD[hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening'],
       hello: `${hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'}, Dr Okafor`,
       sub: [`${DAY_FULL[DOW[TODAY.getDay()]]}, ${MONTHS_FULL[TODAY.getMonth()]} ${TODAY.getDate()}`,
         todayN ? `${countOf(todayN, 'visit')} today` : '', tomorrowN ? `${countOf(tomorrowN, 'visit')} tomorrow` : '',
@@ -1411,7 +1478,7 @@ class Component extends DCLogic {
       statusShape: STATUS[P.trend].shape, statusShape2: STATUS[P.trend].shape2 || 'M0 0',
       statusText: P.ot.kind === 'notimp' ? P.ot.reason : STATUS[P.trend].label,
       statusNote: P.trend === 'nodata' ? ' · too little data to judge the trend'
-        : ` · ${P.ot.source === 'PHQ-9' ? 'from the PHQ-9: too few check-ins for an AI estimate' : 'from the AI estimate'} · ${P.ot.branch === 'early' ? `early in care, ${Math.max(1, Math.round(P.ot.months))} months` : `${Math.round(P.ot.months)} months in care`}`,
+        : `${P.impW ? ` · improving for ${P.impW} weeks` : ''} · ${P.ot.source === 'PHQ-9' ? 'from the PHQ-9: too few check-ins for an AI estimate' : 'from the AI estimate'} · ${P.ot.branch === 'early' ? `early in care, ${Math.max(1, Math.round(P.ot.months))} months` : `${Math.round(P.ot.months)} months in care`}`,
       phqNow: phqNow == null ? '—' : String(phqNow),
       phqDate: iPhq >= 0 ? WEEKS[PHQ_WEEKS[iPhq]] : 'none yet',
       phqBand: phqNow == null ? '' : bandOf(phqNow) + ' range',
@@ -1832,7 +1899,7 @@ class Component extends DCLogic {
       ],
       byStatus, byVisit: !byStatus, groups, peek,
       hero, heroOn: s.refined && s.hero && s.view === 'list', refined: s.refined,
-      lookTabs: [tab('Current', !s.refined, () => this.go({ refined: false })), tab('Refined', s.refined, () => this.go({ refined: true }))],
+      lookTabs: [tab('Refined', s.refined, () => this.go({ refined: true })), tab('Original', !s.refined, () => this.go({ refined: false }))],
       heroTabs: [tab('On', s.hero, () => this.go({ hero: true })), tab('Off', !s.hero, () => this.go({ hero: false }))],
       greetCtl: s.refined && s.view === 'list',
       peekOut: () => { clearTimeout(this.peekT); this.peekT = setTimeout(() => this.setState({ peek: null }), 150); },
@@ -1842,7 +1909,7 @@ class Component extends DCLogic {
       drv, toggleDrivers: () => this.setState({ drivers: !s.drivers }),
       safetyShape: STATUS.safety.shape,
       pt, ch, ho,
-      goList: () => this.go({ view: 'list' }),
+      goList: () => this.backToList(),
       goPatient: () => this.go({ view: 'patient' }),
       goHandout: () => this.go({ view: 'handout' }),
       doPrint: () => { try { window.print(); } catch (e) { /* ignore */ } },
