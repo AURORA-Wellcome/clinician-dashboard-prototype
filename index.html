@@ -43,10 +43,12 @@ img{display:block;max-width:100%;height:auto}
    because green means "on track" there. */
 .banner{position:relative;height:clamp(140px,15vw,220px);overflow:hidden;background:#0F1B4B}
 .bn-layer,.bn-main,.bn-back,.bn-sway,.bn-sway-b,.bn-px,.bn-glints{position:absolute;inset:0;width:100%;height:100%}
-/* Pointer depth: the page moves each layer a little with the pointer, and the layer eases toward it. The stars stay
-   put, the curtains move a little and the hills, nearest, most. (Set on these three wrappers only, so nothing else
-   in the banner needs its style recomputed.) */
-.bn-px{transform:translate3d(0,0,0);transition:transform .9s cubic-bezier(.2,.7,.2,1)}
+/* Pointer depth: the page moves each layer a little with the pointer, and the layer eases toward it, starting gently.
+   When the pointer leaves, the layers drift back more slowly still (.bn-resting). The stars stay put, the curtains
+   move a little and the hills, nearest, most. (Set on these three wrappers only, so nothing else in the banner needs
+   its style recomputed.) */
+.bn-px{transform:translate3d(0,0,0);transition:transform 1.4s cubic-bezier(.3,.45,.3,1)}
+.banner.bn-resting .bn-px{transition:transform 2.4s cubic-bezier(.45,0,.3,1)}
 /* The hills are drawn a little wider than the frame, so they can shift without showing an edge */
 .bn-px-hills .bn-layer{overflow:visible}
 /* Sparkles the page adds near the pointer: a bright core with a faint four-point cross */
@@ -333,14 +335,16 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
 
 </main>
 <script>
-// Banner, for a mouse or pen: stars near the pointer brighten with a quick sparkle, and the layers shift a little
+// Banner, for a mouse or pen: stars near the pointer brighten with a soft sparkle, and the layers shift a little
 // with the pointer for depth. Decorative only; nothing happens on touch or with the reduced-motion setting.
 (() => {
   const banner = document.querySelector('.banner');
   if (!banner || !banner.animate || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
   const glints = banner.querySelector('.bn-glints');
-  const pool = Array.from({ length: 10 }, () => glints.appendChild(Object.assign(document.createElement('i'), { className: 'bn-glint' })));
-  let next = 0, stars = null, at = null, frame = 0;
+  // A sparkle rises over about half a second and fades over a second; its star brightens and settles back
+  const GLINT_MS = 1500, STAR_MS = 2100;
+  const pool = Array.from({ length: 16 }, () => ({ el: glints.appendChild(Object.assign(document.createElement('i'), { className: 'bn-glint' })), until: 0 }));
+  let stars = null, at = null, frame = 0, resting = false, lastSpark = -Infinity;
   // Depth: how far each layer moves, in px, as the pointer goes from the middle to an edge (x, y)
   const layers = [['.bn-px-back', -8, -3], ['.bn-px-main', -16, -5], ['.bn-px-hills', -26, 0]].map(([sel, kx, ky]) => ({ el: banner.querySelector(sel), kx, ky }));
   const shift = (fx, fy) => layers.forEach((l) => { l.el.style.transform = `translate3d(${(fx * l.kx).toFixed(1)}px, ${(fy * l.ky).toFixed(1)}px, 0)`; });
@@ -349,39 +353,46 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     const b = banner.getBoundingClientRect();
     stars = [...banner.querySelectorAll('.bn-sky g[fill] > circle, .bn-sky .acc circle[fill="#FFFFFF"]')].map((el) => {
       const r = el.getBoundingClientRect();
-      return { el, x: r.left + r.width / 2 - b.left, y: r.top + r.height / 2 - b.top, base: Number(el.getAttribute('opacity') || 1), last: 0, accent: !!el.closest('.acc') };
+      return { el, x: r.left + r.width / 2 - b.left, y: r.top + r.height / 2 - b.top, base: Number(el.getAttribute('opacity') || 1), last: -Infinity, accent: !!el.closest('.acc') };
     });
   };
+  // Only a free glint is used, so no sparkle is cut short; a star waits until its last sparkle has settled
   const sparkle = (st, now) => {
-    st.last = now;
-    const g = pool[next++ % pool.length], to = `translate(${st.x.toFixed(1)}px, ${st.y.toFixed(1)}px)`;
-    g.animate([
-      { opacity: 0, transform: `${to} scale(.3) rotate(0deg)` },
-      { opacity: 1, transform: `${to} scale(${st.accent ? 1.6 : 1.15}) rotate(25deg)`, offset: 0.3 },
+    const g = pool.find((p) => p.until <= now);
+    if (!g) return false;
+    st.last = now; g.until = now + GLINT_MS;
+    const to = `translate(${st.x.toFixed(1)}px, ${st.y.toFixed(1)}px)`;
+    g.el.animate([
+      { opacity: 0, transform: `${to} scale(.3) rotate(0deg)`, easing: 'cubic-bezier(.4,0,.3,1)' },
+      { opacity: 1, transform: `${to} scale(${st.accent ? 1.6 : 1.15}) rotate(25deg)`, offset: 0.3, easing: 'cubic-bezier(.4,0,.5,1)' },
       { opacity: 0, transform: `${to} scale(.45) rotate(50deg)` }
-    ], { duration: 950, easing: 'cubic-bezier(.2,.7,.3,1)' });
-    if (!st.accent) st.el.animate([{ opacity: 1 }, { opacity: st.base }], { duration: 1600, easing: 'ease-out' });
+    ], { duration: GLINT_MS });
+    if (!st.accent) st.el.animate([{ opacity: st.base, easing: 'ease-in-out' }, { opacity: 1, offset: 0.2, easing: 'ease-in-out' }, { opacity: st.base }], { duration: STAR_MS });
+    return true;
   };
   const tick = () => {
     frame = 0;
     if (!at) return;
     const now = performance.now();
-    let n = 0;
-    for (const st of stars) {
-      if (now - st.last < 1500) continue;
-      const dx = st.x - at.x, dy = st.y - at.y;
-      if (dx * dx + dy * dy < 55 * 55) { sparkle(st, now); if (++n >= 3) break; }
+    // At most one new sparkle every 90 ms, so a quick sweep leaves an even trail rather than bursts
+    if (now - lastSpark >= 90) {
+      for (const st of stars) {
+        if (now - st.last < STAR_MS) continue;
+        const dx = st.x - at.x, dy = st.y - at.y;
+        if (dx * dx + dy * dy < 55 * 55) { if (sparkle(st, now)) lastSpark = now; break; }
+      }
     }
     shift(at.x / at.w - 0.5, at.y / at.h - 0.5);
   };
   banner.addEventListener('pointermove', (e) => {
     if (e.pointerType === 'touch') return;
     if (!stars) measure();
+    if (resting) { resting = false; banner.classList.remove('bn-resting'); }
     const b = banner.getBoundingClientRect();
     at = { x: e.clientX - b.left, y: e.clientY - b.top, w: b.width, h: b.height };
     if (!frame) frame = requestAnimationFrame(tick);
   });
-  banner.addEventListener('pointerleave', () => { at = null; shift(0, 0); });
+  banner.addEventListener('pointerleave', () => { at = null; resting = true; banner.classList.add('bn-resting'); shift(0, 0); });
   window.addEventListener('resize', () => { stars = null; });
 })();
 </script>
