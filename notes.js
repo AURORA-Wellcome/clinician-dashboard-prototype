@@ -326,6 +326,7 @@
       items.push(card(n, m));
     }
     panelBody.replaceChildren(...[
+      identity(),
       h('p', { class: 'an-status' + (status.ok ? '' : ' warn') }, status.text),
       FACILITATOR ? h('p', { class: 'an-status' }, 'Facilitator view: you see every note.') : null,
       m.visible.some((n) => n.uid === m.uid) ? null : h('p', { class: 'an-intro' }, 'Click “Add a note”, then the part of the page it’s about.'
@@ -340,11 +341,7 @@
         : h('p', { class: 'an-empty' }, onPage ? 'No notes on this page yet. What do you notice, like or suggest?' : 'No notes yet.'),
       resolvedN ? h('label', { class: 'an-check' }, h('input', { type: 'checkbox', checked: ui.showResolved, onchange: (e) => { ui.showResolved = e.target.checked; render(true); } }), ` Show resolved (${resolvedN})`) : null
     ].filter(Boolean)); // replaceChildren would print null as text
-    const who = me();
-    panelFoot.replaceChildren(ui.me ? meForm() : h('div', { class: 'an-row' },
-      h('span', { class: 'an-me' }, who.name ? `You: ${who.name}${who.role ? ' · ' + who.role : ''}` : 'You haven’t added your name yet'),
-      h('button', { type: 'button', class: 'an-tool', onclick: () => { ui.me = true; render(true); } }, who.name ? 'Change' : 'Add name')),
-    h('button', { type: 'button', class: 'an-tool', onclick: downloadCsv }, 'Download notes (CSV)'));
+    panelFoot.replaceChildren(h('button', { type: 'button', class: 'an-tool', onclick: downloadCsv }, 'Download notes (CSV)'));
   }
   function gateText(hidden, onPage) {
     if (onPage) return `${plural(hidden.length, 'note')} from others on this page will appear once you add yours.`;
@@ -422,16 +419,29 @@
     return h('div', { class: 'an-edit' }, ta,
       h('div', { class: 'an-row' }, h('button', { type: 'button', class: 'an-btn', onclick: saveEdit }, 'Save'), h('button', { type: 'button', class: 'an-btn quiet', onclick: close }, 'Cancel')));
   }
-  function meForm() {
-    const f = nameFields();
+  // Who you are, at the top of the panel: the form until there is a name, then one line with Change
+  function identity() {
     const who = me();
+    if (who.name && !ui.me) {
+      return h('div', { class: 'an-me' }, h('span', {}, 'You: ', h('strong', {}, who.name), who.role ? ` · ${who.role}` : ''),
+        h('button', { type: 'button', class: 'an-tool', onclick: () => { ui.me = true; render(true); focusIn('.an-me-form input'); } }, 'Change'));
+    }
+    const f = nameFields();
     f.name.value = who.name;
     f.role.value = who.role;
-    const done = () => { if (saveName(f) || !f.name.value.trim()) { ui.me = false; render(true); } };
-    f.name.addEventListener('keydown', (e) => { if (e.key === 'Enter') done(); });
-    focusIn('.an-foot input');
-    return h('div', { class: 'an-me-form' }, h('div', { class: 'an-c-title' }, 'Your name, shown with your notes'), f.el,
-      h('div', { class: 'an-row' }, h('button', { type: 'button', class: 'an-btn', onclick: done }, 'Save'), h('button', { type: 'button', class: 'an-btn quiet', onclick: () => { ui.me = false; render(true); } }, 'Cancel')));
+    const err = h('p', { class: 'an-err', role: 'alert' });
+    const save = () => {
+      if (!saveName(f)) { err.textContent = 'Type your name first.'; f.name.focus(); return; }
+      ui.me = false;
+      render(true);
+      announce('Name saved.');
+    };
+    f.name.addEventListener('keydown', (e) => { if (e.key === 'Enter') save(); });
+    return h('div', { class: 'an-me-form' },
+      h('div', { class: 'an-c-title' }, who.name ? 'Your name, shown with your notes' : 'Add your name, so others know whose notes they are'),
+      f.el, err,
+      h('div', { class: 'an-row' }, h('button', { type: 'button', class: 'an-btn', onclick: save }, 'Save'),
+        who.name ? h('button', { type: 'button', class: 'an-btn quiet', onclick: () => { ui.me = false; render(true); } }, 'Cancel') : null));
   }
 
   /* ---------- Panel, adding, the note form ---------- */
@@ -645,7 +655,10 @@
 .an-replies li{margin-top:6px}
 .an-reply,.an-edit{margin-top:8px}
 .an-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}
-.an-me{color:#4C6272}
+.an-me{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;color:#4C6272}
+.an-me strong{color:#1F2A33;font-weight:600}
+.an-me-form{margin:0 0 12px;padding:10px 12px;background:#FFF1B8;border-radius:6px}
+.an-me-form .an-c-row{margin-bottom:0}
 .an-check{display:flex;align-items:center;gap:6px;color:#4C6272}
 .an-input{box-sizing:border-box;width:100%;font:400 15px/21px var(--font,system-ui,sans-serif);color:#1F2A33;padding:6px 8px;background:#fff;border:1px solid #C9BFA8;border-radius:6px}
 .an-input:focus{outline:2px solid #0072B2;outline-offset:0}
