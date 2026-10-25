@@ -40,6 +40,10 @@ The rules every mockup screen follows. Give this file, and the reference screens
    - When something doesn't fit, cut words rather than shrink the text, on screen and on paper.
    - Clinicians can enlarge the text: sizes are in rem, and the pages still work at 200% zoom.
    - The sizes, and where they come from, are under Type.
+10. **Open and close from the same place.** A control that opens something also closes it, from the same spot, so opening and closing take no pointer travel (Fitts's law: the time to hit a target grows with its distance).
+   - The account menu, ⓘ tips, the drivers panel, Review options and the Notes button all toggle in place; the Notes button reads "Close notes" while the panel is open.
+   - Escape closes too, and a second way to close, such as a × in the panel, is fine.
+   - Dialogs that cover the page, such as Model Facts, are the exception: they close from their own button, Escape, or a click outside.
 
 ## Word budget
 
@@ -325,6 +329,7 @@ A polish pass, switched under Review options (Look: Current or Refined; deep lin
 - [ ] Caseload numbers line up by place value, with dates and times left-aligned?
 - [ ] Hover readouts also work by keyboard and are announced, and nothing safety-relevant appears only on hover?
 - [ ] No browser `title` tooltips? Every ⓘ opens at once by pointer, Tab or tap, and Escape closes it?
+- [ ] Does every control that opens something close it from the same place?
 
 ## Prompt template for AI design work
 

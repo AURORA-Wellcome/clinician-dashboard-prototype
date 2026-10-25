@@ -264,8 +264,10 @@
   }
 
   /* ---------- Rendering ---------- */
+  // The Notes button stays in place while the panel is open and closes it, so opening and closing need no pointer travel
   const fabCount = h('span', { class: 'an-fab-count', hidden: true });
-  const fab = h('button', { type: 'button', class: 'an-fab an-ui', 'aria-controls': 'an-panel', 'aria-expanded': 'false', onclick: () => setOpen(!ui.open) }, 'Notes', fabCount);
+  const fabLabel = h('span', {}, 'Notes');
+  const fab = h('button', { type: 'button', class: 'an-fab an-ui', 'aria-controls': 'an-panel', 'aria-expanded': 'false', onclick: () => setOpen(!ui.open) }, fabLabel, fabCount);
   const panelHead = h('div', { class: 'an-head' },
     h('div', {}, h('div', { class: 'an-title' }, 'Review notes'), h('div', { class: 'an-sub' }, 'Not part of the design')),
     h('button', { type: 'button', class: 'an-x', 'aria-label': 'Close notes', onclick: () => setOpen(false) }, '×'));
@@ -286,10 +288,12 @@
     renderPins(m);
     renderPanel(m, force);
     const k = m.visible.filter((n) => here(n) && !n.resolved).length;
+    fabLabel.textContent = ui.open ? 'Close notes' : 'Notes';
     fabCount.textContent = String(k);
-    fabCount.hidden = !k;
+    fabCount.hidden = !k || ui.open;
+    fab.classList.toggle('open', ui.open);
     fab.setAttribute('aria-expanded', String(ui.open));
-    fab.setAttribute('aria-label', `Review notes: ${plural(k, 'note')} on this page`);
+    fab.setAttribute('aria-label', ui.open ? 'Close review notes' : `Review notes: ${plural(k, 'note')} on this page`);
     if (pendingScroll && m.visible.some((n) => n.id === pendingScroll && here(n))) {
       const p = pins.querySelector('.an-pin.on');
       if (p) { p.scrollIntoView({ block: 'center' }); pendingScroll = null; }
@@ -617,7 +621,7 @@
 .an-fab:focus-visible,.an-panel button:focus-visible,.an-composer button:focus-visible,.an-pin:focus-visible{outline:2px solid #0072B2;outline-offset:2px}
 .an-fab-count{min-width:24px;padding:0 6px;border-radius:999px;background:#FFD54A;color:#4A3B12;text-align:center}
 .an-fab-count[hidden],.an-panel[hidden],.an-hl[hidden]{display:none}
-.an-open .an-fab{display:none}
+.an-fab.open{z-index:61}
 @media screen and (min-width:1100px){body.an-open{padding-right:23rem}}
 .an-panel{position:fixed;top:0;right:0;bottom:0;z-index:60;display:flex;flex-direction:column;width:min(23rem,100vw);background:#FBF8F1;border-left:1px dashed #A8986F;box-shadow:-8px 0 24px rgba(0,0,0,.10);font:400 15px/21px var(--font,system-ui,sans-serif);color:#1F2A33}
 .an-head{display:flex;align-items:flex-start;gap:8px;padding:12px 16px;background:repeating-linear-gradient(45deg,#F3EFE6,#F3EFE6 12px,#EFEAE0 12px,#EFEAE0 24px);border-bottom:1px dashed #A8986F}
@@ -626,7 +630,7 @@
 .an-x{margin-left:auto;width:32px;height:32px;font:400 24px/1 var(--font,system-ui,sans-serif);color:#4A3B12;background:transparent;border:0;border-radius:6px;cursor:pointer}
 .an-x:hover{background:rgba(0,0,0,.06)}
 .an-body{flex:1;overflow:auto;padding:12px 16px}
-.an-foot{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:10px 16px 12px;border-top:1px dashed #C9BFA8}
+.an-foot{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;min-height:74px;padding:10px 16px 12px;border-top:1px dashed #C9BFA8}
 .an-status{margin:0 0 10px;color:#4C6272}
 .an-status.warn{color:#9C4400}
 .an-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:8px}
