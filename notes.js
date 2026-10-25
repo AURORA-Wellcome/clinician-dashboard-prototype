@@ -16,11 +16,11 @@
   };
   const SDK = 'https://www.gstatic.com/firebasejs/13.1.0/';
   const PAGE_FILES = { v2: 'AURORA%20Dashboard%20v2.dc.html', v3: 'AURORA%20Dashboard%20v3.dc.html' };
-  const VIEW_NAMES = { list: 'Patients list', patient: 'Patient page', handout: 'Patient handout' };
+  const VIEW_NAMES = { list: 'Patients list', patient: 'Patient page', handout: 'Patient handout', checkin: 'Check-in' };
   const KINDS = [['idea', 'Idea'], ['problem', 'Problem'], ['question', 'Question'], ['like', 'Like']];
   const ROLES = ['Clinician', 'Supervisor', 'Researcher', 'Lived experience', 'Technology team', 'Other'];
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const DEFAULT_STATE = { view: 'list', pid: 'delgado', order: 'visit', distinct: true, big: true, icons: true, clock24: false, drivers: false, refined: false, hero: true };
+  const DEFAULT_STATE = { view: 'list', pid: 'delgado', order: 'visit', distinct: true, big: true, icons: true, clock24: false, drivers: false, refined: false, hero: true, cday: null };
   const VERSION = (document.currentScript && document.currentScript.dataset.version) || '';
 
   // localStorage can throw in private windows
@@ -111,6 +111,17 @@
     { k: 'hgoals', sel: '.handout .goals', label: () => 'Handout goals' },
     { k: 'hpara', sel: '.handout p', id: (el) => String([...document.querySelectorAll('.handout p')].indexOf(el) + 1), label: (id) => `Handout paragraph ${id}` },
     { k: 'handout', sel: '.handout', label: () => 'Patient handout' },
+    // v3 check-in page
+    { k: 'ci-steps', sel: '.ci-steps', label: () => 'Safety steps' },
+    { k: 'ci-safety', sel: '.ci-safety', label: () => 'Check-in safety' },
+    { k: 'ci-est', sel: '.ci-est', label: () => 'Check-in estimate' },
+    { k: 'ci-head', sel: '.ci-head', label: () => 'Check-in title' },
+    { k: 'ci-nav', sel: '.ci-nav', label: () => 'Previous and Next' },
+    { k: 'ci-point', sel: '.ci-topics > li', id: (el) => clean(el.querySelector('.ci-topic-text')), label: (id) => `Point: ${short(id)}` },
+    { k: 'ci-came', sel: '.ci-came', label: () => 'What came up' },
+    { k: 'ci-side', sel: '.ci-side', label: () => 'Signals' },
+    { k: 'ci-tx', sel: '.ci-transcript', label: () => 'Transcript' },
+    { k: 'ci-band', sel: '.ci-band', label: () => 'Check-in summary band' },
     { k: 'footer', sel: 'main .foot', label: () => 'Footer' },
     { k: 'band', sel: '.pt-band', label: () => 'Summary band' },
     { k: 'topbar', sel: '.topbar', label: () => 'Top bar' }
@@ -153,7 +164,9 @@
 
   /* ---------- What is on screen ---------- */
   const pageKey = () => `${VERSION}:${page.view}`;
-  const here = (n) => n.pageKey === pageKey() && (page.view === 'list' || !n.pid || n.pid === page.pid);
+  // On the check-in page, a note belongs to its check-in as well as its patient
+  const here = (n) => n.pageKey === pageKey() && (page.view === 'list' || !n.pid || n.pid === page.pid)
+    && (page.view !== 'checkin' || !n.ctx || !n.ctx.day || n.ctx.day === page.cday);
   function patientName() {
     if (page.view === 'list') return '';
     const parts = [...document.querySelectorAll('#dc-root .crumbs .crumb, #dc-root .crumbs .cur')].map(clean);
@@ -163,7 +176,7 @@
     return {
       version: VERSION, view: page.view, pid: page.view === 'list' ? null : page.pid, pname: patientName(), pageKey: pageKey(),
       commit: BUILD.commit, built: BUILD.built,
-      ctx: { order: page.order, style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false }
+      ctx: { order: page.order, style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null }
     };
   }
   // After posting: a reviewer sees others' notes on a page once they have added one there. Facilitators see all.
@@ -483,6 +496,7 @@
       style: c.style || 'distinct', text: c.text || 'larger', clock: String(c.clock || 12)
     });
     if (c.drivers) hp.set('drivers', '1');
+    if (n.view === 'checkin' && c.day) hp.set('d', c.day);
     hp.set('look', c.look || 'current');
     hp.set('hero', c.hero === false ? '0' : '1');
     ui.focus = n.id;
@@ -508,7 +522,7 @@
     hl.hidden = true;
     render(true);
   }
-  const ours = (t) => !!(t && t.closest && t.closest('.an-ui, .an-pins, .review, .review-dock'));
+  const ours = (t) => !!(t && t.closest && t.closest('.an-ui, .an-pins, .review, .review-dock, .review-note'));
   // While adding, a click places the note instead of acting on the page; the review strip still works
   function intercept(e) {
     if (!ui.adding || ours(e.target)) return;
@@ -600,12 +614,12 @@
       return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const iso = (ms) => (ms ? new Date(ms).toISOString().replace('T', ' ').slice(0, 16) : '');
-    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc'];
+    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day'];
     const rows = [...m.visible, ...m.visible.flatMap((n) => m.replies(n.id))].sort(byTime).map((n) => {
       const c = n.ctx || {};
       return [n.id, iso(n.createdAt), n.name, n.role, n.kind, n.text, n.parent || '', Object.keys(n.plus || {}).length, n.resolved ? 'yes' : '', n.resolvedBy || '',
         n.version, VIEW_NAMES[n.view] || n.view, n.pname || n.pid || '', n.anchorLabel, n.x == null ? '' : n.x.toFixed(3), n.y == null ? '' : n.y.toFixed(3),
-        c.order, c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || ''];
+        c.order, c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || ''];
     });
     const csv = [head, ...rows].map((r) => r.map(cell).join(',')).join('\r\n');
     const d = new Date(), pad = (v) => String(v).padStart(2, '0');

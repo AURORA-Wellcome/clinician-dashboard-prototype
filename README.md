@@ -17,6 +17,10 @@ v2 changed to follow the theoretical model (`Theoretical model/`) and the off-tr
 - **Mock patients:** two new ones, `haddad` (early in care, not improving) and `novak` (the PHQ-9 fallback). Add `&drivers=1` to a link to open the drivers panel.
 - **Refined look:** switched in the review strip (Look). Status words in ink with coloured shapes, finer type, soft shadows, an initials avatar, a dot on the latest estimate, quick fade-ins, and a greeting band with soft aurora art on the Patients page. Details are in `DESIGN.md`. Add `&look=refined` to a link, and `&hero=0` to hide the greeting band.
 - **Review strip:** v3's settings are grouped with short labels (Page, List, Look, and Greeting on the Refined Patients page). Section style, text size and icons are settled (Distinct, Larger, on), so they are no longer switches.
+- **Check-in page (draft):** what happened at one check-in, and how much weight to give it. It opens from the trend chart (click a day with a check-in, or press Enter in the keyboard readout), from the Check-ins tile (a filled dot, or Latest check-in), from the Safety tile's "What the protocol asks" link, and from What changed items that cite one.
+  - **Content:** the safety status first, with the protocol's response steps in example wording (timing and the site's number left blank); this check-in's estimate beside the trend, with a note when the recording weakens it; an AI summary of what came up, with the patient's own words; symptoms and that week's phone sensing; and the transcript, collapsed. Previous and Next step through the patient's check-ins.
+  - **Draft:** what clinicians may see of the conversations waits on an IRB decision, so the page is labelled as a draft, and only the examples have written conversations.
+  - **Examples:** the review strip's Example group opens seven states: worsening, a reviewed safety flag, a check-in awaiting review, a PHQ-9 item 9 answer, Spanish with translation, a routine check-in, and one too short for an estimate.
 
 ### v2: `AURORA Dashboard v2.dc.html`
 
@@ -44,6 +48,7 @@ Deep links open a specific page:
 - `#view=patient&p=delgado`
 - `#view=list&order=status`
 - `#view=handout&p=delgado`
+- `#view=checkin&p=delgado&d=2026-08-10` (v3: one check-in; without `&d=`, the patient's example or latest check-in)
 - Add `&clock=24` for 24-hour times. Older links' `&style=`, `&text=` and `&icons=` settings are ignored.
 
 Patient ids: `osei`, `whitfield`, `delgado`, `fernandez`, `nguyen`, `mensah`, `santoso`, `kaur`, `brooks`, `ortiz`.
@@ -58,7 +63,7 @@ Reviewers can pin notes to any part of the v2 and v3 mockups. Click **Notes** at
 - **Who sees what:** reviewers see others' notes on a page once they have added one there, so the first notes don't steer the rest. The facilitator link shows every note.
 - **Access:** notes are shared through a Firebase project (Firestore, with anonymous sign-in). The site is public, so access comes from the invite link, which carries a private board id: `AURORA%20Dashboard%20v3.dc.html?board=<board id>`. Add `&facilitator=1` for the facilitator link. The board id is not in this repo: `firestore.rules` is the template for the project's rules, with the id left out.
 - **Without the link,** notes are saved in that browser only. The Firebase web config in `notes.js` is public by design; the rules are what protect the notes.
-- **What a note records:** the version, page, patient, part of the page, and the settings in use (section style, text size, icons, caseload order, time format, look). It also records the site build the page was loaded from (`build.json`, which GitHub Pages fills in with the commit and build time on each deploy), so a note written in a tab opened before an update is matched to what the reviewer saw. **Download notes (CSV)** exports them.
+- **What a note records:** the version, page, patient, part of the page, and the settings in use (section style, text size, icons, caseload order, time format, look). On the check-in page it also records which check-in. It records the site build the page was loaded from (`build.json`, which GitHub Pages fills in with the commit and build time on each deploy), so a note written in a tab opened before an update is matched to what the reviewer saw. **Download notes (CSV)** exports them.
 - Notes are review scaffolding, like the review strip: they don't print, and the note form asks reviewers to leave out patient information.
 
 ## Other files

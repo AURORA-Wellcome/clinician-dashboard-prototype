@@ -279,6 +279,63 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .tip-v.i9-pos{color:var(--safety)}
 .tip-event{display:flex;align-items:flex-start;margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
 .tip-event .ic{margin-top:1px}
+.tip-hint{margin-top:6px;padding-top:6px;border-top:1px solid var(--line);color:var(--muted)}
+/* Check-ins tile: a filled dot opens its check-in (pointer only; "Latest check-in" and the chart do the same by keyboard) */
+.dot.on{cursor:pointer}
+.dot.on:hover{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--accent)}
+.btn:disabled{color:var(--muted);background:transparent;cursor:default}
+/* Check-in page (draft): one check-in in detail. Hatched notes are review scaffolding, like the review strip. */
+.review-note,.scaffold-note{margin:0;padding:8px 14px;font-size:13px;line-height:18px;color:#5F5235;background:repeating-linear-gradient(45deg,#F3EFE6,#F3EFE6 12px,#EFEAE0 12px,#EFEAE0 24px);border:1px dashed #C9BFA8;border-radius:var(--r)}
+.review-note{margin-bottom:20px}
+.review-note b{color:#7A6A45}
+.scaffold{display:inline-block;margin-left:10px;padding:0 8px;font-size:13px;line-height:20px;font-weight:600;color:#7A6A45;background:repeating-linear-gradient(45deg,#F3EFE6,#F3EFE6 8px,#EFEAE0 8px,#EFEAE0 16px);border:1px dashed #C9BFA8;border-radius:var(--r);vertical-align:2px}
+.ci-band{background:var(--surface);border-bottom:1px solid var(--line)}
+.ci-band .band-inner{padding:24px 24px}
+.ci-title{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
+.ci-nav{display:flex;gap:4px;flex:none;margin-top:4px}
+.ci-safety{margin-top:20px;padding:14px 20px;border-radius:var(--r)}
+.ci-safety.flagged{background:var(--safety-tint);box-shadow:inset 3px 0 0 var(--safety)}
+.ci-safety.pending{border:1px solid var(--line)}
+.ci-safety.quiet{padding:0;color:var(--muted)}
+.ci-safety p{margin:4px 0 0;max-width:70ch}
+.ci-safety-head{display:flex;align-items:center;flex-wrap:wrap;font-size:var(--fs-lg);line-height:var(--lh-lg);font-weight:600}
+.ci-safety-head .muted{margin-left:8px;font-size:var(--fs-md);font-weight:400}
+.ci-steps{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.ci-steps-head{font-weight:600}
+.ci-steps ul{margin:6px 0 0;padding-left:22px;max-width:70ch}
+.ci-steps li{margin:4px 0}
+.ci-est{display:flex;flex-wrap:wrap;align-items:baseline;row-gap:4px;margin-top:16px}
+.ci-item + .ci-item::before{content:"·";margin:0 10px;color:var(--muted)}
+.ci-est .k{color:var(--muted)}
+.ci-est .v{margin-left:2px;font-weight:600;font-variant-numeric:tabular-nums}
+.ci-est .v.muted{font-weight:400}
+.ci-est-note{margin:6px 0 0;max-width:70ch;color:var(--muted)}
+.ci-page{padding-top:8px}
+.ci-sections{display:grid;grid-template-columns:minmax(0,1fr) 21rem;grid-template-areas:"came side" "tx tx";column-gap:24px;align-items:start}
+.ci-came{grid-area:came}.ci-side{grid-area:side}.ci-transcript{grid-area:tx}
+/* The patient's words at body size in ink, under the AI's one-line summary */
+.ci-sub{font-size:var(--fs-md);line-height:var(--lh-md);color:var(--ink)}
+.ci-sub > * + *::before{content:"·";margin-right:5px;color:var(--muted)}
+.ci-trq{color:var(--muted)}
+.ci-mark{font-size:var(--fs-sm);font-weight:600;color:var(--ink)}
+.change.hl{background:var(--tint)}
+.ci-side-card{padding:12px 20px 16px;background:var(--tint);border-radius:var(--r)}
+.ci-side h3{margin:16px 0 2px;font-size:var(--fs-md);line-height:var(--lh-md);font-weight:600}
+.ci-side h3:first-child{margin-top:0}
+.ci-side ul{margin:0;padding:0;list-style:none}
+.ci-side li{display:flex;gap:8px;padding:1px 0}
+.ci-side li .k{flex:none;width:5.5rem;color:var(--muted)}
+.ci-side li .v{font-weight:600;font-variant-numeric:tabular-nums}
+.ci-side p{margin:0}
+.ci-side-link{margin-top:6px}
+.ci-tx-note{margin-left:8px;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
+.ci-tx{margin-top:8px;padding:8px 20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.ci-line{display:grid;grid-template-columns:7rem minmax(0,70ch);column-gap:16px;margin:0;padding:8px 0}
+.ci-line + .ci-line{border-top:1px solid var(--line)}
+.ci-line.hl{margin:0 -12px;padding:8px 12px;background:var(--tint);border-radius:var(--r)}
+.ci-who{color:var(--muted);font-weight:600}
+.ci-flagged{display:flex;align-items:center}
+.ci-tr{display:block;margin-top:2px;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
 /* Caseload group bands (distinct) */
 .distinct .grp{margin-top:8px;padding:8px 20px}
 .distinct .grp.st-safety{background:var(--safety-tint);box-shadow:inset 3px 0 0 var(--safety)}
@@ -306,14 +363,14 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .refined .stat-value.hero{font-weight:500;letter-spacing:-.02em}
 .refined .grp{font-size:var(--fs-md);letter-spacing:0;text-transform:none}
 .refined .h2{margin-top:48px}
-.refined .list,.refined .changes,.refined .chart-wrap{border-color:transparent;box-shadow:0 1px 2px rgba(16,24,40,.05),0 4px 12px rgba(16,24,40,.05)}
+.refined .list,.refined .changes,.refined .chart-wrap,.refined .ci-tx{border-color:transparent;box-shadow:0 1px 2px rgba(16,24,40,.05),0 4px 12px rgba(16,24,40,.05)}
 .refined .chart .grid{stroke:#EEF1F4}
 .refined .chart .estband{fill:rgba(198,127,0,.12)}
 .chart .est-end{fill:var(--ai);stroke:var(--surface);stroke-width:2}
 .refined .row{transition:background-color .12s ease}
 @media (prefers-reduced-motion:no-preference){.refined .peek,.refined .tip,.refined .tt.open{animation:rf-fade .12s ease-out}}
 @keyframes rf-fade{from{opacity:0}to{opacity:1}}
-@media print{.refined .list,.refined .changes,.refined .chart-wrap{box-shadow:none;border-color:var(--line)}}
+@media print{.refined .list,.refined .changes,.refined .chart-wrap,.refined .ci-tx{box-shadow:none;border-color:var(--line)}}
 .pt-who{display:flex;align-items:center;gap:14px;min-width:0}
 .avatar{display:grid;place-items:center;flex:none;width:48px;height:48px;border-radius:50%;background:#E4EBF4;color:#3D4B57;font-size:var(--fs-md);font-weight:600;letter-spacing:.02em}
 /* Greeting band: two soft aurora curtains in cool hues only, because warm hues and greens mean status here */
@@ -339,6 +396,9 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
   .stat:nth-child(odd){border-left:0}
   .stat:nth-child(n+3){border-top:1px solid var(--line)}
   .distinct .pt-sections,.big.distinct .pt-sections{display:flex;flex-direction:column;align-items:stretch}
+  .ci-sections{display:flex;flex-direction:column;align-items:stretch}
+  .ci-title{flex-direction:column;gap:8px}
+  .ci-line{grid-template-columns:minmax(0,1fr);row-gap:2px}
 }
 
 /* Model Facts */
@@ -397,6 +457,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
     <span class="review-label">Review · not part of the design</span>
     <span class="review-group"><span class="review-k">Page</span><span class="seg"><sc-for list="{{ viewTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
     <sc-if value="{{ onList }}"><span class="review-group"><span class="review-k">List</span><span class="seg"><sc-for list="{{ orderTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
+    <sc-if value="{{ onCheckin }}"><span class="review-group"><span class="review-k">Example</span><span class="seg"><sc-for list="{{ exTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
     <span class="review-group"><span class="review-k">Look</span><span class="seg"><sc-for list="{{ lookTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
     <sc-if value="{{ greetCtl }}"><span class="review-group"><span class="review-k">Greeting</span><span class="seg"><sc-for list="{{ heroTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
   </div>
@@ -408,6 +469,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       <sc-if value="{{ !onList }}"><button type="button" class="crumb" onClick="{{ goList }}">Patients</button><span class="sep" aria-hidden="true">›</span></sc-if>
       <sc-if value="{{ onPatient }}"><span class="cur" aria-current="page">{{ pt.name }}</span></sc-if>
       <sc-if value="{{ onHandout }}"><button type="button" class="crumb" onClick="{{ goPatient }}">{{ pt.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">Patient handout</span></sc-if>
+      <sc-if value="{{ onCheckin }}"><button type="button" class="crumb" onClick="{{ goPatient }}">{{ pt.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">{{ ci.crumb }}</span></sc-if>
     </nav>
     <div class="who-wrap">
       <button class="who" onClick="{{ toggleMenu }}" aria-haspopup="true" aria-expanded="{{ menuExpanded }}">Dr E. Okafor · Site 03<span class="caret" aria-hidden="true">▾</span></button>
@@ -507,6 +569,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
           <div class="stat-value {{ pt.safetyCls }}"><sc-if value="{{ pt.safety }}"><svg class="mk" viewBox="0 0 10 10"><path d="{{ safetyShape }}" fill="currentColor"></path></svg></sc-if>{{ pt.safetyHead }}</div>
           <div class="stat-note safety-note muted">{{ pt.safetyNote }}</div>
           <div class="stat-note muted">{{ pt.safetyWhen }}</div>
+          <sc-if value="{{ pt.safetyCi }}"><div class="stat-note no-print"><button type="button" class="linkbtn" onClick="{{ pt.openSafetyCi }}">{{ pt.safetyCiLabel }}</button></div></sc-if>
         </div>
         <div class="stat">
           <div class="stat-label">PHQ-9 <span class="ai">(patient, {{ pt.phqDate }})</span></div>
@@ -535,8 +598,9 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
         <div class="stat">
           <div class="stat-label">Check-ins <span class="ai">(14 days)</span></div>
           <div class="stat-value num">{{ pt.checkins }}</div>
-          <sc-if value="{{ distinct }}"><div class="tt-wrap dots-wrap" aria-hidden="true" onMouseEnter="{{ tips.dots.enter }}" onMouseLeave="{{ tips.dots.leave }}"><div class="dots"><sc-for list="{{ pt.ciDots }}" as="d"><span class="{{ d }}"></span></sc-for></div><span id="tt-dots" class="{{ tips.dots.cls }}"><sc-for list="{{ tips.dots.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></div></sc-if>
+          <sc-if value="{{ distinct }}"><div class="tt-wrap dots-wrap" aria-hidden="true" onMouseEnter="{{ tips.dots.enter }}" onMouseLeave="{{ tips.dots.leave }}"><div class="dots"><sc-for list="{{ pt.ciDots }}" as="d"><span class="{{ d.cls }}" onClick="{{ d.open }}"></span></sc-for></div><span id="tt-dots" class="{{ tips.dots.cls }}"><sc-for list="{{ tips.dots.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></div></sc-if>
           <div class="stat-note muted">{{ pt.ciNote }}</div>
+          <div class="stat-note no-print"><button type="button" class="linkbtn" onClick="{{ pt.openLatestCi }}">Latest check-in</button></div>
         </div>
       </div>
       <sc-if value="{{ pt.discordant }}"><p class="callout">The patient’s PHQ-9 and the AI estimate differ by more than the estimate’s uncertainty. The estimate supplements the patient’s own account; it doesn’t replace it.</p></sc-if>
@@ -552,7 +616,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
           <sc-for list="{{ pt.changes }}" as="c">
             <li class="change">{{ c.iconEl }}
               <div class="change-title {{ c.cls }}">{{ c.title }}</div>
-              <div class="change-src">{{ c.src }}<sc-if value="{{ c.ai }}"> <span class="ai">(AI)</span></sc-if><sc-if value="{{ c.quote }}"> · “{{ c.quote }}”</sc-if><sc-if value="{{ c.goal }}"> · goal: “{{ c.goal }}”</sc-if><sc-if value="{{ c.link }}"><span class="no-print"> · <button type="button" class="linkbtn" onClick="{{ noop }}">{{ c.link }}</button></span></sc-if></div>
+              <div class="change-src">{{ c.src }}<sc-if value="{{ c.ai }}"> <span class="ai">(AI)</span></sc-if><sc-if value="{{ c.quote }}"> · “{{ c.quote }}”</sc-if><sc-if value="{{ c.goal }}"> · goal: “{{ c.goal }}”</sc-if><sc-if value="{{ c.link }}"><span class="no-print"> · <button type="button" class="linkbtn" onClick="{{ c.open }}">{{ c.link }}</button></span></sc-if></div>
             </li>
           </sc-for>
         </ul>
@@ -591,7 +655,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
             <sc-if value="{{ hv.hasCiDot }}"><circle class="hv-ci" cx="{{ hv.x }}" cy="{{ hv.ciY }}" r="5"></circle></sc-if>
             <sc-if value="{{ hv.hasPhqDot }}"><circle class="hv-phq" cx="{{ hv.x }}" cy="{{ hv.phqY }}" r="8"></circle></sc-if>
           </sc-if>
-          <sc-for list="{{ ch.hits }}" as="w"><rect class="hit" x="{{ w.x }}" y="0" width="{{ w.w }}" height="300" onMouseEnter="{{ w.enter }}" onClick="{{ w.enter }}"></rect></sc-for>
+          <sc-for list="{{ ch.hits }}" as="w"><rect class="hit" x="{{ w.x }}" y="0" width="{{ w.w }}" height="300" onMouseEnter="{{ w.enter }}" onClick="{{ w.click }}"></rect></sc-for>
         </svg>
         <sc-if value="{{ hv.show }}">
           <div class="{{ hv.cls }}" style="{{ hv.style }}" aria-hidden="true">
@@ -601,6 +665,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
             <sc-if value="{{ hv.hasPhq }}"><div class="tip-row"><span class="tip-k">PHQ-9</span><span class="{{ hv.phqCls }}">{{ hv.phq }}</span></div></sc-if>
             <sc-if value="{{ hv.hasI9 }}"><div class="tip-row"><span class="tip-k">Item 9</span><span class="{{ hv.i9Cls }}">{{ hv.i9 }}</span></div></sc-if>
             <sc-for list="{{ hv.events }}" as="e"><div class="tip-event">{{ e.iconEl }}<span>{{ e.label }}</span></div></sc-for>
+            <sc-if value="{{ hv.canOpen }}"><div class="tip-hint">Click to open the check-in</div></sc-if>
           </div>
         </sc-if>
         </div>
@@ -672,6 +737,85 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
   </main>
   </sc-if>
 
+  <!-- CHECK-IN PAGE (draft): what happened at one check-in, and how much weight to give it.
+       What clinicians may see of the conversation waits on the IRB decision (spec: Clinicians/Check-in detail view spec). -->
+  <sc-if value="{{ onCheckin }}">
+  <div class="ci-band" data-screen-label="Check-in">
+    <div class="band-inner">
+      <p class="review-note no-print"><b>Review · draft page, mock data.</b> {{ ci.reviewNote }}</p>
+      <div class="ci-title">
+        <div class="ci-head">
+          <h1 class="h1">{{ ci.title }}</h1>
+          <div class="sub">{{ ci.sub }}</div>
+        </div>
+        <div class="ci-nav no-print">
+          <button type="button" class="btn" onClick="{{ ci.prev }}" disabled="{{ ci.prevOff }}" aria-label="{{ ci.prevAria }}">‹ Previous</button>
+          <button type="button" class="btn" onClick="{{ ci.next }}" disabled="{{ ci.nextOff }}" aria-label="{{ ci.nextAria }}">Next ›</button>
+        </div>
+      </div>
+      <section class="{{ ci.sf.cls }}" aria-label="Safety">
+        <sc-if value="{{ ci.sf.hasHead }}"><div class="{{ ci.sf.headCls }}"><sc-if value="{{ ci.sf.marker }}"><svg class="mk" viewBox="0 0 10 10"><path d="{{ safetyShape }}" fill="currentColor"></path></svg></sc-if>{{ ci.sf.iconEl }}{{ ci.sf.head }}<sc-if value="{{ ci.sf.headNote }}"><span class="muted">{{ ci.sf.headNote }}</span></sc-if></div></sc-if>
+        <sc-for list="{{ ci.sf.lines }}" as="l"><p class="{{ l.cls }}">{{ l.text }}</p></sc-for>
+        <sc-if value="{{ ci.sf.hasQuote }}"><p>{{ ci.sf.quote }}<sc-if value="{{ ci.sf.hasPassage }}"><span class="no-print"> · <button type="button" class="linkbtn" onClick="{{ ci.sf.openPassage }}">transcript</button></span></sc-if></p></sc-if>
+        <sc-for list="{{ ci.sf.after }}" as="l"><p class="{{ l.cls }}">{{ l.text }}</p></sc-for>
+        <sc-if value="{{ ci.sf.hasSteps }}">
+          <div class="ci-steps">
+            <div class="ci-steps-head">What the protocol asks of you<span class="scaffold no-print">Example wording until the IRB safety text is written</span></div>
+            <ul><sc-for list="{{ ci.sf.steps }}" as="t"><li>{{ t }}</li></sc-for></ul>
+          </div>
+        </sc-if>
+      </section>
+      <div class="ci-est">
+        <sc-for list="{{ ci.est }}" as="e"><span class="ci-item"><span class="k">{{ e.k }}</span> <span class="{{ e.vCls }}">{{ e.v }}</span><sc-if value="{{ e.src }}"><span class="ai">&nbsp;{{ e.src }}</span></sc-if></span> </sc-for>
+      </div>
+      <sc-if value="{{ ci.estNote }}"><p class="ci-est-note">{{ ci.estNote }}</p></sc-if>
+    </div>
+  </div>
+
+  <main class="page ci-page">
+    <div class="ci-sections">
+      <section class="ci-came">
+        <h2 class="h2">What came up<span class="muted">AI summary</span></h2>
+        <sc-if value="{{ ci.hasTopics }}">
+          <ul class="{{ ci.topicsCls }}">
+            <sc-for list="{{ ci.topics }}" as="t">
+              <li class="{{ t.cls }}">{{ t.iconEl }}
+                <div class="change-title"><span class="ci-topic-text">{{ t.text }}</span><sc-if value="{{ t.marks }}"> <span class="ci-mark">· {{ t.marks }}</span></sc-if></div>
+                <sc-if value="{{ t.hasSub }}"><div class="change-src ci-sub"><sc-if value="{{ t.quote }}"><span class="ci-q">{{ t.quote }}</span> </sc-if><sc-if value="{{ t.tr }}"><span class="ci-trq">{{ t.tr }}</span> </sc-if><sc-if value="{{ t.hasPassage }}"><span class="no-print"><button type="button" class="linkbtn" onClick="{{ t.openPassage }}">transcript</button></span></sc-if></div></sc-if>
+              </li>
+            </sc-for>
+          </ul>
+        </sc-if>
+        <sc-if value="{{ ci.held }}"><p class="empty">Held until the study-team review.</p></sc-if>
+        <sc-if value="{{ ci.noSummary }}"><p class="scaffold-note no-print">Mock data: no summary is written for this check-in. The examples in the review strip have one.</p></sc-if>
+      </section>
+      <aside class="ci-side">
+        <h2 class="h2">Signals</h2>
+        <div class="ci-side-card">
+          <sc-if value="{{ ci.hasSym }}"><h3>Symptoms <span class="ai">(AI)</span></h3><p>{{ ci.symText }}</p></sc-if>
+          <h3>Phone sensing <span class="ai">daily average, that week</span></h3>
+          <ul><sc-for list="{{ ci.sensing }}" as="r"><li><span class="k">{{ r.k }}</span> <span class="v">{{ r.v }}</span> <span class="muted">{{ r.usual }}</span></li></sc-for></ul>
+          <p class="ci-side-link no-print"><button type="button" class="linkbtn" onClick="{{ ci.openDrivers }}">See the weekly trend</button></p>
+        </div>
+      </aside>
+      <section class="ci-transcript">
+        <h2 class="h2">Transcript<span class="scaffold no-print">Waiting on the IRB decision</span></h2>
+        <sc-if value="{{ ci.txHeld }}"><p class="empty">Held until the study-team review.</p></sc-if>
+        <sc-if value="{{ ci.hasTx }}">
+          <div class="no-print"><button type="button" class="btn drv-toggle" onClick="{{ ci.toggleTx }}" aria-expanded="{{ ci.txExpanded }}">{{ ci.txLabel }}</button><span class="ci-tx-note">Opening the transcript is logged.</span></div>
+          <sc-if value="{{ ci.txOpen }}">
+            <div class="ci-tx" id="ci-tx">
+              <sc-for list="{{ ci.lines }}" as="l"><p class="{{ l.cls }}" id="{{ l.id }}"><span class="ci-who">{{ l.who }}<sc-if value="{{ l.flagged }}"> <span class="flag-safety ci-flagged"><svg class="mk" viewBox="0 0 10 10"><path d="{{ safetyShape }}" fill="currentColor"></path></svg>Flagged</span></sc-if></span> <span>{{ l.text }}<sc-if value="{{ l.tr }}"><span class="ci-tr">{{ l.tr }}</span></sc-if></span></p></sc-for>
+            </div>
+          </sc-if>
+        </sc-if>
+        <sc-if value="{{ ci.noTx }}"><p class="scaffold-note no-print">Mock data: no transcript is written for this check-in.</p></sc-if>
+      </section>
+    </div>
+    <p class="foot">This dashboard isn’t monitored in real time: the study team reviews flagged check-ins within one business day and emails you if the risk is urgent. AI summaries and translations can be wrong; the patient’s own account comes first. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></p>
+  </main>
+  </sc-if>
+
   <sc-if value="{{ factsOpen }}">
     <div class="modal-bg" onClick="{{ closeFacts }}">
       <div class="modal" onClick="{{ stop }}">
@@ -693,7 +837,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;defaultView&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;list&quot;, &quot;options&quot;: [&quot;list&quot;, &quot;patient&quot;, &quot;handout&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}, &quot;defaultPatient&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;delgado&quot;, &quot;options&quot;: [&quot;osei&quot;, &quot;whitfield&quot;, &quot;delgado&quot;, &quot;fernandez&quot;, &quot;nguyen&quot;, &quot;mensah&quot;, &quot;santoso&quot;, &quot;kaur&quot;, &quot;brooks&quot;, &quot;ortiz&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}}">
 // Icons: Lucide v0.460.0 (lucide.dev), ISC licence. Geometry only.
-const ICONS = {"briefcase":[["path",{"d":"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"}],["rect",{"width":"20","height":"14","x":"2","y":"6","rx":"2"}]],"calendar":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}]],"clipboard-list":[["rect",{"width":"8","height":"4","x":"8","y":"2","rx":"1","ry":"1"}],["path",{"d":"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{"d":"M12 11h4"}],["path",{"d":"M12 16h4"}],["path",{"d":"M8 11h.01"}],["path",{"d":"M8 16h.01"}]],"dumbbell":[["path",{"d":"M14.4 14.4 9.6 9.6"}],["path",{"d":"M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"}],["path",{"d":"m21.5 21.5-1.4-1.4"}],["path",{"d":"M3.9 3.9 2.5 2.5"}],["path",{"d":"M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"}]],"footprints":[["path",{"d":"M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"}],["path",{"d":"M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"}],["path",{"d":"M16 17h4"}],["path",{"d":"M4 13h4"}]],"message-square":[["path",{"d":"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"}]],"moon":[["path",{"d":"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],"pill-bottle":[["path",{"d":"M18 11h-4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h4"}],["path",{"d":"M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"}],["rect",{"width":"16","height":"5","x":"4","y":"2","rx":"1"}]],"shield":[["path",{"d":"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"}]]};
+const ICONS = {"briefcase":[["path",{"d":"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"}],["rect",{"width":"20","height":"14","x":"2","y":"6","rx":"2"}]],"calendar":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}]],"clipboard-list":[["rect",{"width":"8","height":"4","x":"8","y":"2","rx":"1","ry":"1"}],["path",{"d":"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{"d":"M12 11h4"}],["path",{"d":"M12 16h4"}],["path",{"d":"M8 11h.01"}],["path",{"d":"M8 16h.01"}]],"dumbbell":[["path",{"d":"M14.4 14.4 9.6 9.6"}],["path",{"d":"M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"}],["path",{"d":"m21.5 21.5-1.4-1.4"}],["path",{"d":"M3.9 3.9 2.5 2.5"}],["path",{"d":"M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"}]],"footprints":[["path",{"d":"M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"}],["path",{"d":"M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"}],["path",{"d":"M16 17h4"}],["path",{"d":"M4 13h4"}]],"message-square":[["path",{"d":"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"}]],"moon":[["path",{"d":"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],"pill-bottle":[["path",{"d":"M18 11h-4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h4"}],["path",{"d":"M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"}],["rect",{"width":"16","height":"5","x":"4","y":"2","rx":"1"}]],"shield":[["path",{"d":"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"}]],"users":[["path",{"d":"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"}],["circle",{"cx":"9","cy":"7","r":"4"}],["path",{"d":"M22 21v-2a4 4 0 0 0-3-3.87"}],["path",{"d":"M16 3.13a4 4 0 0 1 0 7.75"}]]};
 
 // Mock data: pseudo-realistic, no real patients. Weeks run Monday to Monday, May 25 to Aug 10; "today" is Wed, Aug 12.
 const WEEKS = ['May 25', 'Jun 1', 'Jun 8', 'Jun 15', 'Jun 22', 'Jun 29', 'Jul 6', 'Jul 13', 'Jul 20', 'Jul 27', 'Aug 3', 'Aug 10'];
@@ -727,9 +871,9 @@ const PATIENTS = [
     baseline: 14, est: [14, 14, 15, 14, 15, 16, 17, 18, 18, 19, 20, 21], unc: U3,
     phq: [14, 14, 16, 17, 19, 20], item9: [0, 0, 0, 1, 0, 0], checkins: '10/12',
     flagIcon: 'shield', flag: 'Safety review: moderate risk', flagNote: 'today 09:40',
-    safety: { head: 'Moderate risk', note: 'Study team review', when: 'Today 09:40' },
+    safety: { head: 'Moderate risk', note: 'Study team review', when: 'Today 09:40', ci: '2026-08-11' },
     changes: [
-      { icon: 'shield', title: 'Passive thoughts of death in Tuesday’s check-in', src: 'Study team review, today 09:40: moderate risk, no plan or intent; crisis contacts were shown', cls: 'flag-safety', link: 'review note' },
+      { icon: 'shield', title: 'Passive thoughts of death in Tuesday’s check-in', src: 'Study team review, today 09:40: moderate risk, no plan or intent mentioned; crisis contacts were shown', cls: 'flag-safety', link: 'check-in', ci: '2026-08-11' },
       { icon: 'briefcase', title: 'Worry about losing her job came up in 4 check-ins', src: 'From check-in conversations', ai: true }
     ],
     goals: [{ icon: 'moon', text: 'Sleep without waking at 4 am', status: 'harder lately (last week)', handoutStatus: 'harder lately' }] },
@@ -739,7 +883,7 @@ const PATIENTS = [
     baseline: 16, est: [16, 16, 17, 16, 17, 18, 19, 20, 22, 22, 24, 25], unc: U3,
     phq: [16, 16, 18, 20, 22, 24], item9: [0, 0, 1, 1, 1, 2], checkins: '11/12',
     flagIcon: 'clipboard-list', flag: 'PHQ-9 item 9 = 2', flagNote: 'not reviewed · Aug 10',
-    safety: { head: 'Item 9 = 2', note: 'Not reviewed by the study team', when: 'PHQ-9 of Mon, Aug 10' },
+    safety: { head: 'Item 9 = 2', note: 'Not reviewed by the study team', when: 'PHQ-9 of Mon, Aug 10', ci: '2026-08-10' },
     changes: [
       { icon: 'clipboard-list', title: 'Thoughts of being better off dead or of hurting himself, on more than half the days', src: 'PHQ-9 item 9 = 2 on Mon, Aug 10 · not reviewed by the study team · above 0 at the last 4 PHQ-9s', cls: 'flag-safety' }
     ],
@@ -753,7 +897,7 @@ const PATIENTS = [
     flagIcon: 'pill-bottle', flag: 'Reports stopping sertraline', flagAi: true,
     events: [{ icon: 'pill-bottle', week: 9.4, label: 'Reports stopping sertraline (AI)' }],
     changes: [
-      { icon: 'pill-bottle', title: 'Reports stopping sertraline about 2 weeks ago', src: 'From a check-in conversation', ai: true, quote: 'made me feel flat', link: 'transcript' },
+      { icon: 'pill-bottle', title: 'Reports stopping sertraline about 2 weeks ago', src: 'From a check-in conversation', ai: true, quote: 'made me feel flat', link: 'check-in', ci: '2026-07-30', ciAt: 'med' },
       { icon: 'moon', title: 'Sleep more broken: 40% above usual, last 3 nights', src: 'Phone sensors', goal: 'Sleep through the night' },
       { icon: 'footprints', title: 'Morning walks stopped 3 weeks ago', src: 'From check-ins', ai: true, goal: 'Get back to morning walks with Ana' }
     ],
@@ -882,19 +1026,188 @@ const bandOf = (v) => [...BANDS].reverse().find((b) => v >= b.lo).name;
 const lastIndex = (arr) => { for (let i = arr.length - 1; i >= 0; i--) if (arr[i] != null) return i; return -1; };
 const signed = (d) => (d > 0 ? '+' : d < 0 ? '−' : '') + Math.abs(d);
 
+// Check-ins are expected daily except Sundays. The last 14 days match the Check-ins tile's dots; earlier days
+// follow the patient's rate. Days count from Mon, May 25 (day 0); today, Wed, Aug 12, is day 79.
+const TODAY_D = Math.round((TODAY - DAY0) / 864e5);
+const RECENT = [];
+for (let d = TODAY_D - 13; d <= TODAY_D; d++) if (new Date(2026, 4, 25 + d).getDay() !== 0) RECENT.push(d);
+const seedOf = (p) => [...p.id].reduce((a, c) => a + c.charCodeAt(0), 0);
+const rateOf = (p) => p.checkins.split('/').map(Number);
+// The tile's 14 days, oldest first: misses spread out unless the mock data fixes them
+const ciPatOf = (p) => p.ciPattern || (() => {
+  const [cn, cd] = rateOf(p), a = Array(cd).fill('1'), miss = cd - cn;
+  for (let k = 0; k < miss; k++) a[Math.round(((k + 1) * cd) / (miss + 1)) - 1] = '0';
+  return a.join('');
+})();
+const checkinOn = (p, d) => {
+  if (new Date(2026, 4, 25 + d).getDay() === 0) return 'none scheduled';
+  const j = RECENT.indexOf(d);
+  if (j >= 0) return ciPatOf(p)[j] === '1' ? 'completed' : 'missed';
+  const [cn, cd] = rateOf(p);
+  return (Math.abs(Math.sin((d + 1) * 12.9898 + seedOf(p) * 78.233)) * 43758.5453) % 1 < cn / cd ? 'completed' : 'missed';
+};
+const startDay = (p) => Math.max(0, WEEKS.length - 1 - p.weeksIn) * 7;
+const checkinDays = (p) => { const out = []; for (let d = startDay(p); d <= TODAY_D; d++) if (checkinOn(p, d) === 'completed') out.push(d); return out; };
+const isoOf = (d) => { const t = new Date(2026, 4, 25 + d); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; };
+const dayOfIso = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? Math.round((new Date(+m[1], +m[2] - 1, +m[3]) - DAY0) / 864e5) : null; };
+const shortDate = (d) => { const t = new Date(2026, 4, 25 + d); return `${DOW[t.getDay()]}, ${MONTHS[t.getMonth()]} ${t.getDate()}`; };
+
+// Check-in page (draft). The review strip's examples, one for each state the page can be in.
+const EXAMPLES = [
+  { pid: 'delgado', day: '2026-08-10', label: 'Worsening' },
+  { pid: 'osei', day: '2026-08-11', label: 'Safety review' },
+  { pid: 'fernandez', day: '2026-08-12', label: 'Awaiting review' },
+  { pid: 'whitfield', day: '2026-08-10', label: 'Item 9' },
+  { pid: 'fernandez', day: '2026-08-11', label: 'Spanish' },
+  { pid: 'haddad', day: '2026-08-11', label: 'Routine' },
+  { pid: 'nguyen', day: '2026-08-06', label: 'Too short' }
+];
+// A patient's check-in page opens on their example, or else their latest check-in
+const defaultCheckin = (p) => { const ex = EXAMPLES.find((e) => e.pid === p.id), list = checkinDays(p); return ex ? dayOfIso(ex.day) : list[list.length - 1]; };
+const resolveCday = (pid, iso) => {
+  const p = PATIENTS.find((q) => q.id === pid) || PATIENTS.find((q) => q.id === 'delgado');
+  const d = dayOfIso(iso);
+  return isoOf(checkinDays(p).includes(d) ? d : defaultCheckin(p));
+};
+// The examples' content, invented for the mockup. Other check-ins show their estimate, sensing and recording only.
+// topics: the AI summary (at: the passage it cites); lines: the transcript, [speaker, text, passage, translation];
+// est: this check-in's own estimate, or null when withheld; face: share of the time the face was in view.
+const CHECKIN_NOTES = {
+  'delgado:2026-07-30': {
+    time: '19:05', min: 5, face: 0.9, est: 18,
+    topics: [
+      { icon: 'pill-bottle', text: 'Stopped sertraline a few days ago', isNew: true, quote: 'it made me feel flat', at: 'med' },
+      { icon: 'footprints', text: 'No morning walk this week', isNew: true, quote: 'I didn’t have the energy', at: 'walk' },
+      { icon: 'moon', text: 'A couple of early mornings; sleep mostly fine', at: 'sleep' }
+    ],
+    symptoms: ['Energy', 'Interest'],
+    lines: [
+      ['a', 'How have you been getting on with your medication?'],
+      ['p', 'I stopped the sertraline a few days ago. It made me feel flat, like nothing mattered.', 'med'],
+      ['a', 'Thank you for telling me. Have you been out walking with Ana?'],
+      ['p', 'Not this week. I didn’t have the energy.', 'walk'],
+      ['a', 'How has your sleep been?'],
+      ['p', 'Mostly fine. A couple of early mornings.', 'sleep']
+    ]
+  },
+  'delgado:2026-08-10': {
+    time: '19:42', min: 4, face: 0.86, est: 23,
+    topics: [
+      { icon: 'moon', text: 'Waking at 4 am most nights', isNew: true, quote: 'I just lie there going over things', at: 'sleep' },
+      { icon: 'briefcase', text: 'Missed two days of work last week', isNew: true, quote: 'I couldn’t face it', at: 'work' },
+      { icon: 'pill-bottle', text: 'Still off sertraline; plans to raise it at Thursday’s visit', quote: 'I’ll bring it up on Thursday', at: 'med' },
+      { icon: 'footprints', text: 'No morning walks for three weeks' }
+    ],
+    symptoms: ['Sleep', 'Energy', 'Interest'],
+    lines: [
+      ['a', 'Last time, you said the mornings were hard. How has this week been?'],
+      ['p', 'Worse, honestly. I’m waking at four most nights, and I just lie there going over things.', 'sleep'],
+      ['a', 'That sounds exhausting. How has work been?'],
+      ['p', 'I missed Tuesday and Wednesday. I couldn’t face it.', 'work'],
+      ['a', 'Have you been able to talk to anyone about stopping the medication?'],
+      ['p', 'Not yet. I’ll bring it up on Thursday.', 'med']
+    ]
+  },
+  'osei:2026-08-11': {
+    time: '21:15', min: 6, face: 0.92, est: 22,
+    safety: { kind: 'reviewed', level: 'moderate risk', at: [79, '09:40'], detail: 'passive thoughts of death; no plan or intent mentioned.', quote: 'some nights I think it would be easier not to wake up', passage: 'risk' },
+    topics: [
+      { icon: 'briefcase', text: 'Layoffs announced at work on Monday', isNew: true, life: true, quote: 'I keep waiting for the email', at: 'work' },
+      { icon: 'moon', text: 'Up at 4 am most nights, thinking about work', at: 'sleep' },
+      { icon: 'users', text: 'Talks with a sister most evenings', quote: 'she keeps me going', at: 'sister' }
+    ],
+    symptoms: ['Mood', 'Sleep', 'Self‑worth'],
+    sensing: { sleep: 5.6, steps: 5.9, contact: 9 },
+    lines: [
+      ['a', 'How have the nights been since we last talked?'],
+      ['p', 'Bad. I’m up at four most nights, just thinking about work.', 'sleep'],
+      ['a', 'What’s been happening at work?'],
+      ['p', 'They announced layoffs on Monday. I keep waiting for the email.', 'work'],
+      ['a', 'That’s a lot to carry. What goes through your mind at four in the morning?'],
+      ['p', 'Mostly that. And some nights I think it would be easier not to wake up. Not that I’d do anything.', 'risk'],
+      ['a', 'Thank you for telling me. Is there someone you can talk to when it gets like that?'],
+      ['p', 'My sister. We talk most evenings. She keeps me going.', 'sister'],
+      ['a', 'I’m glad you have her. I’m going to show you some numbers you can call at any time, day or night.']
+    ]
+  },
+  'fernandez:2026-08-11': {
+    time: '07:10', min: 4, face: 0.81, est: 17, lang: 'Spanish',
+    topics: [
+      { icon: 'pill-bottle', text: 'Unsure the higher dose is helping', quote: 'no sé si me está ayudando', tr: 'I don’t know if it’s helping me', at: 'med' },
+      { icon: 'moon', text: 'Sleeping badly before morning shifts', at: 'sleep' },
+      { icon: 'users', text: 'A daughter’s birthday on Saturday was a good day', quote: 'fue un buen día', tr: 'it was a good day', at: 'family' }
+    ],
+    symptoms: ['Sleep', 'Concentration'],
+    sensing: { sleep: 6.0, steps: 6.4, contact: 8 },
+    lines: [
+      ['a', '¿Cómo te has sentido con la dosis nueva?', null, 'How have you been feeling on the new dose?'],
+      ['p', 'No sé si me está ayudando. Sigo igual, o peor.', 'med', 'I don’t know if it’s helping me. I’m the same, or worse.'],
+      ['a', '¿Y cómo has dormido?', null, 'And how have you been sleeping?'],
+      ['p', 'Mal, sobre todo antes de los turnos de mañana.', 'sleep', 'Badly, especially before morning shifts.'],
+      ['a', '¿Pasó algo bueno esta semana?', null, 'Did anything good happen this week?'],
+      ['p', 'El cumpleaños de mi hija, el sábado. Fue un buen día.', 'family', 'My daughter’s birthday, on Saturday. It was a good day.']
+    ]
+  },
+  'fernandez:2026-08-12': { time: '12:20', min: 5, face: 0.88, est: 18, lang: 'Spanish', safety: { kind: 'pending' } },
+  'whitfield:2026-08-10': {
+    time: '08:30', min: 4, face: 0.4, est: 26,
+    topics: [
+      { icon: 'users', text: 'Separated in July; moved into a new apartment last week', isNew: true, life: true, quote: 'the place is so quiet', at: 'move' },
+      { icon: 'dumbbell', text: 'Hasn’t been to the gym since the move', at: 'gym' },
+      { icon: 'moon', text: 'Sleeping late; hard to get up for work', at: 'sleep' }
+    ],
+    symptoms: ['Mood', 'Interest', 'Self‑worth'],
+    sensing: { sleep: 8.4, steps: 3.4, contact: 3 },
+    lines: [
+      ['a', 'How has the week been?'],
+      ['p', 'I moved into the new apartment on Saturday. We separated in July. The place is so quiet.', 'move'],
+      ['a', 'That’s a big change. Have you kept up with the gym?'],
+      ['p', 'No. Not since the move.', 'gym'],
+      ['a', 'How have you been sleeping?'],
+      ['p', 'Late. It’s hard to get up for work.', 'sleep']
+    ]
+  },
+  'haddad:2026-08-11': {
+    time: '18:50', min: 5, face: 0.9, est: 17,
+    topics: [
+      { icon: 'briefcase', text: 'Got through four days at work', quote: 'Friday was a struggle', at: 'work' },
+      { icon: 'moon', text: 'Sleep about the same', at: 'sleep' }
+    ],
+    symptoms: [],
+    lines: [
+      ['a', 'How did the week go at work?'],
+      ['p', 'I got through four days. Friday was a struggle.', 'work'],
+      ['a', 'And how has your sleep been?'],
+      ['p', 'About the same. Not great, not worse.', 'sleep']
+    ]
+  },
+  'nguyen:2026-08-06': {
+    time: '22:05', min: 1, face: 0.7, est: null, short: true,
+    topics: [{ icon: 'message-square', text: 'Ended after a minute', quote: 'Not now, sorry. Bad time.', at: 'end' }],
+    lines: [
+      ['a', 'Hi Thanh. How are you doing today?'],
+      ['p', 'Not now, sorry. Bad time.', 'end'],
+      ['a', 'That’s fine. We can talk next time.']
+    ]
+  }
+};
+const I9_WORDS = ['not at all', 'several days', 'more than half the days', 'nearly every day'];
+
 class Component extends DCLogic {
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: false, hero: true, factsOpen: false, discussed: false };
+  // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: false, hero: true, factsOpen: false, discussed: false, cday: null, cAt: null, pAt: null, tx: false };
 
   componentDidMount() {
     const o = {};
     if (this.props.defaultView) o.view = this.props.defaultView;
     if (this.props.defaultPatient) o.pid = this.props.defaultPatient;
-    // Deep links for sharing a page with the group: #view=patient&p=delgado&order=visit
+    // Deep links for sharing a page with the group: #view=patient&p=delgado&order=visit, #view=checkin&p=delgado&d=2026-08-10
     this.readHash = () => {
       const h = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
       const r = {};
-      if (['list', 'patient', 'handout'].includes(h.get('view'))) r.view = h.get('view');
+      if (['list', 'patient', 'handout', 'checkin'].includes(h.get('view'))) r.view = h.get('view');
       if (PATIENTS.some((p) => p.id === h.get('p'))) r.pid = h.get('p');
+      if (h.get('d')) r.cday = h.get('d');
       if (['status', 'visit'].includes(h.get('order'))) r.order = h.get('order');
       // Distinct sections, larger text and icons were settled on October 25, so old links' style, text and icons are ignored
       if (['12', '24'].includes(h.get('clock'))) r.clock24 = h.get('clock') === '24';
@@ -903,9 +1216,20 @@ class Component extends DCLogic {
       if (['0', '1'].includes(h.get('hero'))) r.hero = h.get('hero') === '1';
       return r;
     };
+    // The check-in page always names a real check-in of the patient shown
+    const withDay = (r) => {
+      if ((r.view || this.state.view) === 'checkin') r.cday = resolveCday(r.pid || this.state.pid, r.cday);
+      return r;
+    };
     Object.assign(o, this.readHash());
+    withDay(o);
     if (Object.keys(o).length) this.setState(o);
-    this.onHash = () => this.setState(this.readHash());
+    // A link to another page or check-in starts it fresh: transcript closed, nothing marked
+    this.onHash = () => {
+      const r = withDay(this.readHash());
+      const moved = ['view', 'pid', 'cday'].some((k) => k in r && r[k] !== this.state[k]);
+      this.setState(moved ? { ...r, tx: false, cAt: null, pAt: null } : r);
+    };
     window.addEventListener('hashchange', this.onHash);
     // Escape closes hover content anywhere (WCAG 1.4.13: dismissible)
     this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, menuOpen: false, tip: null, tipPinned: false, factsOpen: false }); } };
@@ -919,6 +1243,16 @@ class Component extends DCLogic {
 
   componentDidUpdate() {
     window.dispatchEvent(new CustomEvent('dc:render', { detail: this.state }));
+    // A link that opens part of a page (a summary point, a transcript passage) scrolls to it once it is drawn,
+    // after go() has scrolled to the top
+    if (this.scrollSel) {
+      const sel = this.scrollSel;
+      this.scrollSel = null;
+      setTimeout(() => {
+        const el = document.querySelector(sel);
+        if (el) try { el.scrollIntoView({ block: 'center' }); } catch (e) { /* ignore */ }
+      }, 0);
+    }
     // Keep an open ⓘ tip inside the window
     const el = this.state.tip && document.getElementById(`tt-${this.state.tip}`);
     if (!el) return;
@@ -938,11 +1272,18 @@ class Component extends DCLogic {
 
   go(o) {
     const next = { ...this.state, ...o };
-    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}&order=${next.order}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}`); } catch (e) { /* sandboxed preview */ }
+    if (next.view === 'checkin') next.cday = resolveCday(next.pid, next.cday);
+    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}`); } catch (e) { /* sandboxed preview */ }
     clearTimeout(this.peekT);
     clearTimeout(this.tipT);
-    this.setState({ ...o, factsOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
+    this.setState({ ...o, cday: next.cday, cAt: o.cAt || null, pAt: null, tx: false, factsOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
     try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
+  }
+
+  // Opens a check-in (a day number), optionally at the summary point that cites a passage
+  openCheckin(d, at) {
+    if (at) this.scrollSel = '#dc-root .ci-topics .hl';
+    this.go({ view: 'checkin', cday: isoOf(d), cAt: at || null });
   }
 
   renderVals() {
@@ -1041,8 +1382,9 @@ class Component extends DCLogic {
     const uncNow = P.unc ? P.unc[P.unc.length - 1] : null;
     const lo = P.estNow == null ? null : Math.max(0, P.estNow - uncNow);
     const hi = P.estNow == null ? null : Math.min(MAX, P.estNow + uncNow);
-    // Check-ins over the last 14 days, oldest first (the tile's dots); misses spread out unless the mock data fixes them
-    const ciPat = P.ciPattern || (() => { const a = Array(P.cd).fill('1'); const miss = P.cd - P.cn; for (let k = 0; k < miss; k++) a[Math.round(((k + 1) * P.cd) / (miss + 1)) - 1] = '0'; return a.join(''); })();
+    // Check-ins over the last 14 days, oldest first (the tile's dots), and every completed check-in since joining
+    const ciPat = ciPatOf(P);
+    const ciList = checkinDays(P);
     const pt = {
       ...P,
       initials: P.name.replace(/\./g, '').split(/\s+/).filter(Boolean).map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
@@ -1069,13 +1411,19 @@ class Component extends DCLogic {
         : i9Known.length === 1 ? `Item 9 was ${i9Known[0]} at the one PHQ-9 so far`
         : i9Pos === 0 ? `Item 9 was 0 at all ${i9Known.length} PHQ-9s` : `Item 9 above 0 at ${i9Pos} of ${i9Known.length} PHQ-9s`,
       safetyWhen: P.safety ? tm(P.safety.when) : 'As of today',
+      // A safety flag links to what the protocol asks, on the check-in page of the day it was raised
+      safetyCi: !!(P.safety && P.safety.ci),
+      safetyCiLabel: 'What the protocol asks',
+      openSafetyCi: () => { if (P.safety && P.safety.ci) this.openCheckin(dayOfIso(P.safety.ci)); },
+      openLatestCi: () => { if (ciList.length) this.openCheckin(ciList[ciList.length - 1]); },
       discordant: P.estNow != null && phqNow != null && Math.abs(phqNow - P.estNow) > uncNow,
       hasChanges: P.changes.length > 0,
       hasGoals: P.goals.length > 0,
       safetyTileCls: 'stat' + (P.safety ? ' flagged' : ''),
-      ciDots: ciPat.split('').map((c) => 'dot ' + (c === '1' ? 'on' : 'off')),
-      ciTitle: 'Each dot is one expected check-in in the last 14 days, oldest on the left. Filled: completed.',
-      changes: P.changes.map((c) => ({ ...c, src: tm(c.src), iconEl: icon(c.icon) })),
+      ciDots: ciPat.split('').map((c, j) => ({ cls: 'dot ' + (c === '1' ? 'on' : 'off'), open: c === '1' ? () => this.openCheckin(RECENT[j]) : noop })),
+      ciTitle: 'Each dot is one expected check-in in the last 14 days, oldest on the left. Filled: completed; click one to open it.',
+      // An item from a check-in opens it at the summary point that cites the passage
+      changes: P.changes.map((c) => ({ ...c, src: tm(c.src), iconEl: icon(c.icon), open: c.ci ? () => this.openCheckin(dayOfIso(c.ci), c.ciAt) : noop })),
       goals: P.goals.map((g) => ({ ...g, iconEl: icon(g.icon), iconLgEl: icon(g.icon, 20) })),
       trendSub: P.weeksIn >= 11 ? 'last 12 weeks' : `since joining AURORA ${P.weeksIn} weeks ago`
     };
@@ -1153,19 +1501,13 @@ class Component extends DCLogic {
     ch.hits = [];
     for (let d = d0; d <= dLast; d++) {
       const left = d === d0 ? L - 16 : XD(d - 0.5), right = d === dLast ? R + 16 : XD(d + 0.5), target = snap(d);
-      ch.hits.push({ x: f(left), w: f(right - left), enter: () => this.setState({ hoverDay: target }) });
+      // A click on a completed check-in's day opens that check-in; otherwise it shows the day (touch)
+      ch.hits.push({ x: f(left), w: f(right - left), enter: () => this.setState({ hoverDay: target }),
+        click: () => { if (ciOn(target) === 'completed') this.openCheckin(target); else this.setState({ hoverDay: target }); } });
     }
-    // Daily check-ins: none on Sundays; the last 14 days match the tile's dots; earlier days follow the same rate
-    const todayD = Math.round((TODAY - DAY0) / 864e5);
-    const recent = [];
-    for (let d = todayD - 13; d <= todayD; d++) if (new Date(2026, 4, 25 + d).getDay() !== 0) recent.push(d);
-    const seed = [...P.id].reduce((a, c) => a + c.charCodeAt(0), 0);
-    const checkinOn = (d) => {
-      if (new Date(2026, 4, 25 + d).getDay() === 0) return 'none scheduled';
-      const j = recent.indexOf(d);
-      if (j >= 0) return ciPat[j] === '1' ? 'completed' : 'missed';
-      return (Math.abs(Math.sin((d + 1) * 12.9898 + seed * 78.233)) * 43758.5453) % 1 < P.cn / P.cd ? 'completed' : 'missed';
-    };
+    // Daily check-ins (checkinOn, above the component): none on Sundays; the last 14 days match the tile's dots
+    const seed = seedOf(P);
+    const ciOn = (d) => checkinOn(P, d);
     // Each check-in's own AI estimate: the smoothed trend plus day-to-day change (carried over from day to day)
     // and the reading's own error, sized from the detection-latency simulation (Theoretical model/Simulation):
     // on the PHQ-9 scale, SDs of about 1.5 and 1.9. Most readings land within about 4 points of the line.
@@ -1175,13 +1517,14 @@ class Component extends DCLogic {
     };
     const rnd = (d, k) => (Math.abs(Math.sin((d + 1) * 12.9898 + seed * 78.233 + k * 4.1414)) * 43758.5453) % 1;
     const gauss = (d, k) => Math.sqrt(-2 * Math.log(1 - 0.999999 * rnd(d, k))) * Math.cos(2 * Math.PI * rnd(d, k + 1));
+    // Readings run to today; the chart ends at the last weekly estimate (Mon, Aug 10), so it draws the ones up to then.
     const ciEstAt = new Map();
     if (est.length) {
       let mood = 0, err = 0;
       const readings = [];
-      for (let d = d0; d <= dLast; d++) {
+      for (let d = d0; d <= TODAY_D; d++) {
         mood = 0.7 * mood + 1.5 * Math.sqrt(1 - 0.7 ** 2) * gauss(d, 1);
-        if (checkinOn(d) !== 'completed' || trendAt(d) == null) continue;
+        if (ciOn(d) !== 'completed' || trendAt(d) == null) continue;
         err = 0.3 * err + 1.9 * Math.sqrt(1 - 0.3 ** 2) * gauss(d, 3);
         readings.push({ d, dev: mood + err });
       }
@@ -1191,8 +1534,13 @@ class Component extends DCLogic {
         const m = wk.reduce((a, r) => a + r.dev, 0) / (wk.length || 1);
         wk.forEach((r) => ciEstAt.set(r.d, Math.round(Math.min(MAX, Math.max(0, trendAt(r.d) + r.dev - m)))));
       }
+      // The check-in page's examples set their own reading, or withhold it (too short)
+      for (const d of [...ciEstAt.keys()]) {
+        const n = CHECKIN_NOTES[`${P.id}:${isoOf(d)}`];
+        if (n && 'est' in n) { if (n.est == null) ciEstAt.delete(d); else ciEstAt.set(d, n.est); }
+      }
     }
-    ch.ciEst = [...ciEstAt].map(([d, v]) => ({ cx: f(XD(d)), cy: f(Y(v)) }));
+    ch.ciEst = [...ciEstAt].filter(([d]) => d <= dLast).map(([d, v]) => ({ cx: f(XD(d)), cy: f(Y(v)) }));
     const hd = s.hoverDay != null && s.hoverDay >= d0 && s.hoverDay <= dLast ? s.hoverDay : null;
     const hv = { show: false, aria: '' };
     if (hd != null) {
@@ -1208,21 +1556,22 @@ class Component extends DCLogic {
       const k = hd % 7 === 0 ? PHQ_WEEKS.indexOf(hd / 7) : -1;
       const phq = k >= 0 ? P.phq[k] : null, i9 = k >= 0 ? P.item9[k] : null;
       const evs = (P.events || []).filter((ev) => Math.round(ev.week * 7) === hd);
-      const ci = checkinOn(hd), ciV = ciEstAt.has(hd) ? ciEstAt.get(hd) : null;
+      const ci = ciOn(hd), ciV = ciEstAt.has(hd) ? ciEstAt.get(hd) : null;
+      const withheld = ci === 'completed' && ciV == null && est.length > 0;
       const x = XD(hd);
       Object.assign(hv, {
         show: true, x: f(x), cls: 'tip ' + (x > 0.6 * 880 ? 'left' : 'right'), style: `left:${((100 * x) / 880).toFixed(2)}%`,
-        title,
+        title, canOpen: ci === 'completed',
         hasEst: e != null, est: estText, estY: eRaw == null ? 0 : f(Y(eRaw)),
-        ci: ciV != null ? `estimate ${ciV}` : ci, ciCls: 'tip-v' + (ci === 'missed' || ciV != null ? '' : ' muted'),
+        ci: ciV != null ? `estimate ${ciV}` : withheld ? 'no estimate' : ci, ciCls: 'tip-v' + (ci === 'missed' || ciV != null ? '' : ' muted'),
         hasCiDot: ciV != null, ciY: ciV == null ? 0 : f(Y(ciV)),
         hasPhq: k >= 0, phq: phq == null ? 'not completed' : `${phq} · ${bandOf(phq)}`, phqCls: 'tip-v' + (phq == null ? ' muted' : ''),
         hasPhqDot: phq != null, phqY: phq == null ? 0 : f(Y(phq)),
         hasI9: i9 != null, i9: i9 == null ? '' : String(i9), i9Cls: 'tip-v' + (i9 > 0 ? ' i9-pos' : ''),
         events: evs.map((ev) => ({ label: ev.label, iconEl: icon(ev.icon) })),
-        aria: [title, e == null ? '' : `severity estimate ${estText.replace('±', 'plus or minus')}`, ciV != null ? `check-in estimate ${ciV}` : `check-in ${ci}`,
+        aria: [title, e == null ? '' : `severity estimate ${estText.replace('±', 'plus or minus')}`, ciV != null ? `check-in estimate ${ciV}` : withheld ? 'check-in completed, no estimate' : `check-in ${ci}`,
           k < 0 ? '' : phq == null ? 'PHQ-9 not completed' : `PHQ-9 ${phq}, ${bandOf(phq)}`, i9 == null ? '' : `item 9 ${i9}`,
-          ...evs.map((ev) => ev.label)].filter(Boolean).join('; ') + '.'
+          ...evs.map((ev) => ev.label)].filter(Boolean).join('; ') + '.' + (ci === 'completed' ? ' Press Enter to open the check-in.' : '')
       });
     }
 
@@ -1291,6 +1640,115 @@ class Component extends DCLogic {
     });
     drv.aria = 'Phone sensing over the same weeks: ' + drvAria.join('; ');
 
+    // Check-in page (draft): one check-in, its safety status, estimate, AI summary, signals and transcript
+    const cDay = ciList.includes(dayOfIso(s.cday)) ? dayOfIso(s.cday) : defaultCheckin(P);
+    const ix = ciList.indexOf(cDay);
+    const note = CHECKIN_NOTES[`${P.id}:${isoOf(cDay)}`] || null;
+    // Check-ins without written content get a plausible time, length and recording
+    const cn = { time: (() => { const m = 7 * 60 + Math.floor(rnd(cDay, 7) * 168) * 5; return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`; })(),
+      min: 3 + Math.floor(rnd(cDay, 8) * 4), face: 0.75 + 0.2 * rnd(cDay, 9), ...(note || {}) };
+    const sv = cn.safety || null, held = !!(sv && sv.kind === 'pending');
+    const cWeek = Math.min(last, Math.floor(cDay / 7));
+    const phqK = cDay % 7 === 0 ? PHQ_WEEKS.indexOf(cDay / 7) : -1;
+    const phqV = phqK >= 0 ? P.phq[phqK] : null, i9V = phqK >= 0 ? P.item9[phqK] : null;
+    const cTrend = est.length ? trendAt(cDay) : null;
+    const cUnc = cTrend == null ? null : Math.round(P.unc[cWeek] + (P.unc[Math.min(last, cWeek + 1)] - P.unc[cWeek]) * Math.min(1, cDay / 7 - cWeek));
+    const ciVal = ciEstAt.has(cDay) ? ciEstAt.get(cDay) : null;
+    const withUnc = (e, u) => { const a = Math.max(0, e - u), b = Math.min(MAX, e + u); return a === e - u && b === e + u ? `${e} ± ${u}` : `${e}, range ${a}–${b}`; };
+    const openPassage = (at) => { this.scrollSel = '#ci-tx .hl'; this.setState({ tx: true, pAt: at }); };
+    // Safety: the response steps are the protocol's, not the AI's. Until the IRB safety text exists they are example
+    // wording, with the timing and the site's number left blank rather than guessed.
+    const stepsFor = (selfHarm) => [
+      `Ask about it by [time set in the protocol]: thoughts of death${selfHarm ? ' or self-harm' : ''}, any plan or intent, and access to means.`,
+      'Go over the safety plan together, or make one.',
+      'Worried before then? Call [site urgent-risk line].'
+    ];
+    const known9 = P.item9.filter((v) => v != null);
+    const run9 = (() => { let k = 0; for (let j = known9.length - 1; j >= 0 && known9[j] > 0; j--) k++; return k; })();
+    // A positive item 9 the same day always shows, whatever else the block holds
+    const i9Also = i9V > 0 ? [{ text: `PHQ-9 item 9 the same day: ${i9V}, ${I9_WORDS[i9V]}. The study team doesn’t review item 9 answers.`, cls: '' }] : [];
+    // A review is due one business day after the flag
+    const dueDay = (() => { let d = cDay + 1; while ([0, 6].includes(new Date(2026, 4, 25 + d).getDay())) d++; return d; })();
+    const quiet = (...texts) => ({ cls: 'ci-safety quiet', hasHead: false, lines: texts.filter(Boolean).map((text) => ({ text, cls: '' })), hasQuote: false, after: [], hasSteps: false });
+    const minutes = `${cn.min} minute${cn.min === 1 ? '' : 's'}`;
+    const sf = sv && sv.kind === 'reviewed' ? {
+      cls: 'ci-safety flagged', hasHead: true, headCls: 'ci-safety-head flag-safety', marker: true, iconEl: null, head: `Safety review: ${sv.level}`, headNote: '',
+      lines: [{ text: `Study team, ${shortDate(sv.at[0])}, ${tm(sv.at[1])}: ${sv.detail}`, cls: '' }],
+      hasQuote: true, quote: `“${sv.quote}”`, hasPassage: !!cn.lines, openPassage: () => openPassage(sv.passage),
+      after: [{ text: 'Crisis contacts were shown during the check-in. The study team has not contacted the patient.', cls: '' }, ...i9Also],
+      hasSteps: true, steps: stepsFor(i9V > 0)
+    } : held ? {
+      cls: 'ci-safety pending', hasHead: true, headCls: 'ci-safety-head', marker: false, iconEl: icon('shield'), head: 'Awaiting study-team review', headNote: '',
+      lines: [{ text: `The AI flagged part of this check-in. Review due by ${shortDate(dueDay)}, ${tm(cn.time)}.`, cls: '' },
+        { text: 'Until then, no email doesn’t mean no risk. The summary and transcript are held until the review.', cls: '' }, ...i9Also],
+      hasQuote: false, after: [],
+      hasSteps: true, steps: ['If you see the patient before the review: [step set in the protocol].', 'Worried before then? Call [site urgent-risk line].']
+    } : i9V > 0 ? {
+      cls: 'ci-safety flagged', hasHead: true, headCls: 'ci-safety-head flag-safety', marker: true, iconEl: null, head: `PHQ-9 item 9 = ${i9V}`, headNote: `· ${I9_WORDS[i9V]}`,
+      lines: [{ text: 'The study team doesn’t review item 9 answers, and no one from the study has contacted the patient. Crisis contacts were shown automatically.', cls: '' },
+        { text: `Item 9 at each PHQ-9: ${known9.join(', ')}${run9 >= 2 ? ` (above 0 at the last ${run9})` : ''}.`, cls: '' },
+        { text: 'Nothing in the conversation was flagged for study-team review.', cls: '' }],
+      hasQuote: false, after: [], hasSteps: true, steps: stepsFor(true)
+    } : quiet(cn.short ? `Nothing was flagged for study-team review, but the check-in ended after ${minutes}. The AI can miss risk.`
+      : 'Nothing in this check-in was flagged for study-team review. The AI can miss risk.', i9V === 0 ? 'PHQ-9 item 9 the same day: 0.' : '');
+    // Phone sensing: that week's daily average, as in the drivers panel, against the usual level (the first 4 weeks).
+    // A single day against "usual" invites over-reading.
+    const usualOf = (key) => { const v = DRV[key].filter((x, i) => i >= x0 && x != null).slice(0, 4); return v.reduce((a, x) => a + x, 0) / v.length; };
+    const wkVal = (key) => (cn.sensing && cn.sensing[key] != null ? cn.sensing[key] : DRV[key][cWeek]);
+    const ci = {
+      title: `Check-in · ${shortDate(cDay)}, ${tm(cn.time)}`,
+      crumb: `Check-in, ${shortDate(cDay)}`,
+      sub: [P.name, `${cn.min} min`, cn.lang ? `${cn.lang}, summary translated (AI)` : 'English'].join(' · '),
+      reviewNote: 'Waiting on decisions: what clinicians may see of check-in conversations (summaries, quotes, transcripts: IRB); the wording of the safety steps (IRB safety text); and what AI-COA reports for each check-in (Deliberate AI).'
+        + (held ? ' Open question: should a pending review also show on the patient page and caseload? Here it shows only on this page.' : ''),
+      prevOff: ix <= 0, nextOff: ix < 0 || ix >= ciList.length - 1,
+      prev: () => { if (ix > 0) this.openCheckin(ciList[ix - 1]); },
+      next: () => { if (ix >= 0 && ix < ciList.length - 1) this.openCheckin(ciList[ix + 1]); },
+      prevAria: ix > 0 ? `Previous check-in, ${shortDate(ciList[ix - 1])}` : 'Previous: this is the first check-in',
+      nextAria: ix >= 0 && ix < ciList.length - 1 ? `Next check-in, ${shortDate(ciList[ix + 1])}` : 'Next: this is the latest check-in',
+      sf,
+      // The patient's PHQ-9 comes first when there is one that day; AI values carry (AI)
+      est: [
+        phqV != null ? { k: 'PHQ-9', v: String(phqV), vCls: 'v', src: '(patient, same day)' } : null,
+        ciVal != null ? { k: 'This check-in', v: String(ciVal), vCls: 'v', src: '(AI)' }
+          : { k: 'This check-in', v: est.length ? 'no estimate' : 'no estimate yet', vCls: 'v muted', src: '' },
+        cTrend != null ? { k: 'Trend that day', v: withUnc(Math.round(cTrend), cUnc), vCls: 'v', src: '(AI)' } : null,
+        P.baseline != null ? { k: 'Baseline', v: String(P.baseline), vCls: 'v', src: '(AI)' } : null
+      ].filter(Boolean),
+      // Which number counts, and anything in the recording that weakens this one
+      estNote: [
+        cn.short ? `No estimate: the check-in ended after ${minutes}.` : cn.face < 0.6 ? `Less certain than usual: the face was in view ${Math.round(cn.face * 100)}% of the time.` : '',
+        est.length ? 'The status reads the trend, not single check-ins.' : ''
+      ].filter(Boolean).join(' '),
+      hasTopics: !held && !!(cn.topics && cn.topics.length),
+      topicsCls: 'changes ci-topics' + (s.icons ? ' with-icons' : ''),
+      topics: (held ? [] : cn.topics || []).map((t) => {
+        const hasPassage = !!(t.at && cn.lines);
+        return { iconEl: icon(t.icon), text: t.text, marks: [t.life ? 'Life event' : '', t.isNew ? 'New' : ''].filter(Boolean).join(' · '),
+          quote: t.quote ? `“${t.quote}”` : '', tr: t.tr ? `AI translation: “${t.tr}”` : '', hasPassage, hasSub: !!(t.quote || hasPassage),
+          openPassage: () => openPassage(t.at), cls: 'change' + (s.cAt && t.at === s.cAt ? ' hl' : '') };
+      }),
+      held,
+      noSummary: !held && !(cn.topics && cn.topics.length),
+      hasSym: !held && Array.isArray(cn.symptoms),
+      symText: !Array.isArray(cn.symptoms) ? '' : cn.symptoms.length ? `Worse than usual: ${cn.symptoms.map((x) => x.toLowerCase()).join(', ')}.` : 'None differ from usual.',
+      sensing: [
+        { k: 'Sleep', v: `${wkVal('sleep').toFixed(1)} h`, usual: `usual ${usualOf('sleep').toFixed(1)} h` },
+        { k: 'Activity', v: `${wkVal('steps').toFixed(1)}k steps`, usual: `usual ${usualOf('steps').toFixed(1)}k` },
+        { k: 'Contact', v: `${Math.round(wkVal('contact'))} contacts`, usual: `usual ${Math.round(usualOf('contact'))}` }
+      ],
+      openDrivers: () => this.go({ view: 'patient', drivers: true }),
+      txHeld: held, hasTx: !held && !!cn.lines, noTx: !held && !cn.lines,
+      txOpen: s.tx, txExpanded: s.tx ? 'true' : 'false', txLabel: s.tx ? 'Hide transcript' : 'Show transcript',
+      toggleTx: () => this.setState({ tx: !s.tx, pAt: null }),
+      lines: (cn.lines || []).map(([w, text, at, tr]) => ({
+        who: w === 'a' ? 'AURORA' : 'Patient', text, tr: tr ? `AI translation: ${tr}` : '',
+        id: at ? `ci-p-${at}` : undefined,
+        flagged: !!(sv && sv.kind === 'reviewed' && at === sv.passage),
+        cls: 'ci-line' + (s.pAt && at === s.pAt ? ' hl' : '')
+      }))
+    };
+
     // Patient handout
     const hoDefault = P.trend === 'notimp' ? ['Your check-ins look much the same as they have for a while. That’s worth talking about at your next appointment.']
       : P.status === 'nodata'
@@ -1336,12 +1794,15 @@ class Component extends DCLogic {
 
     const tab = (label, on, pick) => ({ label, cls: on ? 'on' : '', pick });
     return {
-      onList: s.view === 'list', onPatient: s.view === 'patient', onHandout: s.view === 'handout',
+      onList: s.view === 'list', onPatient: s.view === 'patient', onHandout: s.view === 'handout', onCheckin: s.view === 'checkin',
       viewTabs: [
         tab('Patients', s.view === 'list', () => this.go({ view: 'list' })),
         tab('Patient page', s.view === 'patient', () => this.go({ view: 'patient' })),
+        tab('Check-in', s.view === 'checkin', () => this.go({ view: 'checkin', cday: null })),
         tab('Handout', s.view === 'handout', () => this.go({ view: 'handout' }))
       ],
+      ci,
+      exTabs: EXAMPLES.map((e) => tab(e.label, s.pid === e.pid && s.cday === e.day, () => this.go({ view: 'checkin', pid: e.pid, cday: e.day }))),
       appCls: 'app' + (s.distinct ? ' distinct' : '') + (s.big ? ' big' : '') + (s.refined ? ' refined' : ''), distinct: s.distinct, sc,
       goalsCls: 'goals' + (s.icons ? ' with-icons' : ''),
       changesCls: 'changes' + (s.icons ? ' with-icons' : ''),
@@ -1372,11 +1833,13 @@ class Component extends DCLogic {
       closeMenu: () => this.setState({ menuOpen: false }),
       hv, hoverOff: () => this.setState({ hoverDay: null }),
       chartFocus: () => { if (s.hoverDay == null) this.setState({ hoverDay: dLast }); },
-      // Keys as for a slider: arrows move a day, Shift + arrow or Page Up/Down a week, Home/End the ends, Escape closes
+      // Keys as for a slider: arrows move a day, Shift + arrow or Page Up/Down a week, Home/End the ends, Escape closes;
+      // Enter opens that day's check-in
       chartKey: (ev) => {
         const k = ev && ev.key;
-        if (!['ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End', 'Escape'].includes(k)) return;
+        if (!['ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End', 'Escape', 'Enter'].includes(k)) return;
         if (ev.preventDefault) ev.preventDefault();
+        if (k === 'Enter') { if (hd != null && ciOn(hd) === 'completed') this.openCheckin(hd); return; }
         const cur = hd == null ? dLast : hd, step = ev.shiftKey || k === 'PageUp' || k === 'PageDown' ? 7 : 1;
         const next = k === 'ArrowLeft' || k === 'PageDown' ? cur - step : k === 'ArrowRight' || k === 'PageUp' ? cur + step : k === 'Home' ? d0 : k === 'End' ? dLast : null;
         this.setState({ hoverDay: next == null ? null : Math.min(dLast, Math.max(d0, next)) });
