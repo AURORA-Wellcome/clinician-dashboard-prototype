@@ -217,10 +217,12 @@ hills = layer('bn-hills', f'<path d="{far_forest}" fill="#0E1842"/><path d="{nea
 forest_mask = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" preserveAspectRatio="xMidYMax slice">'
                f'<path d="{far_forest}"/><path d="{near_forest}"/></svg>\n')
 open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'forest.svg'), 'w').write(forest_mask)
-# Where the page puts the smoke (the chimney top) and the firelight (on the window), in percent of the scene
+# Where the page puts the smoke (the chimney top), the firelight and the warmer glow when the pointer is near the
+# cabin (both on the window), in percent of the scene
 chimney = (round(cx - 8.6 * CABIN_K, 2), round(by - 19.3 * CABIN_K, 2))
 hearth = (cx - 4.5 * CABIN_K, by - 4.45 * CABIN_K)
 scene = (f'<div class="bn-scene"><div class="bn-hearth" style="left:{hearth[0] / W * 100:.3f}%;top:{hearth[1] / H * 100:.3f}%"></div>'
+         f'<div class="bn-cozy" style="left:{hearth[0] / W * 100:.3f}%;top:{hearth[1] / H * 100:.3f}%"></div>'
          f'<div class="bn-smoke" data-at="{chimney[0]:g},{chimney[1]:g}" style="left:{chimney[0] / W * 100:.3f}%;top:{chimney[1] / H * 100:.3f}%">'
          + '<i></i>' * 8 + '</div></div>')
 
