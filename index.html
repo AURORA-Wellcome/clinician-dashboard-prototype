@@ -335,7 +335,8 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const get = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const set = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* blocked */ } };
   const q = new URLSearchParams(location.search);
-  if (q.get('board')) set('aurora-notes-board', q.get('board'));
+  // An invite link to this page works like one to a mockup: the first mockup visited then opens the Notes panel
+  if (q.get('board')) { set('aurora-notes-board', q.get('board')); set('aurora-notes-invited', '1'); }
   if (q.has('facilitator')) set('aurora-notes-facilitator', q.get('facilitator') === '1' ? '1' : null);
   // The code alone, or inside a whole review link
   const parse = (text) => {
@@ -368,6 +369,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     const code = parse(input.value);
     if (!code) { err.textContent = 'That doesn’t look like an access code. It’s the part of the review link after “board=”.'; input.focus(); return; }
     set('aurora-notes-board', code);
+    set('aurora-notes-invited', '1');
     set('aurora-notes-carry', !carry.hidden && carry.querySelector('input').checked ? '1' : null);
     dlg.close();
     render();
