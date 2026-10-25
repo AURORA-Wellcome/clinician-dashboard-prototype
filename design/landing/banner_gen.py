@@ -114,7 +114,7 @@ hills = layer('bn-hills', f'<path d="{far}" fill="#0E1842"/><path d="{near}" fil
 html = ('<div class="banner" aria-hidden="true">\n  ' + sky
         + '\n  <div class="bn-px bn-px-back"><div class="bn-back"><div class="bn-sway-b">\n    ' + back_svg + '\n  </div></div></div>'
         + '\n  <div class="bn-px bn-px-main"><div class="bn-main"><div class="bn-sway">\n    ' + main_a + '\n    ' + main_b + '\n    ' + main_c + '\n    ' + tint_g + '\n    ' + tint_p + '\n    ' + edge_l + '\n  </div></div></div>'
-        + '\n  <div class="bn-meteor bn-m1"><i></i></div><div class="bn-meteor bn-m2"><i></i></div>'
+        + '\n  <div class="bn-meteor bn-m1"><i></i></div><div class="bn-meteor bn-m2"><i></i></div><div class="bn-meteor bn-m3"><i></i></div>'
         + '\n  <div class="bn-glints"></div>'
         + '\n  <div class="bn-px bn-px-hills">' + hills + '</div>\n</div>')
 open(sys.argv[1], 'w').write(html)
