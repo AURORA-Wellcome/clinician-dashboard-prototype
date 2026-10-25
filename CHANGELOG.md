@@ -53,4 +53,4 @@ The first mockup, with a clinical/EHR look. It has three views (A · Caseload tr
 
 ## Landing page
 
-`index.html` links to all three versions. Since October 25 it opens with a slowly moving aurora banner, each version's heading is a link, and every version's review strip has an "All versions" link back to it.
+`index.html` links to all three versions. Since October 25 it opens with a slowly moving aurora banner, each version's heading is a link, and every version's review strip has an "All versions" link back to it. A Leave notes step explains that shared notes need the private review link, with a dialog to enter its access code; the mockups' Notes panel has the same dialog.

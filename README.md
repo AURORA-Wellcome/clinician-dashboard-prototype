@@ -23,6 +23,7 @@ v2 and v1 stay available for comparison from the landing page. What changed in e
 - **Point at an ⓘ**, or reach it with Tab, for what a scale or rule means.
 - **Leave notes:** notes are shared only through a private review link, which has an access code in it. Ask the study team for it, and please don't pass it on outside the group.
   - From that link, click **Notes** at bottom right, then **Add a note**, then the part of the page the note is about.
+  - Have the access code but not the link? Enter it under How to review on the landing page, or in the Notes panel.
   - On the public link, notes stay in your own browser and no one else sees them; the Notes panel says so.
   - Please leave out patient information.
 

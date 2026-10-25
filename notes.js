@@ -73,6 +73,17 @@
   const byTime = (a, b) => (a.createdAt || 0) - (b.createdAt || 0);
   const msg = (e) => (e && (e.code || e.message)) || String(e);
   const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  // An access code (the board id), typed alone or inside a whole review link
+  const parseCode = (text) => {
+    const t = String(text || '').trim();
+    const m = /[?&]board=([^&#\s]+)/.exec(t);
+    const code = m ? decodeURIComponent(m[1]) : t;
+    return /^[A-Za-z0-9_-]{8,64}$/.test(code) ? code : null;
+  };
+  // Notes kept only in this browser: written without a review link, or while the shared notes were out of reach
+  const LOCAL_KEYS = ['aurora-notes:local', 'aurora-notes:unshared'];
+  const readLocal = (key) => { try { return JSON.parse(lsGet(key) || '[]'); } catch (e) { return []; } };
+  const localNotes = () => LOCAL_KEYS.flatMap(readLocal);
   const me = () => ({ name: lsGet('aurora-notes-name') || '', role: lsGet('aurora-notes-role') || '' });
   function ago(ms) {
     if (!ms) return 'just now';
@@ -245,12 +256,33 @@
       plus: (id, on) => fs.updateDoc(ref(id), { [`plus.${user.uid}`]: on ? true : fs.deleteField() })
     };
   }
+  // Copies notes kept in this browser to the shared board, notes before their replies, then forgets the copies
+  async function carryOver(shared) {
+    let moved = 0;
+    for (const key of LOCAL_KEYS) {
+      const list = readLocal(key);
+      if (!list.length) continue;
+      const ids = new Map(), keep = [];
+      for (const n of [...list.filter((x) => !x.parent), ...list.filter((x) => x.parent)]) {
+        if (n.parent && !ids.has(n.parent)) { keep.push(n); continue; }
+        const { id, uid, createdAt, updatedAt, plus, ...rest } = n;
+        try {
+          ids.set(id, await shared.add({ ...rest, parent: n.parent ? ids.get(n.parent) : null, plus: {} }));
+          moved++;
+        } catch (e) { keep.push(n); }
+      }
+      lsSet(key, keep.length ? JSON.stringify(keep) : null);
+    }
+    return moved;
+  }
   async function connect() {
     const cfg = EMULATOR ? { apiKey: 'demo-key', authDomain: 'localhost', projectId: 'demo-aurora', appId: '1:1:web:1' } : FIREBASE_CONFIG;
     if (cfg && BOARD && /^https?:$/.test(location.protocol)) {
       try {
         store = await sharedStore(cfg, BOARD);
-        status = { ok: true, text: 'Shared with everyone who has the review link.' };
+        let carried = 0;
+        if (lsGet('aurora-notes-carry') === '1') { lsSet('aurora-notes-carry', null); carried = await carryOver(store); }
+        status = { ok: true, text: 'Shared with everyone who has the review link.' + (carried ? ` Copied ${plural(carried, 'note')} from this browser.` : '') };
       } catch (e) {
         store = localStore('unshared');
         status = { ok: false, text: `Couldn’t reach the shared notes (${msg(e)}). New notes are saved in this browser only.` };
@@ -260,15 +292,52 @@
       status = {
         ok: false,
         text: !cfg ? 'Saved in this browser only, until the shared store is set up.'
-          : !BOARD ? 'Saved in this browser only. Open your review link to share notes.'
+          : !BOARD ? 'Saved in this browser only. To share notes, open your review link or enter its access code.'
             : 'Saved in this browser only. Open the published site to share notes.'
       };
     }
     store.subscribe((list) => { notes = list; schedule(); }, (e) => {
-      status = { ok: false, text: `Lost the connection to the shared notes (${msg(e)}).` };
+      // A wrong access code reaches Firebase but is refused: say so, and keep new notes in this browser meanwhile
+      if (e && e.code === 'permission-denied') {
+        status = { ok: false, text: 'That access code didn’t open the shared notes. Check it, or ask the study team for the review link. New notes are saved in this browser only.' };
+        store = localStore('unshared');
+        store.subscribe((list) => { notes = list; schedule(); });
+      } else {
+        status = { ok: false, text: `Lost the connection to the shared notes (${msg(e)}).` };
+      }
       render(true);
     });
     render(true);
+  }
+  // Access code dialog: for reviewers who opened the public link, or got the code on its own. It saves the code
+  // in this browser and reloads, so every mockup page then shares notes. Closes from its button, Escape or outside.
+  function openCodeDialog() {
+    const n = localNotes().length;
+    const input = h('input', { class: 'an-input', type: 'text', autocomplete: 'off', spellcheck: 'false', 'aria-labelledby': 'an-code-title', 'aria-describedby': 'an-code-help' });
+    const carry = n ? h('input', { type: 'checkbox', checked: true }) : null;
+    const err = h('p', { class: 'an-err', role: 'alert' });
+    const dlg = h('dialog', { class: 'an-dialog an-ui', 'aria-labelledby': 'an-code-title' });
+    const form = h('form', { method: 'dialog', onsubmit: (e) => {
+      e.preventDefault();
+      const code = parseCode(input.value);
+      if (!code) { err.textContent = 'That doesn’t look like an access code. It’s the part of the review link after “board=”.'; input.focus(); return; }
+      lsSet('aurora-notes-board', code);
+      lsSet('aurora-notes-carry', carry && carry.checked ? '1' : null);
+      dlg.close();
+      location.reload();
+    } },
+      h('div', { class: 'an-c-title', id: 'an-code-title' }, 'Enter an access code'),
+      h('p', { class: 'an-c-as', id: 'an-code-help' }, 'It’s in the review link the study team sent you, after “board=”. You can paste the whole link.'),
+      input,
+      carry ? h('label', { class: 'an-check' }, carry, ` Copy the ${plural(n, 'note')} saved in this browser to the shared notes`) : null,
+      err,
+      h('div', { class: 'an-row' }, h('button', { type: 'submit', class: 'an-btn' }, 'Save'), h('button', { type: 'button', class: 'an-btn quiet', onclick: () => dlg.close() }, 'Cancel')));
+    dlg.append(form);
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); }); // a click on the backdrop
+    dlg.addEventListener('close', () => dlg.remove());
+    document.body.append(dlg);
+    dlg.showModal();
+    input.focus();
   }
   async function act(fn) {
     ui.error = '';
@@ -353,6 +422,8 @@
     panelBody.replaceChildren(...[
       identity(),
       h('p', { class: 'an-status' + (status.ok ? '' : ' warn') }, status.text),
+      !status.ok && FIREBASE_CONFIG && /^https?:$/.test(location.protocol) && status.text !== 'Connecting…'
+        ? h('p', { class: 'an-status' }, h('button', { type: 'button', class: 'an-tool', onclick: openCodeDialog }, BOARD ? 'Enter a different access code' : 'Enter an access code')) : null,
       FACILITATOR ? h('p', { class: 'an-status' }, 'Facilitator view: you see every note.') : null,
       m.visible.some((n) => n.uid === m.uid) ? null : h('p', { class: 'an-intro' }, 'Click “Add a note”, then the part of the page it’s about.'
         + (FACILITATOR ? '' : ' Others’ notes on a page appear once you’ve added one there.')),
@@ -703,6 +774,10 @@
 .an-chip:has(input:focus-visible){outline:2px solid #0072B2;outline-offset:2px}
 .an-c-hint{margin:6px 0 0;color:#5B6B78}
 .an-err{margin:6px 0 0;color:#9C4400}
+.an-dialog{box-sizing:border-box;width:min(26rem,calc(100vw - 32px));padding:14px 16px;background:#FFF8D6;border:1px solid #E0CC7A;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.22);font:400 15px/21px var(--font,system-ui,sans-serif);color:#1F2A33}
+.an-dialog::backdrop{background:rgba(31,42,51,.35)}
+.an-dialog .an-input{margin:2px 0 8px}
+.an-dialog button:focus-visible{outline:2px solid #0072B2;outline-offset:2px}
 .an-err:empty{display:none}
 .an-pins{position:absolute;top:0;left:0;width:100%;height:0;z-index:55}
 .an-pin{position:absolute;transform:translate(-50%,-50%) rotate(-3deg);display:grid;place-items:center;min-width:28px;height:28px;padding:0 4px;font:700 15px/1 var(--font,system-ui,sans-serif);color:#4A3B12;background:#FFD54A;border:1px solid #C9A227;border-radius:3px 3px 3px 10px;box-shadow:0 3px 8px rgba(0,0,0,.25);cursor:pointer}
