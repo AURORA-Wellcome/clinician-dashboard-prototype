@@ -150,7 +150,7 @@
     { k: 'l-intro', sel: '.hero .lede', label: () => 'Introduction' },
     { k: 'l-status', sel: '.statuses li', id: (el) => clean(el.querySelector('strong')), label: (id) => `Status: ${id}` },
     { k: 'l-statuses', sel: '.statuses', label: () => 'Statuses card' },
-    { k: 'l-hero', sel: '.hero', label: () => 'Hero' },
+    { k: 'l-hero', sel: '.hero', label: () => 'Opening section' },
     { k: 'l-shot', sel: '.featured .frame', label: () => 'v3 screenshot' },
     { k: 'l-v3', sel: '.featured', label: () => 'v3 card' },
     { k: 'l-step', sel: '.steps li', id: (el) => clean(el.querySelector('strong')), label: (id) => `Step: ${id}` },
@@ -317,7 +317,7 @@
       store = localStore(BOARD || 'local');
       status = {
         ok: false,
-        text: !cfg ? 'Saved in this browser only, until the shared store is set up.'
+        text: !cfg ? 'Saved in this browser only, until shared notes are set up.'
           : !BOARD ? 'Saved in this browser only. To share notes, open your review link or enter its access code.'
             : 'Saved in this browser only. Open the published site to share notes.'
       };
@@ -456,7 +456,7 @@
       h('div', { class: 'an-actions' },
         h('button', { type: 'button', class: 'an-btn an-add' + (ui.adding ? ' on' : ''), 'aria-pressed': String(ui.adding), disabled: !store, onclick: onAdd }, ui.adding ? 'Cancel adding' : 'Add a note'),
         h('div', { class: 'an-seg', role: 'group', 'aria-label': 'Which notes' }, seg('This page', 'page'), seg('All pages', 'all'))),
-      ui.adding ? h('p', { class: 'an-hint' }, 'Click the part of the page your note is about. Escape cancels.') : null,
+      ui.adding ? h('p', { class: 'an-hint' }, 'Click the part of the page your note is about. Press Escape to cancel.') : null,
       ui.error ? h('p', { class: 'an-status warn', role: 'alert' }, ui.error) : null,
       hidden.length ? h('p', { class: 'an-gate' }, gateText(hidden, onPage)) : null,
       items.length ? h('ol', { class: 'an-list' }, items)
@@ -560,7 +560,7 @@
     };
     f.name.addEventListener('keydown', (e) => { if (e.key === 'Enter') save(); });
     return h('div', { class: 'an-me-form' },
-      h('div', { class: 'an-c-title' }, who.name ? 'Your name, shown with your notes' : 'Add your name, so others know whose notes they are'),
+      h('div', { class: 'an-c-title' }, who.name ? 'Your name, shown with your notes' : 'Add your name so others know who wrote each note'),
       f.el, err,
       h('div', { class: 'an-row' }, h('button', { type: 'button', class: 'an-btn', onclick: save }, 'Save'),
         who.name ? h('button', { type: 'button', class: 'an-btn quiet', onclick: () => { ui.me = false; render(true); } }, 'Cancel') : null));
@@ -609,7 +609,7 @@
     if (e.detail === 0) return openComposer(null, null); // from the keyboard: pick the part from the menu
     ui.adding = true;
     document.body.classList.add('an-adding');
-    announce('Click the part of the page your note is about. Escape cancels.');
+    announce('Click the part of the page your note is about. Press Escape to cancel.');
     render(true);
   }
   function stopAdding() {
@@ -665,13 +665,13 @@
     composer = h('div', { class: 'an-composer an-ui', role: 'dialog', 'aria-label': 'New note' },
       h('div', { class: 'an-c-title' }, 'New note'),
       f ? f.el : h('p', { class: 'an-c-as' }, `As ${who.name}${who.role ? ' · ' + who.role : ''}`),
-      h('label', { class: 'an-field' }, h('span', {}, 'On'), partIn),
+      h('label', { class: 'an-field' }, h('span', {}, 'About'), partIn),
       kinds, text,
-      h('p', { class: 'an-c-hint' }, 'Everyone with the review link can read notes. Please leave out patient information.'),
+      h('p', { class: 'an-c-hint' }, (status.ok ? 'Everyone with the review link can read notes.' : 'Only you can see notes saved in this browser.') + ' Please leave out patient information.'),
       err,
       h('div', { class: 'an-row' }, save, h('button', { type: 'button', class: 'an-btn quiet', onclick: () => closeComposer(true) }, 'Cancel')));
     save.addEventListener('click', async () => {
-      if (f && !saveName(f)) { err.textContent = 'Add your name, so others know whose note it is.'; f.name.focus(); return; }
+      if (f && !saveName(f)) { err.textContent = 'Add your name so others know who wrote this note.'; f.name.focus(); return; }
       const body = text.value.trim();
       if (!body) { err.textContent = 'Write your note first.'; text.focus(); return; }
       const key = partIn.value, same = !!sec && key === sec.key;

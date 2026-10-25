@@ -576,7 +576,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       </sc-for>
     </div>
     <p class="sr-only" aria-live="polite">{{ peek.aria }}</p>
-    <p class="foot">Severity: AI estimate on the PHQ-9 scale; colored changes are 6 or more points from the patient’s baseline. Not monitored in real time; PHQ-9 item 9 answers appear without study-team review. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></p>
+    <p class="foot">Severity: AI estimate on the PHQ-9 scale. Changes of 6 or more points from the patient’s baseline are colored. This dashboard isn’t monitored in real time. PHQ-9 item 9 answers appear without study-team review. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></p>
   </main>
   </sc-if>
 
@@ -711,7 +711,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
           <button class="btn drv-toggle" onClick="{{ toggleDrivers }}" aria-expanded="{{ drv.expanded }}">{{ drv.toggleLabel }}</button>
           <sc-if value="{{ drv.show }}">
             <div class="drivers">
-              <p class="drv-note">From phone sensors, on the same weeks as the trend. Dotted lines show each measure’s usual level (its first 4 weeks). Changes that line up with symptoms are possible contributors, not causes.</p>
+              <p class="drv-note">From phone sensors, over the same weeks as the trend. Dotted lines show each measure’s usual level (its average over the first 4 weeks). Changes that line up with symptoms are possible contributors, not causes.</p>
               <svg class="drv" viewBox="{{ drv.viewBox }}" role="img" aria-label="{{ drv.aria }}">
                 <sc-for list="{{ drv.rows }}" as="r">
                   <line class="drv-sep" x1="0" x2="880" y1="{{ r.top }}" y2="{{ r.top }}"></line>
@@ -744,7 +744,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 
     <label class="check no-print"><input type="checkbox" checked="{{ discussed }}" onChange="{{ toggleDiscussed }}"> Discussed AURORA data with the patient at this visit</label>
 
-    <p class="foot">Not monitored in real time. The study team reviews AI-detected risk and emails you if it is urgent. PHQ-9 item 9 answers appear here without review.</p>
+    <p class="foot">This dashboard isn’t monitored in real time. The study team reviews AI-detected risk and emails you if it is urgent. PHQ-9 item 9 answers appear here without study-team review.</p>
   </main>
   </sc-if>
 
@@ -842,7 +842,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
         <sc-if value="{{ ci.noTx }}"><p class="scaffold-note no-print">Mock data: no transcript is written for this check-in.</p></sc-if>
       </section>
     </div>
-    <p class="foot">This dashboard isn’t monitored in real time: the study team reviews flagged check-ins within one business day and emails you if the risk is urgent. AI summaries and translations can be wrong; the patient’s own account comes first. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></p>
+    <p class="foot">This dashboard isn’t monitored in real time. The study team reviews flagged check-ins within one business day and emails you if the risk is urgent. AI summaries and translations can be wrong; the patient’s own account comes first. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></p>
   </main>
   </sc-if>
 
@@ -851,8 +851,8 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       <div class="modal" onClick="{{ stop }}">
         <h3>Model Facts: AI-COA (Deliberate AI)</h3>
         <dl class="facts">
-          <dt>Intended use</dt><dd>Supplementary severity context alongside the PHQ-9 and clinical judgment. Never a replacement for either.</dd>
-          <dt>Output</dt><dd>A severity score with an uncertainty interval, from check-in interviews and phone sensors, shown on the PHQ-9 scale (0–27).</dd>
+          <dt>Intended use</dt><dd>Severity context to supplement the PHQ-9 and clinical judgment, never to replace either.</dd>
+          <dt>Output</dt><dd>A severity score on the PHQ-9 scale (0–27), with an uncertainty interval. It comes from check-in interviews and phone sensors.</dd>
           <dt>Changes</dt><dd>A change is colored when it is 6 or more points from the patient’s own baseline (their typical level in their first weeks in AURORA).</dd>
           <dt>Regulatory status</dt><dd>FDA ISTAND letter of intent only. Not FDA-qualified.</dd>
           <dt>Performance</dt><dd>ICC 0.82–0.92, reported by the company. Not independently verified; validation is ongoing.</dd>
@@ -901,9 +901,9 @@ const PATIENTS = [
     baseline: 14, est: [14, 14, 15, 14, 15, 16, 17, 18, 18, 19, 20, 21], unc: U3,
     phq: [14, 14, 16, 17, 19, 20], item9: [0, 0, 0, 1, 0, 0], checkins: '10/12',
     flagIcon: 'shield', flag: 'Safety review: moderate risk', flagNote: 'today 09:40',
-    safety: { head: 'Moderate risk', note: 'Study team review', when: 'Today 09:40', ci: '2026-08-11' },
+    safety: { head: 'Moderate risk', note: 'Reviewed by the study team', when: 'Today 09:40', ci: '2026-08-11' },
     changes: [
-      { icon: 'shield', title: 'Passive thoughts of death in Tuesday’s check-in', src: 'Study team review, today 09:40: moderate risk, no plan or intent mentioned; crisis contacts were shown', cls: 'flag-safety', link: 'check-in', ci: '2026-08-11' },
+      { icon: 'shield', title: 'Passive thoughts of death in Tuesday’s check-in', src: 'Study team review, today 09:40: moderate risk, no plan or intent mentioned; crisis contacts were shown during the check-in', cls: 'flag-safety', link: 'check-in', ci: '2026-08-11' },
       { icon: 'briefcase', title: 'Worry about losing her job came up in 4 check-ins', src: 'From check-in conversations', ai: true }
     ],
     goals: [{ icon: 'moon', text: 'Sleep without waking at 4 am', status: 'harder lately (last week)', handoutStatus: 'harder lately' }] },
@@ -913,7 +913,7 @@ const PATIENTS = [
     baseline: 16, est: [16, 16, 17, 16, 17, 18, 19, 20, 22, 22, 24, 25], unc: U3,
     phq: [16, 16, 18, 20, 22, 24], item9: [0, 0, 1, 1, 1, 2], checkins: '11/12',
     flagIcon: 'clipboard-list', flag: 'PHQ-9 item 9 = 2', flagNote: 'not reviewed · Aug 10',
-    safety: { head: 'Item 9 = 2', note: 'Not reviewed by the study team', when: 'PHQ-9 of Mon, Aug 10', ci: '2026-08-10' },
+    safety: { head: 'Item 9 = 2', note: 'Not reviewed by the study team', when: 'PHQ-9 on Mon, Aug 10', ci: '2026-08-10' },
     changes: [
       { icon: 'clipboard-list', title: 'Thoughts of being better off dead or of hurting himself, on more than half the days', src: 'PHQ-9 item 9 = 2 on Mon, Aug 10 · not reviewed by the study team · above 0 at the last 4 PHQ-9s', cls: 'flag-safety' }
     ],
@@ -928,7 +928,7 @@ const PATIENTS = [
     events: [{ icon: 'pill-bottle', week: 9.4, label: 'Reports stopping sertraline (AI)' }],
     changes: [
       { icon: 'pill-bottle', title: 'Reports stopping sertraline about 2 weeks ago', src: 'From a check-in conversation', ai: true, quote: 'made me feel flat', link: 'check-in', ci: '2026-07-30', ciAt: 'med' },
-      { icon: 'moon', title: 'Sleep more broken: 40% above usual, last 3 nights', src: 'Phone sensors', goal: 'Sleep through the night' },
+      { icon: 'moon', title: 'Sleep 40% more broken than usual for the last 3 nights', src: 'Phone sensors', goal: 'Sleep through the night' },
       { icon: 'footprints', title: 'Morning walks stopped 3 weeks ago', src: 'From check-ins', ai: true, goal: 'Get back to morning walks with Ana' }
     ],
     goals: [
@@ -936,7 +936,7 @@ const PATIENTS = [
       { icon: 'footprints', text: 'Get back to morning walks with Ana', status: 'on pause (3 weeks ago)', handoutStatus: 'on pause for now' },
       { icon: 'briefcase', text: 'Feel like myself at work again', status: 'some better days (last week)', handoutStatus: 'some better days' }
     ],
-    handout: ['The questionnaires you filled in suggest the last few weeks have been harder than the month before, especially sleep and morning energy. You mentioned stopping your medication; that’s the main thing to talk through on Thursday.'] },
+    handout: ['The questionnaires you filled out suggest the last few weeks have been harder than the month before, especially with sleep and morning energy. You mentioned stopping your medication. That’s the main thing to talk through on Thursday.'] },
   { id: 'fernandez', name: 'A. Fernández', first: 'Alejandro', dx: '+ GAD', status: 'worse',
     tenure: 6,
     visit: 'Mon, Aug 17, 13:00', visitDay: 'Monday', visitRank: 5, weeksIn: 11,
@@ -1009,13 +1009,13 @@ const PATIENTS = [
     baseline: null, est: null, unc: null,
     phq: [null, null, 15, 14, 16, 15], item9: [null, null, 0, 0, 0, 0], checkins: '2/12',
     ciPattern: '100000000010',
-    flag: '', changes: [{ icon: 'message-square', title: 'Only 2 of 12 check-ins in the last 14 days', src: 'Check-in log · no AI estimate, so the trend is judged from the PHQ-9 in this trial' }],
+    flag: '', changes: [{ icon: 'message-square', title: 'Only 2 of 12 check-ins in the last 14 days', src: 'Check-in log · no AI estimate, so in this trial the trend is judged from the PHQ-9' }],
     goals: [] }
 ];
 
 // Off-track rules (Study design/Measurement/AURORA_additional_data_collection.md, section 5), run on the AI estimate.
-// Under 3 months in care: above the expected range two weeks running, after a 4-week grace period.
-// From 3 months: 10 or more two weeks running. At any time: 6 or more above baseline. In this trial only,
+// Under 3 months in care: above the expected range for 2 weeks in a row, after a 4-week grace period.
+// From 3 months: 10 or more for 2 weeks in a row. At any time: 6 or more above baseline. In this trial only,
 // if check-ins are too few for an estimate, the same rules run on the PHQ-9 (labeled, and logged by source).
 // Mock thresholds on the PHQ-9 scale: placeholders until set from the estimate's measured reliable change (bead aurora-dey).
 const RULES = { earlyMonths: 3, deterioration: 6, persistence: 10, graceWeeks: 4 };
@@ -1122,11 +1122,11 @@ const CHECKIN_NOTES = {
     topics: [
       { icon: 'pill-bottle', text: 'Stopped sertraline a few days ago', isNew: true, quote: 'it made me feel flat', at: 'med' },
       { icon: 'footprints', text: 'No morning walk this week', isNew: true, quote: 'I didn’t have the energy', at: 'walk' },
-      { icon: 'moon', text: 'A couple of early mornings; sleep mostly fine', at: 'sleep' }
+      { icon: 'moon', text: 'Sleep mostly fine; a couple of early mornings', at: 'sleep' }
     ],
     symptoms: ['Energy', 'Interest'],
     lines: [
-      ['a', 'How have you been getting on with your medication?'],
+      ['a', 'How have things been with your medication?'],
       ['p', 'I stopped the sertraline a few days ago. It made me feel flat, like nothing mattered.', 'med'],
       ['a', 'Thank you for telling me. Have you been out walking with Ana?'],
       ['p', 'Not this week. I didn’t have the energy.', 'walk'],
@@ -1196,7 +1196,7 @@ const CHECKIN_NOTES = {
   'whitfield:2026-08-10': {
     time: '08:30', min: 4, face: 0.4, est: 26,
     topics: [
-      { icon: 'users', text: 'Separated in July; moved into a new apartment last week', isNew: true, life: true, quote: 'the place is so quiet', at: 'move' },
+      { icon: 'users', text: 'Separated in July; moved into a new apartment on Saturday', isNew: true, life: true, quote: 'the place is so quiet', at: 'move' },
       { icon: 'dumbbell', text: 'Hasn’t been to the gym since the move', at: 'gym' },
       { icon: 'moon', text: 'Sleeping late; hard to get up for work', at: 'sleep' }
     ],
@@ -1473,11 +1473,11 @@ class Component extends DCLogic {
     const pt = {
       ...P,
       initials: P.name.replace(/\./g, '').split(/\s+/).filter(Boolean).map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
-      headSub: (P.visitRank === NOT_SCHEDULED ? 'No visit scheduled' : 'Next visit ' + tm(P.visit)) + ` · in AURORA ${P.weeksIn} weeks`,
+      headSub: (P.visitRank === NOT_SCHEDULED ? 'No visit scheduled' : 'Next visit ' + tm(P.visit)) + ` · ${P.weeksIn} weeks in AURORA`,
       sevNow: P.estNow == null ? '—' : String(P.estNow),
       // Show ± unless the interval runs off the 0–27 scale; then show the clipped range
       uncText: P.estNow == null ? '' : (hi - P.estNow === uncNow && P.estNow - lo === uncNow) ? `± ${uncNow}` : `range ${lo}–${hi}`,
-      deltaLong: P.d == null ? 'Withheld: too few check-ins'
+      deltaLong: P.d == null ? 'No estimate yet: too few check-ins'
         : P.d === 0 ? `Same as baseline (${P.baseline})` : `${signed(P.d)} from baseline (${P.baseline})`,
       deltaCls: P.d == null || Math.abs(P.d) < RULES.deterioration ? 'muted' : P.d > 0 ? 'up' : 'down',
       // Trend status line: which rule applies, from which source, and how long in care
@@ -1485,12 +1485,12 @@ class Component extends DCLogic {
       statusShape: STATUS[P.trend].shape, statusShape2: STATUS[P.trend].shape2 || 'M0 0',
       statusText: P.ot.kind === 'notimp' ? P.ot.reason : STATUS[P.trend].label,
       statusNote: P.trend === 'nodata' ? ' · too little data to judge the trend'
-        : `${P.impW ? ` · improving for ${P.impW} weeks` : ''} · ${P.ot.source === 'PHQ-9' ? 'from the PHQ-9: too few check-ins for an AI estimate' : 'from the AI estimate'} · ${P.ot.branch === 'early' ? `early in care, ${Math.max(1, Math.round(P.ot.months))} months` : `${Math.round(P.ot.months)} months in care`}`,
+        : `${P.impW ? ` · improving for ${P.impW} weeks` : ''} · ${P.ot.source === 'PHQ-9' ? 'from the PHQ-9: too few check-ins for an AI estimate' : 'from the AI estimate'} · ${P.ot.branch === 'early' ? `early in care, ${countOf(Math.max(1, Math.round(P.ot.months)), 'month')}` : `${Math.round(P.ot.months)} months in care`}`,
       phqNow: phqNow == null ? '—' : String(phqNow),
       phqDate: iPhq >= 0 ? WEEKS[PHQ_WEEKS[iPhq]] : 'none yet',
       phqBand: phqNow == null ? '' : bandOf(phqNow) + ' range',
       ciNote: P.cn / P.cd < 0.25 ? 'too few for an estimate' : P.cn / P.cd < 0.7 ? 'estimate less certain' : 'enough for the estimate',
-      safetyHead: P.safety ? P.safety.head : 'No flags',
+      safetyHead: P.safety ? P.safety.head : 'No safety flags',
       safetyCls: P.safety ? 'flag-safety' : '',
       safetyNote: P.safety ? P.safety.note
         : i9Known.length === 1 ? `Item 9 was ${i9Known[0]} at the one PHQ-9 so far`
@@ -1506,7 +1506,7 @@ class Component extends DCLogic {
       hasGoals: P.goals.length > 0,
       safetyTileCls: 'stat' + (P.safety ? ' flagged' : ''),
       ciDots: ciPat.split('').map((c, j) => ({ cls: 'dot ' + (c === '1' ? 'on' : 'off'), open: c === '1' ? () => this.openCheckin(RECENT[j]) : noop })),
-      ciTitle: 'Each dot is one expected check-in in the last 14 days, oldest on the left. Filled: completed; click one to open it.',
+      ciTitle: 'Each dot is one expected check-in in the last 14 days, oldest on the left. Filled dots are completed; click one to open it.',
       // An item from a check-in opens it at the summary point that cites the passage
       changes: P.changes.map((c) => ({ ...c, src: tm(c.src), iconEl: icon(c.icon), open: c.ci ? () => this.openCheckin(dayOfIso(c.ci), c.ciAt) : noop })),
       goals: P.goals.map((g) => ({ ...g, iconEl: icon(g.icon), iconLgEl: icon(g.icon, 20) })),
@@ -1537,7 +1537,7 @@ class Component extends DCLogic {
     const lower = pts((v, i) => Math.max(0, v - P.unc[i])).reverse();
     const ch = {
       L, R, T: TOP, B: BOT, tickX: L - 12, endX: R + 10, evtY: TOP - 10,
-      aria: `Severity over ${pt.trendSub} for ${P.name}. Use the arrow keys to read each day.`,
+      aria: `Severity trend for ${P.name}, ${pt.trendSub}. Use the arrow keys to read each day.`,
       ticks: [0, 5, 10, 15, 20, 25].map((v) => ({ y: f(Y(v)), ty: f(Y(v) + 4), label: T(v), cls: v === 0 ? 'axis' : 'grid' })),
       hasEst: est.length > 0,
       // Refined look: a dot marks the latest estimate
@@ -1656,7 +1656,7 @@ class Component extends DCLogic {
         hasPhqDot: phq != null, phqY: phq == null ? 0 : f(Y(phq)),
         hasI9: i9 != null, i9: i9 == null ? '' : String(i9), i9Cls: 'tip-v' + (i9 > 0 ? ' i9-pos' : ''),
         events: evs.map((ev) => ({ label: ev.label, iconEl: icon(ev.icon) })),
-        aria: [title, e == null ? '' : `severity estimate ${estText.replace('±', 'plus or minus')}`, ciV != null ? `check-in estimate ${ciV}` : withheld ? 'check-in completed, no estimate' : `check-in ${ci}`,
+        aria: [title, e == null ? '' : `severity estimate ${estText.replace('±', 'plus or minus')}`, ciV != null ? `check-in estimate ${ciV}` : withheld ? 'check-in completed, no estimate' : ci === 'none scheduled' ? 'no check-in scheduled' : `check-in ${ci}`,
           k < 0 ? '' : phq == null ? 'PHQ-9 not completed' : `PHQ-9 ${phq}, ${bandOf(phq)}`, i9 == null ? '' : `item 9 ${i9}`,
           ...evs.map((ev) => ev.label)].filter(Boolean).join('; ') + '.' + (ci === 'completed' ? ' Press Enter to open the check-in.' : '')
       });
@@ -1746,8 +1746,8 @@ class Component extends DCLogic {
     // Safety: the response steps are the protocol's, not the AI's. Until the IRB safety text exists they are example
     // wording, with the timing and the site's number left blank rather than guessed.
     const stepsFor = (selfHarm) => [
-      `Ask about it by [time set in the protocol]: thoughts of death${selfHarm ? ' or self-harm' : ''}, any plan or intent, and access to means.`,
-      'Go over the safety plan together, or make one.',
+      `By [time set in the protocol], ask about thoughts of death${selfHarm ? ' or self-harm' : ''}, any plan or intent, and access to means.`,
+      'Go over the safety plan with the patient, or make one together.',
       'Worried before then? Call [site urgent-risk line].'
     ];
     const known9 = P.item9.filter((v) => v != null);
@@ -1760,7 +1760,7 @@ class Component extends DCLogic {
     const minutes = `${cn.min} minute${cn.min === 1 ? '' : 's'}`;
     const sf = sv && sv.kind === 'reviewed' ? {
       cls: 'ci-safety flagged', hasHead: true, headCls: 'ci-safety-head flag-safety', marker: true, iconEl: null, head: `Safety review: ${sv.level}`, headNote: '',
-      lines: [{ text: `Study team, ${shortDate(sv.at[0])}, ${tm(sv.at[1])}: ${sv.detail}`, cls: '' }],
+      lines: [{ text: `Study team review, ${shortDate(sv.at[0])}, ${tm(sv.at[1])}: ${sv.detail}`, cls: '' }],
       hasQuote: true, quote: `“${sv.quote}”`, hasPassage: !!cn.lines, openPassage: () => openPassage(sv.passage),
       after: [{ text: 'Crisis contacts were shown during the check-in. The study team has not contacted the patient.', cls: '' }, ...i9Also],
       hasSteps: true, steps: stepsFor(i9V > 0)
@@ -1772,9 +1772,9 @@ class Component extends DCLogic {
       hasSteps: true, steps: ['If you see the patient before the review: [step set in the protocol].', 'Worried before then? Call [site urgent-risk line].']
     } : i9V > 0 ? {
       cls: 'ci-safety flagged', hasHead: true, headCls: 'ci-safety-head flag-safety', marker: true, iconEl: null, head: `PHQ-9 item 9 = ${i9V}`, headNote: `· ${I9_WORDS[i9V]}`,
-      lines: [{ text: 'The study team doesn’t review item 9 answers, and no one from the study has contacted the patient. Crisis contacts were shown automatically.', cls: '' },
-        { text: `Item 9 at each PHQ-9: ${known9.join(', ')}${run9 >= 2 ? ` (above 0 at the last ${run9})` : ''}.`, cls: '' },
-        { text: 'Nothing in the conversation was flagged for study-team review.', cls: '' }],
+      lines: [{ text: 'The study team doesn’t review item 9 answers. Crisis contacts were shown automatically. No one from the study has contacted the patient.', cls: '' },
+        { text: `Item 9 at each PHQ-9, oldest first: ${known9.join(', ')}${run9 >= 2 ? ` (above 0 at the last ${run9})` : ''}.`, cls: '' },
+        { text: 'Nothing in the conversation was flagged for study-team review. The AI can miss risk.', cls: '' }],
       hasQuote: false, after: [], hasSteps: true, steps: stepsFor(true)
     } : quiet(cn.short ? `Nothing was flagged for study-team review, but the check-in ended after ${minutes}. The AI can miss risk.`
       : 'Nothing in this check-in was flagged for study-team review. The AI can miss risk.', i9V === 0 ? 'PHQ-9 item 9 the same day: 0.' : '');
@@ -1786,8 +1786,8 @@ class Component extends DCLogic {
       title: `Check-in · ${shortDate(cDay)}, ${tm(cn.time)}`,
       crumb: `Check-in, ${shortDate(cDay)}`,
       sub: [P.name, `${cn.min} min`, cn.lang ? `${cn.lang}, summary translated (AI)` : 'English'].join(' · '),
-      reviewNote: 'Waiting on decisions: what clinicians may see of check-in conversations (summaries, quotes, transcripts: IRB); the wording of the safety steps (IRB safety text); and what AI-COA reports for each check-in (Deliberate AI).'
-        + (held ? ' Open question: should a pending review also show on the patient page and caseload? Here it shows only on this page.' : ''),
+      reviewNote: 'Waiting on decisions: what clinicians may see of check-in conversations, such as summaries, quotes or transcripts (IRB); the wording of the safety steps (IRB safety text); and what AI-COA reports for each check-in (Deliberate AI).'
+        + (held ? ' Open question: should a pending review also show on the patient page and caseload? The mockup shows it only here.' : ''),
       prevOff: ix <= 0, nextOff: ix < 0 || ix >= ciList.length - 1,
       prev: () => { if (ix > 0) this.openCheckin(ciList[ix - 1]); },
       next: () => { if (ix >= 0 && ix < ciList.length - 1) this.openCheckin(ciList[ix + 1]); },
@@ -1804,8 +1804,8 @@ class Component extends DCLogic {
       ].filter(Boolean),
       // Which number counts, and anything in the recording that weakens this one
       estNote: [
-        cn.short ? `No estimate: the check-in ended after ${minutes}.` : cn.face < 0.6 ? `Less certain than usual: the face was in view ${Math.round(cn.face * 100)}% of the time.` : '',
-        est.length ? 'The status reads the trend, not single check-ins.' : ''
+        cn.short ? `No estimate: the check-in ended after ${minutes}.` : cn.face < 0.6 ? `Less certain than usual: the patient’s face was in view ${Math.round(cn.face * 100)}% of the time.` : '',
+        est.length ? 'The patient’s status is based on the trend, not single check-ins.' : ''
       ].filter(Boolean).join(' '),
       hasTopics: !held && !!(cn.topics && cn.topics.length),
       topicsCls: 'changes ci-topics' + (s.icons ? ' with-icons' : ''),
@@ -1837,16 +1837,16 @@ class Component extends DCLogic {
     };
 
     // Patient handout
-    const hoDefault = P.trend === 'notimp' ? ['Your check-ins look much the same as they have for a while. That’s worth talking about at your next appointment.']
+    const hoDefault = P.trend === 'notimp' ? ['Your check-ins have looked about the same for a while. That’s worth talking about at your next appointment.']
       : P.status === 'nodata'
-      ? ['We only have a few check-ins from the last two weeks, so there isn’t enough yet to show a picture.']
+      ? ['We have only a few check-ins from the last 2 weeks. That isn’t enough yet to see how things are going.']
       : P.status === 'stable' && P.d <= -5 ? ['Your check-ins suggest things have been getting easier over the last few weeks.']
       : P.status === 'stable' ? ['Your check-ins look about the same as usual.']
       : ['Your check-ins suggest the last few weeks have been harder than usual. That’s worth talking about at your next appointment.'];
     const ho = {
       title: `${P.first}, here’s what your check-ins show`,
       sub: `Last 4 weeks · for your ${P.visitDay ? P.visitDay + ' ' : 'next '}appointment with Dr. Okafor`,
-      paras: [...(P.handout || hoDefault), `In the last two weeks you completed ${P.cn} of ${P.cd} check-ins. Thank you: the picture is clearer when there are more of them.`]
+      paras: [...(P.handout || hoDefault), `In the last 2 weeks, you completed ${P.cn} of ${P.cd} check-ins. Thank you. Each one helps make the picture clearer.`]
     };
 
     // ⓘ tips: open at once on hover or keyboard focus; a click or tap keeps one open until a second click, Escape or a click elsewhere
@@ -1866,11 +1866,11 @@ class Component extends DCLogic {
     };
     const tips = {
       sev: tipFor('sev', ['AI estimate (AI-COA) of depression severity on the PHQ-9 scale, 0 to 27.', 'The number after it is the change from the patient’s own baseline, colored when it is 6 or more points.']),
-      ci: tipFor('ci', ['Check-ins completed in the last 14 days. Below 9 of 12 the estimate is less certain.']),
+      ci: tipFor('ci', ['Check-ins completed in the last 14 days, out of 12 expected. Below 9, the estimate is less certain.']),
       rule: tipFor('rule', [
         { cls: 'tt-head', text: 'How the trend is judged, from the AI estimate:' },
-        'In the first 3 months of care: above the expected range two weeks running, after the first 4 weeks.',
-        'After 3 months: 10 or more two weeks running.',
+        'In the first 3 months of care: above the expected range for 2 weeks in a row, after the first 4 weeks.',
+        'From 3 months: 10 or more for 2 weeks in a row.',
         'At any time: 6 or more above baseline.',
         'If check-ins are too few for an estimate, the same rules use the PHQ-9 (this trial only).',
         { cls: 'tt-note', text: 'Thresholds are placeholders until set from the estimate’s measured reliability.' }
@@ -1881,9 +1881,9 @@ class Component extends DCLogic {
       thr: tipFor('thr', [
         { cls: 'tt-head', text: 'Why this line stands out:' },
         `When the AI estimate is ${RULES.deterioration} or more points above this patient’s baseline, the status becomes Worse than baseline.`,
-        'The baseline is the patient’s own typical level in their first weeks in AURORA, so the line is personal, not a severity cut-off.',
-        ...(ch.showZone ? ['The shading above it marks that zone.'] : []),
-        { cls: 'tt-note', text: `${RULES.deterioration} is a placeholder until it is set from the estimate’s measured reliability.` }
+        'The baseline is the patient’s own typical level in their first weeks in AURORA, so the line is specific to this patient, not a severity cut-off.',
+        ...(ch.showZone ? ['The shading above the line marks the Worse than baseline zone.'] : []),
+        { cls: 'tt-note', text: `The ${RULES.deterioration}-point threshold is a placeholder until it is set from the estimate’s measured reliability.` }
       ])
     };
 

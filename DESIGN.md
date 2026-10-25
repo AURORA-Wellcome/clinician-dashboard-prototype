@@ -2,15 +2,19 @@
 
 The rules every mockup screen follows. Give this file, and the reference screenshots, to any person or AI model working on the design, at the start of every session.
 
-**Status:** draft for clinician working group (CWG) review. Checked against the clinical planning notes (`Notes/Clinical/`) on 2026-10-23. Applied in `AURORA Dashboard v2.dc.html` on 2026-10-24, after an independent review. The section styles (Plain or Distinct) were added the same day for the CWG to compare. The type rules (principle 9 and Type) followed a review of published usability guidance, also on 2026-10-24. v3, which applies the theoretical model, was added the same day; its differences are in the v3 section. v3's check-in page was added as a draft on 2026-10-25.
+**Status:** draft for clinician working group (CWG) review.
+
+- 2026-10-23: checked against the clinical planning notes (`Notes/Clinical/`).
+- 2026-10-24: applied in `AURORA Dashboard v2.dc.html`, after an independent review. The section styles (Plain or Distinct) were added for the CWG to compare, and the type rules (principle 9 and Type) followed a review of published usability guidance. v3, which applies the theoretical model, was added too; its differences are in the v3 section.
+- 2026-10-25: v3's check-in page was added as a draft. Distinct sections and the larger text were settled, and the Refined look became v3's default.
 
 ## Principles
 
 1. **One question per page.**
    - **Caseload:** *which of my patients need attention, and in what order?*
-   - **Patient page:** *how is this patient doing, and what has changed?* This page merges v1's patient detail and session prep, following the group's "one simple page" (July 16). It prints as the session brief.
+   - **Patient page:** *how is this patient doing, and what has changed?* This page merges v1's patient detail and session prep, following the group's top priority on July 16, "one simple page". It prints as the session brief.
    - **Patient handout:** *what would the patient want to know?* Plain language, no model internals.
-   - **Check-in** (v3, draft): *what happened at this check-in, and how much weight should I give it?* It is detail on demand: nothing on it is needed for the 3-minute workflow.
+   - **Check-in** (v3, draft): *what happened at this check-in, and how much weight should I give it?* It is detail on demand: nothing on it is needed for the 3-minute workflow the protocol describes.
    - Anything that doesn't serve the page's question moves elsewhere.
 2. **Say it once.** Units, scales and rules appear once per page, in an ⓘ tooltip or the footer, never on each row or header. AI labeling is the exception and follows the source rule under Components.
 3. **Color means status, nothing else.** All data is in neutral ink. Color appears only for:
@@ -18,7 +22,7 @@ The rules every mockup screen follows. Give this file, and the reference screens
    - a change of 5 or more points from the patient's baseline.
    
    Decorative or "category" color is not allowed. Faint tints of the status colors may mark a status group or a flagged tile (see Section styles). The neutral `tint` is a surface, not a color cue.
-4. **Whitespace before borders.** Separate things with space and alignment. Panels hold groups of content; no bordered chips or pills anywhere.
+4. **Whitespace before borders.** Separate items with space and alignment. Panels hold groups of content. No bordered chips or pills (small rounded labels) anywhere.
 5. **Status is always triple-encoded** as shape + color + word: ■ Safety flag, ▲ Worse than baseline, ● Stable or better, ◐ Too few check-ins. This survives color blindness and grayscale printing. Every shape must differ: v1's octagon for crisis looked like a circle at 10 px.
 6. **Safety flags lead, but the dashboard is not a crisis channel.**
    - Under the safety design agreed on October 19, the study team reviews AI-detected risk and emails the clinician if it is urgent. Risk information doesn't reach the treating clinician in real time (August 13).
@@ -33,7 +37,7 @@ The rules every mockup screen follows. Give this file, and the reference screens
    - The source is clinical planning, July 16:
      - Clinicians "don't want to be told what to do", but naming an issue as one that "might be worth addressing" is acceptable.
      - The study team proposed recommendations with a "why" the clinician can open, audit and disagree with, and suggested exploring with clinicians how far recommendations should go.
-   - The theoretical model includes a clinical support layer ("recommended next steps"), so how far to go is an open question for the working group (bead aurora-04b).
+   - The theoretical model includes a clinical support layer ("recommended next steps"), so how far recommendations should go is an open question for the working group (bead aurora-04b).
    - **Safety flags are the exception.** A safety flag shows the protocol's response steps: what the study team did, what the clinician is asked to do and by when, and the site's crisis contacts.
      - These are the study's procedure, set for each review outcome by the IRB safety text, not AI advice. The same steps go in the email.
      - Clinicians ask for this: in focus groups on suicide-risk models, hospital providers named clear workflows and training among what would help (Bentley et al. 2022, doi:10.2196/30946).
@@ -70,9 +74,9 @@ Interface words are labels, headers, notes and buttons, not patient data.
 - **American English** in everything a person reads: the interface, the patient handout, the landing page, these docs and code comments. For example: color, gray, center, behavior, labeled, license, toward, and -ize endings (summarize, prioritize).
 - **Dates and times** are US style too: see Times under Components.
 - **Written quotations** keep their original spelling: the titles of papers and guidance, passages quoted from them, and names of organizations.
-- **Quotes from meetings** use American spelling. Speech has no spelling: a transcript's is the transcription software's, not the speaker's. The transcripts themselves stay as recorded.
+- **Quotes from meetings** use American spelling. Speech has no spelling: a transcript's spelling comes from the transcription software, not the speaker. The transcripts themselves stay as recorded.
 - **Lines and zones are named for what they mean,** in the words of the status they start, not their arithmetic: the line where Worse than baseline begins is labeled Worse than baseline.
-- **Don't call the AI estimate's changes "reliable".** In measurement the word means a change bigger than the measure's own error, which hasn't been measured for the estimate yet, and to a reader it can sound like "confirmed". The study design's "reliable deterioration" (the PHQ-9 rising 6 or more) is Worse than baseline on screen.
+- **Don't call the AI estimate's changes "reliable".** In measurement, a reliable change is one bigger than the measure's own error, and that error hasn't been measured for the estimate yet. To a reader, the word can also sound like "confirmed". The study design's "reliable deterioration" (the PHQ-9 rising 6 or more) appears on screen as Worse than baseline.
 
 ## Tokens
 
@@ -80,7 +84,7 @@ Use these and nothing else. Any new value has to be added here first.
 
 **Type.** Typeface: **Source Sans 3**, with a system-ui fallback. It has an open license and tabular figures. Self-host it in production.
 
-Source Sans 3 runs small: its x-height is 0.49 of the font size, against 0.52 for Arial, and the US Web Design System (USWDS) scales it up by 1.06 to match other typefaces. The sizes below allow for this; if the typeface changes, re-derive them from its x-height. Sizes are set in rem (1 rem is 16 px by default), so a clinician's browser text-size setting applies.
+Source Sans 3 runs small: its x-height (the height of a lowercase x) is 0.49 of the font size, against 0.52 for Arial. The US Web Design System (USWDS) scales it up by 1.06 to match other typefaces. The sizes below allow for this; if the typeface changes, re-derive them from its x-height. Sizes are set in rem (1 rem is 16 px by default), so a clinician's browser text-size setting applies.
 
 | Token | Screen size / line height | Print (session brief) | Weight | Use |
 |---|---|---|---|---|
@@ -91,11 +95,11 @@ Source Sans 3 runs small: its x-height is 0.49 of the font size, against 0.52 fo
 
 - **Chart text** scales with the chart, so its size is set per window width to stay at about 15–17 px. It is set larger in narrow windows, so zooming in enlarges it. In print the chart runs the full page width rather than being squeezed, so its labels stay at 9 pt.
 - **Print:** nothing on paper is below 8 pt. If the brief doesn't fit one page, cut content rather than shrink it.
-- **Patient handout** prints in clear print, 14 pt body text (clear-print guidance asks for 12 pt minimum, 14 pt preferred), not on the brief's scale.
+- **Patient handout** prints in clear print, with 14 pt body text, not on the brief's scale. Clear-print guidance asks for 12 pt minimum, 14 pt preferred.
 - **Line length:** prose runs to about 70 characters a line at most (USWDS: 45–90, aiming for 66). Footers are capped at 70 characters.
 - **Narrow windows and zoom:** below 60 rem, caseload flags move to a second line, the tiles go 2 × 2 and the patient page is one column. Reflow down to 320 px (WCAG 1.4.10) is a production task.
 - **Where the numbers come from:** USWDS asks for at least an effective 16 px for most text, about 17 px in Source Sans, and smaller sizes only "sparingly". GOV.UK and the NHS use 19 px body text and 16 px small text. Microsoft's Fluent uses 14 px for dense app screens. The EU minimum for medicine leaflets is 9 pt.
-- **Earlier sizes:** v2 first used 13 / 15 / 19 / 30 px, printing at 7.9 / 9 / 10.5 / 16.5 pt, with chart labels at 6.7 pt and the handout at 10.5 pt. Half the patient page's words were at 13 px. These sizes stay behind the review strip's Text switch for comparison.
+- **Earlier sizes:** v2 first used 13 / 15 / 19 / 30 px, printing at 7.9 / 9 / 10.5 / 16.5 pt, with chart labels at 6.7 pt and the handout at 10.5 pt. Half the patient page's words were at 13 px. They were offered behind the review strip's Text switch until the larger text was settled on October 25.
 
 Two weights only, 400 and 600. Numbers always use `font-variant-numeric: tabular-nums`.
 
@@ -140,7 +144,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
 - **Change:** a signed number after the value ("21 +9"), measured from the patient's own baseline. It is colored (`worse-text` or `stable-text`, weight 600) only when it is 5 or more points; otherwise muted. Don't use ▲▼ arrows: the triangle is already the worse-than-baseline status shape.
 - **Uncertainty:** "± 4", or the clipped range ("range 22–27") when the interval runs past the 0–27 scale.
 - **Caseload order:**
-  - **By next visit** (the default): one group per day. Each day has a full-width header giving the full date ("Thursday, August 13"), "Today" or "Tomorrow" where it applies, and the number of visits; "Not scheduled" comes last. The date is in the header, so the rows show only the time, under the column heading "Time". Safety-flagged patients come first, in a Safety flag group pinned above the day headers; no day header covers those rows, so each gives the visit date above the time.
+  - **By next visit** (the default): one group per day, with a "Not scheduled" group last. Each day has a full-width header giving the full date ("Thursday, August 13"), "Today" or "Tomorrow" where it applies, and the number of visits. The date is in the header, so the rows show only the time, under the column heading "Time". Safety-flagged patients come first, in a Safety flag group pinned above the day headers. No day header covers those rows, so each of them shows its visit date above the time.
   - Day headers are neutral, because color means status. In the distinct style they sit on the neutral `tint`, with no edge.
   - **Grouped by status:** Safety flag, Worse than baseline, Too few check-ins, Stable or better, with patients in visit order within each group.
 - **Caseload columns:** the column you look patients up by comes first, then the rest in order of importance.
@@ -150,7 +154,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - Flag is last: it is the longest column, and it is empty for stable patients, so a blank never splits a row.
   - Numbers line up by place value: severity, change and check-in counts sit in fixed-width, right-aligned slots. Dates and times are left-aligned.
 - **Row peek:** resting the pointer on a caseload row for about 0.4 s, or reaching it with Tab, opens a card under the row (above it for the last three rows). It shows what the row can't:
-  - a small trend over the same span as the patient page, using the chart's encodings: AI estimate and band, PHQ-9 dots, dotted baseline, dashed baseline + 5, and a zero line. It uses the full 0–27 scale, so cards compare across patients.
+  - a small trend over the same span as the patient page, drawn the same way as its chart: AI estimate and band, PHQ-9 dots, dotted baseline, dashed baseline + 5, and a zero line. It uses the full 0–27 scale, so cards can be compared across patients.
   - severity with its uncertainty and baseline;
   - the latest PHQ-9 with its date and band;
   - item 9 across all PHQ-9s, in `safety` when the latest answer is above 0;
@@ -163,7 +167,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
 - **Rows are links:** Tab reaches each row, and Enter opens the patient.
 - **Check-ins:** the count is always shown. Below 9 of 12 it is bold ink, not colored, because color is reserved for status.
 - **Times:**
-  - 12-hour by default ("2:00 PM"). Clinicians can switch to 24-hour ("14:00") under Time format in the account menu, under their name at top right; in production the choice is saved with their account.
+  - 12-hour by default ("2:00 PM"). Clinicians can switch to 24-hour ("14:00") with the Time format setting in the account menu, which opens from their name at top right. In production, the choice is saved with their account.
   - Every clock time follows the setting: visits, safety reviews, sources.
   - Dates put the month first, US style: "Thu, Aug 13", or "Thu, Aug 13, 2:00 PM" with a time. A space that can't break joins the time to AM or PM.
   - The patient's own words are quoted as written ("waking at 4 am").
@@ -181,7 +185,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - Its notes, such as review status, are `text-md`: safety wording is never in the smallest size.
   - The footer, also `text-md`, says that item 9 answers appear without study-team review.
   - The wording follows the IRB safety text.
-  - In v3, a flagged tile links to "What the protocol asks": the check-in page of the day the flag was raised, which opens on the review record and the response steps. Moderate risk isn't emailed, so the steps must be one click from the flag.
+  - In v3, a flagged tile has a "What the protocol asks" link. It goes to the check-in page for the day the flag was raised, which opens on the review record and the response steps. Moderate risk isn't emailed, so the steps must be one click from the flag.
 - **AI label (source rule):** label AI-derived values at the smallest unit where the source is uniform:
   - once in the header of an all-AI column;
   - on each item where AI and non-AI items mix (flags, changes, chart events);
@@ -191,9 +195,9 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
 - **Chart:**
   - The y axis is the PHQ-9 scale, 0–27, with numeric ticks. Don't label severity bands next to lines, because baseline lines then read as severity cut-offs.
   - The AI estimate is a line in `ai-series` with an `ai-band` uncertainty band. The patient's PHQ-9 answers are ink dots.
-  - Each check-in's own estimate is a small, faint `ai-series` dot. The line is the smoothed estimate, which the status rules read, so one high or low reading doesn't change a patient's status. *(Mock data: the scatter follows the detection-latency simulation's assumptions, day-to-day change plus each reading's error, so most readings land within about 4 points of the line. To confirm with Deliberate AI and the WP3 idiographic study.)*
+  - Each check-in's own estimate is a small, faint `ai-series` dot. The line is the smoothed estimate, which the status rules read, so one high or low reading doesn't change a patient's status. *(Mock data: as the detection-latency simulation assumes, the scatter combines day-to-day change with each reading's error, so most readings land within about 4 points of the line. To be confirmed with Deliberate AI and the WP3 idiographic study.)*
   - Baseline is dotted and baseline + 5 (+ 6 in v3) is dashed in `worse`, each labeled at the line end. v2 labels the dashed line "Baseline + 5"; v3 labels it with the status it starts, Worse than baseline.
-  - The dashed line's label has an ⓘ saying why the line stands out: it is where Worse than baseline begins, measured from the patient's own baseline, so it is not a severity cut-off; and the number is a placeholder. The label is drawn in HTML over the chart so it can hold the button, sized to match the chart's own labels. In v3 it takes two lines in the label column, its last word kept with the ⓘ. The ⓘ doesn't print.
+  - The dashed line's label has an ⓘ explaining why the line stands out. It says that the line is where Worse than baseline begins, measured from the patient's own baseline, so it is not a severity cut-off, and that its number is a placeholder. The label is drawn in HTML over the chart, so that it can hold the ⓘ button, and is sized to match the chart's own labels. In v3 it takes two lines in the label column, with its last word kept on the same line as the ⓘ. The ⓘ doesn't print.
   - Item 9 answers are numbers under the PHQ-9 dates, in bold `safety` when above 0. Don't use badges.
   - Reported events are dashed verticals labeled with their source, e.g. "(AI)". The label sits right of the line, or left of it when it would run off the chart.
   - The time axis runs from when the patient joined, up to 12 weeks.
@@ -205,7 +209,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
     - on a PHQ-9 day, the PHQ-9 with its severity band (or "not completed"), and item 9, in `safety` when above 0;
     - any reported event that day.
 
-    PHQ-9 and event days pull the pointer from one day either side, so the dots stay easy to hit.
+    The readout snaps to a PHQ-9 or event day from one day either side, so the dots stay easy to hit.
   - **Opening a check-in** (v3): on a day with a completed check-in, the card ends "Click to open the check-in". A click opens it, and so does Enter from the keyboard readout.
   - Between the weekly estimates, the line and so the readout are interpolated. Whether AI-COA reports a smoothed estimate, one per check-in, or both is to confirm with Deliberate AI.
   - The card is a popover, so it may have a shadow, and its text is `text-sm`. It flips to the left of the guide line in the right part of the chart.
@@ -215,7 +219,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
     - Home and End go to the ends, and Escape closes the card.
 
     Screen readers hear each day as it is chosen.
-  - Hover only adds detail. Anything a clinician needs for safety stays visible without it: item 9 answers remain printed under the chart.
+  - Hover only adds detail. Anything a clinician needs for safety stays visible without it: item 9 answers are always shown under the chart.
 - **Icons:** one set, [Lucide](https://lucide.dev) (ISC license): line icons with stroke 1.75, in `ink-muted`.
   - Size: 16 px, or 20 px in the patient handout.
   - Meaning: an icon says what kind of signal or goal something is:
@@ -232,11 +236,28 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - Never use icons for urgency (the status shapes and color do that), never color them, and never show one alone. Each sits next to its text and is hidden from screen readers.
   - At most one icon per row or item.
   - Used in: caseload flags, "What changed" items (in a left gutter), chart events and goals.
-  - No emoji, illustrations or decorative graphics. The exceptions are the brand mark (below) and, in the Refined look, the greeting band. Outside the dashboard, the landing page opens with a banner: a night sky with aurora curtains over a low horizon of boreal forest, black spruce on two ridges as in northern Canada, with a log cabin in a clearing (SVG layers, drawn by `design/landing/banner_gen.py`), which sets the stage where nobody is working. It moves calmly but visibly: the curtains drift (26 and 34 s) and sway, their rays leaning and lengthening (11 and 15 s); three ray patterns cross-fade every few seconds, the bright lower edge pulses, and a few accent stars twinkle. Patches of natural green, violet and magenta wander along the curtain and brighten and fade (the magenta, as in strong displays, is a pink border along the lower edge and a faint orchid in the upper rays), and now and then a shooting star glides across it (three take turns, about every 10 s, each for about 2.5 s, so they never cross together; one in three heads right, the others left). Every 100 s or so, a far-off airliner crosses (45 to 50 s), alternating direction, with only its red beacon showing: a flash every 1.2 s and a faint steady light between. It flies straight and level, which in this wide view traces an arc: it rises from one side, is highest, fastest and brightest where it passes nearest, then sinks toward the horizon (the path is computed by `banner_gen.py`). Off to the right, the cabin stands three-quarters on, its long side turned toward the middle of the scene, with one larger window lit warm, a slow, faint flicker of firelight, a faint rim of skylight on its roof, and a thin wisp of chimney smoke that rises and bends downwind (banners narrower than about 430 px don't show it) (the smoke and firelight are laid over the drawing in its own units, `.bn-scene`). The forest and cabin are anchored to the bottom of the banner, so a wide screen crops sky rather than forest, and the curtains' sway only ever lengthens them, so it never uncovers the top edge. With a mouse or pen, stars near the pointer brighten with a soft sparkle: it rises over about half a second and fades over a second, at most one every 90 ms, and none is cut short. The treetops below a sparkling star catch a little silvery light, more for a brighter star lower in the sky; the glow is masked to the forest's silhouette, so only the trees catch it, never the sky. The curtains ease a little toward the pointer for depth (over 1.4 s) and drift back over 2.4 s when it leaves. The stars and the forest stay put: a moving foreground can bring on motion sickness. Pointing at the cabin warms it: its window's light spreads and brightens, and more of it falls on the ground (up over 0.6 s, fading over 1.2 s). Nothing happens on touch or with the reduced-motion setting. The banner is the one place green appears outside a status: it is a picture of the sky, on a page with no patient data, while the dashboard keeps to cool hues because green means "on track" there. Its only red is that plane's beacon, a 2.5 px point that moves and blinks, so it reads as a light in the sky rather than a status, and its only warm color is the cabin's lamplight, plainly a light in a window. Only transforms and opacity animate, so it costs the browser almost nothing, and it is still with the reduced-motion setting.
-  - **The aurora motif** carries the banner's colors through the landing page: a soft glow of blue-violet, violet and a little teal behind the latest version's screenshot; the latest version's badge and the How to review numbers in a blue-violet-to-violet gradient; and the page closes on a band of night over the spruce treeline, under a thin aurora line. In the dashboard the motif is only a thin blue-violet-to-violet line under the top bar (Refined look). Never green, magenta or warm colors in the dashboard, and never in charts, statuses or the printed brief. Text never sits on a gradient, and motion stays in the banner.
+  - No emoji, illustrations or decorative graphics. The exceptions are the brand mark (below) and, in the Refined look, the greeting band.
+  - **Landing banner:** outside the dashboard, the landing page opens with a banner. It sets the stage on a page where nobody is working, and it moves calmly but visibly. `design/landing/banner_gen.py` draws it as SVG layers.
+    - **Scene:** a night sky with aurora curtains over a low horizon of boreal forest: black spruce on two ridges, as in northern Canada, with a log cabin in a clearing. The forest and cabin are anchored to the bottom of the banner, so a wide screen crops sky rather than forest.
+    - **Aurora:** the curtains drift (26 and 34 s) and sway, their rays leaning and lengthening (11 and 15 s). The sway only ever lengthens the curtains, so it never uncovers the top edge. Three ray patterns cross-fade every few seconds, and the bright lower edge pulses. Patches of natural green, violet and magenta wander along the main curtain, brightening and fading. As in strong displays, the magenta is a pink border along the lower edge and a faint orchid in the upper rays.
+    - **Stars:** a few accent stars twinkle. Now and then a shooting star glides across the sky. Three take turns, about every 10 s, each for about 2.5 s, so they never cross together. One in three heads right, the others left.
+    - **Airliner:** every 100 s or so, a far-off airliner crosses (45 to 50 s), alternating direction. Only its red beacon shows: a flash every 1.2 s and a faint steady light between. It flies straight and level, which in this wide view traces an arc: it rises from one side, is highest, fastest and brightest where it passes nearest, then sinks toward the horizon. `banner_gen.py` computes the path.
+    - **Cabin:** off to the right, three-quarters on, with its long side turned toward the middle of the scene. Banners narrower than about 430 px don't show it. Its one window is lit warm, with a slow, faint flicker of firelight. The roof has a faint rim of skylight, and a thin wisp of chimney smoke rises and bends downwind. The smoke and firelight are laid over the drawing in its own units (`.bn-scene`).
+    - **Pointer:** these effects need a mouse or pen. Nothing happens on touch or with the reduced-motion setting.
+      - Stars near the pointer brighten with a soft sparkle. Each sparkle rises over about half a second and fades over a second. At most one starts every 90 ms, and none is cut short.
+      - The treetops below a sparkling star catch a little silvery light, more for a brighter star lower in the sky. The glow is masked to the forest's silhouette, so only the trees catch it, never the sky.
+      - The curtains ease a little toward the pointer for depth (over 1.4 s) and drift back over 2.4 s when it leaves. The stars and the forest stay put, because a moving foreground can bring on motion sickness.
+      - Pointing at the cabin warms it: its window's light spreads and brightens, and more of it falls on the ground (up over 0.6 s, fading over 1.2 s).
+    - **Color:** the banner is the one place green appears outside a status. It is a picture of the sky, on a page with no patient data, while the dashboard keeps to cool hues because green means "on track" there. Its only red is the plane's beacon, a 2.5 px point that moves and blinks, so it reads as a light in the sky rather than a status. Its only warm color is the cabin's lamplight, plainly a light in a window.
+    - **Cost:** only transforms and opacity animate, so the banner costs the browser almost nothing. With the reduced-motion setting, it doesn't move.
+  - **The aurora motif** carries the banner's colors through the landing page:
+    - a soft glow of blue-violet, violet and a little teal behind the latest version's screenshot;
+    - a blue-violet-to-violet gradient on the latest version's badge and the How to review step numbers;
+    - a closing band of night over the spruce treeline, under a thin aurora line.
+  - **In the dashboard,** the motif is only a thin blue-violet-to-violet line under the top bar (Refined look). It never uses green, magenta or warm colors there, and it never appears in charts, statuses or the printed brief. Text never sits on a gradient, and motion stays in the banner.
   - The capsule "pill" icon was replaced by the pill bottle because at 16 px it read as a hyperlink symbol.
 - **Brand mark:** a 24 px rounded square in a blue-to-violet gradient (`#2E6FD6` to `#7B5CC9`) with two level white aurora ribbons, the lower one shorter and fainter. It sits beside the AURORA wordmark in the top bar (v3 and the landing page) and is the browser-tab icon (`favicon.svg`). Cool hues only, like the greeting band, so it never reads as a status. The ribbons stay level: a rising line would read as rising severity, and two identical waves as "≈".
-- **Discussed checkbox:** "Discussed AURORA data with the patient at this visit". This feeds the discussion-rate measure in the supervisor A&F playbook.
+- **Discussed checkbox:** "Discussed AURORA data with the patient at this visit". This feeds the discussion-rate measure in the supervisor audit-and-feedback (A&F) playbook.
 - **ⓘ tooltip:** the place for scales, thresholds and definitions. The page draws it; don't use the browser's `title` tooltip, which appears only after a delay and never by keyboard or touch.
   - The ⓘ is a button. Pointing at it, or reaching it with Tab, opens the tip at once.
   - A click or tap keeps the tip open, with the ⓘ in `ink`. A second click, Escape, or a click elsewhere closes it. This is how it works on touch screens.
@@ -245,7 +266,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - The ⓘ is drawn at text size, but its hit area is 24 × 24 px (the WCAG 2.2 minimum target size).
   - Screen readers hear the tip as the button's description. Tips don't print.
   - The check-in dots have the same tip, for the pointer only, because the count and note beside them say the same in words.
-- **Section styles:** Distinct, settled on October 25, 2026, along with the larger text and the icons. The alternatives (Plain, one column of white panels; the earlier, smaller text; no icons) were clearly weaker, so they are no longer offered for review, to save reviewers' attention for open questions. Distinct makes each section recognisable at a glance:
+- **Section styles:** Distinct, settled on October 25, 2026, along with the larger text and the icons. The alternatives were clearly weaker: the Plain style (one column of white panels), the smaller text used earlier, and no icons. They are no longer offered for review, so reviewers can save their attention for open questions. Distinct makes each section recognizable at a glance:
   - **Summary band:** the patient's name, next visit and the four tiles sit on a full-width white band. Details follow on the gray page.
   - **Tile graphics** repeat a number that is already shown; they never add new data.
     - Severity: a 0–27 scale bar under the hero number, with unlabeled ticks at 5, 10, 15 and 20. The baseline is a dotted tick, and the AI estimate is an `ai-series` dot on its `ai-band` range.
@@ -271,11 +292,11 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 |---|---|---|---|
 | Safety flag | ■ square | `safety` | unchanged |
 | Worse than baseline | ▲ triangle | `worse` | 6 or more above baseline, at any time |
-| Not improving | ▬ flat bar | `worse` | under 3 months in care: above the expected range two weeks running, after a 4-week grace period. From 3 months: 10 or more two weeks running |
+| Not improving | ▬ flat bar | `worse` | under 3 months in care: above the expected range for 2 weeks in a row, after a 4-week grace period. From 3 months: 10 or more for 2 weeks in a row |
 | Too few check-ins | ◐ half circle | `nodata` | no AI estimate, and the PHQ-9 fallback hasn't fired |
 | On track | ● circle | `stable` | none of the above (was "Stable or better") |
 
-- **The rules run on the AI estimate.** This was decided on October 24: the PHQ-9 is mainly for validation, and the simulation puts the AI flag about a week earlier.
+- **The rules run on the AI estimate.** This was decided on October 24, because the PHQ-9 is mainly for validation and the detection-latency simulation puts the AI flag about a week ahead of a PHQ-9 flag.
 - **PHQ-9 fallback:** in this trial only, when check-ins are too few for an estimate, the same rules run on the PHQ-9. The flag says so ("Still symptomatic (PHQ-9)"), and every flag's source is logged (bead aurora-dey).
 - **Time in care** comes from the baseline treatment-history item (§6), plus time since enrollment.
 - **Placeholders:** the thresholds (6, 10, 4 weeks and the expected range) hold until they are set from the estimate's measured reliability.
@@ -287,7 +308,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
   - Rule (mock, to set with the estimate's measured reliability): the longest span of 4 or more weeks, ending now, with no weekly rise of more than 1 point and a net fall of 3 or more.
   - In `ink`, never a status color: it is a note, not a status. Never shown beside a flag of any kind, so it can't soften one.
   - It describes; it doesn't tell the clinician what to do (principle 8).
-- **Tile order:** the patient's PHQ-9 comes first and at the same size as the AI estimate, so the estimate reads as an adjunct to the patient's account, not its arbiter. This follows the model's "feeling believed" node, where displacement is the evidenced risk.
+- **Tile order:** the patient's PHQ-9 comes first and at the same size as the AI estimate, so the estimate reads as an adjunct to the patient's account, not its arbiter. This follows the model's "feeling believed" node, where the evidenced risk is that the estimate displaces the patient's account.
 - **Disagreement:** when the PHQ-9 and the estimate differ, the callout puts the patient's account first: "The estimate supplements the patient's own account; it doesn't replace it."
 
 **Chart.** It draws the rule that applies:
@@ -320,11 +341,15 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
   - the title ("Check-in · Mon, Aug 10, 7:42 PM"), then the patient, the length and the language;
   - the safety block (below);
   - the estimate line: the patient's same-day PHQ-9 first, then this check-in's estimate, the trend that day and the baseline, each AI value labeled;
-  - a note under it saying which number counts ("The status reads the trend, not single check-ins"), and anything in the recording that weakens this estimate ("Less certain than usual: the face was in view 40% of the time", "No estimate: the check-in ended after 1 minute").
+  - a note under it saying which number counts ("The patient's status is based on the trend, not single check-ins"), and anything in the recording that weakens this estimate ("Less certain than usual: the patient's face was in view 40% of the time", "No estimate: the check-in ended after 1 minute").
 - **Safety block,** always in the same place, in one of four states:
-  - **Reviewed:** the review record ("Safety review: moderate risk", who, when, and what was found, worded only as far as the record supports: "no plan or intent mentioned"), the patient's words, and what was done ("Crisis contacts were shown during the check-in. The study team has not contacted the patient"). Then the protocol's response steps.
+  - **Reviewed:**
+    - the review record: "Safety review: moderate risk", who reviewed it and when, and what was found, worded only as far as the record supports ("no plan or intent mentioned");
+    - the patient's words;
+    - what was done ("Crisis contacts were shown during the check-in. The study team has not contacted the patient");
+    - then the protocol's response steps.
   - **PHQ-9 item 9 above 0:** the answer and its frequency, "The study team doesn't review item 9 answers", item 9 at each PHQ-9, whether the conversation was flagged, and the steps.
-  - **Awaiting review:** a neutral panel with the shield icon, not the safety color, because no one has judged the risk yet. It gives the time the review is due and says "Until then, no email doesn't mean no risk". The summary and transcript are held until the review, so the page never becomes a way round it. Whether a pending review should also show on the patient page and caseload is open: here it shows only on this page.
+  - **Awaiting review:** a neutral panel with the shield icon, not the safety color, because no one has judged the risk yet. It gives the time the review is due and says "Until then, no email doesn't mean no risk". The summary and transcript are held until the review, so the page never becomes a way around it. Whether a pending review should also show on the patient page and caseload is still open; for now, the mockup shows it only on this page.
   - **Nothing flagged:** "Nothing in this check-in was flagged for study-team review. The AI can miss risk", in muted text, never "No risk". A check-in that ended early says so.
   - A positive item 9 the same day always shows, whatever else the block holds.
   - **Steps,** until the IRB safety text exists: example wording, with the timing and the site's urgent-risk number left as blanks ("[time set in the protocol]") rather than guessed from the calendar, so they can't read as advice.
@@ -336,7 +361,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 
 ## Refined look *(v3, the default since 2026-10-25; under review)*
 
-A polish pass. Since 2026-10-25 it is v3's default look; the review strip's Look switch still offers the Original look (deep link `&look=current`). Beauty here comes from calm and precision, not decoration: fewer colors on screen at once, a clearer type hierarchy, softer structure, and one focal point per page.
+A polish pass. Since 2026-10-25 it has been v3's default look; the review strip's Look switch still offers the Original look (deep link `&look=current`). Beauty here comes from calm and precision, not decoration: fewer colors on screen at once, a clearer type hierarchy, softer structure, and one focal point per page.
 - **Color:** status words are in `ink`; the shape keeps the status color. Safety wording stays in `safety`. Shape, color and word all remain. *(Amends the Status marker rule if adopted.)*
 - **Type:** the patient's name is tracked in slightly (−0.01 em); tile numbers are weight 500, tracked in −0.02 em; group and day headers are in sentence case at `text-md`; section headings have 48 px above them.
 - **Structure:** the patients list, What changed and the trend chart sit on a soft two-layer shadow instead of a border, with 10 px corners. Chart gridlines are lighter, as is the uncertainty band. Print keeps plain borders. *(Amends "shadows only on popovers" if adopted.)*
@@ -346,7 +371,7 @@ A polish pass. Since 2026-10-25 it is v3's default look; the review strip's Look
   - **Name to title:** opening a patient from the list morphs the name in the row into the page title (0.34 s, View Transitions where the browser has them), and back again from the breadcrumb. The rest of the page cross-fades quickly (0.18 s). It keeps the clinician's eye on the patient across the change of page.
   - **Trend draw-in:** on the patient page the smoothed line draws itself in once (0.7 s), the band and check-in dots fade in, and the end dot appears last.
   - All motion is off when the reduced-motion setting is on, in the Original look, and in print.
-- **Greeting band** (Patients page only; switchable, `&hero=0` hides it): "Good morning, Dr. Okafor", then the date, visits today or tomorrow, and patients with a safety flag. Two soft aurora curtains in pale blue and violet sit at the right, fading out before the text. They follow the time of day: paler in the morning, as above in the afternoon, deeper in the evening. Cool hues only, because warm hues and greens mean status; no animation; not printed. It is the one exception to "no decorative graphics" in the dashboard itself.
+- **Greeting band** (Patients page only; the review strip's Greeting switch or `&hero=0` hides it): "Good morning, Dr. Okafor", then the date, visits today or tomorrow, and patients with a safety flag. Two soft aurora curtains in pale blue and violet sit at the right, fading out before the text. They follow the time of day: these are the afternoon colors, and the curtains are paler in the morning and deeper in the evening. They use cool hues only, because warm hues and greens mean status. The band doesn't animate and isn't printed. It is the one exception to "no decorative graphics" in the dashboard itself.
 - **New values,** to add to Tokens once the CWG confirms the look: avatar `#E4EBF4` with `#3D4B57` text; curtains `#8FB0EE` and `#B3A2EA` (afternoon), `#A9C4F3` and `#CABEF2` (morning), `#6F8EE2` and `#9682DE` (evening); gridlines `#EEF1F4`; card shadow `0 1px 2px rgba(16,24,40,.05), 0 4px 12px rgba(16,24,40,.05)`.
 
 ## Procedure for each redesign round
@@ -354,7 +379,7 @@ A polish pass. Since 2026-10-25 it is v3's default look; the review strip's Look
 1. **Audit content** for the page against its question: keep, move or cut. Get CWG decisions on flagged items. Audits quote the planning meetings, so they stay out of this public repo.
 2. **Restyle one page at a time**, using only these tokens.
 3. **Screenshot loop.** Serve the repo folder (`python3 -m http.server 8767`) and take headless Chrome screenshots at 1400 px wide.
-   - v2 supports deep links, e.g. `AURORA%20Dashboard%20v2.dc.html#view=patient&p=delgado` or `#view=list&order=status`. Add `&clock=24` for 24-hour times. (Links that still carry `&style=`, `&text=` or `&icons=` are ignored: those choices are settled.)
+   - v2 and v3 support deep links, e.g. `AURORA%20Dashboard%20v2.dc.html#view=patient&p=delgado` or `#view=list&order=status`. Add `&clock=24` for 24-hour times. (Links that still carry `&style=`, `&text=` or `&icons=` are ignored: those choices are settled.)
    - Check the printed patient page is one page (`--print-to-pdf`).
    - Save before/after shots to `design/screenshots/` with dated names.
 4. **Independent critique.** Give a second model, or a fresh agent, only the screenshots and this file, and ask what to remove. The Gemini CLI on this Mac needs `GOOGLE_CLOUD_PROJECT` set before it will run.
