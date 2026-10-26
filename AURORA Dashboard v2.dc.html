@@ -425,7 +425,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       </sc-for>
     </div>
     <p class="sr-only" aria-live="polite">{{ peek.aria }}</p>
-    <p class="foot">Severity: AI estimate on the PHQ-9 scale; colored changes are 5 or more points from the patient’s baseline. Not monitored in real time; PHQ-9 item 9 answers appear without study-team review. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></p>
+    <p class="foot">Severity: AI estimate on the PHQ-9 scale; colored changes are 5 or more points from the patient’s baseline. Not monitored in real time; PHQ-9 item 9 answers appear without study team review. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></p>
   </main>
   </sc-if>
 
@@ -1098,7 +1098,7 @@ class Component extends DCLogic {
       // Why the baseline + 5 line stands out in the chart
       thr: tipFor('thr', [
         'When the AI estimate is 5 or more points above this patient’s baseline, the change is colored and the status is Worse than baseline.',
-        'The baseline is the patient’s own typical level in their first weeks in AURORA, so the line is personal, not a severity cut-off.',
+        'The baseline is the patient’s own typical level in their first weeks in AURORA, so the line is personal, not a severity cutoff.',
         ...(ch.showZone ? ['The shading above it marks that zone.'] : []),
         '5 is a placeholder until it is set from the estimate’s measured reliability.'
       ])

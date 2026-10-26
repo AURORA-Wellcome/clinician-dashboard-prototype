@@ -29,7 +29,7 @@ The rules every mockup screen follows. Give this file, and the reference screens
    - Under the safety design agreed on October 19, the study team reviews AI-detected risk and emails the clinician if it is urgent. Risk information doesn't reach the treating clinician in real time (August 13).
    - Safety flags come first: first group in the caseload, first tile on the patient page.
    - They are dated and in the `safety` color, and they say who has or hasn't reviewed them.
-   - Never imply that no email means safe: PHQ-9 item 9 answers arrive without study-team review.
+   - Never imply that no email means safe: PHQ-9 item 9 answers arrive without study team review.
    - No banners, pop-ups or Respond buttons.
 7. **Show detail on demand.** Overview rows show the few things needed to decide. Explanation lives in ⓘ, hover, or the next page: the drill-down clinicians asked for (July 16).
 8. **Describe; suggest only softly and on demand.**
@@ -85,6 +85,7 @@ Interface words are labels, headers, notes and buttons, not patient data.
   - **The check-ins** are "conversaciones con AURORA", never bare "sus conversaciones", which could read as the patient's own phone calls. The app, its notifications, the consent form and the handout should use the same term.
 - **Written quotations** keep their original spelling: the titles of papers and guidance, passages quoted from them, and names of organizations.
 - **Quotes from meetings** use American spelling. Speech has no spelling: a transcript's spelling comes from the transcription software, not the speaker. The transcripts themselves stay as recorded.
+- **Hyphens only where a phrase would misread without one:** "AI-detected risk" ("AI detected risk" reads as a sentence), "self-harm", "FDA-qualified". Pairs of nouns stay open: "study team review", not "study-team review". Unneeded hyphens make text read as if AI wrote it. American spelling also closes some compounds: "cutoff", not "cut-off".
 - **Lines and zones are named for what they mean,** in the words of the status they start, not their arithmetic: the line where Worse than baseline begins is labeled Worse than baseline.
 - **Don't call the AI estimate's changes "reliable".** In measurement, a reliable change is one bigger than the measure's own error, and that error hasn't been measured for the estimate yet. To a reader, the word can also sound like "confirmed". The study design's "reliable deterioration" (the PHQ-9 rising 6 or more) appears on screen as Worse than baseline.
 
@@ -193,7 +194,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - It is the first group in the caseload in either order: grouped by status, or pinned above the day headers by next visit.
   - It shows the criterion that raised it, its review status and the date: "Safety review: moderate risk, today 9:40 AM", "PHQ-9 item 9 = 2, not reviewed, Aug 10". Clinicians want to know the thresholds behind an output (Rai et al. 2025, doi:10.2196/78757).
   - Its notes, such as review status, are `text-md`: safety wording is never in the smallest size.
-  - The footer, also `text-md`, says that item 9 answers appear without study-team review.
+  - The footer, also `text-md`, says that item 9 answers appear without study team review.
   - The wording follows the IRB safety text.
   - In v3, a flagged tile has a "What the protocol asks" link. It goes to the check-in page for the day the flag was raised, which opens on the review record and the response steps. Moderate risk isn't emailed, so the steps must be one click from the flag.
 - **AI label (source rule):** label AI-derived values at the smallest unit where the source is uniform:
@@ -203,11 +204,11 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   
   Use quiet "(AI)" text, never a pill, plus one Model Facts link per page. *(Recommended; CWG/IRB to confirm.)*
 - **Chart:**
-  - The y axis is the PHQ-9 scale, 0–27, with numeric ticks. Don't label severity bands next to lines, because baseline lines then read as severity cut-offs.
+  - The y axis is the PHQ-9 scale, 0–27, with numeric ticks. Don't label severity bands next to lines, because baseline lines then read as severity cutoffs.
   - The AI estimate is a line in `ai-series` with an `ai-band` uncertainty band. The patient's PHQ-9 answers are ink dots.
   - Each check-in's own estimate is a small, faint `ai-series` dot. The line is the smoothed estimate, which the status rules read, so one high or low reading doesn't change a patient's status. *(Mock data: as the detection-latency simulation assumes, the scatter combines day-to-day change with each reading's error, so most readings land within about 4 points of the line. To be confirmed with Deliberate AI and the WP3 idiographic study.)*
   - Baseline is dotted and baseline + 5 (+ 6 in v3) is dashed in `worse`, each labeled at the line end. v2 labels the dashed line "Baseline + 5"; v3 labels it with the status it starts, Worse than baseline.
-  - The dashed line's label has an ⓘ explaining why the line stands out. It says that the line is where Worse than baseline begins, measured from the patient's own baseline, so it is not a severity cut-off, and that its number is a placeholder. The label is drawn in HTML over the chart, so that it can hold the ⓘ button, and is sized to match the chart's own labels. In v3 it takes two lines in the label column, with its last word kept on the same line as the ⓘ. The ⓘ doesn't print.
+  - The dashed line's label has an ⓘ explaining why the line stands out. It says that the line is where Worse than baseline begins, measured from the patient's own baseline, so it is not a severity cutoff, and that its number is a placeholder. The label is drawn in HTML over the chart, so that it can hold the ⓘ button, and is sized to match the chart's own labels. In v3 it takes two lines in the label column, with its last word kept on the same line as the ⓘ. The ⓘ doesn't print.
   - Item 9 answers are numbers under the PHQ-9 dates, in bold `safety` when above 0. Don't use badges.
   - Reported events are dashed verticals labeled with their source, e.g. "(AI)". The label sits right of the line, or left of it when it would run off the chart.
   - **Visits** (v3): past clinic visits are short `ink-muted` marks in a Visits row under the plot, above item 9, so clinicians can read the check-ins against the sessions (review note, October 26). The readout names a visit and its time ("Visit, 2:00 PM", with the calendar icon). *(Mock data: each patient's usual slot, weekly or every 2 weeks, back to when they joined. Where visit dates come from is still open, bead aurora-8ok.)*
@@ -241,7 +242,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
     - exercise (dumbbell)
     - check-ins (speech bubble)
     - questionnaire (clipboard)
-    - study-team safety review (shield)
+    - study team safety review (shield)
     - scheduling (calendar)
     - family, relationships and contact (people; v3 check-in page and drivers panel)
   - Never use icons for urgency (the status shapes and color do that), never color them, and never show one alone. Each sits next to its text and is hidden from screen readers.
@@ -364,9 +365,9 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
     - then the protocol's response steps.
   - **PHQ-9 item 9 above 0:** the answer and its frequency, "The study team doesn't review item 9 answers", item 9 at each PHQ-9, whether the conversation was flagged, and the steps.
   - **Awaiting review:** a neutral panel on `tint` with the shield icon, not the safety color, because no one has judged the risk yet. It gives the time the review is due and says "Until then, no email doesn't mean no risk". The summary and transcript are held until the review, so the page never becomes a way around it; What came up says so, once, and the transcript section is left out. Whether a pending review should also show on the patient page and caseload is still open; for now, the mockup shows it only on this page.
-  - **Nothing flagged:** "Nothing in this check-in was flagged for study-team review. The AI can miss risk", in muted text, never "No risk". A check-in that ended early says so.
+  - **Nothing flagged:** "Nothing in this check-in was flagged for study team review. The AI can miss risk", in muted text, never "No risk". A check-in that ended early says so.
   - A positive item 9 the same day always shows, whatever else the block holds.
-  - **Steps,** until the IRB safety text exists: example wording, with the timing and the site's urgent-risk number left as blanks ("[time set in the protocol]") rather than guessed from the calendar, so they can't read as advice.
+  - **Steps,** until the IRB safety text exists: example wording, with the timing and the site's number for urgent risk left as blanks ("[time set in the protocol]") rather than guessed from the calendar, so they can't read as advice.
 - **What came up:** the AI summary, labeled once in the heading. Each point has its topic icon, one sentence, and a muted "New", "Life event" or "New life event" where they apply. Under it, the patient's words in quotation marks, at body size in `ink`, because the patient's account comes first, with a "transcript" link to the passage set off by space (on the topic's line when there are no quoted words); then, on its own line, an AI translation when the check-in wasn't in English. The AI's own sentences don't name third parties.
 - **Signals** (right column, on `tint`): symptoms that differ from the patient's usual (AI; "None differ from usual" when none do), and phone sensing as that week's daily average against the usual level, in aligned columns, with a link to the weekly trend. A single day against "usual" would invite over-reading.
 - **Transcript** (left column, under What came up, beside the links that open it): collapsed under "Show transcript", which becomes "Hide transcript" in the same place. Opening it is logged. Speakers are "AURORA" and "Patient". A reviewed flagged passage is marked ■ Flagged in `safety`, and lines not in English carry their AI translation.

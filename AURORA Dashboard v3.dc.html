@@ -689,7 +689,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       </sc-for>
     </div>
     <p class="sr-only" aria-live="polite">{{ peek.aria }}</p>
-    <p class="foot"><span>Severity: AI estimate on the PHQ-9 scale. Changes of 6 or more points from the patient’s baseline are colored.</span><span>This dashboard isn’t monitored in real time. PHQ-9 item 9 answers appear without study-team review. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></span></p>
+    <p class="foot"><span>Severity: AI estimate on the PHQ-9 scale. Changes of 6 or more points from the patient’s baseline are colored.</span><span>This dashboard isn’t monitored in real time. PHQ-9 item 9 answers appear without study team review. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></span></p>
   </main>
   </sc-if>
 
@@ -865,7 +865,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       </aside>
     </div>
 
-    <p class="foot"><span>This dashboard isn’t monitored in real time. The study team reviews AI-detected risk and emails you if it is urgent.</span><span>PHQ-9 item 9 answers appear here without study-team review.</span></p>
+    <p class="foot"><span>This dashboard isn’t monitored in real time. The study team reviews AI-detected risk and emails you if it is urgent.</span><span>PHQ-9 item 9 answers appear here without study team review.</span></p>
   </main>
   </sc-if>
 
@@ -1011,7 +1011,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
             </sc-for>
           </ul>
         </sc-if>
-        <sc-if value="{{ ci.held }}"><p class="empty">The summary and transcript are held until the study-team review.</p></sc-if>
+        <sc-if value="{{ ci.held }}"><p class="empty">The summary and transcript are held until the study team reviews this check-in.</p></sc-if>
         <sc-if value="{{ ci.noSummary }}"><p class="scaffold-note no-print">Mock data: no summary is written for this check-in. The examples in the review strip have one.</p></sc-if>
       </section>
       <aside class="ci-side">
@@ -2109,7 +2109,7 @@ class Component extends DCLogic {
     const stepsFor = (selfHarm) => [
       `By [time set in the protocol], ask about thoughts of death${selfHarm ? ' or self-harm' : ''}, any plan or intent, and access to means.`,
       'Go over the safety plan with the patient, or make one together.',
-      'Worried before then? Call [site urgent-risk line].'
+      'Worried before then? Call [the site’s number for urgent risk].'
     ];
     const known9 = P.item9.filter((v) => v != null);
     const run9 = (() => { let k = 0; for (let j = known9.length - 1; j >= 0 && known9[j] > 0; j--) k++; return k; })();
@@ -2128,20 +2128,20 @@ class Component extends DCLogic {
       after: [{ text: 'Crisis contacts were shown during the check-in. The study team has not contacted the patient.', cls: '' }, ...i9Also],
       hasSteps: true, steps: stepsFor(i9V > 0)
     } : held ? {
-      cls: 'ci-safety pending', hasHead: true, headCls: 'ci-safety-head', marker: false, iconEl: icon('shield'), head: 'Awaiting study-team review', headNote: '', meta: '',
+      cls: 'ci-safety pending', hasHead: true, headCls: 'ci-safety-head', marker: false, iconEl: icon('shield'), head: 'Awaiting study team review', headNote: '', meta: '',
       // What is held is said once, under What came up
       lines: [{ text: `The AI flagged part of this check-in. Review due by ${shortDate(dueDay)}, ${tm(cn.time)}.`, cls: '' },
         { text: 'Until then, no email doesn’t mean no risk.', cls: '' }, ...i9Also],
       hasQuote: false, after: [],
-      hasSteps: true, steps: ['If you see the patient before the review: [step set in the protocol].', 'Worried before then? Call [site urgent-risk line].']
+      hasSteps: true, steps: ['If you see the patient before the review: [step set in the protocol].', 'Worried before then? Call [the site’s number for urgent risk].']
     } : i9V > 0 ? {
       cls: 'ci-safety flagged', hasHead: true, headCls: 'ci-safety-head flag-safety', marker: true, iconEl: null, head: `PHQ-9 item 9 = ${i9V}`, headNote: I9_WORDS[i9V], meta: '',
       lines: [{ text: 'The study team doesn’t review item 9 answers. Crisis contacts were shown automatically. No one from the study has contacted the patient.', cls: '' },
         { text: `Item 9 at each PHQ-9, oldest first: ${known9.join(', ')}${run9 >= 2 ? ` (above 0 at the last ${run9})` : ''}.`, cls: '' },
-        { text: 'Nothing in the conversation was flagged for study-team review. The AI can miss risk.', cls: '' }],
+        { text: 'Nothing in the conversation was flagged for study team review. The AI can miss risk.', cls: '' }],
       hasQuote: false, after: [], hasSteps: true, steps: stepsFor(true)
-    } : quiet(cn.short ? `Nothing was flagged for study-team review, but the check-in ended after ${minutes}. The AI can miss risk.`
-      : 'Nothing in this check-in was flagged for study-team review. The AI can miss risk.', i9V === 0 ? 'PHQ-9 item 9 the same day: 0.' : '');
+    } : quiet(cn.short ? `Nothing was flagged for study team review, but the check-in ended after ${minutes}. The AI can miss risk.`
+      : 'Nothing in this check-in was flagged for study team review. The AI can miss risk.', i9V === 0 ? 'PHQ-9 item 9 the same day: 0.' : '');
     // Phone sensing: that week's daily average, as in the drivers panel, against the usual level (the first 4 weeks).
     // A single day against "usual" invites over-reading.
     const usualOf = (key) => { const v = DRV[key].filter((x, i) => i >= x0 && x != null).slice(0, 4); return v.reduce((a, x) => a + x, 0) / v.length; };
@@ -2295,7 +2295,7 @@ class Component extends DCLogic {
       thr: tipFor('thr', [
         { cls: 'tt-head', text: 'Why this line stands out:' },
         `When the AI estimate is ${RULES.deterioration} or more points above this patient’s baseline, the status becomes Worse than baseline.`,
-        'The baseline is the patient’s own typical level in their first weeks in AURORA, so the line is specific to this patient, not a severity cut-off.',
+        'The baseline is the patient’s own typical level in their first weeks in AURORA, so the line is specific to this patient, not a severity cutoff.',
         ...(ch.showZone ? ['The shading above the line marks the Worse than baseline zone.'] : []),
         { cls: 'tt-note', text: `The ${RULES.deterioration}-point threshold is a placeholder until it is set from the estimate’s measured reliability.` }
       ])
