@@ -50,7 +50,7 @@ What changed from v1:
 
 `AURORA Dashboard Clinical.dc.html`, August to September 2026.
 
-The first mockup, with a clinical/EHR look. It has three views (caseload triage, patient detail and session prep), each with four review variants you switch between from the review strip at the top.
+The first mockup had a clinical, EHR-style look, with three views (caseload triage, patient detail and session prep), each with four review variants that the review strip at the top switches between.
 
 ## Landing page
 
