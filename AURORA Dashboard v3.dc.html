@@ -414,12 +414,22 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 @media print{.refined .list,.refined .changes,.refined .chart-wrap,.refined .ci-tx{box-shadow:none;border-color:var(--line)}}
 .pt-who{display:flex;align-items:center;gap:14px;min-width:0}
 .avatar{display:grid;place-items:center;flex:none;width:48px;height:48px;border-radius:50%;background:#E4EBF4;color:#3D4B57;font-size:var(--fs-md);font-weight:600;letter-spacing:.02em}
-/* Greeting band: two soft aurora curtains in cool hues only, because warm hues and greens mean status here */
-.greet{position:relative;overflow:hidden;margin:0 0 20px;padding:18px 24px;background:var(--surface);border-radius:var(--r);box-shadow:0 1px 2px rgba(16,24,40,.05),0 4px 12px rgba(16,24,40,.05)}
-.greet-art{position:absolute;top:0;right:0;width:60%;height:100%;filter:blur(2px);-webkit-mask-image:linear-gradient(to right,transparent,#000 45%);mask-image:linear-gradient(to right,transparent,#000 45%)}
-.greet-text{position:relative}
-.greet-hello{font-size:var(--fs-lg);line-height:var(--lh-lg);font-weight:600;letter-spacing:-.005em}
-.greet-sub{margin-top:2px;color:var(--muted)}
+/* Greeting band: the greeting, then today's date and the caseload's facts. The art, two soft aurora curtains in cool
+   hues only (warm hues and greens mean status here), takes the space to the right of the text and never sits behind it. */
+/* The band's text starts where the list's does: a 1 px border (transparent, as the list's is) and 20 px of padding */
+.greet{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,1fr);column-gap:32px;overflow:hidden;margin:0 0 20px;padding:16px 20px;background:var(--surface);border:1px solid transparent;border-radius:var(--r);box-shadow:0 1px 2px rgba(16,24,40,.05),0 4px 12px rgba(16,24,40,.05)}
+.greet-hello{font-size:var(--fs-lg);line-height:var(--lh-lg);font-weight:600}
+.greet-sub{display:flex;flex-wrap:wrap;align-items:center;column-gap:24px;row-gap:4px;margin-top:4px;color:var(--muted)}
+.greet-fact{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.greet-fact .ic{margin:0}
+.greet-date .short{display:none}
+/* The art bleeds to the band's top, right and bottom edges. It is at most 28rem wide, anchored right, and fades in
+   over 8rem from its left, so it keeps its shape at any width and never reaches the text */
+.greet-art{position:relative;margin:-16px -20px -16px 0}
+.greet-art svg{position:absolute;top:0;right:0;width:min(100%,28rem);height:100%;-webkit-mask-image:linear-gradient(to right,transparent,#000 8rem);mask-image:linear-gradient(to right,transparent,#000 8rem)}
+@media screen and (max-width:52rem){.greet{grid-template-columns:minmax(0,1fr)}.greet-art{display:none}}
+/* Phones: the short date keeps the date and visits on one line. The full date stays for screen readers */
+@media screen and (max-width:32rem){.greet-date .long{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.greet-date .short{display:inline}}
 @media screen and (max-width:66rem){.big .chart text{font-size:15px}.big .chart-box{--chart-fs:15}}
 /* Narrow windows and 200% zoom (WCAG 1.4.4): flags drop to a second line, tiles go 2 x 2, one column */
 @media screen and (max-width:60rem){
@@ -471,10 +481,12 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .handout p,.handout li{font-size:var(--fs-lg);line-height:1.5}
 .handout p{margin:0 0 10px}
 .ho-head{position:relative;margin:0 -48px 18px;padding:26px 48px 20px}
-/* The art sits at the right and fades out before the text, as in the patient list's greeting band */
-.ho-art{position:absolute;top:0;right:0;width:62%;height:100%;-webkit-mask-image:linear-gradient(to right,transparent,#000 45%);mask-image:linear-gradient(to right,transparent,#000 45%)}
-.ho-brand,.ho-head .h1,.ho-head .sub{position:relative}
-.ho-brand{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-weight:600;letter-spacing:.04em}
+/* The art is a strip at the top right, beside the brand: it bleeds to the header's top and right edges and stops above
+   the title, so no text sits on it. Level curtains, as in the greeting band */
+.ho-top{display:grid;grid-template-columns:max-content minmax(0,1fr);column-gap:32px;margin-bottom:12px}
+.ho-art{position:relative;margin:-26px -48px -8px 0}
+.ho-art svg{position:absolute;top:0;right:0;width:min(100%,28rem);height:100%;-webkit-mask-image:linear-gradient(to right,transparent,#000 8rem);mask-image:linear-gradient(to right,transparent,#000 8rem)}
+.ho-brand{display:flex;align-items:center;gap:8px;font-weight:600;letter-spacing:.04em}
 .ho-sec{margin-top:24px}
 .ho-sec .h2{display:flex;align-items:center;gap:8px;margin:0 0 8px}
 .ho-sec .h2 .ic,.ho-goal .ic{flex:none;color:#5560D2}
@@ -516,6 +528,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
   .foot{margin-top:8px}
   .handout{border:0;padding:0;max-width:none}
   .ho-head{margin:0 0 14px;padding:16px 0 14px}
+  .ho-art{margin:-16px 0 -8px 0}
   .ho-sec{break-inside:avoid}
   .stats,.changes,.chart-wrap{break-inside:avoid}
   .band-inner,.distinct .band-inner{padding:0}
@@ -576,15 +589,22 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
     <h1 class="sr-only">Patients</h1>
     <sc-if value="{{ heroOn }}">
       <section class="greet no-print" aria-label="Summary">
-        <svg class="greet-art" viewBox="0 0 640 96" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <div class="greet-text">
+          <div class="greet-hello">{{ hero.hello }}</div>
+          <div class="greet-sub"><span class="greet-date"><span class="long">{{ hero.date }}</span><span class="short" aria-hidden="true">{{ hero.dateShort }}</span></span><sc-for list="{{ hero.facts }}" as="x"><span class="{{ x.cls }}"><span class="sr-only">. </span>{{ x.mark }}{{ x.text }}</span></sc-for><span class="sr-only">.</span></div>
+        </div>
+        <div class="greet-art" aria-hidden="true">
+        <svg viewBox="0 0 480 96" preserveAspectRatio="xMaxYMax slice" focusable="false">
           <defs>
-            <linearGradient id="greet-a" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="{{ hero.a }}" stop-opacity="{{ hero.aOp }}"></stop><stop offset=".9" stop-color="{{ hero.a }}" stop-opacity="0"></stop></linearGradient>
-            <linearGradient id="greet-b" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="{{ hero.b }}" stop-opacity="{{ hero.bOp }}"></stop><stop offset=".9" stop-color="{{ hero.b }}" stop-opacity="0"></stop></linearGradient>
+            <linearGradient id="greet-a" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="{{ hero.a }}" stop-opacity="{{ hero.aOp }}"></stop><stop offset=".85" stop-color="{{ hero.a }}" stop-opacity="0"></stop></linearGradient>
+            <linearGradient id="greet-b" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="{{ hero.b }}" stop-opacity="{{ hero.bOp }}"></stop><stop offset=".85" stop-color="{{ hero.b }}" stop-opacity="0"></stop></linearGradient>
+            <linearGradient id="greet-feather" gradientUnits="userSpaceOnUse" x1="170" y1="0" x2="290" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"></stop><stop offset="1" stop-color="#fff"></stop></linearGradient>
+            <mask id="greet-mb" maskUnits="userSpaceOnUse" x="0" y="0" width="480" height="96"><rect width="480" height="96" fill="url(#greet-feather)"></rect></mask>
           </defs>
-          <path fill="url(#greet-b)" d="M0,0 H640 V46 C580,62 520,34 450,48 C370,64 300,38 230,52 C170,64 110,50 60,58 C35,62 15,60 0,60 Z"></path>
-          <path fill="url(#greet-a)" d="M0,0 H640 V64 C570,82 500,52 420,68 C340,84 270,58 200,72 C140,84 80,70 0,78 Z"></path>
+          <path fill="url(#greet-b)" mask="url(#greet-mb)" d="{{ hero.back }}"></path>
+          <path fill="url(#greet-a)" d="{{ hero.front }}"></path>
         </svg>
-        <div class="greet-text"><div class="greet-hello">{{ hero.hello }}</div><div class="greet-sub">{{ hero.sub }}</div></div>
+        </div>
       </section>
     </sc-if>
     <div class="{{ listCls }}">
@@ -834,15 +854,21 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
     </section>
     <article class="handout" lang="{{ ho.lang }}">
       <header class="ho-head">
-        <svg class="ho-art" viewBox="0 0 640 96" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-          <defs>
-            <linearGradient id="ho-a" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#8FB0EE" stop-opacity=".55"></stop><stop offset=".9" stop-color="#8FB0EE" stop-opacity="0"></stop></linearGradient>
-            <linearGradient id="ho-b" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#B3A2EA" stop-opacity=".5"></stop><stop offset=".9" stop-color="#B3A2EA" stop-opacity="0"></stop></linearGradient>
-          </defs>
-          <path fill="url(#ho-b)" d="M0,0 H640 V46 C580,62 520,34 450,48 C370,64 300,38 230,52 C170,64 110,50 60,58 C35,62 15,60 0,60 Z"></path>
-          <path fill="url(#ho-a)" d="M0,0 H640 V64 C570,82 500,52 420,68 C340,84 270,58 200,72 C140,84 80,70 0,78 Z"></path>
-        </svg>
-        <div class="ho-brand"><img class="logo" src="favicon.svg" width="22" height="22" alt="">AURORA</div>
+        <div class="ho-top">
+          <div class="ho-brand"><img class="logo" src="favicon.svg" width="22" height="22" alt="">AURORA</div>
+          <div class="ho-art" aria-hidden="true">
+            <svg viewBox="0 0 480 60" preserveAspectRatio="xMaxYMax slice" focusable="false">
+              <defs>
+                <linearGradient id="ho-a" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#8FB0EE" stop-opacity=".65"></stop><stop offset=".85" stop-color="#8FB0EE" stop-opacity="0"></stop></linearGradient>
+                <linearGradient id="ho-b" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#B3A2EA" stop-opacity=".55"></stop><stop offset=".85" stop-color="#B3A2EA" stop-opacity="0"></stop></linearGradient>
+                <linearGradient id="ho-feather" gradientUnits="userSpaceOnUse" x1="170" y1="0" x2="290" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"></stop><stop offset="1" stop-color="#fff"></stop></linearGradient>
+                <mask id="ho-mb" maskUnits="userSpaceOnUse" x="0" y="0" width="480" height="60"><rect width="480" height="60" fill="url(#ho-feather)"></rect></mask>
+              </defs>
+              <path fill="url(#ho-b)" mask="url(#ho-mb)" d="{{ ho.art.back }}"></path>
+              <path fill="url(#ho-a)" d="{{ ho.art.front }}"></path>
+            </svg>
+          </div>
+        </div>
         <h1 class="h1">{{ ho.greet }}</h1>
         <div class="sub">{{ ho.sub }}</div>
       </header>
@@ -1649,32 +1675,46 @@ class Component extends DCLogic {
       return { title: `${DAY_FULL[wd]}, ${MONTHS_FULL[MONTHS.indexOf(mon)]} ${dd}`, rel: diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : '' };
     };
     const statusGroup = (k, rows) => ({ isStatus: true, cls: STATUS[k].cls, title: STATUS[k].label, shape: STATUS[k].shape, shape2: STATUS[k].shape2 || 'M0 0', rows });
-    const dayGroups = (rows) => [...new Set(rows.map((p) => p.dayKey))].map((k) => ({ ...dayHead(k), isDay: true, rows: rows.filter((p) => p.dayKey === k) }));
+    // A day's header counts all its visits, including any pinned above under Safety flag, so it agrees with the greeting
+    const dayGroups = (rows) => [...new Set(rows.map((p) => p.dayKey))].map((k) => ({ ...dayHead(k), isDay: true, rows: rows.filter((p) => p.dayKey === k), visits: byVisitOrder.filter((p) => p.dayKey === k).length }));
     // By next visit, safety flags still come first: a Safety flag group above the day headers, its rows carrying the visit date
     const pinned = byVisitOrder.filter((p) => p.status === 'safety').map((p) => ({ ...p, pinDate: p.dayKey || 'Not scheduled' }));
     const groups = (byStatus
       ? GROUP_ORDER.map((k) => statusGroup(k, byVisitOrder.filter((p) => p.status === k)))
       : [statusGroup('safety', pinned), ...dayGroups(byVisitOrder.filter((p) => p.status !== 'safety'))])
-      .filter((g) => g.rows.length).map((g) => ({ ...g, count: String(g.rows.length) }));
+      .filter((g) => g.rows.length).map((g) => ({ ...g, count: String(g.isDay ? g.visits : g.rows.length) }));
 
     // Greeting band (Refined look): a greeting, then today's date and the caseload in one line
     const hour = new Date().getHours();
     const countOf = (n, one) => `${n} ${one}${n === 1 ? '' : 's'}`;
     const todayN = all.filter((p) => p.dayKey && dayHead(p.dayKey).rel === 'Today').length;
     const tomorrowN = all.filter((p) => p.dayKey && dayHead(p.dayKey).rel === 'Tomorrow').length;
-    const safetyN = all.filter((p) => p.status === 'safety').length;
-    // The band's curtains follow the time of day: paler in the morning, deeper in the evening. Cool hues only.
+    // The band's curtains follow the time of day in hue and length, short and pale in the morning, longer and deeper
+    // toward evening, but never heavier: each hour's opacities keep the darkest pixel near 1.8:1 against white. Cool hues
+    // only.
     const BANDS_TOD = {
-      morning: { a: '#A9C4F3', aOp: '.7', b: '#CABEF2', bOp: '.55' },
-      afternoon: { a: '#8FB0EE', aOp: '.75', b: '#B3A2EA', bOp: '.6' },
-      evening: { a: '#6F8EE2', aOp: '.85', b: '#9682DE', bOp: '.75' }
+      morning: { a: '#A9C4F3', aOp: '1', b: '#CABEF2', bOp: '.85', front: 62, back: 44 },
+      afternoon: { a: '#8FB0EE', aOp: '.7', b: '#B3A2EA', bOp: '.6', front: 70, back: 52 },
+      evening: { a: '#6F8EE2', aOp: '.44', b: '#9682DE', bOp: '.37', front: 78, back: 58 }
     };
+    // A curtain hangs from the top to a lower edge that is level but undulates gently: an edge that rose or fell across
+    // the band would read as a trend, here where a rising line means worse
+    const SWAY = [5, -3.5, 6, -4.5, 3, -5.5, 4.5, -3, 5.5, -4, 3.5, -6];
+    const curtain = (x0, y, k) => {
+      const n = Math.round((480 - x0) / 40), step = (480 - x0) / n;
+      let d = `M${x0},0 H480 V${y}`;
+      for (let i = 1; i <= n; i++) d += ` Q${f(480 - (i - 0.5) * step)},${f(y + SWAY[(i + k) % SWAY.length])} ${f(480 - i * step)},${y}`;
+      return d + ' Z';
+    };
+    const tod = BANDS_TOD[hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening'];
     const hero = {
-      ...BANDS_TOD[hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening'],
+      ...tod, front: curtain(0, tod.front, 0), back: curtain(170, tod.back, 5),
       hello: `${hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'}, Dr. Okafor`,
-      sub: [`${DAY_FULL[DOW[TODAY.getDay()]]}, ${MONTHS_FULL[TODAY.getMonth()]} ${TODAY.getDate()}`,
-        todayN ? `${countOf(todayN, 'visit')} today` : '', tomorrowN ? `${countOf(tomorrowN, 'visit')} tomorrow` : '',
-        safetyN ? `${countOf(safetyN, 'patient')} with a safety flag` : ''].filter(Boolean).join(' · ')
+      date: `${DAY_FULL[DOW[TODAY.getDay()]]}, ${MONTHS_FULL[TODAY.getMonth()]} ${TODAY.getDate()}`,
+      dateShort: `${DOW[TODAY.getDay()]}, ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`,
+      // Visits, with the calendar icon. Safety flags aren't repeated here: their group is pinned first, just below.
+      facts: todayN || tomorrowN ? [{ cls: 'greet-fact', mark: icon('calendar'),
+        text: todayN && tomorrowN ? `${countOf(todayN, 'visit')} today, ${tomorrowN} tomorrow` : todayN ? `${countOf(todayN, 'visit')} today` : `${countOf(tomorrowN, 'visit')} tomorrow` }] : []
     };
 
     // Selected patient
@@ -2125,7 +2165,7 @@ class Component extends DCLogic {
       try { const h = new URLSearchParams((location.hash || '').replace(/^#/, '')); h.set('lang', l); history.replaceState(null, '', '#' + h.toString()); } catch (e) { /* sandboxed preview */ }
     };
     const ho = {
-      lang: hoL, t: HO,
+      lang: hoL, t: HO, art: { front: curtain(0, 40, 0), back: curtain(170, 28, 5) },
       greet: HO.greet(hoName),
       sub: HO.sub(P.visitDay),
       // Patient-specific summaries are written in English for the mock; other languages use the standard line
