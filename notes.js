@@ -102,7 +102,7 @@
     return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
   }
   const kindName = (k) => (KINDS.find(([v]) => v === k) || [k, k])[1];
-  const pageName = (key) => { const [v, view] = key.split(':'); return v === view ? VIEW_NAMES[view] || view : `${v} · ${VIEW_NAMES[view] || view}`; };
+  const pageName = (key) => { const [v, view] = key.split(':'); return v === view ? VIEW_NAMES[view] || view : `${VIEW_NAMES[view] || view} (${v})`; };
 
   /* ---------- Parts of the page a note can be pinned to ---------- */
   // Innermost first. id() tells repeated parts apart (rows, tiles, goals).
@@ -487,7 +487,7 @@
     const mine = n.uid === m.uid;
     const plusN = Object.keys(n.plus || {}).length, iPlus = !!(n.plus || {})[m.uid];
     const reps = m.replies(n.id);
-    const where = [VIEW_NAMES[n.view] || n.view, n.pname, n.anchorLabel].filter(Boolean).join(' · ');
+    const where = [VIEW_NAMES[n.view] || n.view, n.pname, n.anchorLabel].filter(Boolean).join(' › ');
     const shownHere = here(n) && !!findAnchor(n.anchor);
     const tool = (label, onclick, extra = {}) => h('button', { type: 'button', class: 'an-tool', onclick, ...extra }, label);
     return h('li', {
@@ -495,19 +495,19 @@
       onclick: (e) => { if (!e.target.closest('button, textarea, input, select, label, a')) { if (shownHere) focusNote(n.id, true); else goTo(n); } }
     },
     h('div', { class: 'an-meta' }, h('span', { class: 'an-num', 'aria-hidden': 'true' }, String(m.num.get(n.id))),
-      h('span', { class: 'an-who' }, n.name + (n.role ? ' · ' + n.role : '')), h('span', { class: 'an-when' }, ago(n.createdAt))),
-    h('div', { class: 'an-where' }, n.version === n.view ? where : `${n.version} · ${where}`, shownHere ? null : [' · ', tool('Show', () => goTo(n), { class: 'an-tool an-inline' })]),
+      h('span', { class: 'an-who' }, n.name + (n.role ? ` (${n.role})` : '')), h('span', { class: 'an-when' }, ago(n.createdAt))),
+    h('div', { class: 'an-where' }, n.version === n.view ? where : `${where} (${n.version})`, shownHere ? null : [' ', tool('Show', () => goTo(n), { class: 'an-tool an-inline' })]),
     n.kind ? h('div', { class: 'an-kind' }, kindName(n.kind)) : null,
     ui.edit === n.id ? editBox(n) : h('p', { class: 'an-text' }, n.text),
     n.resolved ? h('div', { class: 'an-where' }, `Resolved${n.resolvedBy ? ' by ' + n.resolvedBy : ''}`) : null,
     h('div', { class: 'an-tools' },
-      tool(`+1${plusN ? ' · ' + plusN : ''}`, () => act(() => store.plus(n.id, !iPlus)), { 'aria-pressed': String(iPlus), class: 'an-tool' + (iPlus ? ' on' : ''), 'aria-label': `Plus one, ${plusN} so far` }),
+      tool(`+1${plusN ? ` (${plusN})` : ''}`, () => act(() => store.plus(n.id, !iPlus)), { 'aria-pressed': String(iPlus), class: 'an-tool' + (iPlus ? ' on' : ''), 'aria-label': `Plus one, ${plusN} so far` }),
       tool('Reply', () => { ui.reply = n.id; render(true); focusIn(`[data-id="${n.id}"] .an-reply textarea`); }),
       tool(n.resolved ? 'Reopen' : 'Resolve', () => act(() => store.update(n.id, { resolved: !n.resolved, resolvedBy: n.resolved ? '' : me().name || 'someone' }))),
       mine ? tool('Edit', () => { ui.edit = n.id; render(true); focusIn(`[data-id="${n.id}"] .an-edit textarea`); }) : null,
       mine && !reps.length ? tool('Delete', () => { if (confirm('Delete this note?')) act(() => store.remove(n.id)); }) : null),
     reps.length ? h('ul', { class: 'an-replies' }, reps.map((r) => h('li', {},
-      h('div', { class: 'an-meta' }, h('span', { class: 'an-who' }, r.name + (r.role ? ' · ' + r.role : '')), h('span', { class: 'an-when' }, ago(r.createdAt))),
+      h('div', { class: 'an-meta' }, h('span', { class: 'an-who' }, r.name + (r.role ? ` (${r.role})` : '')), h('span', { class: 'an-when' }, ago(r.createdAt))),
       h('p', { class: 'an-text' }, r.text),
       r.uid === m.uid ? h('div', { class: 'an-tools' }, tool('Delete', () => { if (confirm('Delete this reply?')) act(() => store.remove(r.id)); })) : null))) : null,
     ui.reply === n.id ? replyBox(n) : null);
@@ -557,7 +557,7 @@
   function identity() {
     const who = me();
     if (who.name && !ui.me) {
-      return h('div', { class: 'an-me' }, h('span', {}, 'You: ', h('strong', {}, who.name), who.role ? ` · ${who.role}` : ''),
+      return h('div', { class: 'an-me' }, h('span', {}, 'You: ', h('strong', {}, who.name), who.role ? ` (${who.role})` : ''),
         h('button', { type: 'button', class: 'an-tool', onclick: () => { ui.me = true; render(true); focusIn('.an-me-form input'); } }, 'Change'));
     }
     const f = nameFields();
@@ -677,7 +677,7 @@
     const save = h('button', { type: 'button', class: 'an-btn' }, 'Save note');
     composer = h('div', { class: 'an-composer an-ui', role: 'dialog', 'aria-label': 'New note' },
       h('div', { class: 'an-c-title' }, 'New note'),
-      f ? f.el : h('p', { class: 'an-c-as' }, `As ${who.name}${who.role ? ' · ' + who.role : ''}`),
+      f ? f.el : h('p', { class: 'an-c-as' }, `As ${who.name}${who.role ? ` (${who.role})` : ''}`),
       h('label', { class: 'an-field' }, h('span', {}, 'About'), partIn),
       kinds, text,
       h('p', { class: 'an-c-hint' }, (status.ok ? 'Everyone with the review link can read notes.' : 'Only you can see notes saved in this browser.') + ' Please leave out patient information.'),
@@ -790,7 +790,7 @@
 .an-tool{font:400 15px/21px var(--font,system-ui,sans-serif);padding:2px 0;color:#0072B2;background:transparent;border:0;cursor:pointer}
 .an-tool:hover{text-decoration:underline}
 .an-tool.on{font-weight:600}
-.an-inline{padding:0}
+.an-inline{padding:0;margin-left:4px}
 .an-replies{list-style:none;margin:8px 0 0;padding:0 0 0 12px;border-left:2px solid #E8D896}
 .an-replies li{margin-top:6px}
 .an-reply,.an-edit{margin-top:8px}

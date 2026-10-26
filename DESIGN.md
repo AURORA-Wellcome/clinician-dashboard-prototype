@@ -66,13 +66,18 @@ Interface words are labels, headers, notes and buttons, not patient data.
 | Check-in (v3, draft) | 100, not counting the safety steps, whose wording is the protocol's |
 
 - **Flag text:** at most 4 words, starting with the signal: "Few check-ins", "Reports stopping sertraline (AI)", "PHQ-9 item 9 = 2".
-- **Note after the flag:** a muted note after "·" may add time or review status ("· not reviewed · Aug 10").
+- **Note after the flag:** a muted note after a comma may add time or review status (", not reviewed, Aug 10").
 - **When text doesn't fit,** cut words; don't shrink the text below the sizes under Type.
 
 ## Language
 
 - **American English** in everything a person reads: the interface, the patient handout, the landing page, these docs and code comments. For example: color, gray, center, behavior, labeled, license, toward, and -ize endings (summarize, prioritize).
 - **Dates and times** are US style too: see Times under Components.
+- **No middle dots (·)** anywhere in the dashboard:
+  - a note follows its text after a comma ("Safety review: moderate risk, today 9:40 AM");
+  - a value's band goes in parentheses ("20 (severe)");
+  - separate facts on one line are set apart by space, and screen readers hear a comma between them;
+  - places use ›, as in the breadcrumb ("Landing page › Headline" in the review notes).
 - **Other languages** follow their own conventions. The patient handout can print in Spanish, which uses usted, lowercase weekdays and the day before the month ("10 ago").
   - **The clinician's name:** Spanish titles show gender (Dr., Dra.), so the real handout needs each clinician's own choice of how to be named. Until then the mockup says "su terapeuta, E. Okafor".
   - **Register:** the mock check-in voice says tú. An app in tú and a clinic handout in usted is a common split, but it should be a deliberate choice (bead aurora-18y).
@@ -132,7 +137,7 @@ Two weights only, 400 and 600. Numbers always use `font-variant-numeric: tabular
 | `ai-series` | `#C67F00` | AI estimate line in charts only, never text |
 | `ai-band` | `rgba(198,127,0,.16)` | uncertainty band around the AI estimate |
 | `line-strong` | `#C5CDD4` | chart axis, severity scale track, empty check-in dots; never a border |
-| `tint` | `#EEF2F6` | neutral card behind the goals and the check-in page's signals; day headers in the caseload (distinct style); the summary point or transcript passage a link has just opened |
+| `tint` | `#EEF2F6` | neutral card behind the goals and the check-in page's signals, and the check-in page's Awaiting review panel; day headers in the caseload (distinct style); the summary point or transcript passage a link has just opened |
 | `safety-tint` | `rgba(192,39,26,.06)` | flagged Safety tile, Safety flag group band |
 | `worse-tint` | `rgba(213,94,0,.07)` | Worse than baseline group band |
 | `nodata-tint` | `rgba(118,134,146,.09)` | Too few check-ins group band |
@@ -148,7 +153,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
 - **Change:** a signed number after the value ("21 +9"), measured from the patient's own baseline. It is colored (`worse-text` or `stable-text`, weight 600) only when it is 5 or more points; otherwise muted. Don't use ▲▼ arrows: the triangle is already the worse-than-baseline status shape.
 - **Uncertainty:** "± 4", or the clipped range ("range 22–27") when the interval runs past the 0–27 scale.
 - **Caseload order:**
-  - **By next visit** (the default): one group per day, with a "Not scheduled" group last. Each day has a full-width header giving the full date ("Thursday, August 13"), "Today" or "Tomorrow" where it applies, and the number of visits that day, counting any pinned above under Safety flag, so it agrees with the greeting band. The date is in the header, so the rows show only the time, under the column heading "Time". Safety-flagged patients come first, in a Safety flag group pinned above the day headers. No day header covers those rows, so each of them shows its visit date above the time.
+  - **By next visit** (the default): one group per day, with a "Not scheduled" group last. Each day has a full-width header giving the full date, after "Today" or "Tomorrow" where it applies ("Tomorrow, Thursday, August 13"), and the number of visits that day, counting any pinned above under Safety flag, so it agrees with the greeting band. The date is in the header, so the rows show only the time, under the column heading "Time". Safety-flagged patients come first, in a Safety flag group pinned above the day headers. No day header covers those rows, so each of them shows its visit date above the time.
   - Day headers are neutral, because color means status. In the distinct style they sit on the neutral `tint`, with no edge.
   - **Grouped by status:** Safety flag, Worse than baseline, Too few check-ins, Stable or better, with patients in visit order within each group.
 - **Caseload columns:** the column you look patients up by comes first, then the rest in order of importance.
@@ -180,12 +185,12 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - A solid `accent` button is reserved for a page's single primary action; the current pages have none.
   - No outlined buttons.
   - Caseload rows have no action buttons: the whole row opens the patient.
-- **Breadcrumbs:** the top bar shows where you are: "Patients › M. Delgado › Patient handout". Pages above this one are links in `accent`, like every other link, with an underline on hover; the current page is `ink`, weight 600. Separators are a muted ›. No back-arrow icon: it would double up with the separators, and the link color is the standard cue.
+- **Breadcrumbs:** the top bar shows where you are: "Patients › M. Delgado › Patient handout". Pages above this one are links in `accent`, like every other link, with an underline on hover; the current page is `ink`, weight 600. Separators are a muted ›. On phones (below 32rem) the top bar wraps to two rows, the brand and account and then the breadcrumb, which drops the current page when the page has a visible title saying it. No back-arrow icon: it would double up with the separators, and the link color is the standard cue.
 - **Links:** anything clickable looks clickable and is reachable with Tab. Links that act on the page, rather than going to an address, are buttons styled as links.
 - **Safety flag:**
   - It is the first tile on the patient page, with the marker and text in `safety`.
   - It is the first group in the caseload in either order: grouped by status, or pinned above the day headers by next visit.
-  - It shows the criterion that raised it, its review status and the date: "Safety review: moderate risk · today 9:40 AM", "PHQ-9 item 9 = 2 · not reviewed · Aug 10". Clinicians want to know the thresholds behind an output (Rai et al. 2025, doi:10.2196/78757).
+  - It shows the criterion that raised it, its review status and the date: "Safety review: moderate risk, today 9:40 AM", "PHQ-9 item 9 = 2, not reviewed, Aug 10". Clinicians want to know the thresholds behind an output (Rai et al. 2025, doi:10.2196/78757).
   - Its notes, such as review status, are `text-md`: safety wording is never in the smallest size.
   - The footer, also `text-md`, says that item 9 answers appear without study-team review.
   - The wording follows the IRB safety text.
@@ -343,24 +348,24 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
   - What changed items that cite a check-in, which open it at the summary point that cites the passage.
 - **Moving around:** the breadcrumb reads "Patients › M. Delgado › Check-in, Mon, Aug 10". Previous and Next step through the patient's check-ins. They stay in the same place on every check-in, and are disabled, not removed, at either end.
 - **Summary band:**
-  - the title ("Check-in · Mon, Aug 10, 7:42 PM"), then the patient, the length and the language;
-  - the safety block (below);
-  - the estimate line: the patient's same-day PHQ-9 first, then this check-in's estimate, the trend that day and the baseline, each AI value labeled;
-  - a note under it saying which number counts ("The patient's status is based on the trend, not single check-ins"), and anything in the recording that weakens this estimate ("Less certain than usual: the patient's face was in view 40% of the time", "No estimate: the check-in ended after 1 minute").
+  - the title ("Check-in on Monday, August 10"), then the patient, the time, the length and the language, set apart by space;
+  - below them, two columns on the same grid as the sections underneath: the safety block on the left in every state, and the estimates on the right, so the estimates stay in place as the clinician steps from one check-in to the next;
+  - the estimates as a small table: the patient's same-day PHQ-9 first, then this check-in's estimate, the trend that day with its uncertainty, and the baseline. Labels and sources are muted, and all four values are the same size (`text-lg`, 600), so a single reading never outranks the trend. There is no scale or band drawn around them: "inside the band" would read as "consistent", and the estimate's error hasn't been measured;
+  - a note under them saying which number counts ("The patient's status is based on the trend, not single check-ins"), and anything in the recording that weakens this estimate ("Less certain than usual: the patient's face was in view 40% of the time", "No estimate: the check-in ended after 1 minute").
 - **Safety block,** always in the same place, in one of four states:
   - **Reviewed:**
-    - the review record: "Safety review: moderate risk", who reviewed it and when, and what was found, worded only as far as the record supports ("no plan or intent mentioned");
+    - the review record: "Safety review: moderate risk", then who reviewed it and when on a muted line, as on the patient page's tile, and what was found, worded only as far as the record supports ("no plan or intent mentioned");
     - the patient's words;
     - what was done ("Crisis contacts were shown during the check-in. The study team has not contacted the patient");
     - then the protocol's response steps.
   - **PHQ-9 item 9 above 0:** the answer and its frequency, "The study team doesn't review item 9 answers", item 9 at each PHQ-9, whether the conversation was flagged, and the steps.
-  - **Awaiting review:** a neutral panel with the shield icon, not the safety color, because no one has judged the risk yet. It gives the time the review is due and says "Until then, no email doesn't mean no risk". The summary and transcript are held until the review, so the page never becomes a way around it. Whether a pending review should also show on the patient page and caseload is still open; for now, the mockup shows it only on this page.
+  - **Awaiting review:** a neutral panel on `tint` with the shield icon, not the safety color, because no one has judged the risk yet. It gives the time the review is due and says "Until then, no email doesn't mean no risk". The summary and transcript are held until the review, so the page never becomes a way around it; What came up says so, once, and the transcript section is left out. Whether a pending review should also show on the patient page and caseload is still open; for now, the mockup shows it only on this page.
   - **Nothing flagged:** "Nothing in this check-in was flagged for study-team review. The AI can miss risk", in muted text, never "No risk". A check-in that ended early says so.
   - A positive item 9 the same day always shows, whatever else the block holds.
   - **Steps,** until the IRB safety text exists: example wording, with the timing and the site's urgent-risk number left as blanks ("[time set in the protocol]") rather than guessed from the calendar, so they can't read as advice.
-- **What came up:** the AI summary, labeled once in the heading. Each point has its topic icon, one sentence, and "New" or "Life event" where they apply. Under it, the patient's words in quotation marks, at body size in `ink`, because the patient's account comes first; an AI translation when the check-in wasn't in English; and a "transcript" link to the passage. The AI's own sentences don't name third parties.
-- **Signals** (right column, on `tint`): symptoms that differ from the patient's usual (AI; "None differ from usual" when none do), and phone sensing as that week's daily average against the usual level, with a link to the weekly trend. A single day against "usual" would invite over-reading.
-- **Transcript:** collapsed under "Show transcript", which becomes "Hide transcript" in the same place. Opening it is logged. Speakers are "AURORA" and "Patient". A reviewed flagged passage is marked ■ Flagged in `safety`, and lines not in English carry their AI translation.
+- **What came up:** the AI summary, labeled once in the heading. Each point has its topic icon, one sentence, and a muted "New", "Life event" or "New life event" where they apply. Under it, the patient's words in quotation marks, at body size in `ink`, because the patient's account comes first, with a "transcript" link to the passage set off by space (on the topic's line when there are no quoted words); then, on its own line, an AI translation when the check-in wasn't in English. The AI's own sentences don't name third parties.
+- **Signals** (right column, on `tint`): symptoms that differ from the patient's usual (AI; "None differ from usual" when none do), and phone sensing as that week's daily average against the usual level, in aligned columns, with a link to the weekly trend. A single day against "usual" would invite over-reading.
+- **Transcript** (left column, under What came up, beside the links that open it): collapsed under "Show transcript", which becomes "Hide transcript" in the same place. Opening it is logged. Speakers are "AURORA" and "Patient". A reviewed flagged passage is marked ■ Flagged in `safety`, and lines not in English carry their AI translation.
 - **Footer:** the dashboard isn't monitored in real time; the study team reviews flagged check-ins within one business day and emails you if the risk is urgent; AI summaries and translations can be wrong, and the patient's own account comes first.
 - **Not printed** with the session brief, and not part of the patient handout.
 
