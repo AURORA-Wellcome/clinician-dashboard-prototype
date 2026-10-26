@@ -8,11 +8,12 @@ This public link is for viewing. To leave notes the group can see, you need the 
 
 ## What's in the latest version
 
-v3 has four pages:
+v3 has these pages:
 - **Patients:** the caseload, grouped by status, with safety flags always first. Where a site has visit dates, it can also run by next visit. Resting the pointer on a row shows a quick summary.
 - **Patient page:** how the patient is doing and what has changed. The patient's own PHQ-9 sits beside the AI estimate, the trend chart can be read day by day, and goals are in the patient's words. Sleep, activity and contact open on demand. The page prints as a one-page session brief.
 - **Check-in** (draft): what happened at one check-in, and how much weight to give it. After a safety flag, the page also shows what the protocol asks. The IRB has yet to decide what clinicians may see of the conversations.
-- **Patient handout:** a plain-language page to go through with the patient, then print, in the patient's language. A. Fernández's is in Spanish.
+- **Patient handout:** a plain-language page to go through with the patient, then print, in the patient's language. A. Fernández's is in Spanish. The clinician can edit the parts written by AI first, or print it as it is.
+- **Site PI page and Site settings** (draft): for a site's lead, which of the site's clinicians need a call or support, and what the site sets for everyone, such as its crisis line.
 
 The landing page links to v2 and v1 for comparison. What changed in each version is in [CHANGELOG.md](CHANGELOG.md).
 

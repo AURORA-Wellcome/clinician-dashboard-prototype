@@ -16,6 +16,8 @@ The rules every mockup screen follows. Give this file, and the reference screens
    - **Patient page:** *how is this patient doing, and what has changed?* This page merges v1's patient detail and session prep, following the group's top priority on July 16, "one simple page". It prints as the session brief.
    - **Patient handout:** *what would the patient want to know?* Plain language, no model internals.
    - **Check-in** (v3, draft): *what happened at this check-in, and how much weight should I give it?* It is detail on demand: nothing on it is needed for the 3-minute workflow the protocol describes.
+   - **Site PI page** (v3, draft): *which of my site's clinicians need a call or support?*
+   - **Site settings** (v3, draft): *what does the site set for everyone?*
    - Anything that doesn't serve the page's question moves elsewhere.
 2. **Say it once.** Units, scales and rules appear once per page, in an ⓘ tooltip or the footer, never on each row or header. AI labeling is the exception and follows the source rule under Components.
 3. **Color means status, nothing else.** All data is in neutral ink. Color appears only for:
@@ -65,6 +67,7 @@ Interface words are labels, headers, notes and buttons, not patient data.
 | Patient page | 80 |
 | Patient handout | Plain language for the patient; no limit, no model internals |
 | Check-in (v3, draft) | 100, not counting the safety steps, whose wording is the protocol's |
+| Site PI page (v3, draft) | 80 |
 
 - **Flag text:** at most 4 words, starting with the signal: "Few check-ins", "Reports stopping sertraline (AI)", "PHQ-9 item 9 = 2".
 - **Note after the flag:** a muted note after a comma may add time or review status (", not reviewed, Aug 10").
@@ -391,7 +394,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
   - How your weeks have gone: a simple line of the patient's own PHQ-9 answers, from "easier" to "harder", not the AI estimate;
   - Things to talk about at the next visit, with a line to add their own;
   - Your next step, with lines to fill in together;
-  - If things get hard: the site's crisis line, and 988 at US sites only (example wording until the protocol sets it). Each site supplies its line in each language as a whole phrase, because Spanish changes the words around a number ("al 024", "a la línea…");
+  - If things get hard: the site's crisis line, from the site settings, and 988 at US sites only (example wording until the protocol sets it). Each site supplies its line in each language as a whole phrase, because Spanish changes the words around a number ("al 024", "a la línea…");
   - About your check-ins (draft wording until the consent form sets it). It doesn't remind patients that they can stop: the consent form covers that, and a reminder on every printout was felt unhelpful (review note, October 26; bead aurora-ubn);
   - a privacy line.
 - **Printout rules.** The protocol and consent forms still need to describe the handout (bead aurora-ubn).
@@ -401,6 +404,26 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
   - Nothing that reads as blame: "You did 9 of 12 check-ins", not "you missed 3".
   - A privacy line: "This page is about your care. Keep it somewhere private."
 - **Print:** clear print at 14 pt, on two pages at most. The clinician's panel and the draft labels don't print.
+
+**Site PI page** *(draft, from October 26)*. `#view=site`. The engagement plan's monitoring, made visible to the site PI: *which of my site's clinicians need a call or support?*
+- **Top:** the site; its study clinicians, and how many have the dashboard; patients enrolled; and when the quarterly group case consultation is due.
+- **Clinicians:** one row each, from both groups.
+  - Enrollment (weeks since randomization, patients) shows for everyone, because recruitment is the same in both arms.
+  - Dashboard use (sessions per patient and discussions recorded, last 4 weeks) shows only for clinicians with the dashboard; the others show a dash.
+  - **Step due:** where the engagement plan sets one, worded as the plan's step, not as advice: "No patients by week 4, the plan asks for a call from you or a champion"; "2 off-track flags unopened for over a week, the facilitator follows up".
+  - Clinicians with a step due come first, then by surname.
+- **Never on this page:** patient names, patient outcomes of any kind, or comparisons between clinicians with and without the dashboard. The plan sends differences between arms to the steering committee, and with a few clinicians per site they would mean nothing.
+- **Safety reviews:** a placeholder until the study's safety procedure is set (bead aurora-c6i).
+- In ink, without status colors, because color means a patient's status.
+- *(Mock data: Site 03, with Dr. Okafor and three other fictional clinicians.)*
+
+**Site settings** *(draft, from October 26)*. `#view=settings`, from Site settings on the PI page.
+- **Languages** for check-ins and handouts. The study team adds one once its translations are certified.
+- **Crisis line:** the sentence the handout gives under If things get hard, in each language, written whole.
+- **Number for urgent risk:** what the safety steps tell a clinician to call.
+- **Study clinicians:** the roster, which the study team keeps.
+- The mockup doesn't save, but the handout and the check-in page's safety steps use the settings until the page is reloaded, so reviewers can see what they change.
+- Each clinician's own preferences belong on a clinician settings page (bead aurora-454), set up during onboarding (bead aurora-o5n).
 
 ## Refined look *(v3, the default since 2026-10-25; under review)*
 

@@ -15,6 +15,7 @@ A link can open a specific page and settings:
 - `#view=patient&p=delgado`
 - `#view=handout&p=delgado`; `#view=handout&p=fernandez&lang=en` (v3: the handout in English for a patient whose check-ins are in Spanish)
 - `#view=checkin&p=delgado&d=2026-08-10` (v3: one check-in; without `&d=`, the patient's example or latest check-in)
+- `#view=site` (v3: the site PI page) and `#view=settings` (v3: site settings)
 - `&line=checkins` (the default), `pages`, `clinicians` or `none` sets the greeting's last line (Refined look).
 - Add `&clock=24` for 24-hour times, `&drivers=1` to open the drivers panel (v3), `&look=current` for v3's Original look, and `&hero=0` to hide the greeting band.
 - Older links' `&style=`, `&text=` and `&icons=` settings are ignored: those choices are settled.

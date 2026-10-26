@@ -475,6 +475,8 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
   .big .chart .noest{font-size:22px}
   .list.by-status,.big .list.by-status{--cols:minmax(0,1.3fr) minmax(0,1.2fr) 5rem 5rem}
   .list.by-status.no-dates,.big .list.by-status.no-dates{--cols:minmax(0,1.6fr) 5rem 5rem}
+  .list.site-list{--cols:minmax(0,1.3fr) 5rem 6.5rem 5rem}
+  .site-list .lhead > span:nth-child(5){display:none}
   .list.by-visit,.big .list.by-visit{--cols:5.5rem minmax(0,1.2fr) minmax(0,1.3fr) 5rem 5rem}
   .lrow{row-gap:2px}
   .row{padding-top:8px;padding-bottom:8px}
@@ -523,6 +525,21 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .handout .ho-edit{display:block;box-sizing:border-box;width:calc(100% + 14px);margin:-5px -7px;padding:4px 6px;font:inherit;font-size:var(--fs-lg);line-height:1.5;color:inherit;background:var(--surface);border:1px dashed var(--accent);border-radius:var(--r);resize:vertical;field-sizing:content}
 .handout .ho-edit-p{margin:1em -7px}
 .print-only{display:none}
+/* Site PI page and site settings (draft) */
+.site-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:28px}
+.site-page .h2,.set-page .h2{margin:0 0 12px}
+.site-list{--cols:minmax(150px,1.2fr) 96px 120px 84px minmax(170px,1.5fr) minmax(0,2fr)}
+.srow{min-height:44px;padding-top:8px;padding-bottom:8px}
+.srow + .srow{border-top:1px solid var(--line)}
+.cl-name,.cl-note{font-weight:600}
+.site-draft{margin-top:20px}
+.set-page{max-width:48rem}
+.set-sec{margin-top:32px}
+.set-sec .muted{margin:0 0 10px;max-width:70ch}
+.set-field{display:grid;gap:4px;margin:12px 0;font-weight:600}
+.set-input{width:min(40rem,100%);font-weight:400;line-height:1.5}
+textarea.set-input{resize:vertical}
+.set-list{margin:0;padding-left:1.2em}
 .handout{max-width:760px;margin:0 auto;padding:0 48px 32px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .handout p,.handout li{font-size:var(--fs-lg);line-height:1.5}
 .handout p{margin:0 0 10px}
@@ -615,13 +632,15 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
     <span class="brand"><img class="logo" src="favicon.svg" width="24" height="24" alt="">AURORA</span>
     <nav class="crumbs" aria-label="Breadcrumb">
       <sc-if value="{{ onList }}"><span class="cur" aria-current="page">Patients</span></sc-if>
-      <sc-if value="{{ !onList }}"><button type="button" class="crumb" onClick="{{ goList }}">Patients</button><span class="sep" aria-hidden="true">›</span></sc-if>
+      <sc-if value="{{ clinCrumb }}"><button type="button" class="crumb" onClick="{{ goList }}">Patients</button><span class="sep" aria-hidden="true">›</span></sc-if>
       <sc-if value="{{ onPatient }}"><span class="cur" aria-current="page">{{ pt.name }}</span></sc-if>
       <sc-if value="{{ onHandout }}"><button type="button" class="crumb" onClick="{{ goPatient }}">{{ pt.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">Patient handout</span></sc-if>
       <sc-if value="{{ onCheckin }}"><button type="button" class="crumb" onClick="{{ goPatient }}">{{ pt.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">{{ ci.crumb }}</span></sc-if>
+      <sc-if value="{{ onSite }}"><span class="cur" aria-current="page">{{ site.name }}</span></sc-if>
+      <sc-if value="{{ onSettings }}"><button type="button" class="crumb" onClick="{{ goSite }}">{{ site.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">Site settings</span></sc-if>
     </nav>
     <div class="who-wrap">
-      <button class="who" onClick="{{ toggleMenu }}" aria-haspopup="true" aria-expanded="{{ menuExpanded }}">Dr. E. Okafor, Site 03<span class="caret" aria-hidden="true">▾</span></button>
+      <button class="who" onClick="{{ toggleMenu }}" aria-haspopup="true" aria-expanded="{{ menuExpanded }}">{{ whoName }}<span class="caret" aria-hidden="true">▾</span></button>
       <sc-if value="{{ menuOpen }}">
         <div class="menu-bg" onClick="{{ closeMenu }}"></div>
         <div class="menu" role="dialog" aria-label="Settings">
@@ -962,7 +981,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       </section>
       <section class="ho-sec ho-help">
         <h2 class="h2">{{ ho.icons.help }}{{ ho.t.helpHead }}<span class="scaffold no-print" lang="en">Example wording until the protocol sets it</span></h2>
-        <p>{{ ho.t.helpCall }}</p>
+        <p>{{ ho.helpCall }}</p>
         <p>{{ ho.t.help988 }}</p>
       </section>
       <section class="ho-sec ho-about">
@@ -1054,6 +1073,58 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       </sc-if>
     </div>
     <p class="foot"><span>This dashboard isn’t monitored in real time. The study team reviews flagged <span class="nowrap">check-ins</span> within one business day and emails you if the risk is urgent.</span><span>AI summaries and translations can be wrong; the patient’s own account comes first. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></span></p>
+  </main>
+  </sc-if>
+
+  <!-- SITE PI PAGE (draft): which of my site's clinicians need a call or support? Counts per clinician only: no
+       patient names or outcomes, and no comparison between clinicians with and without the dashboard -->
+  <sc-if value="{{ onSite }}">
+  <main class="page site-page" data-screen-label="Site PI page">
+    <div class="site-head">
+      <div>
+        <h1 class="h1">{{ site.name }}</h1>
+        <div class="sub facts"><sc-for list="{{ site.facts }}" as="x"><span><sc-if value="{{ x.sep }}"><span class="sr-only">, </span></sc-if>{{ x.text }}</span></sc-for></div>
+      </div>
+      <div class="actions no-print"><button class="btn" onClick="{{ goSettings }}">Site settings</button></div>
+    </div>
+    <h2 class="h2">Clinicians</h2>
+    <div class="list site-list">
+      <div class="lrow lhead"><span>Clinician</span><span>Dashboard</span><span>In the study</span><span>Patients</span><span>Dashboard use, last 4 weeks</span><span>Step due</span></div>
+      <sc-for list="{{ site.rows }}" as="c">
+        <div class="lrow srow"><span class="cl-name">{{ c.name }}</span><span>{{ c.dash }}</span><span class="num">{{ c.weeks }}</span><span class="num">{{ c.patients }}</span><span class="{{ c.useCls }}">{{ c.use }}</span><span><sc-if value="{{ c.note }}"><span class="cl-note">{{ c.note }}</span><span class="muted">{{ c.noteTail }}</span></sc-if></span></div>
+      </sc-for>
+    </div>
+    <p class="scaffold-note no-print site-draft">Draft: safety reviews at this site will appear here once the study’s safety procedure is set.</p>
+    <p class="foot"><span>Counts come from the dashboard’s logs and the study’s enrollment records. Steps follow the clinician engagement plan.</span><span>This page shows no patient names or outcomes, and doesn’t compare clinicians with and without the dashboard.</span></p>
+  </main>
+  </sc-if>
+
+  <!-- SITE SETTINGS (draft): what the site sets for everyone. A mockup: nothing is saved, but the handout and the
+       check-in page's safety steps use these while the page is open -->
+  <sc-if value="{{ onSettings }}">
+  <main class="page set-page" data-screen-label="Site settings">
+    <h1 class="h1">Site settings</h1>
+    <p class="scaffold-note no-print">Mockup: changes aren’t saved, but the patient handout and the check-in page use them until you reload.</p>
+    <section class="set-sec">
+      <h2 class="h2">Languages</h2>
+      <p class="muted">For check-ins and patient handouts. The study team adds a language once its translations are certified.</p>
+      <ul class="set-list"><sc-for list="{{ sset.langs }}" as="l"><li>{{ l }}</li></sc-for></ul>
+    </section>
+    <section class="set-sec">
+      <h2 class="h2">Crisis line</h2>
+      <p class="muted">The sentence every patient handout gives under “If things get hard”, in each language. Write each one whole: the words around a number change with the language.</p>
+      <sc-for list="{{ sset.crisis }}" as="c"><label class="set-field"><span>{{ c.label }}</span><textarea class="ho-input set-input" rows="2" value="{{ c.value }}" onChange="{{ c.set }}"></textarea></label></sc-for>
+    </section>
+    <section class="set-sec">
+      <h2 class="h2">Number for urgent risk</h2>
+      <p class="muted">What the safety steps tell a clinician to call when the study team finds urgent risk.</p>
+      <label class="set-field"><span>Number or service</span><input type="text" class="ho-input set-input" placeholder="[the site’s number for urgent risk]" value="{{ sset.urgent }}" onChange="{{ sset.setUrgent }}"></label>
+    </section>
+    <section class="set-sec">
+      <h2 class="h2">Study clinicians</h2>
+      <p class="muted">The study team keeps this list. Ask them to add or remove a clinician.</p>
+      <ul class="set-list"><sc-for list="{{ sset.roster }}" as="r"><li>{{ r }}</li></sc-for></ul>
+    </section>
   </main>
   </sc-if>
 
@@ -1302,6 +1373,17 @@ const checkinOn = (p, d) => {
   return (Math.abs(Math.sin((d + 1) * 12.9898 + seedOf(p) * 78.233)) * 43758.5453) % 1 < cn / cd ? 'completed' : 'missed';
 };
 const startDay = (p) => Math.max(0, WEEKS.length - 1 - p.weeksIn) * 7;
+// Site PI page (draft, mock): Site 03's study clinicians, with and without the dashboard. Dr. Okafor's patients are
+// the caseload's twelve.
+const SITE = {
+  name: 'Site 03', pi: 'Dr. L. Ramos', consultDue: 'September 30', langs: ['en', 'es'],
+  clinicians: [
+    { name: 'Dr. E. Okafor', dash: true, weeks: 14, patients: 12, sessions: 3.4, discussions: 9, flagsWaiting: 0 },
+    { name: 'Dr. J. Lindqvist', dash: true, weeks: 9, patients: 6, sessions: 0.8, discussions: 2, flagsWaiting: 2 },
+    { name: 'Dr. S. Adeyemi', dash: false, weeks: 7, patients: 4 },
+    { name: 'Dr. K. Morales', dash: false, weeks: 4, patients: 0 }
+  ]
+};
 // Past clinic visits, for the trend chart (mock): the patient's usual slot, counting back from the next visit to when
 // they joined, weekly, or every 2 weeks when the next visit is a week or more away. A patient with no visit scheduled
 // last came 16 days ago, every 2 weeks before that.
@@ -1547,7 +1629,7 @@ const HO_TEXT = {
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {} };
 
   componentDidMount() {
     const o = {};
@@ -1557,7 +1639,7 @@ class Component extends DCLogic {
     this.readHash = () => {
       const h = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
       const r = {};
-      if (['list', 'patient', 'handout', 'checkin'].includes(h.get('view'))) r.view = h.get('view');
+      if (['list', 'patient', 'handout', 'checkin', 'site', 'settings'].includes(h.get('view'))) r.view = h.get('view');
       if (PATIENTS.some((p) => p.id === h.get('p'))) r.pid = h.get('p');
       if (h.get('d')) r.cday = h.get('d');
       if (['status', 'visit'].includes(h.get('order'))) r.order = h.get('order');
@@ -2141,10 +2223,11 @@ class Component extends DCLogic {
     const openPassage = (at) => { this.scrollSel = '#ci-tx .hl'; this.setState({ tx: true, pAt: at }); };
     // Safety: the response steps are the protocol's, not the AI's. Until the IRB safety text exists they are example
     // wording, with the timing and the site's number left blank rather than guessed.
+    const urgentNum = (s.siteSet || {}).urgent || '[the site’s number for urgent risk]';
     const stepsFor = (selfHarm) => [
       `By [time set in the protocol], ask about thoughts of death${selfHarm ? ' or self-harm' : ''}, any plan or intent, and access to means.`,
       'Go over the safety plan with the patient, or make one together.',
-      'Worried before then? Call [the site’s number for urgent risk].'
+      `Worried before then? Call ${urgentNum}.`
     ];
     const known9 = P.item9.filter((v) => v != null);
     const run9 = (() => { let k = 0; for (let j = known9.length - 1; j >= 0 && known9[j] > 0; j--) k++; return k; })();
@@ -2168,7 +2251,7 @@ class Component extends DCLogic {
       lines: [{ text: `The AI flagged part of this check-in. Review due by ${shortDate(dueDay)}, ${tm(cn.time)}.`, cls: '' },
         { text: 'Until then, no email doesn’t mean no risk.', cls: '' }, ...i9Also],
       hasQuote: false, after: [],
-      hasSteps: true, steps: ['If you see the patient before the review: [step set in the protocol].', 'Worried before then? Call [the site’s number for urgent risk].']
+      hasSteps: true, steps: ['If you see the patient before the review: [step set in the protocol].', `Worried before then? Call ${urgentNum}.`]
     } : i9V > 0 ? {
       cls: 'ci-safety flagged', hasHead: true, headCls: 'ci-safety-head flag-safety', marker: true, iconEl: null, head: `PHQ-9 item 9 = ${i9V}`, headNote: I9_WORDS[i9V], meta: '',
       lines: [{ text: 'The study team doesn’t review item 9 answers. Crisis contacts were shown automatically. No one from the study has contacted the patient.', cls: '' },
@@ -2314,7 +2397,33 @@ class Component extends DCLogic {
         draft: `Draft ${HO_TEXT[hoLangs[0]].label} until the study’s translators write it`
       },
       name: s.hoName || '', setName: (e) => this.setState({ hoName: e.target.value }),
-      icons: { sun: icon('sun', 20), talk: icon('message-square', 20), next: icon('pencil', 20), help: icon('phone', 20) }
+      icons: { sun: icon('sun', 20), talk: icon('message-square', 20), next: icon('pencil', 20), help: icon('phone', 20) },
+      // The site's crisis line, from the site settings once a site has written its own
+      helpCall: (s.siteSet || {})[`crisis_${hoL}`] || HO.helpCall
+    };
+
+    // Site PI page (draft): the engagement plan's steps for each clinician, those with a step due first
+    const surname = (n) => n.replace(/^Dr\. \S+ /, '');
+    const siteRows = SITE.clinicians.map((c) => {
+      const note = c.patients === 0 && c.weeks >= 4 ? ['No patients by week 4', ', the plan asks for a call from you or a champion']
+        : c.flagsWaiting ? [`${countOf(c.flagsWaiting, 'off-track flag')} unopened for over a week`, ', the facilitator follows up'] : null;
+      return { name: c.name, dash: c.dash ? 'Yes' : 'No', weeks: `${c.weeks} weeks`, patients: String(c.patients), due: !!note,
+        use: c.dash ? `${c.sessions.toFixed(1)} sessions a patient, ${countOf(c.discussions, 'discussion')}` : '—', useCls: c.dash ? '' : 'muted',
+        note: note ? note[0] : '', noteTail: note ? note[1] : '' };
+    }).sort((a, b) => (b.due - a.due) || surname(a.name).localeCompare(surname(b.name)));
+    const site = {
+      name: SITE.name, rows: siteRows,
+      facts: [`${countOf(SITE.clinicians.length, 'study clinician')}, ${SITE.clinicians.filter((c) => c.dash).length} with the dashboard`,
+        `${SITE.clinicians.reduce((a, c) => a + c.patients, 0)} patients enrolled`, `Group case consultation due by ${SITE.consultDue}`].map((text, i) => ({ text, sep: i > 0 }))
+    };
+    // Site settings (draft): kept for this session only
+    const ss = s.siteSet || {};
+    const setSite = (k) => (e) => { const v = e.target.value; this.setState((st) => ({ siteSet: { ...(st.siteSet || {}), [k]: v } })); };
+    const sset = {
+      langs: SITE.langs.map((l) => HO_TEXT[l].label),
+      crisis: SITE.langs.map((l) => ({ label: HO_TEXT[l].label, value: ss[`crisis_${l}`] != null ? ss[`crisis_${l}`] : HO_TEXT[l].helpCall, set: setSite(`crisis_${l}`) })),
+      urgent: ss.urgent || '', setUrgent: setSite('urgent'),
+      roster: SITE.clinicians.map((c) => `${c.name}${c.dash ? ', with the dashboard' : ''}`)
     };
 
     // ⓘ tips: open at once on hover or keyboard focus; a click or tap keeps one open until a second click, Escape or a click elsewhere
@@ -2358,11 +2467,16 @@ class Component extends DCLogic {
     const tab = (label, on, pick) => ({ label, cls: on ? 'on' : '', pick });
     return {
       onList: s.view === 'list', onPatient: s.view === 'patient', onHandout: s.view === 'handout', onCheckin: s.view === 'checkin',
+      onSite: s.view === 'site', onSettings: s.view === 'settings', clinCrumb: !['list', 'site', 'settings'].includes(s.view), site, sset,
+      whoName: ['site', 'settings'].includes(s.view) ? `${SITE.pi}, site PI, ${SITE.name}` : 'Dr. E. Okafor, Site 03',
+      goSite: () => this.go({ view: 'site' }), goSettings: () => this.go({ view: 'settings' }),
       viewTabs: [
         tab('Patients', s.view === 'list', () => this.go({ view: 'list' })),
         tab('Patient page', s.view === 'patient', () => this.go({ view: 'patient' })),
         tab('Check-in', s.view === 'checkin', () => this.go({ view: 'checkin', cday: null })),
-        tab('Handout', s.view === 'handout', () => this.go({ view: 'handout' }))
+        tab('Handout', s.view === 'handout', () => this.go({ view: 'handout' })),
+        tab('Site PI', s.view === 'site', () => this.go({ view: 'site' })),
+        tab('Site settings', s.view === 'settings', () => this.go({ view: 'settings' }))
       ],
       ci,
       exTabs: EXAMPLES.map((e) => tab(e.label, s.pid === e.pid && s.cday === e.day, () => this.go({ view: 'checkin', pid: e.pid, cday: e.day }))),

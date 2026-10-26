@@ -16,7 +16,7 @@
   };
   const SDK = 'https://www.gstatic.com/firebasejs/13.1.0/';
   const PAGE_FILES = { v2: 'AURORA%20Dashboard%20v2.dc.html', v3: 'AURORA%20Dashboard%20v3.dc.html', landing: 'index.html' };
-  const VIEW_NAMES = { list: 'Patients list', patient: 'Patient page', handout: 'Patient handout', checkin: 'Check-in', landing: 'Landing page' };
+  const VIEW_NAMES = { list: 'Patients list', patient: 'Patient page', handout: 'Patient handout', checkin: 'Check-in', site: 'Site PI page', settings: 'Site settings', landing: 'Landing page' };
   const KINDS = [['idea', 'Idea'], ['problem', 'Problem'], ['question', 'Question'], ['like', 'Like']];
   const ROLES = ['Clinician', 'Supervisor', 'Researcher', 'Lived experience', 'Technology team', 'Other'];
   // Questions for the clinician working group (v3), in the panel's Questions tab. An answer is saved as a note of kind
@@ -67,7 +67,10 @@
       options: [['no', 'No, just easier and harder, as now'], ['yes', 'Yes, show the scores'], ['choose', 'Let me choose for each patient']] },
     { id: 'ci-see', view: 'checkin', part: 'ci-came', short: 'What clinicians see of check-ins', show: { view: 'checkin', p: 'delgado', d: '2026-08-10' },
       title: 'What should you be able to see of a check-in conversation? This also depends on the consent form.',
-      options: [['summary', 'An AI summary only'], ['quotes', 'The summary and the patient’s own words'], ['all', 'Those and the full transcript, collapsed, as now']] }
+      options: [['summary', 'An AI summary only'], ['quotes', 'The summary and the patient’s own words'], ['all', 'Those and the full transcript, collapsed, as now']] },
+    { id: 'site-detail', view: 'site', part: 'site-list', short: 'What a site PI sees', show: { view: 'site' },
+      title: 'What should a site PI see about the site’s clinicians?',
+      options: [['each', 'Each clinician’s enrollment and dashboard use, as now'], ['enroll', 'Each clinician’s enrollment, and dashboard use for the site as a whole'], ['totals', 'Site totals only']] }
   ];
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const DEFAULT_STATE = { view: 'list', pid: 'delgado', order: 'visit', distinct: true, big: true, icons: true, clock24: false, drivers: false, refined: false, hero: true, dates: true, cday: null };
@@ -158,6 +161,12 @@
   // Innermost first. id() tells repeated parts apart (rows, tiles, goals).
   const SECTIONS = [
     { k: 'facts', sel: '.modal', label: () => 'Model Facts' },
+    // v3 site PI page and site settings (before the caseload's list parts, which share the .list class)
+    { k: 'site-row', sel: '.site-list > .srow', id: (el) => clean(el.querySelector('.cl-name')), label: (id) => `Clinician: ${id}` },
+    { k: 'site-cols', sel: '.site-list > .lhead', label: () => 'Clinicians list headings' },
+    { k: 'site-list', sel: '.site-list', label: () => 'Clinicians list' },
+    { k: 'site-head', sel: '.site-head', label: () => 'Site heading' },
+    { k: 'set-sec', sel: '.set-sec', id: (el) => clean(el.querySelector('.h2')), label: (id) => `Settings: ${id}` },
     { k: 'row', sel: '.list > .row', id: (el) => clean(el.querySelector('.pt-name')), label: (id) => `Row: ${id}` },
     { k: 'group', sel: '.list > .grp', id: (el) => without(el, '.count, .rel'), label: (id) => `Group: ${id}` },
     { k: 'columns', sel: '.list > .lhead', label: () => 'Column headings' },
@@ -266,7 +275,7 @@
   const here = (n) => n.pageKey === pageKey() && (page.view === 'list' || !n.pid || n.pid === page.pid)
     && (page.view !== 'checkin' || !n.ctx || !n.ctx.day || n.ctx.day === page.cday);
   function patientName() {
-    if (page.view === 'list') return '';
+    if (['list', 'site', 'settings'].includes(page.view)) return '';
     const parts = [...document.querySelectorAll('#dc-root .crumbs .crumb, #dc-root .crumbs .cur')].map(clean);
     return parts[1] || '';
   }
@@ -274,7 +283,7 @@
   const handoutLang = () => { const a = page.view === 'handout' && document.querySelector('#dc-root .handout'); return (a && a.getAttribute('lang')) || null; };
   function contextNow() {
     return {
-      version: VERSION, view: page.view, pid: page.view === 'list' || STATIC ? null : page.pid, pname: STATIC ? '' : patientName(), pageKey: pageKey(),
+      version: VERSION, view: page.view, pid: ['list', 'site', 'settings'].includes(page.view) || STATIC ? null : page.pid, pname: STATIC ? '' : patientName(), pageKey: pageKey(),
       commit: BUILD.commit, built: BUILD.built,
       ctx: STATIC ? {} : { order: page.order, dates: page.dates !== false, line: page.greetLine || '', style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang() }
     };
