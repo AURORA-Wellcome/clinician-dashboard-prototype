@@ -517,6 +517,12 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .ho-langs legend{margin:0 0 4px;padding:0;font-weight:600}
 .ho-langs .ho-check{display:inline-flex;margin-right:24px}
 .ho-prep .muted{margin:4px 0 14px}
+.ho-actions{display:flex;flex-wrap:wrap;gap:8px}
+.ho-trans{max-width:760px;margin:0 auto 12px}
+/* Editing the handout's AI-written lines in place, on screen only; the printout uses their text */
+.handout .ho-edit{display:block;box-sizing:border-box;width:calc(100% + 14px);margin:-5px -7px;padding:4px 6px;font:inherit;font-size:var(--fs-lg);line-height:1.5;color:inherit;background:var(--surface);border:1px dashed var(--accent);border-radius:var(--r);resize:vertical;field-sizing:content}
+.handout .ho-edit-p{margin:1em -7px}
+.print-only{display:none}
 .handout{max-width:760px;margin:0 auto;padding:0 48px 32px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .handout p,.handout li{font-size:var(--fs-lg);line-height:1.5}
 .handout p{margin:0 0 10px}
@@ -554,6 +560,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
   /* The patient page prints as the one-page session brief */
   :root{--fs-sm:10.5px;--lh-sm:14px;--fs-md:12px;--lh-md:17px;--fs-lg:14px;--lh-lg:19px;--fs-xl:22px;--lh-xl:26px}
   .no-print{display:none!important}
+  .print-only{display:revert}
   body{background:#fff}
   .page{max-width:none;padding:0}
   .stats{margin-top:12px}
@@ -892,9 +899,11 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       </sc-if>
       <div class="ho-field"><span>Things to talk about</span></div>
       <sc-for list="{{ ho.talk }}" as="t"><label class="ho-check"><input type="checkbox" checked="{{ t.on }}" onChange="{{ t.toggle }}"> {{ t.text }}</label></sc-for>
-      <p class="muted">Untick anything the patient wouldn’t want on paper. Read the handout through before printing: parts of it are written by AI.</p>
-      <button class="btn" onClick="{{ doPrint }}">{{ printIcon }}Print</button>
+      <p class="muted">Untick anything the patient wouldn’t want on paper. Read the handout through before printing: parts of it are written by AI. You can edit them, or print it as it is.</p>
+      <sc-if value="{{ ho.editNote }}"><p class="muted">{{ ho.editNote }}<sc-if value="{{ ho.edited }}"> <button type="button" class="linkbtn" onClick="{{ ho.resetEdits }}">Restore the AI wording</button></sc-if></p></sc-if>
+      <div class="ho-actions"><sc-if value="{{ ho.canEdit }}"><button class="btn" aria-pressed="{{ ho.editPressed }}" onClick="{{ ho.toggleEdit }}">{{ ho.editLabel }}</button></sc-if><button class="btn" onClick="{{ doPrint }}">{{ printIcon }}Print</button></div>
     </section>
+    <sc-if value="{{ ho.transNote }}"><p class="scaffold-note no-print ho-trans">{{ ho.transNote }}</p></sc-if>
     <article class="handout" lang="{{ ho.lang }}">
       <header class="ho-head">
         <div class="ho-top">
@@ -915,10 +924,10 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
         <h1 class="h1">{{ ho.greet }}</h1>
         <div class="sub">{{ ho.sub }}</div>
       </header>
-      <sc-for list="{{ ho.paras }}" as="para"><p class="ho-lead">{{ para }}</p></sc-for>
+      <sc-for list="{{ ho.paras }}" as="para"><sc-if value="{{ ho.editing }}"><textarea class="ho-edit ho-edit-p no-print" rows="{{ para.rows }}" aria-label="{{ para.label }}" value="{{ para.text }}" onChange="{{ para.set }}"></textarea><p class="ho-lead print-only">{{ para.text }}</p></sc-if><sc-if value="{{ !ho.editing }}"><p class="ho-lead">{{ para.text }}</p></sc-if></sc-for>
       <section class="ho-sec ho-well">
         <h2 class="h2">{{ ho.icons.sun }}{{ ho.t.wellHead }}</h2>
-        <ul><sc-for list="{{ ho.well }}" as="w"><li>{{ w }}</li></sc-for></ul>
+        <ul><sc-for list="{{ ho.well }}" as="w"><li><sc-if value="{{ ho.editing }}"><textarea class="ho-edit no-print" rows="{{ w.rows }}" aria-label="{{ w.label }}" value="{{ w.text }}" onChange="{{ w.set }}"></textarea><span class="print-only">{{ w.text }}</span></sc-if><sc-if value="{{ !ho.editing }}">{{ w.text }}</sc-if></li></sc-for></ul>
       </section>
       <sc-if value="{{ ho.hasGoals }}">
         <section class="ho-sec">
@@ -940,7 +949,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       </sc-if>
       <section class="ho-sec ho-talk">
         <h2 class="h2">{{ ho.icons.talk }}{{ ho.talkHead }}</h2>
-        <ul><sc-for list="{{ ho.talkOn }}" as="t"><li>{{ t }}</li></sc-for></ul>
+        <ul><sc-for list="{{ ho.talkOn }}" as="t"><li><sc-if value="{{ ho.editing }}"><textarea class="ho-edit no-print" rows="{{ t.rows }}" aria-label="{{ t.label }}" value="{{ t.text }}" onChange="{{ t.set }}"></textarea><span class="print-only">{{ t.text }}</span></sc-if><sc-if value="{{ !ho.editing }}">{{ t.text }}</sc-if></li></sc-for></ul>
         <p>{{ ho.t.talkAdd }}</p>
         <div class="ho-line"></div>
       </section>
@@ -1538,7 +1547,7 @@ const HO_TEXT = {
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false };
 
   componentDidMount() {
     const o = {};
@@ -1575,7 +1584,7 @@ class Component extends DCLogic {
     this.onHash = () => {
       const r = withDay(this.readHash());
       const moved = ['view', 'pid', 'cday'].some((k) => k in r && r[k] !== this.state[k]);
-      this.setState(moved ? { ...r, tx: false, cAt: null, pAt: null, hoName: '', hoOff: [], hoLang: r.hoLang || null } : r);
+      this.setState(moved ? { ...r, tx: false, cAt: null, pAt: null, hoName: '', hoOff: [], hoLang: r.hoLang || null, hoText: {}, hoEdit: false } : r);
     };
     window.addEventListener('hashchange', this.onHash);
     // Escape closes hover content anywhere (WCAG 1.4.13: dismissible)
@@ -1623,8 +1632,8 @@ class Component extends DCLogic {
     try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&dates=${next.dates ? 1 : 0}&line=${next.greetLine}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}`); } catch (e) { /* sandboxed preview */ }
     clearTimeout(this.peekT);
     clearTimeout(this.tipT);
-    // The handout's name, ticks and language belong to one printout: another page or patient starts fresh
-    const fresh = next.view !== this.state.view || next.pid !== this.state.pid ? { hoName: '', hoOff: [], hoLang: null } : {};
+    // The handout's name, ticks, language and edits belong to one printout: another page or patient starts fresh
+    const fresh = next.view !== this.state.view || next.pid !== this.state.pid ? { hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false } : {};
     this.setState({ ...o, ...fresh, cday: next.cday, cAt: o.cAt || null, pAt: null, tx: false, factsOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
     try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
   }
@@ -2246,7 +2255,15 @@ class Component extends DCLogic {
     const talkIn = (l) => (HO_TALK[P.id] && HO_TALK[P.id][l]) || [HO_TEXT[l].talkDefault[hoTone]];
     const talkEn = talkIn('en'), talkHo = talkIn(hoL);
     const off = s.hoOff || [];
-    const talk = talkEn.map((text, i) => ({ text, on: !off.includes(i), toggle: () => this.setState({ hoOff: off.includes(i) ? off.filter((k) => k !== i) : [...off, i] }) }));
+    // Edits to the AI-written lines, by line, made in English: the version the clinician reads
+    const hoEdits = s.hoText || {};
+    const editable = (key, text, label) => {
+      const t = hoL === 'en' && hoEdits[key] != null ? hoEdits[key] : text;
+      return { text: t, rows: String(Math.max(1, Math.ceil(t.length / 62))), label,
+        set: (e) => { const v = e.target.value; this.setState((st) => ({ hoText: { ...(st.hoText || {}), [key]: v } })); } };
+    };
+    const editsN = Object.keys(hoEdits).length;
+    const talk = talkEn.map((text, i) => ({ text: hoEdits[`t${i}`] != null ? hoEdits[`t${i}`] : text, on: !off.includes(i), toggle: () => this.setState({ hoOff: off.includes(i) ? off.filter((k) => k !== i) : [...off, i] }) }));
     // The patient's own questionnaires, not the AI estimate: higher means harder
     const qs = PHQ_WEEKS.map((w, k) => ({ w, v: P.phq[k] })).filter((q) => q.v != null);
     const qW0 = qs.length ? qs[0].w : 0, qW1 = qs.length ? qs[qs.length - 1].w : 1;
@@ -2265,10 +2282,11 @@ class Component extends DCLogic {
     const ho = {
       lang: hoL, t: HO, art: { front: curtain(0, 40, 0), back: curtain(170, 28, 5) },
       greet: HO.greet(hoName),
-      sub: HO.sub(P.visitDay),
+      // The visit day only where visit dates are known; otherwise "your next appointment"
+      sub: HO.sub(s.dates ? P.visitDay : ''),
       // Patient-specific summaries are written in English for the mock; other languages use the standard line
-      paras: (hoL === 'en' && P.handout) || [HO.summary[hoTone]],
-      well: well.length ? well : [HO.wellNone],
+      paras: ((hoL === 'en' && P.handout) || [HO.summary[hoTone]]).map((t, i) => editable(`p${i}`, t, `Summary, paragraph ${i + 1}`)),
+      well: (well.length ? well : [HO.wellNone]).map((t, i) => editable(`w${i}`, t, `What’s going well, item ${i + 1}`)),
       hasGoals: P.goals.length > 0, goals: P.goals.map((g) => ({ ...g, iconEl: icon(g.icon, 20) })),
       chart: {
         has: qs.length >= 2, harder: T(HO.harder), easier: T(HO.easier),
@@ -2276,8 +2294,18 @@ class Component extends DCLogic {
         pts: qs.map((q) => ({ cx: f(QX(q.w)), cy: f(QY(q.v)), x: f(QX(q.w)), date: T(HO.date(WEEKS[q.w])) })),
         aria: qs.length >= 2 ? HO.chartAria(WEEKS[qW0], WEEKS[qW1], qMove) : ''
       },
-      talk, talkOn: talkHo.filter((t, i) => !off.includes(i)),
-      talkHead: HO.talkHead(P.visitDay),
+      talk, talkOn: talkHo.map((t, i) => ({ t, i })).filter(({ i }) => !off.includes(i)).map(({ t, i }) => editable(`t${i}`, t, `Things to talk about, item ${i + 1}`)),
+      talkHead: HO.talkHead(s.dates ? P.visitDay : ''),
+      // Editing is optional: printing as it is stays one click. The AI-written lines (summary, What's going well,
+      // Things to talk about) become text boxes in place; the goals stay as the patient wrote them. In another
+      // language, editing happens in English and the edited lines are translated for the printout.
+      canEdit: hoL === 'en', editing: hoL === 'en' && s.hoEdit, edited: editsN > 0,
+      editLabel: s.hoEdit ? 'Done editing' : 'Edit the wording', editPressed: s.hoEdit ? 'true' : 'false',
+      toggleEdit: () => this.setState({ hoEdit: !s.hoEdit }), resetEdits: () => this.setState({ hoText: {} }),
+      editNote: hoL !== 'en' ? `To edit the wording, switch to English. Edited lines are then translated for the ${HO_TEXT[hoL].label} handout.${editsN ? ` ${countOf(editsN, 'line')} edited in English.` : ''}`
+        : s.hoEdit ? `Change any line written by AI. Changes are for this printout only.${editsN ? ` ${countOf(editsN, 'line')} edited.` : ''}`
+          : editsN ? `${countOf(editsN, 'line')} edited, for this printout only.` : '',
+      transNote: hoL !== 'en' && editsN ? 'Mockup: in production, your edited English lines would appear here, translated.' : '',
       // Only for patients who print in another language
       langs: {
         many: hoLangs.length > 1,
