@@ -11,7 +11,7 @@ Notes for whoever edits the mockups. What they are is in the [README](README.md)
 ## Deep links
 
 A link can open a specific page and settings:
-- `#view=list&order=status` (`order=visit`, by next visit, is the default)
+- `#view=list&dates=1` shows visit dates, which are off by default (the list is then grouped by status, by last name). With them on, `&order=visit` (by next visit, the default) or `&order=status`.
 - `#view=patient&p=delgado`
 - `#view=handout&p=delgado`; `#view=handout&p=fernandez&lang=en` (v3: the handout in English for a patient whose check-ins are in Spanish)
 - `#view=checkin&p=delgado&d=2026-08-10` (v3: one check-in; without `&d=`, the patient's example or latest check-in)

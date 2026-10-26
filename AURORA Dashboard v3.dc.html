@@ -129,6 +129,8 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
 .list.by-status{--cols:minmax(160px,1.2fr) 156px 100px 80px minmax(0,2.6fr)}
 .list.by-visit{--cols:84px minmax(130px,1fr) 170px 100px 80px minmax(0,2.4fr)}
+/* Without visit dates: no Next visit column */
+.list.by-status.no-dates{--cols:minmax(160px,1.4fr) 100px 80px minmax(0,2.6fr)}
 .lrow{display:grid;grid-template-columns:var(--cols);column-gap:16px;align-items:center;min-height:40px;padding:0 20px}
 .lhead{font-size:var(--fs-sm);font-weight:600;color:var(--muted);border-bottom:1px solid var(--line)}
 .grp{display:flex;align-items:center;padding:20px 20px 6px;font-size:var(--fs-sm);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
@@ -397,6 +399,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .big .page,.big .band-inner{max-width:70rem}
 .big .list.by-status{--cols:minmax(170px,1.2fr) 184px 100px 96px minmax(0,2.6fr)}
 .big .list.by-visit{--cols:90px minmax(140px,1fr) 172px 100px 88px minmax(0,2.4fr)}
+.big .list.by-status.no-dates{--cols:minmax(170px,1.4fr) 100px 96px minmax(0,2.6fr)}
 .big.distinct .pt-sections{grid-template-columns:minmax(0,1fr) 21rem}
 .big .safety-note{font-size:var(--fs-md);line-height:var(--lh-md)}
 .big .foot{font-size:var(--fs-md);line-height:var(--lh-md)}
@@ -471,6 +474,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
   .thr-tag .tt-wrap{margin-left:0}
   .big .chart .noest{font-size:22px}
   .list.by-status,.big .list.by-status{--cols:minmax(0,1.3fr) minmax(0,1.2fr) 5rem 5rem}
+  .list.by-status.no-dates,.big .list.by-status.no-dates{--cols:minmax(0,1.6fr) 5rem 5rem}
   .list.by-visit,.big .list.by-visit{--cols:5.5rem minmax(0,1.2fr) minmax(0,1.3fr) 5rem 5rem}
   .lrow{row-gap:2px}
   .row{padding-top:8px;padding-bottom:8px}
@@ -591,7 +595,8 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
   <div class="review no-print">
     <span class="review-label">Review: not part of the design</span>
     <span class="review-group"><span class="review-k">Page</span><span class="seg"><sc-for list="{{ viewTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
-    <sc-if value="{{ onList }}"><span class="review-group"><span class="review-k">List</span><span class="seg"><sc-for list="{{ orderTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
+    <sc-if value="{{ datesCtl }}"><span class="review-group"><span class="review-k">Visit dates</span><span class="seg"><sc-for list="{{ datesTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
+    <sc-if value="{{ orderCtl }}"><span class="review-group"><span class="review-k">List</span><span class="seg"><sc-for list="{{ orderTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
     <sc-if value="{{ onCheckin }}"><span class="review-group"><span class="review-k">Example</span><span class="seg"><sc-for list="{{ exTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
     <span class="review-group"><span class="review-k">Look</span><span class="seg"><sc-for list="{{ lookTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
     <sc-if value="{{ greetCtl }}"><span class="review-group"><span class="review-k">Greeting</span><span class="seg"><sc-for list="{{ heroTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
@@ -647,7 +652,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       <div class="lrow lhead">
         <sc-if value="{{ byVisit }}"><span>Time</span></sc-if>
         <span>Patient</span>
-        <sc-if value="{{ byStatus }}"><span>Next visit</span></sc-if>
+        <sc-if value="{{ visitCol }}"><span>Next visit</span></sc-if>
         <sc-if value="{{ byVisit }}"><span>Status</span></sc-if>
         <span>Severity <span class="ai">(AI)</span> <span class="tt-wrap" onMouseEnter="{{ tips.sev.enter }}" onMouseLeave="{{ tips.sev.leave }}"><button type="button" class="{{ tips.sev.btnCls }}" aria-label="About severity" aria-describedby="tt-sev" onClick="{{ tips.sev.toggle }}" onFocus="{{ tips.sev.focus }}" onBlur="{{ tips.sev.blur }}">ⓘ</button><span id="tt-sev" role="tooltip" class="{{ tips.sev.cls }}"><sc-for list="{{ tips.sev.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span>
         <span>Check-ins <span class="tt-wrap" onMouseEnter="{{ tips.ci.enter }}" onMouseLeave="{{ tips.ci.leave }}"><button type="button" class="{{ tips.ci.btnCls }}" aria-label="About check-ins" aria-describedby="tt-ci" onClick="{{ tips.ci.toggle }}" onFocus="{{ tips.ci.focus }}" onBlur="{{ tips.ci.blur }}">ⓘ</button><span id="tt-ci" role="tooltip" class="{{ tips.ci.cls }}"><sc-for list="{{ tips.ci.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span>
@@ -679,7 +684,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
             </sc-if>
             <sc-if value="{{ byVisit }}"><span class="num"><sc-if value="{{ p.pinDate }}"><span class="pin-date">{{ p.pinDate }}</span></sc-if>{{ p.timeText }}</span></sc-if>
             <span><sc-if value="{{ byStatus }}"><svg class="mk {{ p.stCls }}" viewBox="0 0 10 10"><path d="{{ p.shape }}" fill="currentColor" fill-rule="evenodd"></path><path d="{{ p.shape2 }}" fill="currentColor"></path></svg></sc-if><span class="pt-name">{{ p.name }}</span><sc-if value="{{ p.dx }}"> <span class="muted">{{ p.dx }}</span></sc-if></span>
-            <sc-if value="{{ byStatus }}"><span class="num {{ p.visitCls }}">{{ p.visitText }}</span></sc-if>
+            <sc-if value="{{ visitCol }}"><span class="num {{ p.visitCls }}">{{ p.visitText }}</span></sc-if>
             <sc-if value="{{ byVisit }}"><span class="status {{ p.stCls }}"><svg class="mk" viewBox="0 0 10 10"><path d="{{ p.shape }}" fill="currentColor" fill-rule="evenodd"></path><path d="{{ p.shape2 }}" fill="currentColor"></path></svg>{{ p.stLabel }}</span></sc-if>
             <span class="num"><span class="sev">{{ p.sevText }}</span><span class="chg {{ p.deltaCls }}">{{ p.deltaText }}</span></span>
             <span class="num {{ p.ciCls }}"><span class="ci">{{ p.checkins }}</span></span>
@@ -771,7 +776,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       <h2 class="h2">Trend<span class="muted">{{ pt.trendSub }}</span></h2>
       <div class="chart-wrap">
         <div class="chart-box" onMouseLeave="{{ hoverOff }}">
-        <svg class="chart" viewBox="0 0 880 324" role="img" aria-label="{{ ch.aria }}" tabindex="0" onKeyDown="{{ chartKey }}" onFocus="{{ chartFocus }}" onBlur="{{ hoverOff }}">
+        <svg class="chart" viewBox="{{ ch.vb }}" role="img" aria-label="{{ ch.aria }}" tabindex="0" onKeyDown="{{ chartKey }}" onFocus="{{ chartFocus }}" onBlur="{{ hoverOff }}">
           <sc-if value="{{ ch.showZone }}"><rect class="zone" x="{{ ch.L }}" y="{{ ch.T }}" width="{{ ch.zoneW }}" height="{{ ch.zoneH }}"></rect></sc-if>
           <sc-if value="{{ ch.hasExp }}"><polygon class="expband" points="{{ ch.expPts }}"></polygon><text x="{{ ch.endX }}" y="{{ ch.expLabelY }}">Expected range</text></sc-if>
           <sc-for list="{{ ch.ticks }}" as="k"><line class="{{ k.cls }}" x1="{{ ch.L }}" x2="{{ ch.R }}" y1="{{ k.y }}" y2="{{ k.y }}"></line><text x="{{ ch.tickX }}" y="{{ k.ty }}" text-anchor="end">{{ k.label }}</text></sc-for>
@@ -799,7 +804,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
             <sc-if value="{{ hv.hasCiDot }}"><circle class="hv-ci" cx="{{ hv.x }}" cy="{{ hv.ciY }}" r="5"></circle></sc-if>
             <sc-if value="{{ hv.hasPhqDot }}"><circle class="hv-phq" cx="{{ hv.x }}" cy="{{ hv.phqY }}" r="8"></circle></sc-if>
           </sc-if>
-          <sc-for list="{{ ch.hits }}" as="w"><rect class="hit" x="{{ w.x }}" y="0" width="{{ w.w }}" height="324" onMouseEnter="{{ w.enter }}" onClick="{{ w.click }}"></rect></sc-for>
+          <sc-for list="{{ ch.hits }}" as="w"><rect class="hit" x="{{ w.x }}" y="0" width="{{ w.w }}" height="{{ ch.H }}" onMouseEnter="{{ w.enter }}" onClick="{{ w.click }}"></rect></sc-for>
         </svg>
         <sc-if value="{{ ch.hasEst }}"><div class="thr-tag" style="{{ ch.thrTagStyle }}">{{ ch.thrHead }}<span class="thr-last">{{ ch.thrTail }}<span class="tt-wrap no-print" onMouseEnter="{{ tips.thr.enter }}" onMouseLeave="{{ tips.thr.leave }}"><button type="button" class="{{ tips.thr.btnCls }}" aria-label="About the Worse than baseline line" aria-describedby="tt-thr" onClick="{{ tips.thr.toggle }}" onFocus="{{ tips.thr.focus }}" onBlur="{{ tips.thr.blur }}">ⓘ</button><span id="tt-thr" role="tooltip" class="{{ tips.thr.cls }}"><sc-for list="{{ tips.thr.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span></div></sc-if>
         <sc-if value="{{ hv.show }}">
@@ -1532,7 +1537,7 @@ const HO_TEXT = {
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, factsOpen: false, disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, factsOpen: false, disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null };
 
   componentDidMount() {
     const o = {};
@@ -1551,6 +1556,7 @@ class Component extends DCLogic {
       if (['0', '1'].includes(h.get('drivers'))) r.drivers = h.get('drivers') === '1';
       if (['current', 'refined'].includes(h.get('look'))) r.refined = h.get('look') === 'refined';
       if (['0', '1'].includes(h.get('hero'))) r.hero = h.get('hero') === '1';
+      if (['0', '1'].includes(h.get('dates'))) r.dates = h.get('dates') === '1';
       if (Object.keys(HO_TEXT).includes(h.get('lang'))) r.hoLang = h.get('lang');
       return r;
     };
@@ -1612,7 +1618,7 @@ class Component extends DCLogic {
   go(o) {
     const next = { ...this.state, ...o };
     if (next.view === 'checkin') next.cday = resolveCday(next.pid, next.cday);
-    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}`); } catch (e) { /* sandboxed preview */ }
+    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&dates=${next.dates ? 1 : 0}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}`); } catch (e) { /* sandboxed preview */ }
     clearTimeout(this.peekT);
     clearTimeout(this.tipT);
     // The handout's name, ticks and language belong to one printout: another page or patient starts fresh
@@ -1716,9 +1722,13 @@ class Component extends DCLogic {
       };
     });
 
-    // Caseload: grouped by status (visit order inside each group), or one list in visit order
-    const byStatus = s.order === 'status';
+    // Caseload: grouped by status (visit order inside each group), or one list in visit order. Without visit dates
+    // (the default: AURORA isn't assumed to link to a site's EHR, aurora-8ok), grouped by status, by last name inside each
+    // group, with no Time or Next visit column.
+    const byStatus = s.order === 'status' || !s.dates;
     const byVisitOrder = [...all].sort((a, b) => a.visitRank - b.visitRank);
+    const lastName = (p) => p.name.replace(/^\S+\s+/, '');
+    const byName = [...all].sort((a, b) => lastName(a).localeCompare(lastName(b)));
     // By next visit: one group per day, headed by the full date, and Today or Tomorrow; Not scheduled last
     const dayHead = (key) => {
       if (!key) return { title: 'Not scheduled', rel: '' };
@@ -1732,7 +1742,7 @@ class Component extends DCLogic {
     // By next visit, safety flags still come first: a Safety flag group above the day headers, its rows carrying the visit date
     const pinned = byVisitOrder.filter((p) => p.status === 'safety').map((p) => ({ ...p, pinDate: p.dayKey || 'Not scheduled' }));
     const groups = (byStatus
-      ? GROUP_ORDER.map((k) => statusGroup(k, byVisitOrder.filter((p) => p.status === k)))
+      ? GROUP_ORDER.map((k) => statusGroup(k, (s.dates ? byVisitOrder : byName).filter((p) => p.status === k)))
       : [statusGroup('safety', pinned), ...dayGroups(byVisitOrder.filter((p) => p.status !== 'safety'))])
       .filter((g) => g.rows.length).map((g) => ({ ...g, count: String(g.rows.length) }));
 
@@ -1765,8 +1775,10 @@ class Component extends DCLogic {
       date: `${DAY_FULL[DOW[TODAY.getDay()]]}, ${MONTHS_FULL[TODAY.getMonth()]} ${TODAY.getDate()}`,
       dateShort: `${DOW[TODAY.getDay()]}, ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`,
       // Study visits, with the calendar icon: "study", because clinicians also see patients who aren't in AURORA.
-      // Safety flags aren't repeated here: their group is pinned first, just below.
-      facts: todayN || tomorrowN ? [{ cls: 'greet-fact', mark: icon('calendar'),
+      // Without visit dates, the number of patients instead. Safety flags aren't repeated here: their group is pinned
+      // first, just below.
+      facts: !s.dates ? [{ cls: 'greet-fact', mark: null, text: `${countOf(all.length, 'patient')} in AURORA` }]
+        : todayN || tomorrowN ? [{ cls: 'greet-fact', mark: icon('calendar'),
         text: todayN && tomorrowN ? `${countOf(todayN, 'study visit')} today, ${tomorrowN} tomorrow` : todayN ? `${countOf(todayN, 'study visit')} today` : `${countOf(tomorrowN, 'study visit')} tomorrow` }] : []
     };
 
@@ -1785,7 +1797,7 @@ class Component extends DCLogic {
     const pt = {
       ...P,
       initials: P.name.replace(/\./g, '').split(/\s+/).filter(Boolean).map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
-      headFacts: [P.visitRank === NOT_SCHEDULED ? 'No visit scheduled' : 'Next visit ' + tm(P.visit), `${P.weeksIn} weeks in AURORA`].map((text, i) => ({ text, sep: i > 0 })),
+      headFacts: [...(s.dates ? [P.visitRank === NOT_SCHEDULED ? 'No visit scheduled' : 'Next visit ' + tm(P.visit)] : []), `${P.weeksIn} weeks in AURORA`].map((text, i) => ({ text, sep: i > 0 })),
       sevNow: P.estNow == null ? '—' : String(P.estNow),
       // Show ± unless the interval runs off the 0–27 scale; then show the clipped range
       uncText: P.estNow == null ? '' : (hi - P.estNow === uncNow && P.estNow - lo === uncNow) ? `± ${uncNow}` : `range ${lo}–${hi}`,
@@ -1837,8 +1849,8 @@ class Component extends DCLogic {
 
     // Chart geometry: PHQ-9 scale 0–27 with a numeric axis, weekly AI estimates, PHQ-9 every 2 weeks.
     // The time axis starts when the patient joined, up to the last 12 weeks.
-    // Under the plot: the visits row, then item 9 and the dates (the viewBox is 880 × CH_H)
-    const L = 72, R = 740, TOP = 32, BOT = 232, CH_H = 324;
+    // Under the plot: the visits row (with visit dates only), then item 9 and the dates (the viewBox is 880 × CH_H)
+    const L = 72, R = 740, TOP = 32, BOT = 232, CH_H = s.dates ? 324 : 300;
     const last = WEEKS.length - 1;
     const x0 = Math.max(0, last - P.weeksIn);
     const X = (i) => L + ((i - x0) * (R - L)) / (last - x0);
@@ -1886,10 +1898,11 @@ class Component extends DCLogic {
           iconEl: iconAt(e.icon, flip ? ex - 20 : ex + 6, TOP - 23), label: T(e.label) };
       }),
       phq: PHQ_WEEKS.map((w, k) => (P.phq[k] == null || !inRange(w) ? null : { cx: f(X(w)), cy: f(Y(P.phq[k])) })).filter(Boolean),
+      vb: `0 0 880 ${CH_H}`, H: CH_H,
       vY: 262, vY1: 250, vY2: 263,
-      i9Y: 286,
+      i9Y: s.dates ? 286 : 262,
       item9: PHQ_WEEKS.map((w, k) => (P.item9[k] == null || !inRange(w) ? null : { x: f(X(w)), cls: P.item9[k] > 0 ? 'i9-pos' : '', label: T(P.item9[k]) })).filter(Boolean),
-      dateY: 314,
+      dateY: s.dates ? 314 : 290,
       dates: (x0 > 0 ? [x0, ...PHQ_WEEKS.filter((w) => w > x0)] : PHQ_WEEKS).map((w) => ({ x: f(X(w)), label: T(WEEKS[w]) }))
     };
 
@@ -1898,7 +1911,7 @@ class Component extends DCLogic {
     const d0 = x0 * 7, dLast = last * 7;
     const XD = (d) => L + ((d - d0) * (R - L)) / (dLast - d0);
     // Clinic visits: short marks in their own row under the plot, in the patient's usual slot
-    const visitDays = visitDaysOf(P).filter((d) => d >= d0 && d <= dLast);
+    const visitDays = s.dates ? visitDaysOf(P).filter((d) => d >= d0 && d <= dLast) : [];
     const visitTime = (/, (\d{1,2}:\d{2})$/.exec(P.visit) || [])[1];
     ch.visits = visitDays.map((d) => ({ x: f(XD(d)) }));
     ch.hasVisits = visitDays.length > 0;
@@ -2320,13 +2333,16 @@ class Component extends DCLogic {
         tab('By next visit', !byStatus, () => this.go({ order: 'visit' }))
       ],
       byStatus, byVisit: !byStatus, groups, peek,
+      // Visit dates: off by default; on shows the list by next visit, the next-visit line and the chart's visits
+      visitCol: byStatus && s.dates, orderCtl: s.view === 'list' && s.dates, datesCtl: s.view === 'list' || s.view === 'patient',
+      datesTabs: [tab('Not known', !s.dates, () => this.go({ dates: false })), tab('Known', s.dates, () => this.go({ dates: true }))],
       hero, heroOn: s.refined && s.hero && s.view === 'list', refined: s.refined,
       lookTabs: [tab('Refined', s.refined, () => this.go({ refined: true })), tab('Original', !s.refined, () => this.go({ refined: false }))],
       heroTabs: [tab('On', s.hero, () => this.go({ hero: true })), tab('Off', !s.hero, () => this.go({ hero: false }))],
       greetCtl: s.refined && s.view === 'list',
       peekOut: () => { clearTimeout(this.peekT); this.peekT = setTimeout(() => this.setState({ peek: null }), 150); },
       peekOff: () => { clearTimeout(this.peekT); this.setState({ peek: null }); },
-      listCls: 'list ' + (byStatus ? 'by-status' : 'by-visit'),
+      listCls: 'list ' + (byStatus ? 'by-status' : 'by-visit') + (s.dates ? '' : ' no-dates'),
       tips,
       drv, toggleDrivers: () => this.setState({ drivers: !s.drivers }),
       safetyShape: STATUS.safety.shape,

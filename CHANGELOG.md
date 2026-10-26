@@ -28,6 +28,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
   - **Patient page:** "AURORA data at this visit" moves up to the foot of the summary band, as two tick boxes, "The patient raised it" and "I raised it", as the clinical group's dashboard suggestions asked; each patient keeps its own ticks. Print has a printer icon. The trend chart shows past clinic visits as marks in a Visits row under the plot, and the readout names a visit and its time.
   - **Model Facts:** the text no longer runs out of the box.
   - **Patient handout:** the note about the check-ins no longer reminds patients that they can stop, in English or Spanish.
+  - **Visit dates:** the caseload no longer assumes them, because AURORA isn't assumed to link to a site's EHR. By default, patients are grouped by status, by last name within each group, with no Time or Next visit column; the greeting band gives the number of patients; and the patient page has no next-visit line and no Visits row on the chart. The review strip's new Visit dates switch shows a site that has them, from its EHR or from patients reporting their next visit in check-ins.
 
 ## v2: redesign
 
