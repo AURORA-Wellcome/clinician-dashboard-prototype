@@ -19,6 +19,44 @@
   const VIEW_NAMES = { list: 'Patients list', patient: 'Patient page', handout: 'Patient handout', checkin: 'Check-in', landing: 'Landing page' };
   const KINDS = [['idea', 'Idea'], ['problem', 'Problem'], ['question', 'Question'], ['like', 'Like']];
   const ROLES = ['Clinician', 'Supervisor', 'Researcher', 'Lived experience', 'Technology team', 'Other'];
+  // Questions for the clinician working group (v3), in the panel's Questions tab. An answer is saved as a note of kind
+  // 'answer', with the question (q), the choice and an optional comment, so the Firestore rules need no change. Saving
+  // again updates it. Others' answers appear once you have given yours. "As now" marks the current design.
+  const QUESTIONS = [
+    { id: 'list-dates', view: 'list', part: 'list', short: 'Caseload without visit dates', show: { view: 'list', dates: '0' },
+      title: 'Most sites won’t have visit dates. Without them, the list is grouped by status, by last name. Does that work for you?',
+      options: [['yes', 'Yes, as now'], ['flat', 'I’d rather have one list by last name, with status as a column'], ['need', 'I need to see visit dates']] },
+    { id: 'list-flagged', view: 'list', part: 'list', short: 'Where flagged visits appear', show: { view: 'list', dates: '1', order: 'visit' },
+      title: 'Where visit dates are known and the list runs by next visit, where should a safety-flagged patient appear?',
+      options: [['pinned', 'Only in the Safety flag group at the top, as now'], ['day', 'Only under their visit day, flagged there'], ['both', 'In both places']] },
+    { id: 'list-checkins', view: 'list', part: 'columns', short: 'Check-ins column', show: { view: 'list' },
+      title: 'Should the list show every patient’s check-in count?',
+      options: [['all', 'Yes, for every patient, as now'], ['few', 'Only when there are too few'], ['page', 'No, the patient page is enough']] },
+    { id: 'look', view: 'list', part: 'page', short: 'Refined or Original look', show: { view: 'list' },
+      title: 'Which look do you prefer? Switch between them with Look in the striped strip at the top.',
+      options: [['refined', 'Refined, as now'], ['original', 'Original'], ['none', 'No preference']] },
+    { id: 'pt-lead', view: 'patient', part: 'band', short: 'PHQ-9 or AI estimate first', show: { view: 'patient', p: 'delgado' },
+      title: 'Which number should come first on the patient page?',
+      options: [['phq', 'The patient’s PHQ-9, their own account, as now'], ['ai', 'The AI estimate, which the status is based on'], ['none', 'No preference']] },
+    { id: 'pt-dots', view: 'patient', part: 'chart', short: 'Each check-in’s estimate on the chart', show: { view: 'patient', p: 'delgado' },
+      title: 'The faint dots around the trend line are each check-in’s own estimate. Do they help?',
+      options: [['keep', 'Yes, keep them, as now'], ['hover', 'Show them only when pointing at the chart'], ['drop', 'No, remove them']] },
+    { id: 'pt-ai-label', view: 'patient', part: 'band', short: 'How AI values are labeled', show: { view: 'patient', p: 'delgado' },
+      title: 'How should values that come from the AI be labeled?',
+      options: [['each', '“(AI)” beside each one, as now'], ['once', 'Once per page'], ['none', 'No preference']] },
+    { id: 'pt-suggest', view: 'patient', part: 'changes', short: 'Suggestions for off-track patients', show: { view: 'patient', p: 'delgado' },
+      title: 'When a patient is off track, how far should the page go?',
+      options: [['describe', 'Describe what changed, as now'], ['topics', 'Also suggest topics that may be worth raising, if I ask'], ['steps', 'Also suggest next steps']] },
+    { id: 'pt-supervisor', view: 'patient', part: 'title', short: 'Sharing with a supervisor', show: { view: 'patient', p: 'osei' },
+      title: 'How should you be able to share a patient’s page with your clinical supervisor?',
+      options: [['print', 'Print it or show it in supervision'], ['button', 'A share button that gives my supervisor access'], ['view', 'Supervisors see all their supervisees’ patients'], ['none', 'Not at all']] },
+    { id: 'ho-numbers', view: 'handout', part: 'ho-weeks', short: 'Scores on the handout chart', show: { view: 'handout', p: 'osei' },
+      title: 'Should the handout’s chart show the PHQ-9 scores?',
+      options: [['no', 'No, just easier and harder, as now'], ['yes', 'Yes, show the scores'], ['choose', 'Let me choose for each patient']] },
+    { id: 'ci-see', view: 'checkin', part: 'ci-came', short: 'What clinicians see of check-ins', show: { view: 'checkin', p: 'delgado', d: '2026-08-10' },
+      title: 'What should you be able to see of a check-in conversation? This also depends on the consent form.',
+      options: [['summary', 'An AI summary only'], ['quotes', 'The summary and the patient’s own words'], ['all', 'Those and the full transcript, collapsed, as now']] }
+  ];
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const DEFAULT_STATE = { view: 'list', pid: 'delgado', order: 'visit', distinct: true, big: true, icons: true, clock24: false, drivers: false, refined: false, hero: true, dates: true, cday: null };
   const CS = document.currentScript;
@@ -50,7 +88,7 @@
   let store = null;
   let status = { ok: false, text: 'Connecting…' };
   let composer = null, pendingPanel = false, pendingScroll = null, timer = 0;
-  const ui = { open: lsGet('aurora-notes-open') === '1', adding: false, filter: 'page', showResolved: false, focus: null, reply: null, edit: null, me: false, error: '' };
+  const ui = { open: lsGet('aurora-notes-open') === '1', adding: false, filter: 'page', showResolved: false, focus: null, reply: null, edit: null, me: false, error: '', tab: 'notes', draft: {} };
   // The first visit from an invite link opens the panel, so reviewers find it. The invite can also come through the
   // landing page, which saves the code and marks the browser as invited.
   if ((query.get('board') || lsGet('aurora-notes-invited') === '1') && !lsGet('aurora-notes-welcomed')) {
@@ -230,15 +268,25 @@
     };
   }
   // After posting: a reviewer sees others' notes on a page once they have added one there. Facilitators see all.
+  // Answers to the questions are kept apart: they aren't pinned or listed with the notes. Each reviewer's latest answer
+  // to a question counts; others' answers show once you have answered it.
   function model() {
     const uid = store ? store.uid : '';
-    const tops = notes.filter((n) => !n.parent);
+    const tops = notes.filter((n) => !n.parent && n.kind !== 'answer');
     const mine = new Set(tops.filter((n) => n.uid === uid).map((n) => n.pageKey));
     const shown = (n) => FACILITATOR || n.uid === uid || mine.has(n.pageKey);
     const visible = tops.filter(shown).sort(byTime);
     const num = new Map(), count = {};
     for (const n of visible) num.set(n.id, (count[n.pageKey] = (count[n.pageKey] || 0) + 1));
-    return { uid, visible, hidden: tops.filter((n) => !shown(n)), num, replies: (id) => notes.filter((r) => r.parent === id).sort(byTime) };
+    const latest = new Map();
+    for (const a of notes.filter((n) => n.kind === 'answer' && n.q)) {
+      const k = `${a.uid}|${a.q}`, b = latest.get(k);
+      if (!b || (a.updatedAt || a.createdAt || 0) >= (b.updatedAt || b.createdAt || 0)) latest.set(k, a);
+    }
+    const answers = [...latest.values()];
+    const answered = new Set(answers.filter((a) => a.uid === uid).map((a) => a.q));
+    return { uid, visible, hidden: tops.filter((n) => !shown(n)), num, replies: (id) => notes.filter((r) => r.parent === id).sort(byTime),
+      answers, answered, answersShown: answers.filter((a) => FACILITATOR || a.uid === uid || answered.has(a.q)) };
   }
 
   /* ---------- Stores: this browser only, or shared through Firestore ---------- */
@@ -452,6 +500,24 @@
     const resolvedN = m.visible.filter((n) => (!onPage || n.pageKey === pk) && n.resolved).length;
     const hidden = m.hidden.filter((n) => !onPage || n.pageKey === pk);
     const seg = (label, value) => h('button', { type: 'button', class: ui.filter === value ? 'on' : '', 'aria-pressed': String(ui.filter === value), onclick: () => { ui.filter = value; render(true); } }, label);
+    // Notes or Questions: the questions for the working group are on v3 only
+    const qs = VERSION === 'v3' && !STATIC ? QUESTIONS : [];
+    const toAnswer = qs.filter((q) => q.view === page.view && !m.answered.has(q.id)).length;
+    const tabBtn = (label, value) => h('button', { type: 'button', class: ui.tab === value ? 'on' : '', 'aria-pressed': String(ui.tab === value), onclick: () => { ui.tab = value; render(true); } }, label);
+    const head = [
+      identity(),
+      h('p', { class: 'an-status' + (status.ok ? '' : ' warn') }, status.text),
+      !status.ok && FIREBASE_CONFIG && /^https?:$/.test(location.protocol) && status.text !== 'Connecting…'
+        ? h('p', { class: 'an-status' }, h('button', { type: 'button', class: 'an-tool', onclick: openCodeDialog }, BOARD ? 'Enter a different access code' : 'Enter an access code')) : null,
+      FACILITATOR ? h('p', { class: 'an-status' }, qs.length ? 'Facilitator view: you see every note and answer.' : 'Facilitator view: you see every note.') : null,
+      qs.length ? h('div', { class: 'an-seg an-tabs', role: 'group', 'aria-label': 'Notes or questions' },
+        tabBtn('Notes', 'notes'), tabBtn(toAnswer ? `Questions (${toAnswer} here)` : 'Questions', 'questions')) : null
+    ];
+    if (qs.length && ui.tab === 'questions') {
+      panelBody.replaceChildren(...[...head, ...questionsBody(m, seg)].filter(Boolean));
+      panelFoot.replaceChildren(h('button', { type: 'button', class: 'an-tool', onclick: downloadCsv }, 'Download notes and answers (CSV)'));
+      return;
+    }
     const items = [];
     let lastPage = '';
     for (const n of onPage ? list : [...list].sort((a, b) => a.pageKey.localeCompare(b.pageKey) || byTime(a, b))) {
@@ -459,11 +525,7 @@
       items.push(card(n, m));
     }
     panelBody.replaceChildren(...[
-      identity(),
-      h('p', { class: 'an-status' + (status.ok ? '' : ' warn') }, status.text),
-      !status.ok && FIREBASE_CONFIG && /^https?:$/.test(location.protocol) && status.text !== 'Connecting…'
-        ? h('p', { class: 'an-status' }, h('button', { type: 'button', class: 'an-tool', onclick: openCodeDialog }, BOARD ? 'Enter a different access code' : 'Enter an access code')) : null,
-      FACILITATOR ? h('p', { class: 'an-status' }, 'Facilitator view: you see every note.') : null,
+      ...head,
       m.visible.some((n) => n.uid === m.uid) ? null : h('p', { class: 'an-intro' }, 'Click “Add a note”, then the part of the page it’s about.'
         + (FACILITATOR ? '' : ' Others’ notes on a page appear once you’ve added one there.')),
       h('div', { class: 'an-actions' },
@@ -476,8 +538,85 @@
         : h('p', { class: 'an-empty' }, onPage ? 'No notes on this page yet. What do you notice, like or suggest?' : 'No notes yet.'),
       resolvedN ? h('label', { class: 'an-check' }, h('input', { type: 'checkbox', checked: ui.showResolved, onchange: (e) => { ui.showResolved = e.target.checked; render(true); } }), ` Show resolved (${resolvedN})`) : null
     ].filter(Boolean)); // replaceChildren would print null as text
-    panelFoot.replaceChildren(h('button', { type: 'button', class: 'an-tool', onclick: downloadCsv }, 'Download notes (CSV)'));
+    panelFoot.replaceChildren(h('button', { type: 'button', class: 'an-tool', onclick: downloadCsv }, qs.length ? 'Download notes and answers (CSV)' : 'Download notes (CSV)'));
   }
+
+  /* ---------- Questions for the working group ---------- */
+  const labelOf = (q, v) => (q.options.find(([k]) => k === v) || [v, v])[1];
+  // Whether the page shows what a question is about; otherwise its Show me link opens the right page and settings
+  const onQuestion = (q) => page.view === q.show.view && (q.show.dates == null || (page.dates !== false ? '1' : '0') === q.show.dates)
+    && (!q.show.order || page.order === q.show.order);
+  function showQuestion(q) {
+    location.hash = '#' + new URLSearchParams(q.show).toString();
+    render(true);
+  }
+  function questionsBody(m, seg) {
+    const onPage = ui.filter === 'page';
+    const list = QUESTIONS.filter((q) => !onPage || q.view === page.view);
+    const items = [];
+    let last = '';
+    for (const q of list) {
+      if (!onPage && q.view !== last) { last = q.view; items.push(h('li', { class: 'an-subhead' }, VIEW_NAMES[q.view])); }
+      items.push(questionCard(q, m));
+    }
+    return [
+      h('p', { class: 'an-intro' }, 'A few questions for the clinician working group. Your answer is shared like a note.'
+        + (FACILITATOR ? '' : ' Others’ answers to a question appear once you’ve given yours.')),
+      h('div', { class: 'an-actions' }, h('div', { class: 'an-seg', role: 'group', 'aria-label': 'Which questions' }, seg('This page', 'page'), seg('All pages', 'all'))),
+      ui.error ? h('p', { class: 'an-status warn', role: 'alert' }, ui.error) : null,
+      items.length ? h('ol', { class: 'an-list' }, items)
+        : h('p', { class: 'an-empty' }, 'No questions about this page. Choose All pages to see the others.')
+    ];
+  }
+  function questionCard(q, m) {
+    const mine = m.answers.find((a) => a.q === q.id && a.uid === m.uid);
+    // A choice or comment not yet saved survives the panel redrawing
+    const cur = () => ui.draft[q.id] || { choice: mine ? mine.choice : '', comment: mine ? mine.comment || '' : '' };
+    const d = cur();
+    const err = h('p', { class: 'an-err', role: 'alert' });
+    const opts = h('div', { class: 'an-opts', role: 'radiogroup', 'aria-label': q.title },
+      q.options.map(([v, l]) => h('label', { class: 'an-opt' },
+        h('input', { type: 'radio', name: `an-q-${q.id}`, value: v, checked: d.choice === v, onchange: () => { ui.draft[q.id] = { ...cur(), choice: v }; } }), h('span', {}, l))));
+    const ta = h('textarea', { class: 'an-input', rows: 2, maxlength: 1000, 'aria-label': 'Why (optional)', placeholder: 'Why? (optional)' }, d.comment);
+    ta.addEventListener('input', () => { ui.draft[q.id] = { ...cur(), comment: ta.value }; });
+    const all = m.answers.filter((a) => a.q === q.id);
+    const others = all.filter((a) => a.uid !== m.uid);
+    const seeAll = FACILITATOR || !!mine;
+    return h('li', { class: 'an-q', 'data-q': q.id },
+      h('div', { class: 'an-q-title' }, q.title),
+      onQuestion(q) ? null : h('div', {}, h('button', { type: 'button', class: 'an-tool', onclick: () => showQuestion(q) }, 'Show me')),
+      opts, ta, err,
+      h('div', { class: 'an-row' },
+        h('button', { type: 'button', class: 'an-btn', disabled: !store, onclick: () => saveAnswer(q, cur(), mine, err) }, mine ? 'Update answer' : 'Save answer'),
+        mine ? h('span', { class: 'an-saved' }, `Saved ${ago(mine.updatedAt || mine.createdAt)}`) : null),
+      seeAll && all.length ? h('div', { class: 'an-tally' },
+        h('div', { class: 'an-tally-head' }, `${plural(all.length, 'answer')} so far`),
+        h('ul', { class: 'an-counts' }, q.options.map(([v, l]) => h('li', {}, h('span', {}, l), h('span', { class: 'an-count' }, String(all.filter((a) => a.choice === v).length))))),
+        others.length ? h('ul', { class: 'an-others' }, others.sort(byTime).map((a) => h('li', {},
+          h('span', { class: 'an-who' }, a.name + (a.role ? ` (${a.role})` : '')), `: ${labelOf(q, a.choice)}`,
+          a.comment ? h('div', { class: 'an-text' }, a.comment) : null))) : null)
+        : others.length ? h('p', { class: 'an-q-gate' }, `${plural(others.length, 'answer')} from others so far. They appear once you answer.`) : null);
+  }
+  async function saveAnswer(q, d, mine, err) {
+    if (!d.choice) { err.textContent = 'Choose an answer first.'; return; }
+    const who = me();
+    if (!who.name) { err.textContent = 'Add your name at the top of the panel first.'; focusIn('.an-me-form input'); return; }
+    const comment = (d.comment || '').trim().slice(0, 1000);
+    const text = (comment ? `${labelOf(q, d.choice)}: ${comment}` : labelOf(q, d.choice)).slice(0, 4000);
+    const c = contextNow();
+    await act(async () => {
+      if (mine) await store.update(mine.id, { choice: d.choice, comment, text, name: who.name, role: who.role, ctx: c.ctx, commit: c.commit, built: c.built });
+      else {
+        await store.add({
+          ...c, version: 'v3', view: q.view, pid: null, pname: '', pageKey: `v3:${q.view}`, anchor: q.part, anchorLabel: `Question: ${q.short}`, x: null, y: null,
+          kind: 'answer', q: q.id, choice: d.choice, comment, text, name: who.name, role: who.role, parent: null, plus: {}, resolved: false, resolvedBy: ''
+        });
+      }
+      delete ui.draft[q.id];
+    });
+    if (!ui.error) announce('Answer saved.');
+  }
+
   function gateText(hidden, onPage) {
     if (onPage) return `${plural(hidden.length, 'note')} from others on this page will appear once you add yours.`;
     const by = {};
@@ -728,12 +867,13 @@
       return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const iso = (ms) => (ms ? new Date(ms).toISOString().replace('T', ' ').slice(0, 16) : '');
-    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day', 'handout_language', 'visit_dates'];
-    const rows = [...m.visible, ...m.visible.flatMap((n) => m.replies(n.id))].sort(byTime).map((n) => {
+    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day', 'handout_language', 'visit_dates', 'question', 'choice'];
+    // Notes, their replies, and the answers to the questions you may see
+    const rows = [...m.visible, ...m.visible.flatMap((n) => m.replies(n.id)), ...m.answersShown].sort(byTime).map((n) => {
       const c = n.ctx || {};
       return [n.id, iso(n.createdAt), n.name, n.role, n.kind, n.text, n.parent || '', Object.keys(n.plus || {}).length, n.resolved ? 'yes' : '', n.resolvedBy || '',
         n.version, VIEW_NAMES[n.view] || n.view, n.pname || n.pid || '', n.anchorLabel, n.x == null ? '' : n.x.toFixed(3), n.y == null ? '' : n.y.toFixed(3),
-        c.order, c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || '', c.lang || '', c.dates === false ? 'not known' : 'known'];
+        c.order, c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || '', c.lang || '', c.dates === false ? 'not known' : 'known', n.q || '', n.choice || ''];
     });
     const csv = [head, ...rows].map((r) => r.map(cell).join(',')).join('\r\n');
     const d = new Date(), pad = (v) => String(v).padStart(2, '0');
@@ -822,6 +962,21 @@
 .an-dialog .an-input{margin:2px 0 8px}
 .an-dialog button:focus-visible{outline:2px solid #0072B2;outline-offset:2px}
 .an-err:empty{display:none}
+.an-tabs{display:flex;margin:0 0 10px}
+.an-tabs button{flex:1}
+.an-q{margin:0 0 12px;padding:10px 12px;background:#fff;border:1px solid #E3D9C2;border-radius:6px}
+.an-q-title{font-weight:600}
+.an-opts{display:flex;flex-direction:column;gap:4px;margin:8px 0}
+.an-opt{display:flex;align-items:flex-start;gap:8px;cursor:pointer}
+.an-opt input{flex:none;margin:3px 0 0}
+.an-saved,.an-q-gate{color:#5B6B78}
+.an-q-gate{margin:8px 0 0}
+.an-tally{margin-top:10px;padding-top:8px;border-top:1px dashed #E3D9C2}
+.an-tally-head{font-weight:600;color:#7A6A45}
+.an-counts,.an-others{list-style:none;margin:4px 0 0;padding:0}
+.an-counts li{display:flex;justify-content:space-between;gap:12px}
+.an-count{font-weight:600;font-variant-numeric:tabular-nums}
+.an-others li{margin-top:6px;color:#4C6272}
 .an-pins{position:absolute;top:0;left:0;width:100%;height:0;z-index:55}
 .an-pin{position:absolute;transform:translate(-50%,-50%) rotate(-3deg);display:grid;place-items:center;min-width:28px;height:28px;padding:0 4px;font:700 15px/1 var(--font,system-ui,sans-serif);color:#4A3B12;background:#FFD54A;border:1px solid #C9A227;border-radius:3px 3px 3px 10px;box-shadow:0 3px 8px rgba(0,0,0,.25);cursor:pointer}
 .an-pin:hover,.an-pin.on{background:#FFC107;box-shadow:0 0 0 3px rgba(184,134,11,.45),0 3px 8px rgba(0,0,0,.25)}

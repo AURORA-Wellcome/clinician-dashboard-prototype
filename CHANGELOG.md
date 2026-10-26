@@ -29,6 +29,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
   - **Model Facts:** the text no longer runs out of the box.
   - **Patient handout:** the note about the check-ins no longer reminds patients that they can stop, in English or Spanish.
   - **Visit dates:** the caseload no longer assumes them, because AURORA isn't assumed to link to a site's EHR. By default, patients are grouped by status, by last name within each group, with no Time or Next visit column; the greeting band gives the number of patients; and the patient page has no next-visit line and no Visits row on the chart. The review strip's new Visit dates switch shows a site that has them, from its EHR or from patients reporting their next visit in check-ins.
+  - **Questions for the working group:** the Notes panel has a Questions tab, with eleven questions across the four pages, drawn from the group's open decisions and the review notes. Answers are shared like notes, and others' answers to a question appear once you've given yours.
 
 ## v2: redesign
 

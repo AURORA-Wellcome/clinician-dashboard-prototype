@@ -26,6 +26,7 @@ The landing page links to v2 and v1 for comparison. What changed in each version
   - Have the access code but not the link? Enter it under How to review on the landing page, or in the Notes panel.
   - On the public link, notes stay in your own browser and no one else sees them; the Notes panel says so.
   - Please leave out patient information.
+- **Answer the questions:** in v3, the Notes panel's Questions tab asks a few things about each page. Your answer is shared like a note, and others' answers appear once you've given yours. You can change your answer later.
 
 ## Design rules
 

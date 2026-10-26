@@ -368,7 +368,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       <li><div><strong>Open v3</strong><span>The latest version starts on the caseload, the list of a clinician’s patients.</span></div></li>
       <li><div><strong>Try the 5-second test</strong><span>Look at the caseload for five seconds. Who needs attention first?</span></div></li>
       <li><div><strong>Switch options</strong><span>The striped strip at the top changes pages and design options. It isn’t part of the design. Its “All versions” link brings you back here.</span></div></li>
-      <li><div><strong>Leave notes</strong><span id="notes-step">Click Notes at bottom right, here or in a mockup. Notes are shared only through the private review link from the study team. The link has an access code in it. On this public site, notes stay in your browser.</span> <button type="button" class="linkbtn" id="code-open">Enter an access code</button></div></li>
+      <li><div><strong>Leave notes</strong><span id="notes-step">Click Notes at bottom right, here or in a mockup. In v3, its Questions tab also asks a few things about each page. Notes are shared only through the private review link from the study team. The link has an access code in it. On this public site, notes stay in your browser.</span> <button type="button" class="linkbtn" id="code-open">Enter an access code</button></div></li>
     </ol>
   </section>
   <section class="history" aria-labelledby="history-title">
@@ -525,8 +525,8 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const step = $('notes-step'), open = $('code-open'), dlg = $('code-dialog'), input = $('code-input'), err = $('code-err'), carry = $('code-carry');
   const render = () => {
     const on = !!get('aurora-notes-board');
-    step.textContent = on ? 'Click Notes at bottom right, here or in a mockup. This browser has the access code, so the notes you add are shared with the group.'
-      : 'Click Notes at bottom right, here or in a mockup. Notes are shared only through the private review link from the study team. The link has an access code in it. On this public site, notes stay in your browser.';
+    step.textContent = on ? 'Click Notes at bottom right, here or in a mockup. In v3, its Questions tab also asks a few things about each page. This browser has the access code, so the notes you add are shared with the group.'
+      : 'Click Notes at bottom right, here or in a mockup. In v3, its Questions tab also asks a few things about each page. Notes are shared only through the private review link from the study team. The link has an access code in it. On this public site, notes stay in your browser.';
     open.textContent = on ? 'Remove the access code' : 'Enter an access code';
   };
   open.addEventListener('click', () => {
