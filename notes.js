@@ -35,6 +35,12 @@
     { id: 'look', view: 'list', part: 'page', short: 'Refined or Original look', show: { view: 'list' },
       title: 'Which look do you prefer? Switch between them with Look in the striped strip at the top.',
       options: [['refined', 'Refined, as now'], ['original', 'Original'], ['none', 'No preference']] },
+    { id: 'greet-tone', view: 'list', part: 'greet', short: 'How the greeting line feels', show: { view: 'list', look: 'refined', hero: '1' },
+      title: 'The greeting ends with a short line about your work in AURORA. Switch between them with Greeting line in the striped strip. How does it feel?',
+      options: [['encouraging', 'Encouraging'], ['fine', 'Fine, but I wouldn’t miss it'], ['patronizing', 'Patronizing']] },
+    { id: 'greet-line', view: 'list', part: 'greet', short: 'Which greeting line', show: { view: 'list', look: 'refined', hero: '1' },
+      title: 'Which line would you want in the greeting?',
+      options: [['checkins', 'Your patients’ check-ins, as now'], ['pages', 'How many of your patients’ pages you opened this week'], ['clinicians', 'That you’re one of the AURORA clinicians'], ['rotate', 'A different one each day'], ['none', 'None']] },
     { id: 'pt-lead', view: 'patient', part: 'band', short: 'PHQ-9 or AI estimate first', show: { view: 'patient', p: 'delgado' },
       title: 'Which number should come first on the patient page?',
       options: [['phq', 'The patient’s PHQ-9, their own account, as now'], ['ai', 'The AI estimate, which the status is based on'], ['none', 'No preference']] },
@@ -264,7 +270,7 @@
     return {
       version: VERSION, view: page.view, pid: page.view === 'list' || STATIC ? null : page.pid, pname: STATIC ? '' : patientName(), pageKey: pageKey(),
       commit: BUILD.commit, built: BUILD.built,
-      ctx: STATIC ? {} : { order: page.order, dates: page.dates !== false, style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang() }
+      ctx: STATIC ? {} : { order: page.order, dates: page.dates !== false, line: page.greetLine || '', style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang() }
     };
   }
   // After posting: a reviewer sees others' notes on a page once they have added one there. Facilitators see all.
@@ -750,6 +756,7 @@
     hp.set('look', c.look || 'current');
     hp.set('hero', c.hero === false ? '0' : '1');
     hp.set('dates', c.dates === false ? '0' : '1'); // notes from before the switch saw visit dates
+    if (c.line) hp.set('line', c.line);
     ui.focus = n.id;
     if (n.version !== VERSION && PAGE_FILES[n.version]) { location.href = `${PAGE_FILES[n.version]}${location.search}#${hp}&note=${n.id}`; return; }
     pendingScroll = n.id;
@@ -867,13 +874,13 @@
       return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const iso = (ms) => (ms ? new Date(ms).toISOString().replace('T', ' ').slice(0, 16) : '');
-    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day', 'handout_language', 'visit_dates', 'question', 'choice'];
+    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day', 'handout_language', 'visit_dates', 'question', 'choice', 'greeting_line'];
     // Notes, their replies, and the answers to the questions you may see
     const rows = [...m.visible, ...m.visible.flatMap((n) => m.replies(n.id)), ...m.answersShown].sort(byTime).map((n) => {
       const c = n.ctx || {};
       return [n.id, iso(n.createdAt), n.name, n.role, n.kind, n.text, n.parent || '', Object.keys(n.plus || {}).length, n.resolved ? 'yes' : '', n.resolvedBy || '',
         n.version, VIEW_NAMES[n.view] || n.view, n.pname || n.pid || '', n.anchorLabel, n.x == null ? '' : n.x.toFixed(3), n.y == null ? '' : n.y.toFixed(3),
-        c.order, c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || '', c.lang || '', c.dates === false ? 'not known' : 'known', n.q || '', n.choice || ''];
+        c.order, c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || '', c.lang || '', c.dates === false ? 'not known' : 'known', n.q || '', n.choice || '', c.line || ''];
     });
     const csv = [head, ...rows].map((r) => r.map(cell).join(',')).join('\r\n');
     const d = new Date(), pad = (v) => String(v).padStart(2, '0');

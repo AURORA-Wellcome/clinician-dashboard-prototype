@@ -600,6 +600,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
     <sc-if value="{{ onCheckin }}"><span class="review-group"><span class="review-k">Example</span><span class="seg"><sc-for list="{{ exTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
     <span class="review-group"><span class="review-k">Look</span><span class="seg"><sc-for list="{{ lookTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
     <sc-if value="{{ greetCtl }}"><span class="review-group"><span class="review-k">Greeting</span><span class="seg"><sc-for list="{{ heroTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
+    <sc-if value="{{ lineCtl }}"><span class="review-group"><span class="review-k">Greeting line</span><span class="seg"><sc-for list="{{ lineTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
     <a class="review-link" href="index.html">All versions</a>
   </div>
 
@@ -1537,7 +1538,7 @@ const HO_TEXT = {
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, factsOpen: false, disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null };
 
   componentDidMount() {
     const o = {};
@@ -1557,6 +1558,7 @@ class Component extends DCLogic {
       if (['current', 'refined'].includes(h.get('look'))) r.refined = h.get('look') === 'refined';
       if (['0', '1'].includes(h.get('hero'))) r.hero = h.get('hero') === '1';
       if (['0', '1'].includes(h.get('dates'))) r.dates = h.get('dates') === '1';
+      if (['checkins', 'pages', 'clinicians', 'none'].includes(h.get('line'))) r.greetLine = h.get('line');
       if (Object.keys(HO_TEXT).includes(h.get('lang'))) r.hoLang = h.get('lang');
       return r;
     };
@@ -1618,7 +1620,7 @@ class Component extends DCLogic {
   go(o) {
     const next = { ...this.state, ...o };
     if (next.view === 'checkin') next.cday = resolveCday(next.pid, next.cday);
-    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&dates=${next.dates ? 1 : 0}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}`); } catch (e) { /* sandboxed preview */ }
+    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&dates=${next.dates ? 1 : 0}&line=${next.greetLine}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}`); } catch (e) { /* sandboxed preview */ }
     clearTimeout(this.peekT);
     clearTimeout(this.tipT);
     // The handout's name, ticks and language belong to one printout: another page or patient starts fresh
@@ -1769,17 +1771,28 @@ class Component extends DCLogic {
       return d + ' Z';
     };
     const tod = BANDS_TOD[hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening'];
+    // The greeting's last line: positive and descriptive, about the clinician's own work in AURORA. Never a comparison
+    // with other clinicians, patient outcomes, or anything about enrollment (DESIGN.md, Greeting band). In production,
+    // one a day, rotating among those that apply; 'pages' only when the share is high. Mock numbers.
+    const ciTotal = PATIENTS.reduce((a, p) => a + rateOf(p)[0], 0);
+    const greetLines = {
+      checkins: { mark: icon('message-square'), text: `Your patients completed ${ciTotal} check-ins in the last 2 weeks` },
+      pages: { mark: null, text: `You opened ${all.length - 1} of your ${all.length} patients’ pages this week` },
+      clinicians: { mark: null, text: 'You’re one of 40 AURORA clinicians in 8 countries' }
+    };
     const hero = {
       ...tod, front: curtain(0, tod.front, 0), back: curtain(170, tod.back, 5),
       hello: `${hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'}, Dr. Okafor`,
       date: `${DAY_FULL[DOW[TODAY.getDay()]]}, ${MONTHS_FULL[TODAY.getMonth()]} ${TODAY.getDate()}`,
       dateShort: `${DOW[TODAY.getDay()]}, ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`,
-      // Study visits, with the calendar icon: "study", because clinicians also see patients who aren't in AURORA.
-      // Without visit dates, the number of patients instead. Safety flags aren't repeated here: their group is pinned
-      // first, just below.
-      facts: !s.dates ? [{ cls: 'greet-fact', mark: null, text: `${countOf(all.length, 'patient')} in AURORA` }]
-        : todayN || tomorrowN ? [{ cls: 'greet-fact', mark: icon('calendar'),
-        text: todayN && tomorrowN ? `${countOf(todayN, 'study visit')} today, ${tomorrowN} tomorrow` : todayN ? `${countOf(todayN, 'study visit')} today` : `${countOf(tomorrowN, 'study visit')} tomorrow` }] : []
+      // Where visit dates are known, the study visits, with the calendar icon: "study", because clinicians also see
+      // patients who aren't in AURORA. Then the line about the clinician's own work. Safety flags aren't repeated here:
+      // their group is pinned first, just below.
+      facts: [
+        ...(s.dates && (todayN || tomorrowN) ? [{ cls: 'greet-fact', mark: icon('calendar'),
+          text: todayN && tomorrowN ? `${countOf(todayN, 'study visit')} today, ${tomorrowN} tomorrow` : todayN ? `${countOf(todayN, 'study visit')} today` : `${countOf(tomorrowN, 'study visit')} tomorrow` }] : []),
+        ...(greetLines[s.greetLine] ? [{ cls: 'greet-fact', ...greetLines[s.greetLine] }] : [])
+      ]
     };
 
     // Selected patient
@@ -2339,6 +2352,8 @@ class Component extends DCLogic {
       hero, heroOn: s.refined && s.hero && s.view === 'list', refined: s.refined,
       lookTabs: [tab('Refined', s.refined, () => this.go({ refined: true })), tab('Original', !s.refined, () => this.go({ refined: false }))],
       heroTabs: [tab('On', s.hero, () => this.go({ hero: true })), tab('Off', !s.hero, () => this.go({ hero: false }))],
+      lineTabs: [['checkins', 'Check-ins'], ['pages', 'Pages opened'], ['clinicians', 'Clinicians'], ['none', 'None']].map(([k, l]) => tab(l, s.greetLine === k, () => this.go({ greetLine: k }))),
+      lineCtl: s.refined && s.view === 'list' && s.hero,
       greetCtl: s.refined && s.view === 'list',
       peekOut: () => { clearTimeout(this.peekT); this.peekT = setTimeout(() => this.setState({ peek: null }), 150); },
       peekOff: () => { clearTimeout(this.peekT); this.setState({ peek: null }); },
