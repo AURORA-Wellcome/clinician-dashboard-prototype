@@ -7,6 +7,7 @@ The rules every mockup screen follows. Give this file, and the reference screens
 - 2026-10-23: checked against the clinical planning notes (`Notes/Clinical/`).
 - 2026-10-24: applied in `AURORA Dashboard v2.dc.html`, after an independent review. The section styles (Plain or Distinct) were added for the CWG to compare, and the type rules (principle 9 and Type) followed a review of published usability guidance. v3, which applies the theoretical model, was added too; its differences are in the v3 section.
 - 2026-10-25: v3's check-in page was added as a draft. Distinct sections and the larger text were settled, and the Refined look became v3's default.
+- 2026-10-26: v3 changed after the first review notes: footers, day headers, the greeting band, Print, the discussion tick boxes, visits on the chart and the handout's note about the check-ins.
 
 ## Principles
 
@@ -105,7 +106,7 @@ Source Sans 3 runs small: its x-height (the height of a lowercase x) is 0.49 of 
 - **Chart text** scales with the chart, so its size is set per window width to stay at about 15–17 px. It is set larger in narrow windows, so zooming in enlarges it. In print the chart runs the full page width rather than being squeezed, so its labels stay at 9 pt.
 - **Print:** nothing on paper is below 8 pt. If the brief doesn't fit one page, cut content rather than shrink it.
 - **Patient handout** prints in clear print, with 14 pt body text, not on the brief's scale. Clear-print guidance asks for 12 pt minimum, 14 pt preferred.
-- **Line length:** prose runs to about 70 characters a line at most (USWDS: 45–90, aiming for 66). Footers are capped at 70 characters.
+- **Line length:** prose runs to about 70 characters a line at most (USWDS: 45–90, aiming for 66). Footers span the content width in two blocks side by side, each capped at 70 characters a line, so they line up with the panels above; in narrow windows the blocks stack.
 - **Narrow windows and zoom:** below 60 rem, caseload flags move to a second line, the tiles go 2 × 2 and the patient page is one column. Reflow down to 320 px (WCAG 1.4.10) is a production task.
 - **Where the numbers come from:** USWDS asks for at least an effective 16 px for most text, about 17 px in Source Sans, and smaller sizes only "sparingly". GOV.UK and the NHS use 19 px body text and 16 px small text. Microsoft's Fluent uses 14 px for dense app screens. The EU minimum for medicine leaflets is 9 pt.
 - **Earlier sizes:** v2 first used 13 / 15 / 19 / 30 px, printing at 7.9 / 9 / 10.5 / 16.5 pt, with chart labels at 6.7 pt and the handout at 10.5 pt. Half the patient page's words were at 13 px. They were offered behind the review strip's Text switch until the larger text was settled on October 25.
@@ -153,7 +154,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
 - **Change:** a signed number after the value ("21 +9"), measured from the patient's own baseline. It is colored (`worse-text` or `stable-text`, weight 600) only when it is 5 or more points; otherwise muted. Don't use ▲▼ arrows: the triangle is already the worse-than-baseline status shape.
 - **Uncertainty:** "± 4", or the clipped range ("range 22–27") when the interval runs past the 0–27 scale.
 - **Caseload order:**
-  - **By next visit** (the default): one group per day, with a "Not scheduled" group last. Each day has a full-width header giving the full date, after "Today" or "Tomorrow" where it applies ("Tomorrow, Thursday, August 13"), and the number of visits that day, counting any pinned above under Safety flag, so it agrees with the greeting band. The date is in the header, so the rows show only the time, under the column heading "Time". Safety-flagged patients come first, in a Safety flag group pinned above the day headers. No day header covers those rows, so each of them shows its visit date above the time.
+  - **By next visit** (the default): one group per day, with a "Not scheduled" group last. Each day has a full-width header giving the full date, after "Today" or "Tomorrow" where it applies ("Tomorrow, Thursday, August 13"). Day headers carry no count: with safety-flagged visits pinned above, a count disagrees either with the rows below it or with the greeting band (review note, October 26). The date is in the header, so the rows show only the time, under the column heading "Time". Safety-flagged patients come first, in a Safety flag group pinned above the day headers. No day header covers those rows, so each of them shows its visit date above the time.
   - Day headers are neutral, because color means status. In the distinct style they sit on the neutral `tint`, with no edge.
   - **Grouped by status:** Safety flag, Worse than baseline, Too few check-ins, Stable or better, with patients in visit order within each group.
 - **Caseload columns:** the column you look patients up by comes first, then the rest in order of importance.
@@ -181,7 +182,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - Dates put the month first, US style: "Thu, Aug 13", or "Thu, Aug 13, 2:00 PM" with a time. A space that can't break joins the time to AM or PM.
   - The patient's own words are quoted as written ("waking at 4 am").
 - **Buttons:**
-  - Secondary actions (Print, Patient handout) are text buttons in `accent`, with no border.
+  - Secondary actions (Print, Patient handout) are text buttons in `accent`, with no border. Print carries the printer icon, in the button's color.
   - A solid `accent` button is reserved for a page's single primary action; the current pages have none.
   - No outlined buttons.
   - Caseload rows have no action buttons: the whole row opens the patient.
@@ -209,6 +210,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - The dashed line's label has an ⓘ explaining why the line stands out. It says that the line is where Worse than baseline begins, measured from the patient's own baseline, so it is not a severity cut-off, and that its number is a placeholder. The label is drawn in HTML over the chart, so that it can hold the ⓘ button, and is sized to match the chart's own labels. In v3 it takes two lines in the label column, with its last word kept on the same line as the ⓘ. The ⓘ doesn't print.
   - Item 9 answers are numbers under the PHQ-9 dates, in bold `safety` when above 0. Don't use badges.
   - Reported events are dashed verticals labeled with their source, e.g. "(AI)". The label sits right of the line, or left of it when it would run off the chart.
+  - **Visits** (v3): past clinic visits are short `ink-muted` marks in a Visits row under the plot, above item 9, so clinicians can read the check-ins against the sessions (review note, October 26). The readout names a visit and its time ("Visit, 2:00 PM", with the calendar icon). *(Mock data: each patient's usual slot, weekly or every 2 weeks, back to when they joined. Where visit dates come from is still open, bead aurora-8ok.)*
   - The time axis runs from when the patient joined, up to 12 weeks.
   - In the distinct style, the area above baseline + 5 is shaded in `worse-zone`.
   - **Hover readout:** it moves one day at a time. Pointing anywhere over the chart shows a guide line, a ring on the trend line (and on the dot, on a PHQ-9 day), and a small card:
@@ -243,8 +245,9 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
     - scheduling (calendar)
     - family, relationships and contact (people; v3 check-in page and drivers panel)
   - Never use icons for urgency (the status shapes and color do that), never color them, and never show one alone. Each sits next to its text and is hidden from screen readers.
+  - **One action icon:** the printer beside Print, the exception to Meaning. It takes the button's color, so the button reads as one control (review note, October 26).
   - At most one icon per row or item.
-  - Used in: caseload flags, "What changed" items (in a left gutter), chart events, goals, the drivers panel's titles and the greeting band's visits (Refined look).
+  - Used in: caseload flags, "What changed" items (in a left gutter), chart events and the readout's visits, goals, the drivers panel's titles, the greeting band's visits (Refined look) and the Print buttons.
   - No emoji, illustrations or decorative graphics. The exceptions are the brand mark (below), the greeting band in the Refined look, and the patient handout's header.
   - **Landing banner:** outside the dashboard, the landing page opens with a banner. It sets the stage on a page where nobody is working, and it moves calmly but visibly. `design/landing/banner_gen.py` draws it as SVG layers.
     - **Scene:** a night sky with aurora curtains over a low horizon of boreal forest: black spruce on two ridges, as in northern Canada, with a log cabin in a clearing. The forest and cabin are anchored to the bottom of the banner, so a wide screen crops sky rather than forest.
@@ -266,7 +269,8 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - **In the dashboard,** the motif is only a thin blue-violet-to-violet line under the top bar and the greeting band's curtains (Refined look), and the patient handout's header strip. It never uses green, magenta or warm colors there, and it never appears in charts, statuses or the printed brief. (The drivers panel's hues in the Refined look come from the same cool range, but they are identity colors, not the motif.) Text never sits on a gradient, and motion stays in the banner.
   - The capsule "pill" icon was replaced by the pill bottle because at 16 px it read as a hyperlink symbol.
 - **Brand mark:** a 24 px rounded square in a blue-to-violet gradient (`#2E6FD6` to `#7B5CC9`) with two level white aurora ribbons, the lower one shorter and fainter. It sits beside the AURORA wordmark in the top bar (v3 and the landing page) and is the browser-tab icon (`favicon.svg`). Cool hues only, like the greeting band, so it never reads as a status. The ribbons stay level: a rising line would read as rising severity, and two identical waves as "≈".
-- **Discussed checkbox:** "Discussed AURORA data with the patient at this visit". This feeds the discussion-rate measure in the supervisor audit-and-feedback (A&F) playbook.
+- **Discussed checkbox** (v2): "Discussed AURORA data with the patient at this visit", at the foot of the patient page. This feeds the discussion-rate measure in the supervisor audit-and-feedback (A&F) playbook.
+- **Discussion tick boxes** (v3, from October 26): at the foot of the patient page's summary band, "AURORA data at this visit:" with two tick boxes, "The patient raised it" and "I raised it". They replace v2's checkbox: the clinical group's dashboard suggestions (August 31) asked to record who raised the measures, and the review notes asked for a more prominent place. Either tick counts as discussed for the A&F playbook's discussion rate, and the logging spec records which (bead aurora-1w3). Each patient keeps its own ticks. Not printed.
 - **ⓘ tooltip:** the place for scales, thresholds and definitions. The page draws it; don't use the browser's `title` tooltip, which appears only after a delay and never by keyboard or touch.
   - The ⓘ is a button. Pointing at it, or reaching it with Tab, opens the tip at once.
   - A click or tap keeps the tip open, with the ⓘ in `ink`. A second click, Escape, or a click elsewhere closes it. This is how it works on touch screens.
@@ -381,7 +385,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
   - Things to talk about at the next visit, with a line to add their own;
   - Your next step, with lines to fill in together;
   - If things get hard: the site's crisis line, and 988 at US sites only (example wording until the protocol sets it). Each site supplies its line in each language as a whole phrase, because Spanish changes the words around a number ("al 024", "a la línea…");
-  - About your check-ins (draft wording until the consent form sets it);
+  - About your check-ins (draft wording until the consent form sets it). It doesn't remind patients that they can stop: the consent form covers that, and a reminder on every printout was felt unhelpful (review note, October 26; bead aurora-ubn);
   - a privacy line.
 - **Printout rules.** The protocol and consent forms still need to describe the handout (bead aurora-ubn).
   - Nothing that identifies the patient: no full name, date of birth, study ID, medical record number, address or site. A first name appears only if the clinician adds it when printing; otherwise the patient can write it in. How names reach the dashboard at all is still open (bead aurora-il5).
@@ -405,7 +409,7 @@ A polish pass. Since 2026-10-25 it has been v3's default look; the review strip'
   - All motion is off when the reduced-motion setting is on, in the Original look, and in print.
 - **Drivers panel:** each measure has its icon (moon, footprints, people) and its own cool hue: night indigo for sleep, daylight blue for activity, violet for contact. The hues only say which measure is which. Warm hues and greens mean status and amber is the AI estimate, so these stay cool. They pass the data-viz palette checks for small multiples: color-blind separation across all pairs (worst ΔE 15, target 8), the normal-vision floor (19, floor 15) and 3:1 contrast on white. The lines are smooth but never overshoot a week's value (monotone curves), and a soft wash fills the gap between each line and its usual level. Each title sits on its own line above its chart, so the chart keeps the trend's left edge and the weeks line up. *(Amends the drivers panel's ink-only rule if adopted.)*
 - **Greeting band** (Patients page only; the review strip's Greeting switch or `&hero=0` hides it):
-  - **Content:** "Good morning, Dr. Okafor", then the date and the visits today or tomorrow, with the calendar icon. Safety flags aren't repeated here: their group is pinned first, just below, and a second red mark so close would compete with it. Space separates the facts, not middle dots, and screen readers hear them as sentences.
+  - **Content:** "Good morning, Dr. Okafor", then the date and the study visits today or tomorrow ("3 study visits tomorrow", since clinicians also see patients who aren't in AURORA), with the calendar icon. Safety flags aren't repeated here: their group is pinned first, just below, and a second red mark so close would compete with it. Space separates the facts, not middle dots, and screen readers hear them as sentences.
   - **Layout:** the text starts where the list's does (a 1 px transparent border and 20 px of padding). The art takes its own column to the right of the text: at most 28rem wide, anchored right, fading in over 8rem, and hidden below 52rem, so text never sits on it. On phones (below 32rem) the date shortens to "Wed, Aug 12", so the band stays two lines; screen readers still hear the full date.
   - **Art:** two soft aurora curtains in pale blue and violet, the violet one feathering in behind the blue. Their lower edges are level and undulate gently: edges that rose across the band would read as a worsening trend, in a dashboard where a rising line means worse. Static rays were tried and dropped, because on a white band they read as a blurred bar chart.
   - **Time of day:** the curtains are shorter and paler in the morning and longer and deeper toward evening, but never heavier. Each hour's opacities keep the darkest pixel near 1.8:1 against white.

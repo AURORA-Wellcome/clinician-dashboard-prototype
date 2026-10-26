@@ -4,7 +4,7 @@ Three versions are kept side by side so the working group can compare them; the 
 
 ## v3: progress-focused
 
-`AURORA Dashboard v3.dc.html`, October 24, 2026, with additions on October 25.
+`AURORA Dashboard v3.dc.html`, October 24, 2026, with additions on October 25 and 26.
 
 v2, changed to follow the theoretical model (`Theoretical model/` in the project folder) and the off-track rules in `Study design/Measurement/AURORA_additional_data_collection.md`. The rules are in the v3 section of DESIGN.md.
 - **Off-track flag:** a two-branch flag on the AI estimate. "Not improving" (▬) is a new status for patients who aren't improving early in care, or who remain symptomatic after 3 months; "Stable or better" becomes "On track". In this trial only, when check-ins are too few for an estimate, the flag falls back on the PHQ-9 and says so.
@@ -13,7 +13,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
 - **Chart:** it draws the rule that applies: baseline + 6 always, plus the expected range early in care or, once the persistence rule fires, the "10: symptomatic" line. The baseline + 6 line is labeled with the status it starts, Worse than baseline, and has an ⓘ saying why it stands out.
 - **Drivers panel:** "Show sleep, activity and contact" opens phone-sensing measures on the trend's weeks. Since October 25, each measure has its icon and its own cool hue in the Refined look, with a smooth line and a soft wash showing how far it has moved from its usual level. Pointing at either chart shows that week's values in the panel.
 - **Mock patients:** two new ones, `haddad` (early in care, not improving) and `novak` (the PHQ-9 fallback).
-- **Refined look** (the default since October 25): status words in ink with colored shapes, finer type, soft shadows, an initials avatar, a dot on the latest estimate, quick fade-ins, and a greeting band on the Patients page, with soft aurora art that follows the time of day. The band was revised on October 25: level curtains in a column of their own, clear of the text; the visits with a calendar icon; no repeated safety count, since that group is pinned just below; and two lines on a phone. The day headers below now count every visit that day, including one pinned under Safety flag, so they agree with it. Opening a patient morphs the name into the page title, and the trend line draws in; motion is off with the reduced-motion setting. The review strip's Look switch still offers the Original look.
+- **Refined look** (the default since October 25): status words in ink with colored shapes, finer type, soft shadows, an initials avatar, a dot on the latest estimate, quick fade-ins, and a greeting band on the Patients page, with soft aurora art that follows the time of day. The band was revised on October 25: level curtains in a column of their own, clear of the text; the visits with a calendar icon; no repeated safety count, since that group is pinned just below; and two lines on a phone. Opening a patient morphs the name into the page title, and the trend line draws in; motion is off with the reduced-motion setting. The review strip's Look switch still offers the Original look.
 - **Improving:** a patient on track whose estimate has come down steadily gets a quiet note, "Improving for 11 weeks (AI)", in the caseload and on the status line.
 - **No middle dots** (October 25): notes follow a comma, values' bands go in parentheses, and separate facts are set apart by space, in the dashboard and the review notes. On phones the top bar wraps to two rows.
 - **Review strip:** settings are grouped with short labels (Page, List, Look, and Greeting on the Refined Patients page). Section style, text size and icons are settled (Distinct, Larger, on), so they are no longer switches.
@@ -23,6 +23,11 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
   - **Draft:** what clinicians may see of the conversations waits on an IRB decision, so the page is labeled as a draft, and only the examples have written conversations.
   - **Examples:** the review strip's Example group opens seven states: worsening, a reviewed safety flag, a check-in awaiting review, a PHQ-9 item 9 answer, Spanish with translation, a routine check-in, and one too short for an estimate.
   - **Revised layout** (October 25): two columns at the top, safety on the left in every state and the estimates on the right as a small table, so they stay in place from one check-in to the next. The reviewer and time sit on a muted line under a safety heading; Awaiting review is a neutral panel that says once what is held; translations have their own line; the phone-sensing table is aligned; and the transcript sits under What came up.
+- **After the first review notes** (October 26): changes from the reviewers' notes and the clinical planning meeting the same day.
+  - **Patients page:** the footer spans the list's full width, in two blocks. Day headers no longer show a count, which disagreed with the rows below when a visit was pinned under Safety flag. The greeting band says "3 study visits tomorrow", since clinicians also see patients who aren't in AURORA.
+  - **Patient page:** "AURORA data at this visit" moves up to the foot of the summary band, as two tick boxes, "The patient raised it" and "I raised it", as the clinical group's dashboard suggestions asked; each patient keeps its own ticks. Print has a printer icon. The trend chart shows past clinic visits as marks in a Visits row under the plot, and the readout names a visit and its time.
+  - **Model Facts:** the text no longer runs out of the box.
+  - **Patient handout:** the note about the check-ins no longer reminds patients that they can stop, in English or Spanish.
 
 ## v2: redesign
 

@@ -33,7 +33,7 @@ Reviewers can pin notes to any part of the v2 and v3 pages and the landing page.
 
 ## Screenshots and images
 
-- `design/landing/`: the screenshots `index.html` shows, one per version, rendered at 2× without the review strip. Regenerate them when a version's caseload or patient page changes.
+- `design/landing/`: the screenshots `index.html` shows, one per version: the caseload in a 1200 × 750 window at 4/3 scale (1600 × 1000 pixels), without the review strip or the Notes button (hide `.review` and the notes' `an-` classes with injected CSS). Regenerate them when a version's caseload or patient page changes.
 - `design/landing/banner_gen.py` draws the landing page's aurora banner as layers, which the page animates slowly. To regenerate it:
   1. Run `python3 design/landing/banner_gen.py banner.html plane.css`.
   2. Paste `banner.html` over the banner in `index.html`.

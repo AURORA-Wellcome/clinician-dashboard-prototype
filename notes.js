@@ -125,7 +125,8 @@
     { k: 'chart', sel: '.pt-trend', label: () => 'Trend chart' },
     { k: 'goal', sel: '.pt-goals li', id: (el) => clean(el.querySelector('.goal-text')), label: (id) => `Goal: ${short(id)}` },
     { k: 'goals', sel: '.pt-goals', label: () => 'Goals' },
-    { k: 'discussed', sel: '.check', label: () => '“Discussed” checkbox' },
+    // v2's single checkbox (.check) and v3's two tick boxes (.disc) share the key, so older notes still find their place
+    { k: 'discussed', sel: '.disc, .check', label: () => 'Discussed AURORA data' },
     // v3 patient handout (the keys hgoals and hpara are kept, so older notes still find their place)
     { k: 'ho-prep', sel: '.ho-prep', label: () => 'Before you print' },
     { k: 'ho-head', sel: '.ho-head', label: () => 'Handout heading' },

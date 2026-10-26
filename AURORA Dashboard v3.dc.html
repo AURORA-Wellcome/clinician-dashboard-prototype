@@ -108,6 +108,9 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .h2{margin:40px 0 12px;font-size:var(--fs-lg);line-height:var(--lh-lg);font-weight:600}
 .h2 .muted{font-size:var(--fs-md);font-weight:400;margin-left:8px}
 .foot{margin:16px 0 0;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
+/* Footers span the content width in blocks side by side, so lines stay short; one under the other in narrow windows */
+.foot{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,24rem),1fr));column-gap:32px;row-gap:4px}
+.foot > span{display:block;max-width:70ch}
 
 /* Status: shape + color + word. Base hues for shapes, -text hues for words. */
 .mk{width:10px;height:10px;flex:none;margin-right:8px;vertical-align:-1px}
@@ -171,6 +174,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .pt-title{display:flex;align-items:center;justify-content:space-between;gap:24px}
 .actions{display:flex;gap:4px}
 .btn{font:inherit;font-weight:600;padding:6px 12px;border:0;border-radius:var(--r);background:transparent;color:var(--accent);cursor:pointer}
+.btn .ic{color:inherit;margin-right:6px}
 .btn:hover{background:var(--hover)}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);margin-top:24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
 .stat{padding:16px 20px;border-left:1px solid var(--line)}.stat:first-child{border-left:0}
@@ -210,12 +214,16 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .chart .hv-ci{fill:none;stroke:var(--ai);stroke-width:1.5}
 .chart .phq{fill:var(--ink);stroke:#fff;stroke-width:1.5}
 .chart .evt{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+.chart .visit{stroke:var(--muted);stroke-width:2;stroke-linecap:round}
 .chart .i9-pos{fill:var(--safety);font-weight:600}
 .chart .noest{font-size:15px}
 .key{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:8px;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
 .key span{display:inline-flex;align-items:center;gap:6px}
-.check{display:flex;align-items:center;gap:10px;margin-top:32px;padding:14px 20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);font-weight:600;cursor:pointer}
-.check input{width:16px;height:16px;margin:0}
+/* Who raised the AURORA data at this visit: two tick boxes at the foot of the summary band */
+.disc{display:flex;flex-wrap:wrap;align-items:center;column-gap:24px;row-gap:8px;margin-top:20px}
+.disc-q{font-weight:600}
+.disc label{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.disc input{width:16px;height:16px;margin:0}
 
 /* Patient page layout. Plain: one column. Distinct: summary band, two-column middle, full-width trend. */
 .band-inner{max-width:1040px;margin:0 auto;padding:32px 24px 0}
@@ -320,7 +328,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .ci-title{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
 .ci-nav{display:flex;gap:4px;flex:none;margin-top:4px}
 /* Facts on one line, separated by space rather than middle dots; screen readers hear a comma between them */
-.facts{display:flex;flex-wrap:wrap;column-gap:24px}
+.facts{display:flex;flex-wrap:wrap;column-gap:24px;margin:8px 0 0}
 .facts > *{white-space:nowrap}
 /* The top of the check-in page: safety on the left in every state, the estimates on the right, on the same columns as
    the sections below, so the estimates stay in place from one check-in to the next */
@@ -391,7 +399,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .big .list.by-visit{--cols:90px minmax(140px,1fr) 172px 100px 88px minmax(0,2.4fr)}
 .big.distinct .pt-sections{grid-template-columns:minmax(0,1fr) 21rem}
 .big .safety-note{font-size:var(--fs-md);line-height:var(--lh-md)}
-.big .foot{font-size:var(--fs-md);line-height:var(--lh-md);max-width:70ch}
+.big .foot{font-size:var(--fs-md);line-height:var(--lh-md)}
 .big .chart text{font-size:14px}
 .big .chart-box{--chart-fs:14}
 .big .chart .noest{font-size:16px}
@@ -485,9 +493,10 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .modal-bg{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:24px;background:rgba(31,42,51,.45)}
 .modal{width:min(560px,100%);padding:24px;background:var(--surface);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .modal h3{margin:0;font-size:var(--fs-lg);line-height:var(--lh-lg)}
-.facts{margin:8px 0 0}
-.facts dt{margin-top:12px;font-weight:600}
-.facts dd{margin:2px 0 0}
+/* Its own class: the header's .facts lays its children out in one unbroken row */
+.mf{margin:8px 0 0}
+.mf dt{margin-top:12px;font-weight:600}
+.mf dd{margin:2px 0 0}
 .modal .actions{justify-content:flex-end;margin-top:20px}
 
 /* Patient handout: a page to go through with the patient, then print in clear print (14 pt). Plain words, and nothing
@@ -649,7 +658,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
           <div class="grp {{ g.cls }}"><svg class="mk" viewBox="0 0 10 10"><path d="{{ g.shape }}" fill="currentColor" fill-rule="evenodd"></path><path d="{{ g.shape2 }}" fill="currentColor"></path></svg>{{ g.title }}<span class="count">{{ g.count }}</span></div>
         </sc-if>
         <sc-if value="{{ g.isDay }}">
-          <div class="grp day"><sc-if value="{{ g.rel }}"><span class="rel">{{ g.rel }}, </span></sc-if>{{ g.title }}<span class="count">{{ g.count }}</span></div>
+          <div class="grp day"><sc-if value="{{ g.rel }}"><span class="rel">{{ g.rel }}, </span></sc-if>{{ g.title }}</div>
         </sc-if>
         <sc-for list="{{ g.rows }}" as="p">
           <div class="lrow row" data-pid="{{ p.id }}" onClick="{{ p.open }}" tabindex="0" role="link" onMouseEnter="{{ p.peekIn }}" onMouseLeave="{{ peekOut }}" onFocus="{{ p.peekFocus }}" onBlur="{{ peekOff }}" onKeyDown="{{ p.rowKey }}">
@@ -680,7 +689,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       </sc-for>
     </div>
     <p class="sr-only" aria-live="polite">{{ peek.aria }}</p>
-    <p class="foot">Severity: AI estimate on the PHQ-9 scale. Changes of 6 or more points from the patient’s baseline are colored. This dashboard isn’t monitored in real time. PHQ-9 item 9 answers appear without study-team review. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></p>
+    <p class="foot"><span>Severity: AI estimate on the PHQ-9 scale. Changes of 6 or more points from the patient’s baseline are colored.</span><span>This dashboard isn’t monitored in real time. PHQ-9 item 9 answers appear without study-team review. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></span></p>
   </main>
   </sc-if>
 
@@ -692,7 +701,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
         <div class="pt-who"><sc-if value="{{ refined }}"><span class="avatar no-print" aria-hidden="true">{{ pt.initials }}</span></sc-if><h1 class="h1">{{ pt.name }}</h1></div>
         <div class="actions no-print">
           <button class="btn" onClick="{{ goHandout }}">Patient handout</button>
-          <button class="btn" onClick="{{ doPrint }}">Print</button>
+          <button class="btn" onClick="{{ doPrint }}">{{ printIcon }}Print</button>
         </div>
       </div>
       <div class="sub num facts"><sc-for list="{{ pt.headFacts }}" as="x"><span><sc-if value="{{ x.sep }}"><span class="sr-only">, </span></sc-if>{{ x.text }}</span></sc-for></div>
@@ -738,6 +747,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
         </div>
       </div>
       <sc-if value="{{ pt.discordant }}"><p class="callout">The patient’s PHQ-9 and the AI estimate differ by more than the estimate’s uncertainty. The estimate supplements the patient’s own account; it doesn’t replace it.</p></sc-if>
+      <div class="disc no-print" role="group" aria-labelledby="disc-q"><span class="disc-q" id="disc-q">AURORA data at this visit:</span><label><input type="checkbox" checked="{{ disc.pt }}" onChange="{{ disc.togglePt }}"> The patient raised it</label><label><input type="checkbox" checked="{{ disc.me }}" onChange="{{ disc.toggleMe }}"> I raised it</label></div>
     </div>
   </div>
 
@@ -761,7 +771,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       <h2 class="h2">Trend<span class="muted">{{ pt.trendSub }}</span></h2>
       <div class="chart-wrap">
         <div class="chart-box" onMouseLeave="{{ hoverOff }}">
-        <svg class="chart" viewBox="0 0 880 300" role="img" aria-label="{{ ch.aria }}" tabindex="0" onKeyDown="{{ chartKey }}" onFocus="{{ chartFocus }}" onBlur="{{ hoverOff }}">
+        <svg class="chart" viewBox="0 0 880 324" role="img" aria-label="{{ ch.aria }}" tabindex="0" onKeyDown="{{ chartKey }}" onFocus="{{ chartFocus }}" onBlur="{{ hoverOff }}">
           <sc-if value="{{ ch.showZone }}"><rect class="zone" x="{{ ch.L }}" y="{{ ch.T }}" width="{{ ch.zoneW }}" height="{{ ch.zoneH }}"></rect></sc-if>
           <sc-if value="{{ ch.hasExp }}"><polygon class="expband" points="{{ ch.expPts }}"></polygon><text x="{{ ch.endX }}" y="{{ ch.expLabelY }}">Expected range</text></sc-if>
           <sc-for list="{{ ch.ticks }}" as="k"><line class="{{ k.cls }}" x1="{{ ch.L }}" x2="{{ ch.R }}" y1="{{ k.y }}" y2="{{ k.y }}"></line><text x="{{ ch.tickX }}" y="{{ k.ty }}" text-anchor="end">{{ k.label }}</text></sc-for>
@@ -779,6 +789,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
           <sc-if value="{{ ch.showPersist }}"><line class="persist" x1="{{ ch.L }}" x2="{{ ch.R }}" y1="{{ ch.persistY }}" y2="{{ ch.persistY }}"></line><text x="{{ ch.endX }}" y="{{ ch.persistLabelY }}">10: symptomatic</text></sc-if>
           <sc-if value="{{ !ch.hasEst }}"><text class="noest" x="{{ ch.midX }}" y="{{ ch.noEstY }}" text-anchor="middle">No estimate yet: too few check-ins</text></sc-if>
           <sc-for list="{{ ch.phq }}" as="d"><circle class="phq" cx="{{ d.cx }}" cy="{{ d.cy }}" r="4.5"></circle></sc-for>
+          <sc-if value="{{ ch.hasVisits }}"><text x="{{ ch.tickX }}" y="{{ ch.vY }}" text-anchor="end">Visits</text><sc-for list="{{ ch.visits }}" as="v"><line class="visit" x1="{{ v.x }}" x2="{{ v.x }}" y1="{{ ch.vY1 }}" y2="{{ ch.vY2 }}"></line></sc-for></sc-if>
           <text x="{{ ch.tickX }}" y="{{ ch.i9Y }}" text-anchor="end">Item 9</text>
           <sc-for list="{{ ch.item9 }}" as="m"><text class="{{ m.cls }}" x="{{ m.x }}" y="{{ ch.i9Y }}" text-anchor="middle">{{ m.label }}</text></sc-for>
           <sc-for list="{{ ch.dates }}" as="d"><text x="{{ d.x }}" y="{{ ch.dateY }}" text-anchor="middle">{{ d.label }}</text></sc-for>
@@ -788,7 +799,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
             <sc-if value="{{ hv.hasCiDot }}"><circle class="hv-ci" cx="{{ hv.x }}" cy="{{ hv.ciY }}" r="5"></circle></sc-if>
             <sc-if value="{{ hv.hasPhqDot }}"><circle class="hv-phq" cx="{{ hv.x }}" cy="{{ hv.phqY }}" r="8"></circle></sc-if>
           </sc-if>
-          <sc-for list="{{ ch.hits }}" as="w"><rect class="hit" x="{{ w.x }}" y="0" width="{{ w.w }}" height="300" onMouseEnter="{{ w.enter }}" onClick="{{ w.click }}"></rect></sc-for>
+          <sc-for list="{{ ch.hits }}" as="w"><rect class="hit" x="{{ w.x }}" y="0" width="{{ w.w }}" height="324" onMouseEnter="{{ w.enter }}" onClick="{{ w.click }}"></rect></sc-for>
         </svg>
         <sc-if value="{{ ch.hasEst }}"><div class="thr-tag" style="{{ ch.thrTagStyle }}">{{ ch.thrHead }}<span class="thr-last">{{ ch.thrTail }}<span class="tt-wrap no-print" onMouseEnter="{{ tips.thr.enter }}" onMouseLeave="{{ tips.thr.leave }}"><button type="button" class="{{ tips.thr.btnCls }}" aria-label="About the Worse than baseline line" aria-describedby="tt-thr" onClick="{{ tips.thr.toggle }}" onFocus="{{ tips.thr.focus }}" onBlur="{{ tips.thr.blur }}">ⓘ</button><span id="tt-thr" role="tooltip" class="{{ tips.thr.cls }}"><sc-for list="{{ tips.thr.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span></div></sc-if>
         <sc-if value="{{ hv.show }}">
@@ -798,6 +809,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
             <div class="tip-row"><span class="tip-k">Check-in</span><span class="{{ hv.ciCls }}">{{ hv.ci }}</span></div>
             <sc-if value="{{ hv.hasPhq }}"><div class="tip-row"><span class="tip-k">PHQ-9</span><span class="{{ hv.phqCls }}">{{ hv.phq }}</span></div></sc-if>
             <sc-if value="{{ hv.hasI9 }}"><div class="tip-row"><span class="tip-k">Item 9</span><span class="{{ hv.i9Cls }}">{{ hv.i9 }}</span></div></sc-if>
+            <sc-if value="{{ hv.hasVisit }}"><div class="tip-event">{{ hv.visitIcon }}<span>{{ hv.visit }}</span></div></sc-if>
             <sc-for list="{{ hv.events }}" as="e"><div class="tip-event">{{ e.iconEl }}<span>{{ e.label }}</span></div></sc-for>
             <sc-if value="{{ hv.canOpen }}"><div class="tip-hint">Click to open the check-in</div></sc-if>
           </div>
@@ -853,9 +865,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       </aside>
     </div>
 
-    <label class="check no-print"><input type="checkbox" checked="{{ discussed }}" onChange="{{ toggleDiscussed }}"> Discussed AURORA data with the patient at this visit</label>
-
-    <p class="foot">This dashboard isn’t monitored in real time. The study team reviews AI-detected risk and emails you if it is urgent. PHQ-9 item 9 answers appear here without study-team review.</p>
+    <p class="foot"><span>This dashboard isn’t monitored in real time. The study team reviews AI-detected risk and emails you if it is urgent.</span><span>PHQ-9 item 9 answers appear here without study-team review.</span></p>
   </main>
   </sc-if>
 
@@ -877,7 +887,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       <div class="ho-field"><span>Things to talk about</span></div>
       <sc-for list="{{ ho.talk }}" as="t"><label class="ho-check"><input type="checkbox" checked="{{ t.on }}" onChange="{{ t.toggle }}"> {{ t.text }}</label></sc-for>
       <p class="muted">Untick anything the patient wouldn’t want on paper. Read the handout through before printing: parts of it are written by AI.</p>
-      <button class="btn" onClick="{{ doPrint }}">Print</button>
+      <button class="btn" onClick="{{ doPrint }}">{{ printIcon }}Print</button>
     </section>
     <article class="handout" lang="{{ ho.lang }}">
       <header class="ho-head">
@@ -1028,7 +1038,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
       </section>
       </sc-if>
     </div>
-    <p class="foot">This dashboard isn’t monitored in real time. The study team reviews flagged <span class="nowrap">check-ins</span> within one business day and emails you if the risk is urgent. AI summaries and translations can be wrong; the patient’s own account comes first. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></p>
+    <p class="foot"><span>This dashboard isn’t monitored in real time. The study team reviews flagged <span class="nowrap">check-ins</span> within one business day and emails you if the risk is urgent.</span><span>AI summaries and translations can be wrong; the patient’s own account comes first. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></span></p>
   </main>
   </sc-if>
 
@@ -1036,7 +1046,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
     <div class="modal-bg" onClick="{{ closeFacts }}">
       <div class="modal" onClick="{{ stop }}">
         <h3>Model Facts: AI-COA (Deliberate AI)</h3>
-        <dl class="facts">
+        <dl class="mf">
           <dt>Intended use</dt><dd>Severity context to supplement the PHQ-9 and clinical judgment, never to replace either.</dd>
           <dt>Output</dt><dd>A severity score on the PHQ-9 scale (0–27), with an uncertainty interval. It comes from check-in interviews and phone sensors.</dd>
           <dt>Changes</dt><dd>A change is colored when it is 6 or more points from the patient’s own baseline (their typical level in their first weeks in AURORA).</dd>
@@ -1053,7 +1063,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;defaultView&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;list&quot;, &quot;options&quot;: [&quot;list&quot;, &quot;patient&quot;, &quot;handout&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}, &quot;defaultPatient&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;delgado&quot;, &quot;options&quot;: [&quot;osei&quot;, &quot;whitfield&quot;, &quot;delgado&quot;, &quot;fernandez&quot;, &quot;nguyen&quot;, &quot;mensah&quot;, &quot;santoso&quot;, &quot;kaur&quot;, &quot;brooks&quot;, &quot;ortiz&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}}">
 // Icons: Lucide v0.460.0 (lucide.dev), ISC license. Geometry only.
-const ICONS = {"briefcase":[["path",{"d":"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"}],["rect",{"width":"20","height":"14","x":"2","y":"6","rx":"2"}]],"calendar":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}]],"clipboard-list":[["rect",{"width":"8","height":"4","x":"8","y":"2","rx":"1","ry":"1"}],["path",{"d":"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{"d":"M12 11h4"}],["path",{"d":"M12 16h4"}],["path",{"d":"M8 11h.01"}],["path",{"d":"M8 16h.01"}]],"dumbbell":[["path",{"d":"M14.4 14.4 9.6 9.6"}],["path",{"d":"M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"}],["path",{"d":"m21.5 21.5-1.4-1.4"}],["path",{"d":"M3.9 3.9 2.5 2.5"}],["path",{"d":"M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"}]],"footprints":[["path",{"d":"M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"}],["path",{"d":"M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"}],["path",{"d":"M16 17h4"}],["path",{"d":"M4 13h4"}]],"message-square":[["path",{"d":"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"}]],"moon":[["path",{"d":"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],"pill-bottle":[["path",{"d":"M18 11h-4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h4"}],["path",{"d":"M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"}],["rect",{"width":"16","height":"5","x":"4","y":"2","rx":"1"}]],"shield":[["path",{"d":"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"}]],"users":[["path",{"d":"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"}],["circle",{"cx":"9","cy":"7","r":"4"}],["path",{"d":"M22 21v-2a4 4 0 0 0-3-3.87"}],["path",{"d":"M16 3.13a4 4 0 0 1 0 7.75"}]],"sun":[["circle",{"cx":"12","cy":"12","r":"4"}],["path",{"d":"M12 2v2"}],["path",{"d":"M12 20v2"}],["path",{"d":"m4.93 4.93 1.41 1.41"}],["path",{"d":"m17.66 17.66 1.41 1.41"}],["path",{"d":"M2 12h2"}],["path",{"d":"M20 12h2"}],["path",{"d":"m6.34 17.66-1.41 1.41"}],["path",{"d":"m19.07 4.93-1.41 1.41"}]],"phone":[["path",{"d":"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"}]],"pencil":[["path",{"d":"M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"}],["path",{"d":"m15 5 4 4"}]]};
+const ICONS = {"briefcase":[["path",{"d":"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"}],["rect",{"width":"20","height":"14","x":"2","y":"6","rx":"2"}]],"calendar":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}]],"clipboard-list":[["rect",{"width":"8","height":"4","x":"8","y":"2","rx":"1","ry":"1"}],["path",{"d":"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{"d":"M12 11h4"}],["path",{"d":"M12 16h4"}],["path",{"d":"M8 11h.01"}],["path",{"d":"M8 16h.01"}]],"dumbbell":[["path",{"d":"M14.4 14.4 9.6 9.6"}],["path",{"d":"M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"}],["path",{"d":"m21.5 21.5-1.4-1.4"}],["path",{"d":"M3.9 3.9 2.5 2.5"}],["path",{"d":"M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"}]],"footprints":[["path",{"d":"M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"}],["path",{"d":"M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"}],["path",{"d":"M16 17h4"}],["path",{"d":"M4 13h4"}]],"message-square":[["path",{"d":"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"}]],"moon":[["path",{"d":"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],"pill-bottle":[["path",{"d":"M18 11h-4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h4"}],["path",{"d":"M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"}],["rect",{"width":"16","height":"5","x":"4","y":"2","rx":"1"}]],"shield":[["path",{"d":"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"}]],"users":[["path",{"d":"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"}],["circle",{"cx":"9","cy":"7","r":"4"}],["path",{"d":"M22 21v-2a4 4 0 0 0-3-3.87"}],["path",{"d":"M16 3.13a4 4 0 0 1 0 7.75"}]],"sun":[["circle",{"cx":"12","cy":"12","r":"4"}],["path",{"d":"M12 2v2"}],["path",{"d":"M12 20v2"}],["path",{"d":"m4.93 4.93 1.41 1.41"}],["path",{"d":"m17.66 17.66 1.41 1.41"}],["path",{"d":"M2 12h2"}],["path",{"d":"M20 12h2"}],["path",{"d":"m6.34 17.66-1.41 1.41"}],["path",{"d":"m19.07 4.93-1.41 1.41"}]],"phone":[["path",{"d":"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"}]],"printer":[["path",{"d":"M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"}],["path",{"d":"M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"}],["rect",{"x":"6","y":"14","width":"12","height":"8","rx":"1"}]],"pencil":[["path",{"d":"M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"}],["path",{"d":"m15 5 4 4"}]]};
 
 // Mock data: pseudo-realistic, no real patients. Weeks run Monday to Monday, May 25 to Aug 10; "today" is Wed, Aug 12.
 const WEEKS = ['May 25', 'Jun 1', 'Jun 8', 'Jun 15', 'Jun 22', 'Jun 29', 'Jul 6', 'Jul 13', 'Jul 20', 'Jul 27', 'Aug 3', 'Aug 10'];
@@ -1277,6 +1287,17 @@ const checkinOn = (p, d) => {
   return (Math.abs(Math.sin((d + 1) * 12.9898 + seedOf(p) * 78.233)) * 43758.5453) % 1 < cn / cd ? 'completed' : 'missed';
 };
 const startDay = (p) => Math.max(0, WEEKS.length - 1 - p.weeksIn) * 7;
+// Past clinic visits, for the trend chart (mock): the patient's usual slot, counting back from the next visit to when
+// they joined, weekly, or every 2 weeks when the next visit is a week or more away. A patient with no visit scheduled
+// last came 16 days ago, every 2 weeks before that.
+const visitDaysOf = (p) => {
+  const m = /^\w{3}, (\w{3}) (\d+)/.exec(p.visit);
+  const next = m ? Math.round((new Date(2026, MONTHS.indexOf(m[1]), Number(m[2])) - DAY0) / 864e5) : null;
+  const step = next == null || next - TODAY_D >= 7 ? 14 : 7;
+  const out = [];
+  for (let d = next == null ? TODAY_D - 16 : next - step; d >= startDay(p); d -= step) out.unshift(d);
+  return out;
+};
 const checkinDays = (p) => { const out = []; for (let d = startDay(p); d <= TODAY_D; d++) if (checkinOn(p, d) === 'completed') out.push(d); return out; };
 const isoOf = (d) => { const t = new Date(2026, 4, 25 + d); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; };
 const dayOfIso = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? Math.round((new Date(+m[1], +m[2] - 1, +m[3]) - DAY0) / 864e5) : null; };
@@ -1468,7 +1489,7 @@ const HO_TEXT = {
     helpCall: 'Call [site crisis line] at any time, day or night.',
     help988: 'In the US, you can also call or text 988.',
     aboutHead: 'About your check-ins',
-    about: 'Your check-ins help you and Dr. Okafor see how you’re doing between visits. You can stop at any time: just tell Dr. Okafor or the study team.',
+    about: 'Your check-ins help you and Dr. Okafor see how you’re doing between visits.',
     foot: 'This page is about your care. Keep it somewhere private.'
   },
   es: {
@@ -1504,14 +1525,14 @@ const HO_TEXT = {
     helpCall: 'Llame a [línea de crisis del centro] a cualquier hora, de día o de noche.',
     help988: 'En Estados Unidos, también puede llamar al 988 y marcar el 2 para hablar en español. O envíe un mensaje de texto con la palabra AYUDA al 988.',
     aboutHead: 'Sobre sus conversaciones con AURORA',
-    about: 'Sus conversaciones con AURORA les ayudan a usted y a su terapeuta a ver cómo está entre una cita y otra. Puede dejarlas en cualquier momento: solo dígaselo a su terapeuta o al equipo del estudio.',
+    about: 'Sus conversaciones con AURORA les ayudan a usted y a su terapeuta a ver cómo está entre una cita y otra.',
     foot: 'Esta hoja tiene información personal sobre su tratamiento. Guárdela en un lugar seguro.'
   }
 };
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, factsOpen: false, discussed: false, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, factsOpen: false, disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null };
 
   componentDidMount() {
     const o = {};
@@ -1706,14 +1727,14 @@ class Component extends DCLogic {
       return { title: `${DAY_FULL[wd]}, ${MONTHS_FULL[MONTHS.indexOf(mon)]} ${dd}`, rel: diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : '' };
     };
     const statusGroup = (k, rows) => ({ isStatus: true, cls: STATUS[k].cls, title: STATUS[k].label, shape: STATUS[k].shape, shape2: STATUS[k].shape2 || 'M0 0', rows });
-    // A day's header counts all its visits, including any pinned above under Safety flag, so it agrees with the greeting
-    const dayGroups = (rows) => [...new Set(rows.map((p) => p.dayKey))].map((k) => ({ ...dayHead(k), isDay: true, rows: rows.filter((p) => p.dayKey === k), visits: byVisitOrder.filter((p) => p.dayKey === k).length }));
+    // Day headers carry no count: with safety-flagged visits pinned above, a count would disagree with the rows below
+    const dayGroups = (rows) => [...new Set(rows.map((p) => p.dayKey))].map((k) => ({ ...dayHead(k), isDay: true, rows: rows.filter((p) => p.dayKey === k) }));
     // By next visit, safety flags still come first: a Safety flag group above the day headers, its rows carrying the visit date
     const pinned = byVisitOrder.filter((p) => p.status === 'safety').map((p) => ({ ...p, pinDate: p.dayKey || 'Not scheduled' }));
     const groups = (byStatus
       ? GROUP_ORDER.map((k) => statusGroup(k, byVisitOrder.filter((p) => p.status === k)))
       : [statusGroup('safety', pinned), ...dayGroups(byVisitOrder.filter((p) => p.status !== 'safety'))])
-      .filter((g) => g.rows.length).map((g) => ({ ...g, count: String(g.isDay ? g.visits : g.rows.length) }));
+      .filter((g) => g.rows.length).map((g) => ({ ...g, count: String(g.rows.length) }));
 
     // Greeting band (Refined look): a greeting, then today's date and the caseload in one line
     const hour = new Date().getHours();
@@ -1743,9 +1764,10 @@ class Component extends DCLogic {
       hello: `${hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'}, Dr. Okafor`,
       date: `${DAY_FULL[DOW[TODAY.getDay()]]}, ${MONTHS_FULL[TODAY.getMonth()]} ${TODAY.getDate()}`,
       dateShort: `${DOW[TODAY.getDay()]}, ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`,
-      // Visits, with the calendar icon. Safety flags aren't repeated here: their group is pinned first, just below.
+      // Study visits, with the calendar icon: "study", because clinicians also see patients who aren't in AURORA.
+      // Safety flags aren't repeated here: their group is pinned first, just below.
       facts: todayN || tomorrowN ? [{ cls: 'greet-fact', mark: icon('calendar'),
-        text: todayN && tomorrowN ? `${countOf(todayN, 'visit')} today, ${tomorrowN} tomorrow` : todayN ? `${countOf(todayN, 'visit')} today` : `${countOf(tomorrowN, 'visit')} tomorrow` }] : []
+        text: todayN && tomorrowN ? `${countOf(todayN, 'study visit')} today, ${tomorrowN} tomorrow` : todayN ? `${countOf(todayN, 'study visit')} today` : `${countOf(tomorrowN, 'study visit')} tomorrow` }] : []
     };
 
     // Selected patient
@@ -1815,7 +1837,8 @@ class Component extends DCLogic {
 
     // Chart geometry: PHQ-9 scale 0–27 with a numeric axis, weekly AI estimates, PHQ-9 every 2 weeks.
     // The time axis starts when the patient joined, up to the last 12 weeks.
-    const L = 72, R = 740, TOP = 32, BOT = 232;
+    // Under the plot: the visits row, then item 9 and the dates (the viewBox is 880 × CH_H)
+    const L = 72, R = 740, TOP = 32, BOT = 232, CH_H = 324;
     const last = WEEKS.length - 1;
     const x0 = Math.max(0, last - P.weeksIn);
     const X = (i) => L + ((i - x0) * (R - L)) / (last - x0);
@@ -1840,7 +1863,7 @@ class Component extends DCLogic {
       baseLabelY: P.baseline == null ? 0 : f(Y(P.baseline) + 4),
       baseLabel: T(`Baseline ${P.baseline}`),
       // The Worse than baseline label is HTML (see .thr-tag), placed by percentage of the chart's height
-      thrTagStyle: P.baseline == null ? '' : `top:${((Y(P.baseline + RULES.deterioration) / 300) * 100).toFixed(2)}%`,
+      thrTagStyle: P.baseline == null ? '' : `top:${((Y(P.baseline + RULES.deterioration) / CH_H) * 100).toFixed(2)}%`,
       // its last word stays with the ⓘ, so the two don't part on a narrow chart
       thrHead: STATUS.worse.label.replace(/\S+$/, ''), thrTail: STATUS.worse.label.match(/\S+$/)[0],
       midX: f((L + R) / 2), noEstY: f(Y(22.5) + 5),
@@ -1863,9 +1886,10 @@ class Component extends DCLogic {
           iconEl: iconAt(e.icon, flip ? ex - 20 : ex + 6, TOP - 23), label: T(e.label) };
       }),
       phq: PHQ_WEEKS.map((w, k) => (P.phq[k] == null || !inRange(w) ? null : { cx: f(X(w)), cy: f(Y(P.phq[k])) })).filter(Boolean),
-      i9Y: 262,
+      vY: 262, vY1: 250, vY2: 263,
+      i9Y: 286,
       item9: PHQ_WEEKS.map((w, k) => (P.item9[k] == null || !inRange(w) ? null : { x: f(X(w)), cls: P.item9[k] > 0 ? 'i9-pos' : '', label: T(P.item9[k]) })).filter(Boolean),
-      dateY: 290,
+      dateY: 314,
       dates: (x0 > 0 ? [x0, ...PHQ_WEEKS.filter((w) => w > x0)] : PHQ_WEEKS).map((w) => ({ x: f(X(w)), label: T(WEEKS[w]) }))
     };
 
@@ -1873,7 +1897,12 @@ class Component extends DCLogic {
     // PHQ-9s and events show on their own day, and the pointer snaps to them from one day either side.
     const d0 = x0 * 7, dLast = last * 7;
     const XD = (d) => L + ((d - d0) * (R - L)) / (dLast - d0);
-    const keyDays = [...PHQ_WEEKS.filter((w) => w >= x0).map((w) => w * 7), ...(P.events || []).filter((ev) => inRange(ev.week)).map((ev) => Math.round(ev.week * 7))];
+    // Clinic visits: short marks in their own row under the plot, in the patient's usual slot
+    const visitDays = visitDaysOf(P).filter((d) => d >= d0 && d <= dLast);
+    const visitTime = (/, (\d{1,2}:\d{2})$/.exec(P.visit) || [])[1];
+    ch.visits = visitDays.map((d) => ({ x: f(XD(d)) }));
+    ch.hasVisits = visitDays.length > 0;
+    const keyDays = [...PHQ_WEEKS.filter((w) => w >= x0).map((w) => w * 7), ...(P.events || []).filter((ev) => inRange(ev.week)).map((ev) => Math.round(ev.week * 7)), ...visitDays];
     const snap = (d) => keyDays.filter((m) => Math.abs(m - d) <= 1).sort((a, b) => Math.abs(a - d) - Math.abs(b - d))[0] ?? d;
     ch.hits = [];
     for (let d = d0; d <= dLast; d++) {
@@ -1935,6 +1964,8 @@ class Component extends DCLogic {
       const evs = (P.events || []).filter((ev) => Math.round(ev.week * 7) === hd);
       const ci = ciOn(hd), ciV = ciEstAt.has(hd) ? ciEstAt.get(hd) : null;
       const withheld = ci === 'completed' && ciV == null && est.length > 0;
+      const isVisit = visitDays.includes(hd);
+      const visitText = isVisit ? (visitTime ? `Visit, ${tm(visitTime)}` : 'Visit') : '';
       const x = XD(hd);
       Object.assign(hv, {
         show: true, x: f(x), cls: 'tip ' + (x > 0.6 * 880 ? 'left' : 'right'), style: `left:${((100 * x) / 880).toFixed(2)}%`,
@@ -1946,8 +1977,9 @@ class Component extends DCLogic {
         hasPhqDot: phq != null, phqY: phq == null ? 0 : f(Y(phq)),
         hasI9: i9 != null, i9: i9 == null ? '' : String(i9), i9Cls: 'tip-v' + (i9 > 0 ? ' i9-pos' : ''),
         events: evs.map((ev) => ({ label: ev.label, iconEl: icon(ev.icon) })),
+        hasVisit: isVisit, visit: visitText, visitIcon: icon('calendar'),
         aria: [title, e == null ? '' : `severity estimate ${estText.replace('±', 'plus or minus')}`, ciV != null ? `check-in estimate ${ciV}` : withheld ? 'check-in completed, no estimate' : ci === 'none scheduled' ? 'no check-in scheduled' : `check-in ${ci}`,
-          k < 0 ? '' : phq == null ? 'PHQ-9 not completed' : `PHQ-9 ${phq}, ${bandOf(phq)}`, i9 == null ? '' : `item 9 ${i9}`,
+          k < 0 ? '' : phq == null ? 'PHQ-9 not completed' : `PHQ-9 ${phq}, ${bandOf(phq)}`, i9 == null ? '' : `item 9 ${i9}`, visitText,
           ...evs.map((ev) => ev.label)].filter(Boolean).join('; ') + '.' + (ci === 'completed' ? ' Press Enter to open the check-in.' : '')
       });
     }
@@ -2303,7 +2335,13 @@ class Component extends DCLogic {
       goPatient: () => this.go({ view: 'patient' }),
       goHandout: () => this.go({ view: 'handout' }),
       doPrint: () => { try { window.print(); } catch (e) { /* ignore */ } },
-      discussed: s.discussed, toggleDiscussed: () => this.setState({ discussed: !s.discussed }),
+      printIcon: icon('printer'),
+      // Who raised the AURORA data at this visit, kept per patient. Either tick counts as discussed (aurora-1w3).
+      disc: (() => {
+        const d = s.disc[P.id] || {};
+        const set = (k) => () => this.setState({ disc: { ...s.disc, [P.id]: { ...d, [k]: !d[k] } } });
+        return { pt: !!d.pt, me: !!d.me, togglePt: set('pt'), toggleMe: set('me') };
+      })(),
       factsOpen: s.factsOpen,
       menuOpen: s.menuOpen, menuExpanded: s.menuOpen ? 'true' : 'false',
       toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }),
