@@ -77,3 +77,4 @@ The first mockup had a clinical, EHR-style look, with three views (caseload tria
 ## All pages
 
 - **Open tabs pick up new versions** (October 26): a reviewer who comes back to a mockup or the landing page after a new version has been published gets it without reloading, on the same page and patient. If they're partway through a note or the handout, a bar offers Reload instead. MAINTAINING.md has the details.
+- **See others' notes first** (October 27): where others' notes are hidden until you add one, the Notes panel offers "Show them now". It helps on a second computer or browser, where the page can't tell you've added notes before. The browser remembers the choice, and a line in the panel turns it off again. Answers to the questions still appear once you've given yours.

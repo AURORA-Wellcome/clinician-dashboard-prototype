@@ -103,7 +103,8 @@
   let store = null;
   let status = { ok: false, text: 'Connecting…' };
   let composer = null, pendingPanel = false, pendingScroll = null, timer = 0;
-  const ui = { open: lsGet('aurora-notes-open') === '1', adding: false, filter: 'page', showResolved: false, focus: null, reply: null, edit: null, me: false, error: '', tab: 'notes', draft: {} };
+  const ui = { open: lsGet('aurora-notes-open') === '1', adding: false, filter: 'page', showResolved: false, focus: null, reply: null, edit: null, me: false, error: '', tab: 'notes', draft: {},
+    showOthers: lsGet('aurora-notes-show-others') === '1' };
   // The first visit from an invite link opens the panel, so reviewers find it. The invite can also come through the
   // landing page, which saves the code and marks the browser as invited.
   if ((query.get('board') || lsGet('aurora-notes-invited') === '1') && !lsGet('aurora-notes-welcomed')) {
@@ -288,14 +289,16 @@
       ctx: STATIC ? {} : { order: page.order, dates: page.dates !== false, line: page.greetLine || '', style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang() }
     };
   }
-  // After posting: a reviewer sees others' notes on a page once they have added one there. Facilitators see all.
-  // Answers to the questions are kept apart: they aren't pinned or listed with the notes. Each reviewer's latest answer
-  // to a question counts; others' answers show once you have answered it.
+  // After posting: a reviewer sees others' notes on a page once they have added one there. Facilitators see all, and
+  // so does a reviewer who chooses to see them first (ui.showOthers): the page knows a reviewer only by this browser,
+  // so on a second computer their earlier notes don't count. Answers to the questions are kept apart: they aren't
+  // pinned or listed with the notes. Each reviewer's latest answer to a question counts; others' answers show once
+  // you have answered it.
   function model() {
     const uid = store ? store.uid : '';
     const tops = notes.filter((n) => !n.parent && n.kind !== 'answer');
     const mine = new Set(tops.filter((n) => n.uid === uid).map((n) => n.pageKey));
-    const shown = (n) => FACILITATOR || n.uid === uid || mine.has(n.pageKey);
+    const shown = (n) => FACILITATOR || ui.showOthers || n.uid === uid || mine.has(n.pageKey);
     const visible = tops.filter(shown).sort(byTime);
     const num = new Map(), count = {};
     for (const n of visible) num.set(n.id, (count[n.pageKey] = (count[n.pageKey] || 0) + 1));
@@ -548,13 +551,16 @@
     panelBody.replaceChildren(...[
       ...head,
       m.visible.some((n) => n.uid === m.uid) ? null : h('p', { class: 'an-intro' }, 'Click “Add a note”, then the part of the page it’s about.'
-        + (FACILITATOR ? '' : ' Others’ notes on a page appear once you’ve added one there.')),
+        + (FACILITATOR || ui.showOthers ? '' : ' Others’ notes on a page appear once you’ve added one there.')),
       h('div', { class: 'an-actions' },
         h('button', { type: 'button', class: 'an-btn an-add' + (ui.adding ? ' on' : ''), 'aria-pressed': String(ui.adding), disabled: !store, onclick: onAdd }, ui.adding ? 'Cancel adding' : 'Add a note'),
         h('div', { class: 'an-seg', role: 'group', 'aria-label': 'Which notes' }, seg('This page', 'page'), seg('All pages', 'all'))),
       ui.adding ? h('p', { class: 'an-hint' }, 'Click the part of the page your note is about. Press Escape to cancel.') : null,
       ui.error ? h('p', { class: 'an-status warn', role: 'alert' }, ui.error) : null,
-      hidden.length ? h('p', { class: 'an-gate' }, gateText(hidden, onPage)) : null,
+      hidden.length ? h('p', { class: 'an-gate' }, gateText(hidden, onPage), ' ',
+        h('button', { type: 'button', class: 'an-tool', onclick: () => setShowOthers(true) }, 'Show them now')) : null,
+      ui.showOthers && !FACILITATOR ? h('p', { class: 'an-gate' }, 'You’re seeing others’ notes before adding your own. ',
+        h('button', { type: 'button', class: 'an-tool', onclick: () => setShowOthers(false) }, 'Hide them until I add mine')) : null,
       items.length ? h('ol', { class: 'an-list' }, items)
         : h('p', { class: 'an-empty' }, onPage ? 'No notes on this page yet. What do you notice, like or suggest?' : 'No notes yet.'),
       resolvedN ? h('label', { class: 'an-check' }, h('input', { type: 'checkbox', checked: ui.showResolved, onchange: (e) => { ui.showResolved = e.target.checked; render(true); } }), ` Show resolved (${resolvedN})`) : null
@@ -639,10 +645,18 @@
   }
 
   function gateText(hidden, onPage) {
-    if (onPage) return `${plural(hidden.length, 'note')} from others on this page will appear once you add yours.`;
+    if (onPage) return `${plural(hidden.length, 'note')} from others on this page will appear once you add yours, so they don’t steer what you write.`;
     const by = {};
     hidden.forEach((n) => { by[n.pageKey] = (by[n.pageKey] || 0) + 1; });
-    return 'Others’ notes on a page appear once you add one there: ' + Object.entries(by).map(([k, c]) => `${pageName(k)} (${c})`).join(', ') + '.';
+    return 'Others’ notes on a page appear once you add one there, so they don’t steer what you write: ' + Object.entries(by).map(([k, c]) => `${pageName(k)} (${c})`).join(', ') + '.';
+  }
+  // Seeing others' notes first: for a reviewer on a second computer or browser, or anyone who would rather. Kept in
+  // this browser.
+  function setShowOthers(on) {
+    ui.showOthers = on;
+    lsSet('aurora-notes-show-others', on ? '1' : null);
+    render(true);
+    announce(on ? 'Others’ notes are shown.' : 'Others’ notes are hidden until you add one on a page.');
   }
   function card(n, m) {
     const mine = n.uid === m.uid;
