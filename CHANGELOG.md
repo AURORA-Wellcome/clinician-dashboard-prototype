@@ -47,6 +47,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
 - **Alerts about one patient** (October 27, draft): Alerts, beside Print on the patient page, lets a clinician ask for an email or a text the day something new is flagged for that patient, without the patient's name in it. Your settings lists these patients.
 - **Your notes** (October 27, draft): the patient page has a section under Goals for the clinician's own dated notes, which only they see, and the Today tick boxes add an optional line for what the patient made of their data. Where notes are kept and who may read them wait on the data flow and the consent form.
 - **Welcome and the empty caseload** (October 27, draft): the first page after a clinician's first sign-in sets their name on handouts and their safety alert channel and says what happens next, and the patients list says when there are no patients yet. Neither prompts recruitment, which must be the same in both arms. The review strip's Caseload switch shows the empty list.
+- **PHQ-9 or AI estimate first** (October 27, for review): on the patient page, the review strip's First number puts the AI estimate's tile before the PHQ-9's. On the full handout, Chart shows the AI estimate instead of the PHQ-9, or both. They let the group compare what two of the Questions tab's questions ask.
 
 ## v2: redesign
 

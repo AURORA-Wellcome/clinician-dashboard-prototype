@@ -42,7 +42,7 @@
       title: 'Which line would you want in the greeting?',
       options: [['checkins', 'Your patients’ check-ins, as now'], ['pages', 'How many of your patients’ pages you opened this week'], ['clinicians', 'That you’re one of the AURORA clinicians'], ['rotate', 'A different one each day'], ['none', 'None']] },
     { id: 'pt-lead', view: 'patient', part: 'band', short: 'PHQ-9 or AI estimate first', show: { view: 'patient', p: 'delgado' },
-      title: 'Which number should come first on the patient page?',
+      title: 'Which number should come first on the patient page? Switch between them with First number in the striped strip.',
       options: [['phq', 'The patient’s PHQ-9, their own account, as now'], ['ai', 'The AI estimate, which the status is based on'], ['none', 'No preference']] },
     { id: 'pt-items', view: 'patient', part: 'band', short: 'PHQ-9 answers question by question', show: { view: 'patient', p: 'delgado' },
       title: 'Under the PHQ-9, “Answers by question” shows the patient’s answer to each question, highest first. Would you use it?',
@@ -60,7 +60,7 @@
       title: 'How should you be able to share a patient’s page with your clinical supervisor?',
       options: [['print', 'Print it or show it in supervision'], ['button', 'A share button that gives my supervisor access'], ['view', 'Supervisors see all their supervisees’ patients'], ['none', 'Not at all']] },
     { id: 'ho-measure', view: 'handout', part: 'ho-weeks', short: 'What the handout chart is based on', show: { view: 'handout', p: 'osei' },
-      title: 'What should the handout’s “How your weeks have gone” chart be based on?',
+      title: 'What should the handout’s “How your weeks have gone” chart be based on? Switch between them with Chart in the striped strip.',
       options: [['phq', 'The patient’s own PHQ-9 answers, as now'], ['ai', 'The AI estimate from their check-ins'], ['both', 'Both']] },
     { id: 'ho-numbers', view: 'handout', part: 'ho-weeks', short: 'Scores on the handout chart', show: { view: 'handout', p: 'osei' },
       title: 'The handout’s chart now shows the PHQ-9 scale on its side and each point’s score. Should it?',
@@ -294,7 +294,7 @@
     return {
       version: VERSION, view: page.view, pid: ['list', 'site', 'settings', 'account', 'welcome'].includes(page.view) || STATIC ? null : page.pid, pname: STATIC ? '' : patientName(), pageKey: pageKey(),
       commit: BUILD.commit, built: BUILD.built,
-      ctx: STATIC ? {} : { order: page.order, sort: page.sort ? page.sort + (page.sortRev ? '-reversed' : '') : null, dates: page.dates !== false, line: page.greetLine || '', style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang(), ho: page.view === 'handout' ? (page.hoStyle === 'simple' ? 'simple' : 'full') : null, flagged: page.view === 'list' && page.dates && page.order === 'visit' && !page.sort ? page.flagged || 'day' : null, empty: page.view === 'list' && page.empty ? true : null }
+      ctx: STATIC ? {} : { order: page.order, sort: page.sort ? page.sort + (page.sortRev ? '-reversed' : '') : null, dates: page.dates !== false, line: page.greetLine || '', style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang(), ho: page.view === 'handout' ? (page.hoStyle === 'simple' ? 'simple' : 'full') : null, flagged: page.view === 'list' && page.dates && page.order === 'visit' && !page.sort ? page.flagged || 'day' : null, empty: page.view === 'list' && page.empty ? true : null, lead: page.view === 'patient' ? (page.lead === 'ai' ? 'ai' : 'phq') : null, hom: page.view === 'handout' && page.hoStyle !== 'simple' ? page.hoMeasure || 'phq' : null }
     };
   }
   // After posting: a reviewer sees others' notes on a page once they have added one there. Facilitators see all, and
@@ -797,6 +797,8 @@
     if (c.ho) hp.set('ho', c.ho);
     if (c.flagged) hp.set('flagged', c.flagged);
     if (c.empty) hp.set('empty', '1');
+    if (c.lead === 'ai') hp.set('lead', 'ai');
+    if (c.hom && c.hom !== 'phq') hp.set('hom', c.hom);
     if (c.sort) { hp.set('sort', c.sort.replace('-reversed', '')); if (c.sort.endsWith('-reversed')) hp.set('rev', '1'); }
     ui.focus = n.id;
     if (n.version !== VERSION && PAGE_FILES[n.version]) { location.href = `${PAGE_FILES[n.version]}${location.search}#${hp}&note=${n.id}`; return; }
@@ -915,13 +917,13 @@
       return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const iso = (ms) => (ms ? new Date(ms).toISOString().replace('T', ' ').slice(0, 16) : '');
-    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'list_sort', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day', 'handout_language', 'handout_style', 'visit_dates', 'flagged_visits', 'caseload_empty', 'question', 'choice', 'greeting_line'];
+    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'list_sort', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day', 'handout_language', 'handout_style', 'visit_dates', 'flagged_visits', 'caseload_empty', 'first_number', 'handout_chart', 'question', 'choice', 'greeting_line'];
     // Notes, their replies, and the answers to the questions you may see
     const rows = [...m.visible, ...m.visible.flatMap((n) => m.replies(n.id)), ...m.answersShown].sort(byTime).map((n) => {
       const c = n.ctx || {};
       return [n.id, iso(n.createdAt), n.name, n.role, n.kind, n.text, n.parent || '', Object.keys(n.plus || {}).length, n.resolved ? 'yes' : '', n.resolvedBy || '',
         n.version, VIEW_NAMES[n.view] || n.view, n.pname || n.pid || '', n.anchorLabel, n.x == null ? '' : n.x.toFixed(3), n.y == null ? '' : n.y.toFixed(3),
-        c.order, c.sort || '', c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || '', c.lang || '', c.ho || '', c.dates === false ? 'not known' : 'known', c.flagged || '', c.empty ? 'yes' : '', n.q || '', n.choice || '', c.line || ''];
+        c.order, c.sort || '', c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || '', c.lang || '', c.ho || '', c.dates === false ? 'not known' : 'known', c.flagged || '', c.empty ? 'yes' : '', c.lead || '', c.hom || '', n.q || '', n.choice || '', c.line || ''];
     });
     const csv = [head, ...rows].map((r) => r.map(cell).join(',')).join('\r\n');
     const d = new Date(), pad = (v) => String(v).padStart(2, '0');

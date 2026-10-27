@@ -19,8 +19,8 @@ Notes for whoever edits the mockups. What they are is in the [README](README.md)
 A link can open a specific page and settings:
 - `#view=list&dates=1` shows visit dates, which are off by default (the list is then grouped by status, by last name). With them on, `&order=visit` (by next visit, the default) or `&order=status`. By next visit, `&flagged=day` (the default) lists safety-flagged patients under their visit day, `&flagged=pinned` only in a group at the top, and `&flagged=both` in both places (v3).
 - `#view=list&sort=name` or `&sort=sev` (v3: the patients list sorted by last name or by severity, safety flags first; add `&rev=1` to reverse)
-- `#view=patient&p=delgado`
-- `#view=handout&p=delgado`; `#view=handout&p=fernandez&lang=en` (v3: the handout in English for a patient whose check-ins are in Spanish); `&ho=simple` for the simple handout (v3)
+- `#view=patient&p=delgado`; `&lead=ai` puts the AI estimate's tile first (v3)
+- `#view=handout&p=delgado`; `#view=handout&p=fernandez&lang=en` (v3: the handout in English for a patient whose check-ins are in Spanish); `&ho=simple` for the simple handout (v3); `&hom=ai` or `&hom=both` for the full handout's chart on the AI estimate, or both (v3)
 - `#view=checkin&p=delgado&d=2026-08-10` (v3: one check-in; without `&d=`, the patient's example or latest check-in)
 - `#view=site` (v3: the site PI page), `#view=settings` (v3: site settings) `#view=account` (v3: Your settings) and `#view=welcome` (v3: the first page after signing in); `#view=list&empty=1` shows the caseload before the first patient
 - `&line=checkins` (the default), `pages`, `clinicians` or `none` sets the greeting's last line (Refined look).
