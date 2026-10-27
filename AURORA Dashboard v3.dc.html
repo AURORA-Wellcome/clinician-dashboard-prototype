@@ -103,17 +103,12 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .linkbtn{padding:0;font:inherit;color:var(--accent);background:none;border:0;cursor:pointer}
 .linkbtn:hover{text-decoration:underline}
 .linkbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
-/* Account menu: the clinician's settings (time format) */
+/* The clinician's name opens Your settings in one click, with that page's icon */
 .who-wrap{position:relative;margin-left:auto}
 .who{font:inherit;color:var(--muted);background:transparent;border:0;border-radius:var(--r);padding:6px 8px;cursor:pointer}
 .who:hover{background:var(--hover)}
-.caret{margin-left:6px}
-.menu-bg{position:fixed;inset:0;z-index:40}
-.menu{position:absolute;right:0;top:calc(100% + 6px);z-index:41;min-width:15rem;padding:12px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.12)}
-.menu-label{margin-bottom:4px;font-size:var(--fs-sm);line-height:var(--lh-sm);font-weight:600;color:var(--muted)}
-.menu-opt{display:flex;align-items:center;gap:8px;padding:4px 0;color:var(--ink);cursor:pointer}
-.menu-opt input{margin:0}
-.menu-opt .muted{margin-left:auto;padding-left:16px}
+.who:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.who .ic{color:inherit;margin-right:6px}
 
 .page{max-width:1040px;margin:0 auto;padding:32px 24px 48px}
 .h1{margin:0;font-size:var(--fs-xl);line-height:var(--lh-xl);font-weight:600}
@@ -570,7 +565,6 @@ textarea.set-input{resize:vertical}
 .set-indent{margin-left:24px}
 .set-sec .set-eg{margin:0;font-weight:400}
 .set-sec .set-draft{margin-top:12px;max-width:70ch}
-.menu-link{display:block;padding:4px 0;text-align:left}
 .handout{max-width:760px;margin:0 auto;padding:0 48px 32px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .handout p,.handout li{font-size:var(--fs-lg);line-height:1.5}
 .handout p{margin:0 0 10px}
@@ -682,13 +676,7 @@ textarea.set-input{resize:vertical}
       <sc-if value="{{ onAccount }}"><span class="cur" aria-current="page">{{ pageIcon }}Your settings</span></sc-if>
     </nav>
     <div class="who-wrap">
-      <button class="who" onClick="{{ toggleMenu }}" aria-haspopup="true" aria-expanded="{{ menuExpanded }}">{{ whoName }}<span class="caret" aria-hidden="true">▾</span></button>
-      <sc-if value="{{ menuOpen }}">
-        <div class="menu-bg" onClick="{{ closeMenu }}"></div>
-        <div class="menu" role="group" aria-label="Account">
-          <button type="button" class="linkbtn menu-link" onClick="{{ goAccount }}">Your settings</button>
-        </div>
-      </sc-if>
+      <button type="button" class="who" onClick="{{ goAccount }}" aria-label="{{ whoLabel }}">{{ whoIcon }}{{ whoName }}</button>
     </div>
   </header>
 
@@ -1800,7 +1788,7 @@ const HO_TEXT = {
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {}, acctSet: {} };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {}, acctSet: {} };
 
   componentDidMount() {
     const o = {};
@@ -1844,7 +1832,7 @@ class Component extends DCLogic {
     };
     window.addEventListener('hashchange', this.onHash);
     // Escape closes hover content anywhere (WCAG 1.4.13: dismissible)
-    this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, menuOpen: false, tip: null, tipPinned: false, factsOpen: false, phqOpen: false }); } };
+    this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, tip: null, tipPinned: false, factsOpen: false, phqOpen: false }); } };
     window.addEventListener('keydown', this.onEsc);
     // A click or tap outside an open ⓘ tip closes it
     this.onDown = (e) => { if (this.state.tip && !(e.target.closest && e.target.closest('.tt-wrap'))) this.setState({ tip: null, tipPinned: false }); };
@@ -1947,7 +1935,7 @@ class Component extends DCLogic {
     const iconAt = (name, x, y, size = 14) => (!s.icons || !ICONS[name] ? null
       : React.createElement('svg', { ...svgAttrs, className: 'ic-chart', x: f(x), y: f(y), width: size, height: size, strokeWidth: 2 }, ...iconKids(name)));
 
-    // Clock times: 12-hour by default ("2:00 PM"), 24-hour ("14:00") from the account menu
+    // Clock times: 12-hour by default ("2:00 PM"), 24-hour ("14:00") from Your settings
     const tm = (str) => (str || '').replace(/\b(\d{1,2}):(\d{2})\b/g, (m, hh, mm) => {
       const h = Number(hh);
       return s.clock24 ? `${String(h).padStart(2, '0')}:${mm}` : `${h % 12 || 12}:${mm}\u00a0${h < 12 ? 'AM' : 'PM'}`;
@@ -2723,10 +2711,12 @@ class Component extends DCLogic {
     };
 
     const tab = (label, on, pick) => ({ label, cls: on ? 'on' : '', pick });
+    const whoText = ['site', 'settings'].includes(s.view) ? `${SITE.pi}, site PI, ${SITE.name}` : 'Dr. E. Okafor, Site 03';
     return {
       onList: s.view === 'list', onPatient: s.view === 'patient', onHandout: s.view === 'handout', onCheckin: s.view === 'checkin',
       onSite: s.view === 'site', onSettings: s.view === 'settings', onAccount: s.view === 'account', acct, clinCrumb: !['list', 'site', 'settings'].includes(s.view), site, sset,
-      whoName: ['site', 'settings'].includes(s.view) ? `${SITE.pi}, site PI, ${SITE.name}` : 'Dr. E. Okafor, Site 03',
+      // The name at top right opens Your settings in one click, with that page's icon (DESIGN.md, Icons)
+      whoName: whoText, whoLabel: `${whoText}, your settings`, whoIcon: icon('user-cog'),
       goSite: () => this.go({ view: 'site' }), goSettings: () => this.go({ view: 'settings' }),
       viewTabs: [
         tab('Patients', s.view === 'list', () => this.go({ view: 'list' })),
@@ -2790,10 +2780,7 @@ class Component extends DCLogic {
       })(),
       factsOpen: s.factsOpen,
       phqOpen: s.phqOpen && !!pi, pi: pi || { title: '', d1: '', d0: '', hasPrev: false, rows: [], total: '' }, closePhqItems: () => this.setState({ phqOpen: false }),
-      menuOpen: s.menuOpen, menuExpanded: s.menuOpen ? 'true' : 'false',
-      toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }),
-      closeMenu: () => this.setState({ menuOpen: false }),
-      goAccount: () => this.go({ view: 'account', menuOpen: false }),
+      goAccount: () => this.go({ view: 'account' }),
       hv, hoverOff: () => this.setState({ hoverDay: null }),
       chartFocus: () => { if (s.hoverDay == null) this.setState({ hoverDay: dLast }); },
       // Keys as for a slider: arrows move a day, Shift + arrow or Page Up/Down a week, Home/End the ends, Escape closes;

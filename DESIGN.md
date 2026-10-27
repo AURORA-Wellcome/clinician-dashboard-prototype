@@ -54,7 +54,7 @@ The rules every mockup screen follows. Give this file, and the reference screens
    - Clinicians can enlarge the text: sizes are in rem, and the pages still work at 200% zoom.
    - The sizes, and where they come from, are under Type.
 10. **Open and close from the same place.** A control that opens something also closes it, from the same spot, so opening and closing take no pointer travel (Fitts's law: the time to hit a target grows with its distance).
-   - The account menu, ⓘ tips, the drivers panel and the Notes button all toggle in place; the Notes button reads "Close notes" while the panel is open.
+   - ⓘ tips, the drivers panel and the Notes button all toggle in place; the Notes button reads "Close notes" while the panel is open.
    - Escape closes too, and a second way to close, such as a × in the panel, is fine.
    - Dialogs that cover the page, such as Model Facts, are the exception: they close from their own button, Escape, or a click outside.
 
@@ -183,7 +183,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
 - **Rows are links:** Tab reaches each row, and Enter opens the patient.
 - **Check-ins:** the count is always shown. Below 9 of 12 it is bold ink, not colored, because color is reserved for status.
 - **Times:**
-  - 12-hour by default ("2:00 PM"). Clinicians can switch to 24-hour ("14:00") under Times on Your settings, which opens from the menu under their name at top right. In production, the choice is saved with their account.
+  - 12-hour by default ("2:00 PM"). Clinicians can switch to 24-hour ("14:00") under Times on Your settings, which opens from their name at top right. In production, the choice is saved with their account.
   - Every clock time follows the setting: visits, safety reviews, sources.
   - Dates put the month first, US style: "Thu, Aug 13", or "Thu, Aug 13, 2:00 PM" with a time. A space that can't break joins the time to AM or PM.
   - The patient's own words are quoted as written ("waking at 4 am").
@@ -251,10 +251,10 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
     - scheduling (calendar)
     - family, relationships and contact (people; v3 check-in page and drivers panel)
   - Never use icons for urgency (the status shapes and color do that), never color them, and never show one alone. Each sits next to its text and is hidden from screen readers.
-  - **One action icon:** the printer beside Print, the exception to Meaning. It takes the button's color, so the button reads as one control (review note, October 26).
+  - **Two action icons,** the exceptions to Meaning: the printer beside Print (review note, October 26), and the person with a gear beside the clinician's name at top right, which opens Your settings in one click (October 27). Each takes its button's color, so the button reads as one control.
   - **Page icons** (wayfinding, from October 27, from a review note): the current page's name in the breadcrumb has its page's icon: people for Patients, a person for a patient, a page for the handout, a speech bubble for a check-in (as for check-ins elsewhere), a building for the site PI page, a gear for site settings, a person with a gear for Your settings. Muted, 16 px, hidden from screen readers, and one per top bar, so the rule of one icon per row holds. People also marks family, relationships and contact (see Meaning), but here the page's name beside it says which.
   - At most one icon per row or item.
-  - Used in: caseload flags, "What changed" items (in a left gutter), chart events and the readout's visits, goals, the drivers panel's titles, the greeting band's visits (Refined look) and the Print buttons.
+  - Used in: caseload flags, "What changed" items (in a left gutter), chart events and the readout's visits, goals, the drivers panel's titles, the greeting band's visits (Refined look), the Print buttons and the clinician's name at top right.
   - No emoji, illustrations or decorative graphics. The exceptions are the brand mark (below), the greeting band in the Refined look, and the patient handout's header.
   - **Landing banner:** outside the dashboard, the landing page opens with a banner. It sets the stage on a page where nobody is working, and it moves calmly but visibly. `design/landing/banner_gen.py` draws it as SVG layers.
     - **Scene:** a night sky with aurora curtains over a low horizon of boreal forest: black spruce on two ridges, as in northern Canada, with a log cabin in a clearing. The forest and cabin are anchored to the bottom of the banner, so a wide screen crops sky rather than forest.
@@ -436,7 +436,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 - The mockup doesn't save, but the handout and the check-in page's safety steps use the settings until the page is reloaded, so reviewers can see what they change.
 - Each clinician's own settings are on Your settings (below).
 
-**Your settings** *(draft, from October 27)*. `#view=account`, from Your settings in the menu under the clinician's name, which no longer holds the time format.
+**Your settings** *(draft, from October 27)*. `#view=account`. The clinician's name at top right opens it in one click; the name carries the page's icon, a person with a gear, and there is no menu.
 - **What can be a setting:** how and when AURORA reaches a clinician, and how patients see their name. Never what the dashboard shows, such as the look, which number comes first, the chart's dots or the greeting's line: those are decided once with the CWG, so the intervention is the same for every clinician in the trial. The page's footer says so.
 - **Alerts:**
   - The study team's safety email is always on, because the safety procedure requires it. A clinician can add a text message, which says only that an alert is waiting.
