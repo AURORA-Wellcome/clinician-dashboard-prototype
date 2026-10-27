@@ -725,7 +725,7 @@ textarea.set-input{resize:vertical}
           <div class="grp day"><sc-if value="{{ g.rel }}"><span class="rel">{{ g.rel }}, </span></sc-if>{{ g.title }}</div>
         </sc-if>
         <sc-if value="{{ g.isFlat }}">
-            <div class="grp day flat">{{ g.title }}<button type="button" class="linkbtn grp-link" onClick="{{ g.regroup }}">Group by status</button></div>
+            <div class="grp day flat">{{ g.title }}<button type="button" class="linkbtn grp-link" onClick="{{ g.regroup }}">{{ g.regroupLabel }}</button></div>
           </sc-if>
           <sc-for list="{{ g.rows }}" as="p">
           <div class="lrow row" data-pid="{{ p.id }}" data-row="{{ p.rowId }}" onClick="{{ p.open }}" tabindex="0" role="link" onMouseEnter="{{ p.peekIn }}" onMouseLeave="{{ peekOut }}" onFocus="{{ p.peekFocus }}" onBlur="{{ peekOff }}" onKeyDown="{{ p.rowKey }}">
@@ -1979,9 +1979,11 @@ class Component extends DCLogic {
       : (a, b) => (a.estNow == null) - (b.estNow == null) || (s.sortRev ? a.estNow - b.estNow : b.estNow - a.estNow) || lastName(a).localeCompare(lastName(b)));
     const flatTitle = `${all.some((p) => p.status === 'safety') ? 'Other patients' : 'All patients'}, ${s.sort === 'name'
       ? (s.sortRev ? 'by last name, Z to A' : 'by last name') : (s.sortRev ? 'by severity, lowest first' : 'by severity, highest first')}`;
+    // A sort ends where the list was: by visit day where it runs by next visit, otherwise by status
+    const regroupLabel = s.dates && s.order !== 'status' ? 'Group by visit day' : 'Group by status';
     const groups = (s.sort
       ? [statusGroup('safety', sortRows(all.filter((p) => p.status === 'safety'))),
-        { isFlat: true, title: flatTitle, rows: sortRows(all.filter((p) => p.status !== 'safety')), regroup: () => this.go({ sort: '', sortRev: false }) }]
+        { isFlat: true, title: flatTitle, regroupLabel, rows: sortRows(all.filter((p) => p.status !== 'safety')), regroup: () => this.go({ sort: '', sortRev: false }) }]
       : byStatus
       ? GROUP_ORDER.map((k) => statusGroup(k, (s.dates ? byVisitOrder : byName).filter((p) => p.status === k)))
       : [statusGroup('safety', pinned), ...dayGroups(dayRows)])
@@ -2662,8 +2664,9 @@ class Component extends DCLogic {
       goalsCls: 'goals' + (s.icons ? ' with-icons' : ''),
       changesCls: 'changes' + (s.icons ? ' with-icons' : ''),
       orderTabs: [
-        tab('By status', byStatus, () => this.go({ order: 'status' })),
-        tab('By next visit', !byStatus, () => this.go({ order: 'visit' }))
+        // Either order also ends a sort; while the list is sorted, neither is shown as chosen
+        tab('By status', byStatus && !s.sort, () => this.go({ order: 'status', sort: '', sortRev: false })),
+        tab('By next visit', !byStatus, () => this.go({ order: 'visit', sort: '', sortRev: false }))
       ],
       byStatus, byVisit: !byStatus, groups, peek,
       // Visit dates: off by default; on shows the list by next visit, the next-visit line and the chart's visits
@@ -2682,12 +2685,12 @@ class Component extends DCLogic {
       peekOut: () => { clearTimeout(this.peekT); this.peekT = setTimeout(() => this.setState({ peek: null }), 150); },
       peekOff: () => { clearTimeout(this.peekT); this.setState({ peek: null }); },
       listCls: 'list ' + (byStatus ? 'by-status' : 'by-visit') + (s.dates ? '' : ' no-dates'),
-      // The Patient and Severity headings sort the list: once, then reversed, then back to the status groups
+      // The Patient and Severity headings sort the list: once, then reversed, then back to the groups
       sortName: { mark: s.sort === 'name' ? (s.sortRev ? '▼' : '▲') : '',
-        label: s.sort !== 'name' ? 'Sort by last name' : s.sortRev ? 'Sorted by last name, Z to A. Group by status' : 'Sorted by last name, A to Z. Sort Z to A',
+        label: s.sort !== 'name' ? 'Sort by last name' : s.sortRev ? `Sorted by last name, Z to A. ${regroupLabel}` : 'Sorted by last name, A to Z. Sort Z to A',
         go: () => this.go(s.sort !== 'name' ? { sort: 'name', sortRev: false } : s.sortRev ? { sort: '', sortRev: false } : { sortRev: true }) },
       sortSev: { mark: s.sort === 'sev' ? (s.sortRev ? '▲' : '▼') : '',
-        label: s.sort !== 'sev' ? 'Sort by severity, highest first' : s.sortRev ? 'Sorted by severity, lowest first. Group by status' : 'Sorted by severity, highest first. Sort lowest first',
+        label: s.sort !== 'sev' ? 'Sort by severity, highest first' : s.sortRev ? `Sorted by severity, lowest first. ${regroupLabel}` : 'Sorted by severity, highest first. Sort lowest first',
         go: () => this.go(s.sort !== 'sev' ? { sort: 'sev', sortRev: false } : s.sortRev ? { sort: '', sortRev: false } : { sortRev: true }) },
       // Wayfinding: the current page's name in the breadcrumb has its page's icon (DESIGN.md, Icons)
       pageIcon: icon(({ list: 'list', patient: 'user', handout: 'file-text', checkin: 'message-square', site: 'building-2', settings: 'settings' })[s.view]),
