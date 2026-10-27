@@ -188,7 +188,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - Dates put the month first, US style: "Thu, Aug 13", or "Thu, Aug 13, 2:00 PM" with a time. A space that can't break joins the time to AM or PM.
   - The patient's own words are quoted as written ("waking at 4 am").
 - **Buttons:**
-  - Secondary actions (Print, Patient handout) are text buttons in `accent`, with no border. Print carries the printer icon, in the button's color.
+  - Secondary actions (Patient handout, Print, Alerts) are text buttons in `accent`, with no border. Print carries the printer icon, in the button's color.
   - A solid `accent` button is reserved for a page's single primary action; the current pages have none.
   - No outlined buttons.
   - Caseload rows have no action buttons: the whole row opens the patient.
@@ -279,6 +279,11 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - **Tagline** (from October 27): pointing at the mark or the wordmark shows "Rich context, shared understanding", in a popover styled like the ⓘ tips, in v3 and on the landing page. It echoes the name (Adaptive Understanding through Real-time Observation, Reporting, and Assistance) and the shared understanding that routine outcome monitoring works toward, and it promises no results, since the trial is testing them. It is branding, not information, so pointing alone shows it and screen readers skip it. Nothing a clinician needs may go in it.
 - **Discussed checkbox** (v2): "Discussed AURORA data with the patient at this visit", at the foot of the patient page. This feeds the discussion-rate measure in the supervisor audit-and-feedback (A&F) playbook.
 - **Discussion tick boxes** (v3, from October 26): at the foot of the patient page's summary band, "Today:" with two tick boxes, "The patient brought up their AURORA data" and "I brought up their AURORA data". Each names what was brought up, not "it" (review note, October 27), and "Today" is what a tick records, since the dashboard doesn't know visit dates. They replace v2's checkbox: the clinical group's dashboard suggestions (August 31) asked to record who raised the measures, and the review notes asked for a more prominent place. Either tick counts as discussed for the A&F playbook's discussion rate, and the logging spec records which (bead aurora-1w3). Each patient keeps its own ticks. Not printed.
+- **Alerts about one patient** (v3, draft, from October 27): Alerts, beside Print on the patient page, opens a small panel under it, which closes from the same button, Escape or a click elsewhere.
+  - Between visits, the clinician can ask for an email or a text the day something new is flagged for this patient (a new status or a new safety flag), or keep the default on Your settings ("text me if something comes up", clinical planning, October 26).
+  - Emails and texts say only that something is waiting, never the patient's name.
+  - The button names the choice ("Alerts: email"), and Your settings lists the patients with their own alerts.
+  - A draft until the study decides on outreach between visits (bead aurora-12g). Changes are logged (`setting_changed`).
 - **ⓘ tooltip:** the place for scales, thresholds and definitions. The page draws it; don't use the browser's `title` tooltip, which appears only after a delay and never by keyboard or touch.
   - The ⓘ is a button. Pointing at it, or reaching it with Tab, opens the tip at once.
   - A click or tap keeps the tip open, with the ⓘ in `ink`. A second click, Escape, or a click elsewhere closes it. This is how it works on touch screens.
@@ -441,7 +446,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 - **Alerts:**
   - The study team's safety email is always on, because the safety procedure requires it. A clinician can add a text message, which says only that an alert is waiting.
   - How they hear between visits that a patient has gone off track: only on the dashboard (the default), a weekly email, or an email the day it happens. Emails link to the dashboard and don't name patients.
-  - A draft until the study decides on outreach between visits (bead aurora-12g) and the safety pathway (bead aurora-c6i). Alerts about one patient, asked for from that patient's page, could follow.
+  - A draft until the study decides on outreach between visits (bead aurora-12g) and the safety pathway (bead aurora-c6i). Alerts about one patient are set from that patient's page (see Alerts about one patient), and listed here.
 - **Your name on handouts:** one field per site language, written to follow "with" or "con", with the handout's line under it as it will read.
 - **Patients list:** the order the list opens in: grouped by status (by visit day where the site has visit dates), or sorted by last name or by severity. A heading sort changes only the list in view.
 - **Patient handouts:** which handout opens, full or simple. A draft: a setting only if the CWG keeps both.

@@ -109,6 +109,13 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .who:hover{background:var(--hover)}
 .who:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .who .ic{color:inherit;margin-right:6px}
+/* Alerts about one patient (patient page): a popover under its button, like the ⓘ tips */
+.alert-wrap{position:relative}
+.alert-pop{position:absolute;right:0;top:calc(100% + 6px);z-index:41;width:min(24rem,calc(100vw - 32px));padding:12px 16px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.14);font-weight:400}
+.alert-head{margin-bottom:6px;font-weight:600}
+.alert-pop .set-opt{color:var(--ink)}
+.alert-note{margin:10px 0;font-size:var(--fs-sm);line-height:var(--lh-sm)}
+.set-pts{margin:10px 0 0}
 
 .page{max-width:1040px;margin:0 auto;padding:32px 24px 48px}
 .h1{margin:0;font-size:var(--fs-xl);line-height:var(--lh-xl);font-weight:600}
@@ -766,6 +773,17 @@ textarea.set-input{resize:vertical}
         <div class="actions no-print">
           <button class="btn" onClick="{{ goHandout }}">Patient handout</button>
           <button class="btn" onClick="{{ doPrint }}">{{ printIcon }}Print</button>
+          <span class="alert-wrap">
+            <button type="button" class="btn" aria-expanded="{{ ptAlert.expanded }}" onClick="{{ ptAlert.toggle }}">{{ ptAlert.label }}</button>
+            <sc-if value="{{ ptAlert.open }}">
+              <div class="alert-pop" role="group" aria-label="{{ ptAlert.title }}">
+                <div class="alert-head">{{ ptAlert.title }}</div>
+                <sc-for list="{{ ptAlert.opts }}" as="o"><label class="set-opt"><input type="radio" name="pt-alert" checked="{{ o.on }}" onChange="{{ o.pick }}"><span>{{ o.label }}</span></label></sc-for>
+                <p class="alert-note muted">Something new is a new status or a new safety flag. Emails and texts say only that something is waiting, without the patient’s name; texts go to the number on <button type="button" class="linkbtn" onClick="{{ goAccount }}">Your settings</button>.</p>
+                <p class="scaffold-note">Draft: the study hasn’t yet decided whether AURORA reaches out between visits.</p>
+              </div>
+            </sc-if>
+          </span>
         </div>
       </div>
       <div class="sub num facts"><sc-for list="{{ pt.headFacts }}" as="x"><span><sc-if value="{{ x.sep }}"><span class="sr-only">, </span></sc-if>{{ x.text }}</span></sc-for></div>
@@ -1210,7 +1228,8 @@ textarea.set-input{resize:vertical}
       <h3 class="set-h3">Patients going off track</h3>
       <p class="muted">How you hear between visits that a patient is Worse than baseline or Not improving. Emails link to the dashboard and don’t name patients.</p>
       <sc-for list="{{ acct.offTrack }}" as="o"><label class="set-opt"><input type="radio" name="offtrack" checked="{{ o.on }}" onChange="{{ o.pick }}"> {{ o.label }}</label></sc-for>
-      <p class="scaffold-note no-print set-draft">Draft: the study hasn’t yet decided whether AURORA reaches out between visits, or whether texts can carry safety alerts. A patient’s page could also let you ask for alerts about that patient.</p>
+      <sc-if value="{{ acct.hasPtList }}"><p class="set-pts">For some patients, set on their page: <sc-for list="{{ acct.ptList }}" as="q"><sc-if value="{{ q.sep }}">; </sc-if><button type="button" class="linkbtn" onClick="{{ q.open }}">{{ q.name }}</button>, {{ q.how }}</sc-for>.</p></sc-if>
+      <p class="scaffold-note no-print set-draft">Draft: the study hasn’t yet decided whether AURORA reaches out between visits, or whether texts can carry safety alerts. Alerts about one patient are set from Alerts on their page.</p>
     </section>
     <section class="set-sec">
       <h2 class="h2">Your name on handouts</h2>
@@ -1788,7 +1807,7 @@ const HO_TEXT = {
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {}, acctSet: {} };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {}, acctSet: {}, alertOpen: false, ptAlerts: {} };
 
   componentDidMount() {
     const o = {};
@@ -1832,10 +1851,13 @@ class Component extends DCLogic {
     };
     window.addEventListener('hashchange', this.onHash);
     // Escape closes hover content anywhere (WCAG 1.4.13: dismissible)
-    this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, tip: null, tipPinned: false, factsOpen: false, phqOpen: false }); } };
+    this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, tip: null, tipPinned: false, factsOpen: false, phqOpen: false, alertOpen: false }); } };
     window.addEventListener('keydown', this.onEsc);
     // A click or tap outside an open ⓘ tip closes it
-    this.onDown = (e) => { if (this.state.tip && !(e.target.closest && e.target.closest('.tt-wrap'))) this.setState({ tip: null, tipPinned: false }); };
+    this.onDown = (e) => {
+      if (this.state.tip && !(e.target.closest && e.target.closest('.tt-wrap'))) this.setState({ tip: null, tipPinned: false });
+      if (this.state.alertOpen && !(e.target.closest && e.target.closest('.alert-wrap'))) this.setState({ alertOpen: false });
+    };
     document.addEventListener('pointerdown', this.onDown);
     // Review notes (notes.js) follow the page's state
     window.dispatchEvent(new CustomEvent('dc:render', { detail: this.state }));
@@ -1878,7 +1900,7 @@ class Component extends DCLogic {
     clearTimeout(this.tipT);
     // The handout's name, ticks, language and edits belong to one printout: another page or patient starts fresh
     const fresh = next.view !== this.state.view || next.pid !== this.state.pid ? { hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false } : {};
-    this.setState({ ...o, ...fresh, cday: next.cday, cAt: o.cAt || null, pAt: null, tx: false, factsOpen: false, phqOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
+    this.setState({ ...o, ...fresh, cday: next.cday, cAt: o.cAt || null, pAt: null, tx: false, factsOpen: false, phqOpen: false, alertOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
     if (!opts.keepScroll) try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
   }
 
@@ -2663,7 +2685,22 @@ class Component extends DCLogic {
       names: SITE.langs.map((l) => ({ label: HO_TEXT[l].label, value: as[`name_${l}`] != null ? as[`name_${l}`] : HO_TEXT[l].clin, set: setAcct(`name_${l}`),
         example: `“${HO_TEXT[l].sub('', clinName(l))}”` })),
       listOrder: radios('listSort', '', [['', 'Grouped by status (by visit day, where your site has visit dates)'], ['name', 'Sorted by last name'], ['sev', 'Sorted by severity, highest first']], (v) => ({ sort: v, sortRev: false })),
-      handout: radios('hoDefault', 'full', [['full', 'Full'], ['simple', 'Simple: the scores, and things to talk about']], (v) => ({ hoStyle: v }))
+      handout: radios('hoDefault', 'full', [['full', 'Full'], ['simple', 'Simple: the scores, and things to talk about']], (v) => ({ hoStyle: v })),
+      // Patients with their own alerts, set on their page
+      ptList: PATIENTS.filter((q) => (s.ptAlerts || {})[q.id]).map((q, i) => ({ name: q.name, sep: i > 0, how: `${s.ptAlerts[q.id] === 'text' ? 'a text' : 'an email'} the day something new is flagged`, open: () => this.go({ view: 'patient', pid: q.id }) }))
+    };
+    acct.hasPtList = acct.ptList.length > 0;
+
+    // Alerts about one patient between visits (draft; bead aurora-12g), beside Print: "text me if something comes up".
+    // Only that something new is flagged, never the patient's name. Otherwise the default on Your settings applies.
+    const ptA = (s.ptAlerts || {})[P.id] || '';
+    const offTrackNow = { dashboard: 'only on the dashboard', weekly: 'a weekly email', daily: 'an email the day it happens' }[as.offTrack || 'dashboard'];
+    const ptAlert = {
+      open: !!s.alertOpen, expanded: s.alertOpen ? 'true' : 'false', title: `Alerts about ${P.name} between visits`,
+      label: ptA === 'email' ? 'Alerts: email' : ptA === 'text' ? 'Alerts: text' : 'Alerts',
+      toggle: () => this.setState({ alertOpen: !s.alertOpen }),
+      opts: [['', `As on Your settings: ${offTrackNow}`], ['email', 'Email me the day something new is flagged'], ['text', 'Text me the day something new is flagged']]
+        .map(([v, label]) => ({ label, on: ptA === v, pick: () => this.setState((st) => ({ ptAlerts: { ...(st.ptAlerts || {}), [P.id]: v } })) }))
     };
 
     // ⓘ tips: open at once on hover or keyboard focus; a click or tap keeps one open until a second click, Escape or a click elsewhere
@@ -2714,7 +2751,7 @@ class Component extends DCLogic {
     const whoText = ['site', 'settings'].includes(s.view) ? `${SITE.pi}, site PI, ${SITE.name}` : 'Dr. E. Okafor, Site 03';
     return {
       onList: s.view === 'list', onPatient: s.view === 'patient', onHandout: s.view === 'handout', onCheckin: s.view === 'checkin',
-      onSite: s.view === 'site', onSettings: s.view === 'settings', onAccount: s.view === 'account', acct, clinCrumb: !['list', 'site', 'settings'].includes(s.view), site, sset,
+      onSite: s.view === 'site', onSettings: s.view === 'settings', onAccount: s.view === 'account', acct, ptAlert, clinCrumb: !['list', 'site', 'settings'].includes(s.view), site, sset,
       // The name at top right opens Your settings in one click, with that page's icon (DESIGN.md, Icons)
       whoName: whoText, whoLabel: `${whoText}, your settings`, whoIcon: icon('user-cog'),
       goSite: () => this.go({ view: 'site' }), goSettings: () => this.go({ view: 'settings' }),
