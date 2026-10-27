@@ -34,6 +34,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
   - **Site PI page and site settings** (draft): for the site PI, which clinicians need a call or support. One row per study clinician, with enrollment for everyone, dashboard use for those with the dashboard, and the engagement plan's step where one is due. No patient names, outcomes or comparisons between the groups. Site settings hold the languages, the crisis line in each language, the number for urgent risk and the roster; the handout and the check-in page use them. The review strip's Page switch reaches both.
   - **Questions for the working group:** the Notes panel has a Questions tab, with sixteen questions across the pages, drawn from the group's open decisions and the review notes. Answers are shared like notes, and others' answers to a question appear once you've given yours.
 - **Plainer wording** (October 27, from review notes): the patient page's tick boxes read "Today:", then "The patient brought up their AURORA data" and "I brought up their AURORA data", instead of "it". The Safety tile's link and the check-in page's steps heading say "Protocol steps".
+- **Tagline** (October 27): pointing at the AURORA mark or wordmark shows "Rich context, shared understanding". The landing page shows it the same way.
 
 ## v2: redesign
 
@@ -73,6 +74,7 @@ The first mockup had a clinical, EHR-style look, with three views (caseload tria
 - **Banner** (since October 25): the page opens with a slowly moving aurora banner. Moving a mouse over it makes nearby stars sparkle and eases the aurora slightly toward the pointer, for depth.
 - **Links** (since October 25): each version's heading is a link, and every version's review strip has an "All versions" link back to the landing page.
 - **Notes:** a Leave notes step explains that shared notes need the private review link, and offers a dialog to enter its access code. The mockups' Notes panel has the same dialog. Notes can be left on the landing page itself as well as in the mockups.
+- **Tagline** (October 27): pointing at the AURORA mark shows "Rich context, shared understanding", as in v3.
 - **Order:** How to review comes straight after v3. The earlier versions sit below it, oldest first, in a quieter "How we got here" section.
 
 ## All pages

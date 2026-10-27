@@ -79,6 +79,11 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 /* Brand mark: two aurora ribbons in the blue-violet of the greeting band; cool hues only, since warm hues and greens mean status */
 .brand{display:inline-flex;align-items:center;gap:10px;font-size:var(--fs-lg);font-weight:600;letter-spacing:.04em}
 .brand .logo{display:block;flex:none;width:24px;height:24px}
+/* The tagline, shown on pointing at the brand. Branding, not information, so pointing is enough (DESIGN.md, Brand mark) */
+.brand{position:relative}
+.brand-tag{position:absolute;top:calc(100% + 12px);left:0;z-index:30;display:none;white-space:nowrap;padding:8px 12px;font-size:var(--fs-sm);line-height:var(--lh-sm);font-weight:400;letter-spacing:0;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.brand:hover .brand-tag{display:block}
+@media (prefers-reduced-motion:no-preference){.refined .brand:hover .brand-tag{animation:rf-fade .12s ease-out}}
 .crumbs{display:flex;align-items:center;gap:8px}
 /* Pages above this one are links in accent, like every other link; buttons, so Tab reaches them */
 .crumbs .crumb{margin:0 -6px;padding:4px 6px;font:inherit;color:var(--accent);background:transparent;border:0;border-radius:var(--r);cursor:pointer}
@@ -629,7 +634,7 @@ textarea.set-input{resize:vertical}
   </div>
 
   <header class="topbar no-print">
-    <span class="brand"><img class="logo" src="favicon.svg" width="24" height="24" alt="">AURORA</span>
+    <span class="brand"><img class="logo" src="favicon.svg" width="24" height="24" alt="">AURORA<span class="brand-tag" aria-hidden="true">Rich context, shared understanding</span></span>
     <nav class="crumbs" aria-label="Breadcrumb">
       <sc-if value="{{ onList }}"><span class="cur" aria-current="page">Patients</span></sc-if>
       <sc-if value="{{ clinCrumb }}"><button type="button" class="crumb" onClick="{{ goList }}">Patients</button><span class="sep" aria-hidden="true">›</span></sc-if>
