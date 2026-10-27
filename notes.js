@@ -64,7 +64,7 @@
       options: [['phq', 'The patient’s own PHQ-9 answers, as now'], ['ai', 'The AI estimate from their check-ins'], ['both', 'Both']] },
     { id: 'ho-numbers', view: 'handout', part: 'ho-weeks', short: 'Scores on the handout chart', show: { view: 'handout', p: 'osei' },
       title: 'The handout’s chart now shows the PHQ-9 scale on its side and each point’s score. Should it?',
-      options: [['points', 'Yes, as now'], ['scale', 'Just the scale on the side'], ['no', 'No, just easier and harder'], ['choose', 'Let me choose for each patient']] },
+      options: [['points', 'Yes, as now'], ['scale', 'Just the scale on the side'], ['no', 'No, just more and fewer symptoms'], ['choose', 'Let me choose for each patient']] },
     { id: 'ho-style', view: 'handout', part: 'page', short: 'Full or simple handout', show: { view: 'handout', p: 'nguyen' },
       title: 'Which handout would you give your patients? Switch between them with Handout in the striped strip.',
       options: [['full', 'The full one, as now'], ['simple', 'The simple one: the scores, and things to talk about'], ['neither', 'Neither as it is']] },
