@@ -19,7 +19,7 @@ Notes for whoever edits the mockups. What they are is in the [README](README.md)
 A link can open a specific page and settings:
 - `#view=list&dates=1` shows visit dates, which are off by default (the list is then grouped by status, by last name). With them on, `&order=visit` (by next visit, the default) or `&order=status`.
 - `#view=patient&p=delgado`
-- `#view=handout&p=delgado`; `#view=handout&p=fernandez&lang=en` (v3: the handout in English for a patient whose check-ins are in Spanish)
+- `#view=handout&p=delgado`; `#view=handout&p=fernandez&lang=en` (v3: the handout in English for a patient whose check-ins are in Spanish); `&ho=simple` for the simple handout (v3)
 - `#view=checkin&p=delgado&d=2026-08-10` (v3: one check-in; without `&d=`, the patient's example or latest check-in)
 - `#view=site` (v3: the site PI page) and `#view=settings` (v3: site settings)
 - `&line=checkins` (the default), `pages`, `clinicians` or `none` sets the greeting's last line (Refined look).
@@ -64,4 +64,5 @@ Reviewers can pin notes to any part of the v2 and v3 pages and the landing page.
 ## Runtime quirks
 
 - **Tables:** in a page's template, write tables with the runtime's raw tags (`sc-raw-table`, `sc-raw-thead`, `sc-raw-tbody`, `sc-raw-tr`, `sc-raw-th`, `sc-raw-td`); they render as ordinary tables. With plain `<table>` tags, the browser moves `<sc-for>` loops out of the table. The runtime repairs that only when the page is served, so a page opened straight from disk shows an empty table.
+- **Values in SVG text:** the runtime wraps each `{{ }}` value in an HTML `<span>`, which SVG doesn't draw, so a value inside `<text>` must go through `T()` (a React fragment), as the charts' dates and the simple handout's scores do.
 - **Chart labels** are SVG text, which can't hold HTML such as an ⓘ button. The label on the baseline + 6 line ("Worse than baseline") is drawn in HTML over the chart instead, sized with the chart (see `.thr-tag`).

@@ -65,6 +65,9 @@
     { id: 'ho-numbers', view: 'handout', part: 'ho-weeks', short: 'Scores on the handout chart', show: { view: 'handout', p: 'osei' },
       title: 'Should the handout’s chart show the PHQ-9 scores?',
       options: [['no', 'No, just easier and harder, as now'], ['yes', 'Yes, show the scores'], ['choose', 'Let me choose for each patient']] },
+    { id: 'ho-style', view: 'handout', part: 'page', short: 'Full or simple handout', show: { view: 'handout', p: 'nguyen' },
+      title: 'Which handout would you give your patients? Switch between them with Handout in the striped strip.',
+      options: [['full', 'The full one, as now'], ['simple', 'The simple one: the scores, and things to talk about'], ['neither', 'Neither as it is']] },
     { id: 'ci-see', view: 'checkin', part: 'ci-came', short: 'What clinicians see of check-ins', show: { view: 'checkin', p: 'delgado', d: '2026-08-10' },
       title: 'What should you be able to see of a check-in conversation? This also depends on the consent form.',
       options: [['summary', 'An AI summary only'], ['quotes', 'The summary and the patient’s own words'], ['all', 'Those and the full transcript, collapsed, as now']] },
@@ -286,7 +289,7 @@
     return {
       version: VERSION, view: page.view, pid: ['list', 'site', 'settings'].includes(page.view) || STATIC ? null : page.pid, pname: STATIC ? '' : patientName(), pageKey: pageKey(),
       commit: BUILD.commit, built: BUILD.built,
-      ctx: STATIC ? {} : { order: page.order, dates: page.dates !== false, line: page.greetLine || '', style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang() }
+      ctx: STATIC ? {} : { order: page.order, dates: page.dates !== false, line: page.greetLine || '', style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang(), ho: page.view === 'handout' ? (page.hoStyle === 'simple' ? 'simple' : 'full') : null }
     };
   }
   // After posting: a reviewer sees others' notes on a page once they have added one there. Facilitators see all, and
@@ -903,13 +906,13 @@
       return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const iso = (ms) => (ms ? new Date(ms).toISOString().replace('T', ' ').slice(0, 16) : '');
-    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day', 'handout_language', 'visit_dates', 'question', 'choice', 'greeting_line'];
+    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day', 'handout_language', 'handout_style', 'visit_dates', 'question', 'choice', 'greeting_line'];
     // Notes, their replies, and the answers to the questions you may see
     const rows = [...m.visible, ...m.visible.flatMap((n) => m.replies(n.id)), ...m.answersShown].sort(byTime).map((n) => {
       const c = n.ctx || {};
       return [n.id, iso(n.createdAt), n.name, n.role, n.kind, n.text, n.parent || '', Object.keys(n.plus || {}).length, n.resolved ? 'yes' : '', n.resolvedBy || '',
         n.version, VIEW_NAMES[n.view] || n.view, n.pname || n.pid || '', n.anchorLabel, n.x == null ? '' : n.x.toFixed(3), n.y == null ? '' : n.y.toFixed(3),
-        c.order, c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || '', c.lang || '', c.dates === false ? 'not known' : 'known', n.q || '', n.choice || '', c.line || ''];
+        c.order, c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || '', c.lang || '', c.ho || '', c.dates === false ? 'not known' : 'known', n.q || '', n.choice || '', c.line || ''];
     });
     const csv = [head, ...rows].map((r) => r.map(cell).join(',')).join('\r\n');
     const d = new Date(), pad = (v) => String(v).padStart(2, '0');
