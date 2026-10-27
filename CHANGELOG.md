@@ -37,7 +37,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
 - **Tagline** (October 27): pointing at the AURORA mark or wordmark shows "Rich context, shared understanding". The landing page shows it the same way.
 - **PHQ-9 ranges and answers** (October 27, from review notes): wherever a PHQ-9 score's band is named, its range follows ("12 (moderate, 10 to 14)"), and the PHQ-9 tile's band has an ⓘ listing all five. Answers by question, under the PHQ-9 tile, opens the patient's answer to each question, highest first, beside the PHQ-9 before. Model Facts says the ranges are for the PHQ-9 only.
 - **Simple handout** (October 27, from review notes, for review): the review strip's Handout switch shows a simpler handout beside the full one. It has the PHQ-9 scores on their own scale with the ranges named in plain words (very low to very high, rather than minimal to severe), things to talk about, the crisis line and the privacy line, and no name, summary, goals or lines to fill in. The Questions tab asks which handout the group would give patients.
-- **Scores on the full handout's chart** (October 27, from review notes): How your weeks have gone shows the PHQ-9's scale on its side, 0 to 27, with Harder and Easier kept at its ends. The note under it and its description for screen readers give the scores.
+- **Scores on the full handout's chart** (October 27, from review notes): How your weeks have gone shows the PHQ-9's scale on its side, 0 to 27, and each point's score, with Harder and Easier kept at its ends. The note under it and its description for screen readers give the scores.
 
 ## v2: redesign
 
