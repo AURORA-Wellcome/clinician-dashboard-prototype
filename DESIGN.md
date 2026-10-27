@@ -394,7 +394,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
   - a short summary in plain words;
   - What's going well: check-ins done, goals with better days, and the questionnaires if they show things getting easier;
   - the goals as cards, in the patient's words;
-  - How your weeks have gone: a simple line of the patient's own PHQ-9 answers, from "easier" to "harder", not the AI estimate;
+  - How your weeks have gone: a simple line of the patient's own PHQ-9 answers, not the AI estimate, with the PHQ-9's scale on its side (0 to 27, from October 27, as review notes asked) and "Harder" and "Easier" kept at its ends;
   - Things to talk about at the next visit, with a line to add their own;
   - Your next step, with lines to fill in together;
   - If things get hard: the site's crisis line, from the site settings, and 988 at US sites only (example wording until the protocol sets it). Each site supplies its line in each language as a whole phrase, because Spanish changes the words around a number ("al 024", "a la línea…");
