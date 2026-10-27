@@ -25,7 +25,7 @@
   const QUESTIONS = [
     { id: 'list-dates', view: 'list', part: 'list', short: 'Caseload without visit dates', show: { view: 'list', dates: '0' },
       title: 'Most sites won’t have visit dates. Without them, the list is grouped by status, by last name. Does that work for you?',
-      options: [['yes', 'Yes, as now'], ['flat', 'I’d rather have one list by last name, with status as a column'], ['need', 'I need to see visit dates']] },
+      options: [['yes', 'Yes, as now'], ['flat', 'I’d rather it opened as one list by last name, as clicking the Patient heading does'], ['need', 'I need to see visit dates']] },
     { id: 'list-flagged', view: 'list', part: 'list', short: 'Where flagged visits appear', show: { view: 'list', dates: '1', order: 'visit' },
       title: 'Where visit dates are known and the list runs by next visit, where should a safety-flagged patient appear? Switch between them with Safety flags in the striped strip.',
       options: [['pinned', 'Only in a Safety flag group at the top'], ['day', 'Only under their visit day, flagged there, as now'], ['both', 'In both places']] },
