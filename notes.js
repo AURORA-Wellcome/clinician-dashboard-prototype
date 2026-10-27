@@ -27,8 +27,8 @@
       title: 'Most sites won’t have visit dates. Without them, the list is grouped by status, by last name. Does that work for you?',
       options: [['yes', 'Yes, as now'], ['flat', 'I’d rather have one list by last name, with status as a column'], ['need', 'I need to see visit dates']] },
     { id: 'list-flagged', view: 'list', part: 'list', short: 'Where flagged visits appear', show: { view: 'list', dates: '1', order: 'visit' },
-      title: 'Where visit dates are known and the list runs by next visit, where should a safety-flagged patient appear?',
-      options: [['pinned', 'Only in the Safety flag group at the top, as now'], ['day', 'Only under their visit day, flagged there'], ['both', 'In both places']] },
+      title: 'Where visit dates are known and the list runs by next visit, where should a safety-flagged patient appear? Switch between them with Safety flags in the striped strip.',
+      options: [['pinned', 'Only in the Safety flag group at the top'], ['day', 'Only under their visit day, flagged there'], ['both', 'In both places, as now']] },
     { id: 'list-checkins', view: 'list', part: 'columns', short: 'Check-ins column', show: { view: 'list' },
       title: 'Should the list show every patient’s check-in count?',
       options: [['all', 'Yes, for every patient, as now'], ['few', 'Only when there are too few'], ['page', 'No, the patient page is enough']] },
@@ -289,7 +289,7 @@
     return {
       version: VERSION, view: page.view, pid: ['list', 'site', 'settings'].includes(page.view) || STATIC ? null : page.pid, pname: STATIC ? '' : patientName(), pageKey: pageKey(),
       commit: BUILD.commit, built: BUILD.built,
-      ctx: STATIC ? {} : { order: page.order, sort: page.sort ? page.sort + (page.sortRev ? '-reversed' : '') : null, dates: page.dates !== false, line: page.greetLine || '', style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang(), ho: page.view === 'handout' ? (page.hoStyle === 'simple' ? 'simple' : 'full') : null }
+      ctx: STATIC ? {} : { order: page.order, sort: page.sort ? page.sort + (page.sortRev ? '-reversed' : '') : null, dates: page.dates !== false, line: page.greetLine || '', style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang(), ho: page.view === 'handout' ? (page.hoStyle === 'simple' ? 'simple' : 'full') : null, flagged: page.view === 'list' && page.dates && page.order === 'visit' && !page.sort ? page.flagged || 'both' : null }
     };
   }
   // After posting: a reviewer sees others' notes on a page once they have added one there. Facilitators see all, and
@@ -789,6 +789,9 @@
     hp.set('hero', c.hero === false ? '0' : '1');
     hp.set('dates', c.dates === false ? '0' : '1'); // notes from before the switch saw visit dates
     if (c.line) hp.set('line', c.line);
+    if (c.ho) hp.set('ho', c.ho);
+    if (c.flagged) hp.set('flagged', c.flagged);
+    if (c.sort) { hp.set('sort', c.sort.replace('-reversed', '')); if (c.sort.endsWith('-reversed')) hp.set('rev', '1'); }
     ui.focus = n.id;
     if (n.version !== VERSION && PAGE_FILES[n.version]) { location.href = `${PAGE_FILES[n.version]}${location.search}#${hp}&note=${n.id}`; return; }
     pendingScroll = n.id;
@@ -906,13 +909,13 @@
       return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const iso = (ms) => (ms ? new Date(ms).toISOString().replace('T', ' ').slice(0, 16) : '');
-    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'list_sort', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day', 'handout_language', 'handout_style', 'visit_dates', 'question', 'choice', 'greeting_line'];
+    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'list_sort', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day', 'handout_language', 'handout_style', 'visit_dates', 'flagged_visits', 'question', 'choice', 'greeting_line'];
     // Notes, their replies, and the answers to the questions you may see
     const rows = [...m.visible, ...m.visible.flatMap((n) => m.replies(n.id)), ...m.answersShown].sort(byTime).map((n) => {
       const c = n.ctx || {};
       return [n.id, iso(n.createdAt), n.name, n.role, n.kind, n.text, n.parent || '', Object.keys(n.plus || {}).length, n.resolved ? 'yes' : '', n.resolvedBy || '',
         n.version, VIEW_NAMES[n.view] || n.view, n.pname || n.pid || '', n.anchorLabel, n.x == null ? '' : n.x.toFixed(3), n.y == null ? '' : n.y.toFixed(3),
-        c.order, c.sort || '', c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || '', c.lang || '', c.ho || '', c.dates === false ? 'not known' : 'known', n.q || '', n.choice || '', c.line || ''];
+        c.order, c.sort || '', c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || '', c.lang || '', c.ho || '', c.dates === false ? 'not known' : 'known', c.flagged || '', n.q || '', n.choice || '', c.line || ''];
     });
     const csv = [head, ...rows].map((r) => r.map(cell).join(',')).join('\r\n');
     const d = new Date(), pad = (v) => String(v).padStart(2, '0');

@@ -652,6 +652,7 @@ textarea.set-input{resize:vertical}
     <sc-if value="{{ hoStyleCtl }}"><span class="review-group"><span class="review-k">Handout</span><span class="seg"><sc-for list="{{ hoStyleTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
     <sc-if value="{{ datesCtl }}"><span class="review-group"><span class="review-k">Visit dates</span><span class="seg"><sc-for list="{{ datesTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
     <sc-if value="{{ orderCtl }}"><span class="review-group"><span class="review-k">List</span><span class="seg"><sc-for list="{{ orderTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
+    <sc-if value="{{ flaggedCtl }}"><span class="review-group"><span class="review-k">Safety flags</span><span class="seg"><sc-for list="{{ flaggedTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
     <sc-if value="{{ onCheckin }}"><span class="review-group"><span class="review-k">Example</span><span class="seg"><sc-for list="{{ exTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
     <span class="review-group"><span class="review-k">Look</span><span class="seg"><sc-for list="{{ lookTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
     <sc-if value="{{ greetCtl }}"><span class="review-group"><span class="review-k">Greeting</span><span class="seg"><sc-for list="{{ heroTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
@@ -727,7 +728,7 @@ textarea.set-input{resize:vertical}
             <div class="grp day flat">{{ g.title }}<button type="button" class="linkbtn grp-link" onClick="{{ g.regroup }}">Group by status</button></div>
           </sc-if>
           <sc-for list="{{ g.rows }}" as="p">
-          <div class="lrow row" data-pid="{{ p.id }}" onClick="{{ p.open }}" tabindex="0" role="link" onMouseEnter="{{ p.peekIn }}" onMouseLeave="{{ peekOut }}" onFocus="{{ p.peekFocus }}" onBlur="{{ peekOff }}" onKeyDown="{{ p.rowKey }}">
+          <div class="lrow row" data-pid="{{ p.id }}" data-row="{{ p.rowId }}" onClick="{{ p.open }}" tabindex="0" role="link" onMouseEnter="{{ p.peekIn }}" onMouseLeave="{{ peekOut }}" onFocus="{{ p.peekFocus }}" onBlur="{{ peekOff }}" onKeyDown="{{ p.rowKey }}">
             <sc-if value="{{ p.peekOn }}">
               <div class="{{ peek.cls }}" aria-hidden="true">
                 <div class="peek-head">{{ peek.span }}</div>
@@ -1744,7 +1745,7 @@ const HO_TEXT = {
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {} };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'both', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {} };
 
   componentDidMount() {
     const o = {};
@@ -1768,6 +1769,7 @@ class Component extends DCLogic {
       if (Object.keys(HO_TEXT).includes(h.get('lang'))) r.hoLang = h.get('lang');
       if (['full', 'simple'].includes(h.get('ho'))) r.hoStyle = h.get('ho');
       if (['name', 'sev'].includes(h.get('sort'))) { r.sort = h.get('sort'); r.sortRev = h.get('rev') === '1'; }
+      if (['pinned', 'day', 'both'].includes(h.get('flagged'))) r.flagged = h.get('flagged');
       return r;
     };
     // The check-in page always names a real check-in of the patient shown
@@ -1828,7 +1830,7 @@ class Component extends DCLogic {
   go(o) {
     const next = { ...this.state, ...o };
     if (next.view === 'checkin') next.cday = resolveCday(next.pid, next.cday);
-    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&dates=${next.dates ? 1 : 0}&line=${next.greetLine}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}&ho=${next.hoStyle || 'full'}${next.sort ? `&sort=${next.sort}${next.sortRev ? '&rev=1' : ''}` : ''}`); } catch (e) { /* sandboxed preview */ }
+    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&dates=${next.dates ? 1 : 0}&line=${next.greetLine}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}&ho=${next.hoStyle || 'full'}&flagged=${next.flagged || 'both'}${next.sort ? `&sort=${next.sort}${next.sortRev ? '&rev=1' : ''}` : ''}`); } catch (e) { /* sandboxed preview */ }
     clearTimeout(this.peekT);
     clearTimeout(this.tipT);
     // The handout's name, ticks, language and edits belong to one printout: another page or patient starts fresh
@@ -1863,7 +1865,9 @@ class Component extends DCLogic {
     const pid = this.state.pid;
     let nameEl = null;
     this.transition({ view: 'list' }, () => {
-      const row = document.querySelector(`#dc-root .list .row[data-pid="${pid}"]`);
+      // Back to the row the patient was opened from, where they are listed twice
+      const rows = [...document.querySelectorAll(`#dc-root .list .row[data-pid="${pid}"]`)];
+      const row = rows.find((r) => r.dataset.row === this.lastRow) || rows[0];
       nameEl = row && row.querySelector('.pt-name');
       if (nameEl) nameEl.style.viewTransitionName = 'pt-title';
     }).finally(() => { if (nameEl) nameEl.style.viewTransitionName = ''; });
@@ -1894,6 +1898,20 @@ class Component extends DCLogic {
       return s.clock24 ? `${String(h).padStart(2, '0')}:${mm}` : `${h % 12 || 12}:${mm}\u00a0${h < 12 ? 'AM' : 'PM'}`;
     });
 
+    // A caseload row's handlers. By next visit a safety-flagged patient is listed twice, at the top and under their
+    // visit day, so the peek and the way back follow the row, not just the patient.
+    // Peek: opens after a short hover, switches quickly once one is open, opens at once on keyboard focus
+    const rowFns = (pid, rowId) => {
+      const open = (el) => { this.lastRow = rowId; this.morph({ view: 'patient', pid }, el && el.querySelector('.pt-name')); };
+      return {
+        rowId,
+        open: (ev) => open(ev && ev.currentTarget),
+        peekOn: s.peek === rowId,
+        peekIn: () => { clearTimeout(this.peekT); this.peekT = setTimeout(() => this.setState({ peek: rowId }), this.state.peek ? 120 : 400); },
+        peekFocus: () => { clearTimeout(this.peekT); this.setState({ peek: rowId }); },
+        rowKey: (ev) => { if (ev && ev.key === 'Enter') open(ev.currentTarget); }
+      };
+    };
     const all = PATIENTS.map((p) => {
       const estNow = p.est ? p.est[p.est.length - 1] : null;
       const d = estNow == null ? null : estNow - p.baseline;
@@ -1923,12 +1941,7 @@ class Component extends DCLogic {
         visitText: tm(p.visit),
         dayKey: (p.visit.match(/^(.*), \d{1,2}:\d{2}$/) || ['', ''])[1], // 'Thu, Aug 13'
         timeText: tm((p.visit.match(/\d{1,2}:\d{2}$/) || [''])[0]),
-        open: (ev) => this.morph({ view: 'patient', pid: p.id }, ev && ev.currentTarget && ev.currentTarget.querySelector('.pt-name')),
-        // Peek: opens after a short hover, switches quickly once one is open, opens at once on keyboard focus
-        peekOn: s.peek === p.id,
-        peekIn: () => { clearTimeout(this.peekT); this.peekT = setTimeout(() => this.setState({ peek: p.id }), this.state.peek ? 120 : 400); },
-        peekFocus: () => { clearTimeout(this.peekT); this.setState({ peek: p.id }); },
-        rowKey: (ev) => { if (ev && ev.key === 'Enter') this.morph({ view: 'patient', pid: p.id }, ev.currentTarget && ev.currentTarget.querySelector('.pt-name')); }
+        ...rowFns(p.id, p.id)
       };
     });
 
@@ -1947,10 +1960,16 @@ class Component extends DCLogic {
       return { title: `${DAY_FULL[wd]}, ${MONTHS_FULL[MONTHS.indexOf(mon)]} ${dd}`, rel: diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : '' };
     };
     const statusGroup = (k, rows) => ({ isStatus: true, cls: STATUS[k].cls, title: STATUS[k].label, shape: STATUS[k].shape, shape2: STATUS[k].shape2 || 'M0 0', rows });
-    // Day headers carry no count: with safety-flagged visits pinned above, a count would disagree with the rows below
+    // Day headers carry no count: the greeting band counts the visits, and where flagged patients are only in the top
+    // group, a count would disagree with the rows below
     const dayGroups = (rows) => [...new Set(rows.map((p) => p.dayKey))].map((k) => ({ ...dayHead(k), isDay: true, rows: rows.filter((p) => p.dayKey === k) }));
-    // By next visit, safety flags still come first: a Safety flag group above the day headers, its rows carrying the visit date
-    const pinned = byVisitOrder.filter((p) => p.status === 'safety').map((p) => ({ ...p, pinDate: p.dayKey || 'Not scheduled' }));
+    // By next visit, safety flags still come first (principle 6): a Safety flag group above the day headers, its rows
+    // carrying the visit date. Each flagged patient is also listed under their visit day, so a day lists everyone coming
+    // in (a clinician's review note, October 26). The review strip's Safety flags switch shows the other placements the
+    // CWG is asked about: the top group only, or their day only.
+    const pinned = s.flagged === 'day' ? [] : byVisitOrder.filter((p) => p.status === 'safety')
+      .map((p) => ({ ...p, pinDate: p.dayKey || 'Not scheduled', ...rowFns(p.id, `${p.id}@top`) }));
+    const dayRows = s.flagged === 'pinned' ? byVisitOrder.filter((p) => p.status !== 'safety') : byVisitOrder;
     // Sorted by the Patient or Severity heading: safety flags still lead (principle 6), then everyone else in one list.
     // Severity sorts by the AI estimate, with patients who have none last either way.
     const sortRows = (rows) => [...rows].sort(s.sort === 'name'
@@ -1963,7 +1982,7 @@ class Component extends DCLogic {
         { isFlat: true, title: flatTitle, rows: sortRows(all.filter((p) => p.status !== 'safety')), regroup: () => this.go({ sort: '', sortRev: false }) }]
       : byStatus
       ? GROUP_ORDER.map((k) => statusGroup(k, (s.dates ? byVisitOrder : byName).filter((p) => p.status === k)))
-      : [statusGroup('safety', pinned), ...dayGroups(byVisitOrder.filter((p) => p.status !== 'safety'))])
+      : [statusGroup('safety', pinned), ...dayGroups(dayRows)])
       .filter((g) => g.rows.length).map((g) => ({ ...g, count: String(g.rows.length) }));
 
     // Greeting band (Refined look): a greeting, then today's date and the caseload in one line
@@ -2240,9 +2259,9 @@ class Component extends DCLogic {
 
     // Caseload peek card for the hovered or focused row
     let peek = { cls: 'peek', aria: '' };
-    const PK = s.peek ? all.find((q) => q.id === s.peek) : null;
+    const PK = s.peek ? all.find((q) => q.id === s.peek.split('@')[0]) : null;
     if (PK) {
-      const order = groups.flatMap((g) => g.rows.map((r) => r.id));
+      const order = groups.flatMap((g) => g.rows.map((r) => r.rowId));
       const lastW = WEEKS.length - 1, px0 = Math.max(0, lastW - PK.weeksIn);
       const PX = (i) => 4 + ((i - px0) * 272) / (lastW - px0), PY = (v) => 58 - (v / MAX) * 52;
       const pe = PK.est || [];
@@ -2252,7 +2271,7 @@ class Component extends DCLogic {
       const kq = lastIndex(PK.phq);
       const i9k = PK.item9.filter((v) => v != null), i9pos = i9k.filter((v) => v > 0).length, i9last = i9k.length ? i9k[i9k.length - 1] : null;
       peek = {
-        cls: 'peek' + (order.indexOf(PK.id) >= order.length - 3 ? ' above' : ''),
+        cls: 'peek' + (order.indexOf(s.peek) >= order.length - 3 ? ' above' : ''),
         span: PK.weeksIn >= 11 ? 'Last 12 weeks' : `Since joining AURORA, ${PK.weeksIn} weeks ago`,
         hasEst: pe.length > 0, line: ppts((v) => v).join(' '),
         band: [...ppts((v, i) => Math.min(MAX, v + PK.unc[i])), ...ppts((v, i) => Math.max(0, v - PK.unc[i])).reverse()].join(' '),
@@ -2648,6 +2667,9 @@ class Component extends DCLogic {
       // Visit dates: off by default; on shows the list by next visit, the next-visit line and the chart's visits
       visitCol: byStatus && s.dates, orderCtl: s.view === 'list' && s.dates, datesCtl: s.view === 'list' || s.view === 'patient',
       datesTabs: [tab('Not known', !s.dates, () => this.go({ dates: false })), tab('Known', s.dates, () => this.go({ dates: true }))],
+      // By next visit: where safety-flagged patients appear, for the CWG question (list-flagged in notes.js)
+      flaggedCtl: s.view === 'list' && !byStatus,
+      flaggedTabs: [['pinned', 'At top'], ['day', 'In their day'], ['both', 'Both']].map(([k, l]) => tab(l, s.flagged === k, () => this.go({ flagged: k }))),
       hoStyleCtl: s.view === 'handout', hoStyleTabs: [tab('Full', s.hoStyle !== 'simple', () => this.go({ hoStyle: 'full' })), tab('Simple', s.hoStyle === 'simple', () => this.go({ hoStyle: 'simple' }))],
       hero, heroOn: s.refined && s.hero && s.view === 'list', refined: s.refined,
       lookTabs: [tab('Refined', s.refined, () => this.go({ refined: true })), tab('Original', !s.refined, () => this.go({ refined: false }))],
