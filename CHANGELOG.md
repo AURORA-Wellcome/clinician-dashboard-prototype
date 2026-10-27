@@ -45,6 +45,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
 - **Ranges beside Severity** (October 27, from a review note): the caseload's Severity ⓘ lists the PHQ-9's five ranges for reference, without naming a range for any estimate.
 - **Your settings** (October 27, draft): a page for each clinician's own settings, opened in one click from their name at top right, which carries the page's icon (a person with a gear) instead of opening a menu. Alerts (the safety email always on, an optional text, and how they hear between visits about patients going off track), their name on handouts in each language, the order the patients list opens in, which handout opens, and times, which move here from the menu. Only how and when: what the dashboard shows stays the same for every clinician. The Questions tab asks how clinicians would want to hear about patients going off track.
 - **Alerts about one patient** (October 27, draft): Alerts, beside Print on the patient page, lets a clinician ask for an email or a text the day something new is flagged for that patient, without the patient's name in it. Your settings lists these patients.
+- **Your notes** (October 27, draft): the patient page has a section under Goals for the clinician's own dated notes, which only they see, and the Today tick boxes add an optional line for what the patient made of their data. Where notes are kept and who may read them wait on the data flow and the consent form.
 
 ## v2: redesign
 

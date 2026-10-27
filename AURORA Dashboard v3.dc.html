@@ -246,7 +246,17 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .band-inner{max-width:1040px;margin:0 auto;padding:32px 24px 0}
 .pt-page{padding-top:0}
 .pt-sections{display:flex;flex-direction:column}
-.pt-changes{order:1}.pt-trend{order:2}.pt-goals{order:3}
+.pt-changes{order:1}.pt-trend{order:2}.pt-goals{order:3}.pt-notes{order:4}
+/* Your notes (draft): dated, newest first, with a box to add one */
+.note-list{list-style:none;margin:0;padding:0}
+.note{padding:8px 0}
+.note + .note{border-top:1px solid var(--line)}
+.note-date{display:block;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
+.note-add{display:grid;justify-items:start;gap:8px;margin-top:12px}
+.note-input{width:100%;resize:vertical;line-height:1.5}
+.notes-draft{margin-top:12px}
+.disc .disc-said{flex-basis:100%;flex-wrap:wrap;cursor:auto}
+.disc-said .ho-input{width:min(32rem,100%)}
 .scale{display:flex;align-items:center;gap:6px;max-width:240px;margin-top:6px;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
 .scale svg{flex:1;min-width:0;width:100%;height:auto}
 .scale-track{stroke:var(--line-strong);stroke-width:3;stroke-linecap:round}
@@ -264,8 +274,9 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .distinct .stat.flagged{background:var(--safety-tint);box-shadow:inset 3px 0 0 var(--safety);border-radius:var(--r)}
 .distinct .stat.flagged + .stat{border-left-color:transparent}
 .distinct .pt-page{padding-top:8px}
-.distinct .pt-sections{display:grid;grid-template-columns:minmax(0,1fr) 320px;grid-template-areas:"changes goals" "trend trend";column-gap:24px;align-items:start}
-.distinct .pt-changes{grid-area:changes}.distinct .pt-goals{grid-area:goals}.distinct .pt-trend{grid-area:trend}
+.distinct .pt-sections{display:grid;grid-template-columns:minmax(0,1fr) 320px;grid-template-areas:"changes goals" "changes notes" "trend trend";column-gap:24px;align-items:start}
+.distinct .pt-changes{grid-area:changes}.distinct .pt-goals{grid-area:goals}.distinct .pt-trend{grid-area:trend}.distinct .pt-notes{grid-area:notes}
+.distinct .notes-wrap{padding:12px 20px 16px;background:var(--tint);border-radius:var(--r)}
 .distinct .goals-wrap{padding:12px 20px;background:var(--tint);border-radius:var(--r)}
 .distinct .goal{padding:6px 0}
 .distinct .goal-sep{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -830,7 +841,7 @@ textarea.set-input{resize:vertical}
         </div>
       </div>
       <sc-if value="{{ pt.discordant }}"><p class="callout">The patient’s PHQ-9 and the AI estimate differ by more than the estimate’s uncertainty. The estimate supplements the patient’s own account; it doesn’t replace it.</p></sc-if>
-      <div class="disc no-print" role="group" aria-labelledby="disc-q"><span class="disc-q" id="disc-q">Today:</span><label><input type="checkbox" checked="{{ disc.pt }}" onChange="{{ disc.togglePt }}"> The patient brought up their AURORA data</label><label><input type="checkbox" checked="{{ disc.me }}" onChange="{{ disc.toggleMe }}"> I brought up their AURORA data</label></div>
+      <div class="disc no-print" role="group" aria-labelledby="disc-q"><span class="disc-q" id="disc-q">Today:</span><label><input type="checkbox" checked="{{ disc.pt }}" onChange="{{ disc.togglePt }}"> The patient brought up their AURORA data</label><label><input type="checkbox" checked="{{ disc.me }}" onChange="{{ disc.toggleMe }}"> I brought up their AURORA data</label><sc-if value="{{ disc.any }}"><label class="disc-said"><span>What the patient made of it <span class="muted">(optional)</span></span><input type="text" class="ho-input" value="{{ disc.said }}" onChange="{{ disc.setSaid }}"></label></sc-if></div>
     </div>
   </div>
 
@@ -946,6 +957,18 @@ textarea.set-input{resize:vertical}
         <sc-if value="{{ !pt.hasGoals }}"><p class="empty">No goals recorded yet.</p></sc-if>
         </div>
       </aside>
+      <section class="pt-notes no-print">
+        <h2 class="h2">Your notes<span class="muted">only you see them</span></h2>
+        <div class="notes-wrap">
+          <sc-if value="{{ notes.has }}"><ul class="note-list"><sc-for list="{{ notes.list }}" as="n"><li class="note"><span class="note-date">{{ n.date }}</span>{{ n.text }}</li></sc-for></ul></sc-if>
+          <sc-if value="{{ !notes.has }}"><p class="empty">No notes yet.</p></sc-if>
+          <div class="note-add">
+            <textarea class="ho-input note-input" rows="3" aria-label="New note about {{ pt.name }}" placeholder="Your impressions and plans" value="{{ notes.draft }}" onChange="{{ notes.setDraft }}"></textarea>
+            <button type="button" class="btn" disabled="{{ notes.cantSave }}" onClick="{{ notes.save }}">Save note</button>
+          </div>
+        </div>
+        <p class="scaffold-note notes-draft">Draft: where these notes are kept, who else may read them and whether the study uses them are still to be decided, with the consent form.</p>
+      </section>
     </div>
 
     <p class="foot"><span>This dashboard isn’t monitored in real time. The study team reviews AI-detected risk and emails you if it is urgent.</span><span>PHQ-9 item 9 answers appear here without study team review.</span></p>
@@ -1536,6 +1559,12 @@ const checkinOn = (p, d) => {
   return (Math.abs(Math.sin((d + 1) * 12.9898 + seedOf(p) * 78.233)) * 43758.5453) % 1 < cn / cd ? 'completed' : 'missed';
 };
 const startDay = (p) => Math.max(0, WEEKS.length - 1 - p.weeksIn) * 7;
+// Your notes (draft, mock): the clinician's own notes about a patient, newest first
+const CLIN_NOTES = {
+  osei: [{ date: 'Aug 5', text: 'Work stress up since the reorganization. Agreed to try a wind-down routine for the 4 am waking.' }],
+  delgado: [{ date: 'Jul 27', text: 'Stopped sertraline about two weeks ago because of side effects. Will raise it with the prescriber; check mood and sleep next session.' }]
+};
+
 // Site PI page (draft, mock): Site 03's study clinicians, with and without the dashboard. Dr. Okafor's patients are
 // the caseload's twelve.
 const SITE = {
@@ -1807,7 +1836,7 @@ const HO_TEXT = {
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {}, acctSet: {}, alertOpen: false, ptAlerts: {} };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {}, acctSet: {}, alertOpen: false, ptAlerts: {}, myNotes: {}, noteDraft: {} };
 
   componentDidMount() {
     const o = {};
@@ -2703,6 +2732,21 @@ class Component extends DCLogic {
         .map(([v, label]) => ({ label, on: ptA === v, pick: () => this.setState((st) => ({ ptAlerts: { ...(st.ptAlerts || {}), [P.id]: v } })) }))
     };
 
+    // Your notes (draft; bead aurora-hv1): the clinician's own impressions, dated, newest first, seen only by them.
+    // Clinical free text, so where it's kept and who else may read it wait on the data flow and the consent form.
+    const todayShort = `${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`;
+    const noteList = [...((s.myNotes || {})[P.id] || []), ...(CLIN_NOTES[P.id] || [])];
+    const noteDraft = (s.noteDraft || {})[P.id] || '';
+    const notes = {
+      list: noteList.map((n) => ({ date: n.date === todayShort ? 'Today' : n.date, text: n.text })), has: noteList.length > 0,
+      draft: noteDraft, cantSave: !noteDraft.trim(),
+      setDraft: (e) => { const v = e.target.value; this.setState((st) => ({ noteDraft: { ...(st.noteDraft || {}), [P.id]: v } })); },
+      save: () => this.setState((st) => {
+        const t = ((st.noteDraft || {})[P.id] || '').trim();
+        return t ? { myNotes: { ...(st.myNotes || {}), [P.id]: [{ date: todayShort, text: t }, ...((st.myNotes || {})[P.id] || [])] }, noteDraft: { ...(st.noteDraft || {}), [P.id]: '' } } : null;
+      })
+    };
+
     // ⓘ tips: open at once on hover or keyboard focus; a click or tap keeps one open until a second click, Escape or a click elsewhere
     const tipFor = (key, lines) => {
       const open = s.tip === key;
@@ -2751,7 +2795,7 @@ class Component extends DCLogic {
     const whoText = ['site', 'settings'].includes(s.view) ? `${SITE.pi}, site PI, ${SITE.name}` : 'Dr. E. Okafor, Site 03';
     return {
       onList: s.view === 'list', onPatient: s.view === 'patient', onHandout: s.view === 'handout', onCheckin: s.view === 'checkin',
-      onSite: s.view === 'site', onSettings: s.view === 'settings', onAccount: s.view === 'account', acct, ptAlert, clinCrumb: !['list', 'site', 'settings'].includes(s.view), site, sset,
+      onSite: s.view === 'site', onSettings: s.view === 'settings', onAccount: s.view === 'account', acct, ptAlert, notes, clinCrumb: !['list', 'site', 'settings'].includes(s.view), site, sset,
       // The name at top right opens Your settings in one click, with that page's icon (DESIGN.md, Icons)
       whoName: whoText, whoLabel: `${whoText}, your settings`, whoIcon: icon('user-cog'),
       goSite: () => this.go({ view: 'site' }), goSettings: () => this.go({ view: 'settings' }),
@@ -2813,7 +2857,9 @@ class Component extends DCLogic {
       disc: (() => {
         const d = s.disc[P.id] || {};
         const set = (k) => () => this.setState({ disc: { ...s.disc, [P.id]: { ...d, [k]: !d[k] } } });
-        return { pt: !!d.pt, me: !!d.me, togglePt: set('pt'), toggleMe: set('me') };
+        // What the patient made of their data, in a line, once either box is ticked (draft; bead aurora-hv1)
+        const setSaid = (e) => { const v = e.target.value; this.setState((st) => ({ disc: { ...st.disc, [P.id]: { ...(st.disc[P.id] || {}), said: v } } })); };
+        return { pt: !!d.pt, me: !!d.me, togglePt: set('pt'), toggleMe: set('me'), any: !!(d.pt || d.me), said: d.said || '', setSaid };
       })(),
       factsOpen: s.factsOpen,
       phqOpen: s.phqOpen && !!pi, pi: pi || { title: '', d1: '', d0: '', hasPrev: false, rows: [], total: '' }, closePhqItems: () => this.setState({ phqOpen: false }),
