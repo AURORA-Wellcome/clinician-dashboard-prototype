@@ -17,7 +17,7 @@ Notes for whoever edits the mockups. What they are is in the [README](README.md)
 ## Deep links
 
 A link can open a specific page and settings:
-- `#view=list&dates=1` shows visit dates, which are off by default (the list is then grouped by status, by last name). With them on, `&order=visit` (by next visit, the default) or `&order=status`. By next visit, `&flagged=pinned` lists safety-flagged patients only in the group at the top, `&flagged=day` only under their visit day, and `&flagged=both` (the default) in both places (v3).
+- `#view=list&dates=1` shows visit dates, which are off by default (the list is then grouped by status, by last name). With them on, `&order=visit` (by next visit, the default) or `&order=status`. By next visit, `&flagged=day` (the default) lists safety-flagged patients under their visit day, `&flagged=pinned` only in a group at the top, and `&flagged=both` in both places (v3).
 - `#view=list&sort=name` or `&sort=sev` (v3: the patients list sorted by last name or by severity, safety flags first; add `&rev=1` to reverse)
 - `#view=patient&p=delgado`
 - `#view=handout&p=delgado`; `#view=handout&p=fernandez&lang=en` (v3: the handout in English for a patient whose check-ins are in Spanish); `&ho=simple` for the simple handout (v3)

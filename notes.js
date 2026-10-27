@@ -28,7 +28,7 @@
       options: [['yes', 'Yes, as now'], ['flat', 'I’d rather have one list by last name, with status as a column'], ['need', 'I need to see visit dates']] },
     { id: 'list-flagged', view: 'list', part: 'list', short: 'Where flagged visits appear', show: { view: 'list', dates: '1', order: 'visit' },
       title: 'Where visit dates are known and the list runs by next visit, where should a safety-flagged patient appear? Switch between them with Safety flags in the striped strip.',
-      options: [['pinned', 'Only in the Safety flag group at the top'], ['day', 'Only under their visit day, flagged there'], ['both', 'In both places, as now']] },
+      options: [['pinned', 'Only in a Safety flag group at the top'], ['day', 'Only under their visit day, flagged there, as now'], ['both', 'In both places']] },
     { id: 'list-checkins', view: 'list', part: 'columns', short: 'Check-ins column', show: { view: 'list' },
       title: 'Should the list show every patient’s check-in count?',
       options: [['all', 'Yes, for every patient, as now'], ['few', 'Only when there are too few'], ['page', 'No, the patient page is enough']] },
@@ -289,7 +289,7 @@
     return {
       version: VERSION, view: page.view, pid: ['list', 'site', 'settings'].includes(page.view) || STATIC ? null : page.pid, pname: STATIC ? '' : patientName(), pageKey: pageKey(),
       commit: BUILD.commit, built: BUILD.built,
-      ctx: STATIC ? {} : { order: page.order, sort: page.sort ? page.sort + (page.sortRev ? '-reversed' : '') : null, dates: page.dates !== false, line: page.greetLine || '', style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang(), ho: page.view === 'handout' ? (page.hoStyle === 'simple' ? 'simple' : 'full') : null, flagged: page.view === 'list' && page.dates && page.order === 'visit' && !page.sort ? page.flagged || 'both' : null }
+      ctx: STATIC ? {} : { order: page.order, sort: page.sort ? page.sort + (page.sortRev ? '-reversed' : '') : null, dates: page.dates !== false, line: page.greetLine || '', style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang(), ho: page.view === 'handout' ? (page.hoStyle === 'simple' ? 'simple' : 'full') : null, flagged: page.view === 'list' && page.dates && page.order === 'visit' && !page.sort ? page.flagged || 'day' : null }
     };
   }
   // After posting: a reviewer sees others' notes on a page once they have added one there. Facilitators see all, and

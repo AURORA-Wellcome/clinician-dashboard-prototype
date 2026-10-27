@@ -152,7 +152,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 /* Day headers (by next visit): neutral, because color means status */
 /* The day header is a flex row, which drops a trailing space, so "Tomorrow," keeps its space as a margin */
 .grp .rel{margin-right:.25em}
-/* By next visit, flagged patients are pinned above the day headers, so their rows carry the visit date */
+/* A Safety flag group by next visit (the review strip's At top or Both) sits above the day headers, so its rows carry the visit date */
 .pin-date{display:block}
 .row:has(.pin-date){padding-top:8px;padding-bottom:8px}
 .row:hover{background:var(--hover)}
@@ -1745,7 +1745,7 @@ const HO_TEXT = {
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'both', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {} };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {} };
 
   componentDidMount() {
     const o = {};
@@ -1830,7 +1830,7 @@ class Component extends DCLogic {
   go(o) {
     const next = { ...this.state, ...o };
     if (next.view === 'checkin') next.cday = resolveCday(next.pid, next.cday);
-    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&dates=${next.dates ? 1 : 0}&line=${next.greetLine}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}&ho=${next.hoStyle || 'full'}&flagged=${next.flagged || 'both'}${next.sort ? `&sort=${next.sort}${next.sortRev ? '&rev=1' : ''}` : ''}`); } catch (e) { /* sandboxed preview */ }
+    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&dates=${next.dates ? 1 : 0}&line=${next.greetLine}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}&ho=${next.hoStyle || 'full'}&flagged=${next.flagged || 'day'}${next.sort ? `&sort=${next.sort}${next.sortRev ? '&rev=1' : ''}` : ''}`); } catch (e) { /* sandboxed preview */ }
     clearTimeout(this.peekT);
     clearTimeout(this.tipT);
     // The handout's name, ticks, language and edits belong to one printout: another page or patient starts fresh
@@ -1898,8 +1898,8 @@ class Component extends DCLogic {
       return s.clock24 ? `${String(h).padStart(2, '0')}:${mm}` : `${h % 12 || 12}:${mm}\u00a0${h < 12 ? 'AM' : 'PM'}`;
     });
 
-    // A caseload row's handlers. By next visit a safety-flagged patient is listed twice, at the top and under their
-    // visit day, so the peek and the way back follow the row, not just the patient.
+    // A caseload row's handlers. With the Safety flags switch on Both, a flagged patient is listed twice by next visit,
+    // at the top and under their visit day, so the peek and the way back follow the row, not just the patient.
     // Peek: opens after a short hover, switches quickly once one is open, opens at once on keyboard focus
     const rowFns = (pid, rowId) => {
       const open = (el) => { this.lastRow = rowId; this.morph({ view: 'patient', pid }, el && el.querySelector('.pt-name')); };
@@ -1961,12 +1961,14 @@ class Component extends DCLogic {
     };
     const statusGroup = (k, rows) => ({ isStatus: true, cls: STATUS[k].cls, title: STATUS[k].label, shape: STATUS[k].shape, shape2: STATUS[k].shape2 || 'M0 0', rows });
     // Day headers carry no count: the greeting band counts the visits, and where flagged patients are only in the top
-    // group, a count would disagree with the rows below
-    const dayGroups = (rows) => [...new Set(rows.map((p) => p.dayKey))].map((k) => ({ ...dayHead(k), isDay: true, rows: rows.filter((p) => p.dayKey === k) }));
-    // By next visit, safety flags still come first (principle 6): a Safety flag group above the day headers, its rows
-    // carrying the visit date. Each flagged patient is also listed under their visit day, so a day lists everyone coming
-    // in (a clinician's review note, October 26). The review strip's Safety flags switch shows the other placements the
-    // CWG is asked about: the top group only, or their day only.
+    // group, a count would disagree with the rows below. Not scheduled has no times, so it runs by status, flags first.
+    const dayGroups = (rows) => [...new Set(rows.map((p) => p.dayKey))].map((k) => ({ ...dayHead(k), isDay: true,
+      rows: rows.filter((p) => p.dayKey === k).sort((a, b) => (k ? 0 : GROUP_ORDER.indexOf(a.status) - GROUP_ORDER.indexOf(b.status))) }));
+    // By next visit, the schedule sets the order: a safety-flagged patient sits under their visit day, flagged in place
+    // by their status and flag (a clinician's review note, October 26). This varies principle 6, because the list without
+    // visit dates, the one most sites will use, keeps flags first. The review strip's Safety flags switch shows the other
+    // placements the CWG is asked about: a Safety flag group above the day headers, its rows carrying the visit date,
+    // instead of the day or as well.
     const pinned = s.flagged === 'day' ? [] : byVisitOrder.filter((p) => p.status === 'safety')
       .map((p) => ({ ...p, pinDate: p.dayKey || 'Not scheduled', ...rowFns(p.id, `${p.id}@top`) }));
     const dayRows = s.flagged === 'pinned' ? byVisitOrder.filter((p) => p.status !== 'safety') : byVisitOrder;
@@ -2024,7 +2026,7 @@ class Component extends DCLogic {
       dateShort: `${DOW[TODAY.getDay()]}, ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`,
       // Where visit dates are known, the study visits, with the calendar icon: "study", because clinicians also see
       // patients who aren't in AURORA. Then the line about the clinician's own work. Safety flags aren't repeated here:
-      // their group is pinned first, just below.
+      // without visit dates their group comes first, just below, and by next visit each is on its patient's row.
       facts: [
         ...(s.dates && (todayN || tomorrowN) ? [{ cls: 'greet-fact', mark: icon('calendar'),
           text: todayN && tomorrowN ? `${countOf(todayN, 'study visit')} today, ${tomorrowN} tomorrow` : todayN ? `${countOf(todayN, 'study visit')} today` : `${countOf(tomorrowN, 'study visit')} tomorrow` }] : []),
@@ -2669,7 +2671,7 @@ class Component extends DCLogic {
       datesTabs: [tab('Not known', !s.dates, () => this.go({ dates: false })), tab('Known', s.dates, () => this.go({ dates: true }))],
       // By next visit: where safety-flagged patients appear, for the CWG question (list-flagged in notes.js)
       flaggedCtl: s.view === 'list' && !byStatus,
-      flaggedTabs: [['pinned', 'At top'], ['day', 'In their day'], ['both', 'Both']].map(([k, l]) => tab(l, s.flagged === k, () => this.go({ flagged: k }))),
+      flaggedTabs: [['day', 'In their day'], ['pinned', 'At top'], ['both', 'Both']].map(([k, l]) => tab(l, s.flagged === k, () => this.go({ flagged: k }))),
       hoStyleCtl: s.view === 'handout', hoStyleTabs: [tab('Full', s.hoStyle !== 'simple', () => this.go({ hoStyle: 'full' })), tab('Simple', s.hoStyle === 'simple', () => this.go({ hoStyle: 'simple' }))],
       hero, heroOn: s.refined && s.hero && s.view === 'list', refined: s.refined,
       lookTabs: [tab('Refined', s.refined, () => this.go({ refined: true })), tab('Original', !s.refined, () => this.go({ refined: false }))],
