@@ -90,6 +90,13 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .crumbs .crumb:hover{background:var(--hover);text-decoration:underline}
 .crumbs .crumb:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .crumbs .cur{color:var(--ink);font-weight:600}
+/* Sortable headings: Patient and Severity sort the list (once, reversed, then back to the status groups) */
+.sort-btn{padding:0;font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.sort-btn:hover{color:var(--ink);text-decoration:underline}
+.sort-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+.sort-btn{white-space:nowrap}
+.sort-mark{margin-left:3px;font-size:.7em}
+.grp-link{margin-left:auto;font-size:var(--fs-sm);font-weight:600;letter-spacing:0;text-transform:none}
 .crumbs .sep{color:var(--muted)}
 /* Click-only links are buttons that look like links, so Tab reaches them too */
 .linkbtn{padding:0;font:inherit;color:var(--accent);background:none;border:0;cursor:pointer}
@@ -132,10 +139,10 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 
 /* Caseload */
 .list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
-.list.by-status{--cols:minmax(160px,1.2fr) 156px 100px 80px minmax(0,2.6fr)}
-.list.by-visit{--cols:84px minmax(130px,1fr) 170px 100px 80px minmax(0,2.4fr)}
+.list.by-status{--cols:minmax(160px,1.2fr) 156px 116px 80px minmax(0,2.6fr)}
+.list.by-visit{--cols:84px minmax(130px,1fr) 170px 116px 80px minmax(0,2.4fr)}
 /* Without visit dates: no Next visit column */
-.list.by-status.no-dates{--cols:minmax(160px,1.4fr) 100px 80px minmax(0,2.6fr)}
+.list.by-status.no-dates{--cols:minmax(160px,1.4fr) 116px 80px minmax(0,2.6fr)}
 .lrow{display:grid;grid-template-columns:var(--cols);column-gap:16px;align-items:center;min-height:40px;padding:0 20px}
 .lhead{font-size:var(--fs-sm);font-weight:600;color:var(--muted);border-bottom:1px solid var(--line)}
 .grp{display:flex;align-items:center;padding:20px 20px 6px;font-size:var(--fs-sm);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
@@ -402,9 +409,9 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .distinct .grp.day{background:var(--tint)}
 /* Larger text: wider column and table columns, safety wording and footers at body size, lines kept short */
 .big .page,.big .band-inner{max-width:70rem}
-.big .list.by-status{--cols:minmax(170px,1.2fr) 184px 100px 96px minmax(0,2.6fr)}
-.big .list.by-visit{--cols:90px minmax(140px,1fr) 172px 100px 88px minmax(0,2.4fr)}
-.big .list.by-status.no-dates{--cols:minmax(170px,1.4fr) 100px 96px minmax(0,2.6fr)}
+.big .list.by-status{--cols:minmax(170px,1.2fr) 184px 116px 96px minmax(0,2.6fr)}
+.big .list.by-visit{--cols:90px minmax(140px,1fr) 172px 116px 88px minmax(0,2.4fr)}
+.big .list.by-status.no-dates{--cols:minmax(170px,1.4fr) 116px 96px minmax(0,2.6fr)}
 .big.distinct .pt-sections{grid-template-columns:minmax(0,1fr) 21rem}
 .big .safety-note{font-size:var(--fs-md);line-height:var(--lh-md)}
 .big .foot{font-size:var(--fs-md);line-height:var(--lh-md)}
@@ -655,13 +662,13 @@ textarea.set-input{resize:vertical}
   <header class="topbar no-print">
     <span class="brand"><img class="logo" src="favicon.svg" width="24" height="24" alt="">AURORA<span class="brand-tag" aria-hidden="true">Rich context, shared understanding</span></span>
     <nav class="crumbs" aria-label="Breadcrumb">
-      <sc-if value="{{ onList }}"><span class="cur" aria-current="page">Patients</span></sc-if>
+      <sc-if value="{{ onList }}"><span class="cur" aria-current="page">{{ pageIcon }}Patients</span></sc-if>
       <sc-if value="{{ clinCrumb }}"><button type="button" class="crumb" onClick="{{ goList }}">Patients</button><span class="sep" aria-hidden="true">›</span></sc-if>
-      <sc-if value="{{ onPatient }}"><span class="cur" aria-current="page">{{ pt.name }}</span></sc-if>
-      <sc-if value="{{ onHandout }}"><button type="button" class="crumb" onClick="{{ goPatient }}">{{ pt.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">Patient handout</span></sc-if>
-      <sc-if value="{{ onCheckin }}"><button type="button" class="crumb" onClick="{{ goPatient }}">{{ pt.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">{{ ci.crumb }}</span></sc-if>
-      <sc-if value="{{ onSite }}"><span class="cur" aria-current="page">{{ site.name }}</span></sc-if>
-      <sc-if value="{{ onSettings }}"><button type="button" class="crumb" onClick="{{ goSite }}">{{ site.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">Site settings</span></sc-if>
+      <sc-if value="{{ onPatient }}"><span class="cur" aria-current="page">{{ pageIcon }}{{ pt.name }}</span></sc-if>
+      <sc-if value="{{ onHandout }}"><button type="button" class="crumb" onClick="{{ goPatient }}">{{ pt.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">{{ pageIcon }}Patient handout</span></sc-if>
+      <sc-if value="{{ onCheckin }}"><button type="button" class="crumb" onClick="{{ goPatient }}">{{ pt.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">{{ pageIcon }}{{ ci.crumb }}</span></sc-if>
+      <sc-if value="{{ onSite }}"><span class="cur" aria-current="page">{{ pageIcon }}{{ site.name }}</span></sc-if>
+      <sc-if value="{{ onSettings }}"><button type="button" class="crumb" onClick="{{ goSite }}">{{ site.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">{{ pageIcon }}Site settings</span></sc-if>
     </nav>
     <div class="who-wrap">
       <button class="who" onClick="{{ toggleMenu }}" aria-haspopup="true" aria-expanded="{{ menuExpanded }}">{{ whoName }}<span class="caret" aria-hidden="true">▾</span></button>
@@ -702,10 +709,10 @@ textarea.set-input{resize:vertical}
     <div class="{{ listCls }}">
       <div class="lrow lhead">
         <sc-if value="{{ byVisit }}"><span>Time</span></sc-if>
-        <span>Patient</span>
+        <span><button type="button" class="sort-btn" aria-label="{{ sortName.label }}" onClick="{{ sortName.go }}">Patient<sc-if value="{{ sortName.mark }}"><span class="sort-mark" aria-hidden="true">{{ sortName.mark }}</span></sc-if></button></span>
         <sc-if value="{{ visitCol }}"><span>Next visit</span></sc-if>
         <sc-if value="{{ byVisit }}"><span>Status</span></sc-if>
-        <span>Severity <span class="ai">(AI)</span> <span class="tt-wrap" onMouseEnter="{{ tips.sev.enter }}" onMouseLeave="{{ tips.sev.leave }}"><button type="button" class="{{ tips.sev.btnCls }}" aria-label="About severity" aria-describedby="tt-sev" onClick="{{ tips.sev.toggle }}" onFocus="{{ tips.sev.focus }}" onBlur="{{ tips.sev.blur }}">ⓘ</button><span id="tt-sev" role="tooltip" class="{{ tips.sev.cls }}"><sc-for list="{{ tips.sev.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span>
+        <span><button type="button" class="sort-btn" aria-label="{{ sortSev.label }}" onClick="{{ sortSev.go }}">Severity <span class="ai">(AI)</span><sc-if value="{{ sortSev.mark }}"><span class="sort-mark" aria-hidden="true">{{ sortSev.mark }}</span></sc-if></button> <span class="tt-wrap" onMouseEnter="{{ tips.sev.enter }}" onMouseLeave="{{ tips.sev.leave }}"><button type="button" class="{{ tips.sev.btnCls }}" aria-label="About severity" aria-describedby="tt-sev" onClick="{{ tips.sev.toggle }}" onFocus="{{ tips.sev.focus }}" onBlur="{{ tips.sev.blur }}">ⓘ</button><span id="tt-sev" role="tooltip" class="{{ tips.sev.cls }}"><sc-for list="{{ tips.sev.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span>
         <span>Check-ins <span class="tt-wrap" onMouseEnter="{{ tips.ci.enter }}" onMouseLeave="{{ tips.ci.leave }}"><button type="button" class="{{ tips.ci.btnCls }}" aria-label="About check-ins" aria-describedby="tt-ci" onClick="{{ tips.ci.toggle }}" onFocus="{{ tips.ci.focus }}" onBlur="{{ tips.ci.blur }}">ⓘ</button><span id="tt-ci" role="tooltip" class="{{ tips.ci.cls }}"><sc-for list="{{ tips.ci.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span>
         <span>Flag</span>
       </div>
@@ -716,7 +723,10 @@ textarea.set-input{resize:vertical}
         <sc-if value="{{ g.isDay }}">
           <div class="grp day"><sc-if value="{{ g.rel }}"><span class="rel">{{ g.rel }}, </span></sc-if>{{ g.title }}</div>
         </sc-if>
-        <sc-for list="{{ g.rows }}" as="p">
+        <sc-if value="{{ g.isFlat }}">
+            <div class="grp day flat">{{ g.title }}<button type="button" class="linkbtn grp-link" onClick="{{ g.regroup }}">Group by status</button></div>
+          </sc-if>
+          <sc-for list="{{ g.rows }}" as="p">
           <div class="lrow row" data-pid="{{ p.id }}" onClick="{{ p.open }}" tabindex="0" role="link" onMouseEnter="{{ p.peekIn }}" onMouseLeave="{{ peekOut }}" onFocus="{{ p.peekFocus }}" onBlur="{{ peekOff }}" onKeyDown="{{ p.rowKey }}">
             <sc-if value="{{ p.peekOn }}">
               <div class="{{ peek.cls }}" aria-hidden="true">
@@ -1220,7 +1230,7 @@ textarea.set-input{resize:vertical}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;defaultView&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;list&quot;, &quot;options&quot;: [&quot;list&quot;, &quot;patient&quot;, &quot;handout&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}, &quot;defaultPatient&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;delgado&quot;, &quot;options&quot;: [&quot;osei&quot;, &quot;whitfield&quot;, &quot;delgado&quot;, &quot;fernandez&quot;, &quot;nguyen&quot;, &quot;mensah&quot;, &quot;santoso&quot;, &quot;kaur&quot;, &quot;brooks&quot;, &quot;ortiz&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}}">
 // Icons: Lucide v0.460.0 (lucide.dev), ISC license. Geometry only.
-const ICONS = {"briefcase":[["path",{"d":"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"}],["rect",{"width":"20","height":"14","x":"2","y":"6","rx":"2"}]],"calendar":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}]],"clipboard-list":[["rect",{"width":"8","height":"4","x":"8","y":"2","rx":"1","ry":"1"}],["path",{"d":"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{"d":"M12 11h4"}],["path",{"d":"M12 16h4"}],["path",{"d":"M8 11h.01"}],["path",{"d":"M8 16h.01"}]],"dumbbell":[["path",{"d":"M14.4 14.4 9.6 9.6"}],["path",{"d":"M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"}],["path",{"d":"m21.5 21.5-1.4-1.4"}],["path",{"d":"M3.9 3.9 2.5 2.5"}],["path",{"d":"M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"}]],"footprints":[["path",{"d":"M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"}],["path",{"d":"M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"}],["path",{"d":"M16 17h4"}],["path",{"d":"M4 13h4"}]],"message-square":[["path",{"d":"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"}]],"moon":[["path",{"d":"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],"pill-bottle":[["path",{"d":"M18 11h-4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h4"}],["path",{"d":"M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"}],["rect",{"width":"16","height":"5","x":"4","y":"2","rx":"1"}]],"shield":[["path",{"d":"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"}]],"users":[["path",{"d":"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"}],["circle",{"cx":"9","cy":"7","r":"4"}],["path",{"d":"M22 21v-2a4 4 0 0 0-3-3.87"}],["path",{"d":"M16 3.13a4 4 0 0 1 0 7.75"}]],"sun":[["circle",{"cx":"12","cy":"12","r":"4"}],["path",{"d":"M12 2v2"}],["path",{"d":"M12 20v2"}],["path",{"d":"m4.93 4.93 1.41 1.41"}],["path",{"d":"m17.66 17.66 1.41 1.41"}],["path",{"d":"M2 12h2"}],["path",{"d":"M20 12h2"}],["path",{"d":"m6.34 17.66-1.41 1.41"}],["path",{"d":"m19.07 4.93-1.41 1.41"}]],"phone":[["path",{"d":"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"}]],"printer":[["path",{"d":"M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"}],["path",{"d":"M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"}],["rect",{"x":"6","y":"14","width":"12","height":"8","rx":"1"}]],"pencil":[["path",{"d":"M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"}],["path",{"d":"m15 5 4 4"}]]};
+const ICONS = {"briefcase":[["path",{"d":"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"}],["rect",{"width":"20","height":"14","x":"2","y":"6","rx":"2"}]],"building-2":[["path",{"d":"M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"}],["path",{"d":"M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"}],["path",{"d":"M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"}],["path",{"d":"M10 6h4"}],["path",{"d":"M10 10h4"}],["path",{"d":"M10 14h4"}],["path",{"d":"M10 18h4"}]],"calendar":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}]],"clipboard-list":[["rect",{"width":"8","height":"4","x":"8","y":"2","rx":"1","ry":"1"}],["path",{"d":"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{"d":"M12 11h4"}],["path",{"d":"M12 16h4"}],["path",{"d":"M8 11h.01"}],["path",{"d":"M8 16h.01"}]],"dumbbell":[["path",{"d":"M14.4 14.4 9.6 9.6"}],["path",{"d":"M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"}],["path",{"d":"m21.5 21.5-1.4-1.4"}],["path",{"d":"M3.9 3.9 2.5 2.5"}],["path",{"d":"M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"}]],"file-text":[["path",{"d":"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"}],["path",{"d":"M14 2v4a2 2 0 0 0 2 2h4"}],["path",{"d":"M10 9H8"}],["path",{"d":"M16 13H8"}],["path",{"d":"M16 17H8"}]],"footprints":[["path",{"d":"M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"}],["path",{"d":"M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"}],["path",{"d":"M16 17h4"}],["path",{"d":"M4 13h4"}]],"list":[["path",{"d":"M3 12h.01"}],["path",{"d":"M3 18h.01"}],["path",{"d":"M3 6h.01"}],["path",{"d":"M8 12h13"}],["path",{"d":"M8 18h13"}],["path",{"d":"M8 6h13"}]],"message-square":[["path",{"d":"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"}]],"moon":[["path",{"d":"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],"pencil":[["path",{"d":"M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"}],["path",{"d":"m15 5 4 4"}]],"phone":[["path",{"d":"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"}]],"pill-bottle":[["path",{"d":"M18 11h-4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h4"}],["path",{"d":"M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"}],["rect",{"width":"16","height":"5","x":"4","y":"2","rx":"1"}]],"printer":[["path",{"d":"M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"}],["path",{"d":"M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"}],["rect",{"x":"6","y":"14","width":"12","height":"8","rx":"1"}]],"settings":[["path",{"d":"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"}],["circle",{"cx":"12","cy":"12","r":"3"}]],"shield":[["path",{"d":"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"}]],"sun":[["circle",{"cx":"12","cy":"12","r":"4"}],["path",{"d":"M12 2v2"}],["path",{"d":"M12 20v2"}],["path",{"d":"m4.93 4.93 1.41 1.41"}],["path",{"d":"m17.66 17.66 1.41 1.41"}],["path",{"d":"M2 12h2"}],["path",{"d":"M20 12h2"}],["path",{"d":"m6.34 17.66-1.41 1.41"}],["path",{"d":"m19.07 4.93-1.41 1.41"}]],"user":[["path",{"d":"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"}],["circle",{"cx":"12","cy":"7","r":"4"}]],"users":[["path",{"d":"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"}],["circle",{"cx":"9","cy":"7","r":"4"}],["path",{"d":"M22 21v-2a4 4 0 0 0-3-3.87"}],["path",{"d":"M16 3.13a4 4 0 0 1 0 7.75"}]]};
 
 // Mock data: pseudo-realistic, no real patients. Weeks run Monday to Monday, May 25 to Aug 10; "today" is Wed, Aug 12.
 const WEEKS = ['May 25', 'Jun 1', 'Jun 8', 'Jun 15', 'Jun 22', 'Jun 29', 'Jul 6', 'Jul 13', 'Jul 20', 'Jul 27', 'Aug 3', 'Aug 10'];
@@ -1734,7 +1744,7 @@ const HO_TEXT = {
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {} };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {} };
 
   componentDidMount() {
     const o = {};
@@ -1757,6 +1767,7 @@ class Component extends DCLogic {
       if (['checkins', 'pages', 'clinicians', 'none'].includes(h.get('line'))) r.greetLine = h.get('line');
       if (Object.keys(HO_TEXT).includes(h.get('lang'))) r.hoLang = h.get('lang');
       if (['full', 'simple'].includes(h.get('ho'))) r.hoStyle = h.get('ho');
+      if (['name', 'sev'].includes(h.get('sort'))) { r.sort = h.get('sort'); r.sortRev = h.get('rev') === '1'; }
       return r;
     };
     // The check-in page always names a real check-in of the patient shown
@@ -1817,7 +1828,7 @@ class Component extends DCLogic {
   go(o) {
     const next = { ...this.state, ...o };
     if (next.view === 'checkin') next.cday = resolveCday(next.pid, next.cday);
-    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&dates=${next.dates ? 1 : 0}&line=${next.greetLine}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}&ho=${next.hoStyle || 'full'}`); } catch (e) { /* sandboxed preview */ }
+    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&dates=${next.dates ? 1 : 0}&line=${next.greetLine}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}&ho=${next.hoStyle || 'full'}${next.sort ? `&sort=${next.sort}${next.sortRev ? '&rev=1' : ''}` : ''}`); } catch (e) { /* sandboxed preview */ }
     clearTimeout(this.peekT);
     clearTimeout(this.tipT);
     // The handout's name, ticks, language and edits belong to one printout: another page or patient starts fresh
@@ -1924,7 +1935,7 @@ class Component extends DCLogic {
     // Caseload: grouped by status (visit order inside each group), or one list in visit order. Without visit dates
     // (the default: AURORA isn't assumed to link to a site's EHR, aurora-8ok), grouped by status, by last name inside each
     // group, with no Time or Next visit column.
-    const byStatus = s.order === 'status' || !s.dates;
+    const byStatus = s.order === 'status' || !s.dates || !!s.sort;
     const byVisitOrder = [...all].sort((a, b) => a.visitRank - b.visitRank);
     const lastName = (p) => p.name.replace(/^\S+\s+/, '');
     const byName = [...all].sort((a, b) => lastName(a).localeCompare(lastName(b)));
@@ -1940,7 +1951,17 @@ class Component extends DCLogic {
     const dayGroups = (rows) => [...new Set(rows.map((p) => p.dayKey))].map((k) => ({ ...dayHead(k), isDay: true, rows: rows.filter((p) => p.dayKey === k) }));
     // By next visit, safety flags still come first: a Safety flag group above the day headers, its rows carrying the visit date
     const pinned = byVisitOrder.filter((p) => p.status === 'safety').map((p) => ({ ...p, pinDate: p.dayKey || 'Not scheduled' }));
-    const groups = (byStatus
+    // Sorted by the Patient or Severity heading: safety flags still lead (principle 6), then everyone else in one list.
+    // Severity sorts by the AI estimate, with patients who have none last either way.
+    const sortRows = (rows) => [...rows].sort(s.sort === 'name'
+      ? (a, b) => lastName(a).localeCompare(lastName(b)) * (s.sortRev ? -1 : 1)
+      : (a, b) => (a.estNow == null) - (b.estNow == null) || (s.sortRev ? a.estNow - b.estNow : b.estNow - a.estNow) || lastName(a).localeCompare(lastName(b)));
+    const flatTitle = `${all.some((p) => p.status === 'safety') ? 'Other patients' : 'All patients'}, ${s.sort === 'name'
+      ? (s.sortRev ? 'by last name, Z to A' : 'by last name') : (s.sortRev ? 'by severity, lowest first' : 'by severity, highest first')}`;
+    const groups = (s.sort
+      ? [statusGroup('safety', sortRows(all.filter((p) => p.status === 'safety'))),
+        { isFlat: true, title: flatTitle, rows: sortRows(all.filter((p) => p.status !== 'safety')), regroup: () => this.go({ sort: '', sortRev: false }) }]
+      : byStatus
       ? GROUP_ORDER.map((k) => statusGroup(k, (s.dates ? byVisitOrder : byName).filter((p) => p.status === k)))
       : [statusGroup('safety', pinned), ...dayGroups(byVisitOrder.filter((p) => p.status !== 'safety'))])
       .filter((g) => g.rows.length).map((g) => ({ ...g, count: String(g.rows.length) }));
@@ -2637,6 +2658,15 @@ class Component extends DCLogic {
       peekOut: () => { clearTimeout(this.peekT); this.peekT = setTimeout(() => this.setState({ peek: null }), 150); },
       peekOff: () => { clearTimeout(this.peekT); this.setState({ peek: null }); },
       listCls: 'list ' + (byStatus ? 'by-status' : 'by-visit') + (s.dates ? '' : ' no-dates'),
+      // The Patient and Severity headings sort the list: once, then reversed, then back to the status groups
+      sortName: { mark: s.sort === 'name' ? (s.sortRev ? '▼' : '▲') : '',
+        label: s.sort !== 'name' ? 'Sort by last name' : s.sortRev ? 'Sorted by last name, Z to A. Group by status' : 'Sorted by last name, A to Z. Sort Z to A',
+        go: () => this.go(s.sort !== 'name' ? { sort: 'name', sortRev: false } : s.sortRev ? { sort: '', sortRev: false } : { sortRev: true }) },
+      sortSev: { mark: s.sort === 'sev' ? (s.sortRev ? '▲' : '▼') : '',
+        label: s.sort !== 'sev' ? 'Sort by severity, highest first' : s.sortRev ? 'Sorted by severity, lowest first. Group by status' : 'Sorted by severity, highest first. Sort lowest first',
+        go: () => this.go(s.sort !== 'sev' ? { sort: 'sev', sortRev: false } : s.sortRev ? { sort: '', sortRev: false } : { sortRev: true }) },
+      // Wayfinding: the current page's name in the breadcrumb has its page's icon (DESIGN.md, Icons)
+      pageIcon: icon(({ list: 'list', patient: 'user', handout: 'file-text', checkin: 'message-square', site: 'building-2', settings: 'settings' })[s.view]),
       tips,
       drv, toggleDrivers: () => this.setState({ drivers: !s.drivers }),
       safetyShape: STATUS.safety.shape,

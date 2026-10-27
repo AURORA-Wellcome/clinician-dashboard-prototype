@@ -191,7 +191,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - A solid `accent` button is reserved for a page's single primary action; the current pages have none.
   - No outlined buttons.
   - Caseload rows have no action buttons: the whole row opens the patient.
-- **Breadcrumbs:** the top bar shows where you are: "Patients › M. Delgado › Patient handout". Pages above this one are links in `accent`, like every other link, with an underline on hover; the current page is `ink`, weight 600. Separators are a muted ›. On phones (below 32rem) the top bar wraps to two rows, the brand and account and then the breadcrumb, which drops the current page when the page has a visible title saying it. No back-arrow icon: it would double up with the separators, and the link color is the standard cue.
+- **Breadcrumbs:** the top bar shows where you are: "Patients › M. Delgado › Patient handout". Pages above this one are links in `accent`, like every other link, with an underline on hover; the current page is `ink`, weight 600. Separators are a muted ›. On phones (below 32rem) the top bar wraps to two rows, the brand and account and then the breadcrumb, which drops the current page when the page has a visible title saying it. No back-arrow icon: it would double up with the separators, and the link color is the standard cue. The current page carries its page icon (see Icons).
 - **Links:** anything clickable looks clickable and is reachable with Tab. Links that act on the page, rather than going to an address, are buttons styled as links.
 - **Safety flag:**
   - It is the first tile on the patient page, with the marker and text in `safety`.
@@ -251,6 +251,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
     - family, relationships and contact (people; v3 check-in page and drivers panel)
   - Never use icons for urgency (the status shapes and color do that), never color them, and never show one alone. Each sits next to its text and is hidden from screen readers.
   - **One action icon:** the printer beside Print, the exception to Meaning. It takes the button's color, so the button reads as one control (review note, October 26).
+  - **Page icons** (wayfinding, from October 27, from a review note): the current page's name in the breadcrumb has its page's icon: a list for Patients, a person for a patient, a page for the handout, a speech bubble for a check-in (as for check-ins elsewhere), a building for the site PI page, a gear for site settings. Muted, 16 px, hidden from screen readers, and one per top bar, so the rule of one icon per row holds. Not people for the caseload: people already means family and contact.
   - At most one icon per row or item.
   - Used in: caseload flags, "What changed" items (in a left gutter), chart events and the readout's visits, goals, the drivers panel's titles, the greeting band's visits (Refined look) and the Print buttons.
   - No emoji, illustrations or decorative graphics. The exceptions are the brand mark (below), the greeting band in the Refined look, and the patient handout's header.
@@ -295,6 +296,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - **Two-column middle:** "What changed" beside the goals, which sit on a `tint` card with each status on its own line. The trend runs full width below.
   - **Chart zone:** see Chart.
   - **Caseload group bands:** each status group header sits on its status tint, with a 3 px edge in the status color. Day headers (By next visit) sit on the neutral `tint`, with no edge.
+  - **Sorting** (from October 27, from a review note): the Patient and Severity headings sort the caseload: once (last name A to Z; severity highest first), then reversed, then back to the status groups. Safety flags stay first in every order (principle 6). Everyone else forms one list under a header that names the order, with Group by status to go back. Severity sorts by the AI estimate, with patients who have none last either way. It is a convenience, not a status, so the caseload opens grouped by status. The heading shows ▲ or ▼, and the order goes in the address (`&sort=name` or `&sort=sev`, `&rev=1` reversed).
   - Printing keeps the two-column middle and still fits one page. Tints print only when the browser prints background graphics, so no tint may carry meaning alone: the shape, color and word still do.
 
 ## v3: changes from the theoretical model *(under review)*

@@ -18,6 +18,7 @@ Notes for whoever edits the mockups. What they are is in the [README](README.md)
 
 A link can open a specific page and settings:
 - `#view=list&dates=1` shows visit dates, which are off by default (the list is then grouped by status, by last name). With them on, `&order=visit` (by next visit, the default) or `&order=status`.
+- `#view=list&sort=name` or `&sort=sev` (v3: the patients list sorted by last name or by severity, safety flags first; add `&rev=1` to reverse)
 - `#view=patient&p=delgado`
 - `#view=handout&p=delgado`; `#view=handout&p=fernandez&lang=en` (v3: the handout in English for a patient whose check-ins are in Spanish); `&ho=simple` for the simple handout (v3)
 - `#view=checkin&p=delgado&d=2026-08-10` (v3: one check-in; without `&d=`, the patient's example or latest check-in)
