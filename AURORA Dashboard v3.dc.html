@@ -997,7 +997,7 @@ textarea.set-input{resize:vertical}
         </div>
       </aside>
       <section class="pt-notes no-print">
-        <h2 class="h2">Your notes<span class="muted">only you see them</span></h2>
+        <h2 class="h2">Your notes</h2>
         <div class="notes-wrap">
           <sc-if value="{{ notes.has }}"><ul class="note-list"><sc-for list="{{ notes.list }}" as="n"><li class="note"><span class="note-date">{{ n.date }}</span>{{ n.text }}</li></sc-for></ul></sc-if>
           <sc-if value="{{ !notes.has }}"><p class="empty">No notes yet.</p></sc-if>

@@ -286,7 +286,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - The button names the choice ("Alerts: email"), and Your settings lists the patients with their own alerts.
   - A draft until the study decides on outreach between visits (bead aurora-12g). Changes are logged (`setting_changed`).
 - **Your notes** (v3, draft, from October 27, from the clinical group's suggestions): a section under Goals on the patient page for the clinician's own impressions.
-  - Notes are dated, newest first ("Today" for today's), on `tint` like the goals, with a box and Save note under them. Only the clinician sees them, which the heading says.
+  - Notes are dated, newest first ("Today" for today's), on `tint` like the goals, with a box and Save note under them. The heading makes no claim about who sees them until the data flow below is decided; then it can say.
   - They don't print: the session brief stays one page, and a printout can be left where others see it.
   - Clinical free text, so where notes are kept, who else may read them (a supervisor, bead aurora-2q1) and whether the study uses them wait on the data flow and the consent form (bead aurora-hv1). A scaffold note says so. The logging spec records only that a note was saved.
 - **ⓘ tooltip:** the place for scales, thresholds and definitions. The page draws it; don't use the browser's `title` tooltip, which appears only after a delay and never by keyboard or touch.
