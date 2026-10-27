@@ -588,6 +588,7 @@ textarea.set-input{resize:vertical}
 .ho-chart.ho-scores{max-height:none}
 .ho-chart.ho-scores text{font-size:15px}
 .ho-scores .sv{font-size:17px;font-weight:600;fill:var(--ink)}
+.ho-scores .bh{font-weight:600}
 .ho-chart text{font-size:14px;fill:var(--muted)}
 .ho-line{height:1.9em;margin-bottom:6px;border-bottom:1.5px solid var(--line-strong)}
 .ho-help{padding:14px 18px;border:1.5px solid #B9BCEB;border-radius:var(--r)}
@@ -943,6 +944,7 @@ textarea.set-input{resize:vertical}
       </sc-if>
       <div class="ho-field"><span>Things to talk about</span></div>
       <sc-for list="{{ ho.talk }}" as="t"><label class="ho-check"><input type="checkbox" checked="{{ t.on }}" onChange="{{ t.toggle }}"> {{ t.text }}</label></sc-for>
+      <sc-if value="{{ ho.simple }}"><p class="muted">The simple handout names the PHQ-9’s ranges in plain words: very low (minimal), low (mild), medium (moderate), high (moderately severe) and very high (severe).</p></sc-if>
       <p class="muted">Untick anything the patient wouldn’t want on paper. Read the handout through before printing: parts of it are written by AI. You can edit them, or print it as it is.</p>
       <sc-if value="{{ ho.editNote }}"><p class="muted">{{ ho.editNote }}<sc-if value="{{ ho.edited }}"> <button type="button" class="linkbtn" onClick="{{ ho.resetEdits }}">Restore the AI wording</button></sc-if></p></sc-if>
       <div class="ho-actions"><sc-if value="{{ ho.canEdit }}"><button class="btn" aria-pressed="{{ ho.editPressed }}" onClick="{{ ho.toggleEdit }}">{{ ho.editLabel }}</button></sc-if><button class="btn" onClick="{{ doPrint }}">{{ printIcon }}Print</button></div>
@@ -1016,7 +1018,7 @@ textarea.set-input{resize:vertical}
               <svg class="ho-chart ho-scores" viewBox="0 0 540 236" role="img" aria-label="{{ ho.sc.aria }}">
                 <sc-for list="{{ ho.sc.grid }}" as="g"><line class="grid" x1="72" x2="392" y1="{{ g.y }}" y2="{{ g.y }}"></line></sc-for>
                 <sc-for list="{{ ho.sc.ticks }}" as="k"><text class="tk" x="44" y="{{ k.y }}" text-anchor="end">{{ k.label }}</text></sc-for>
-                <sc-for list="{{ ho.sc.bands }}" as="b"><text class="bn" x="412" y="{{ b.y }}">{{ b.name }}</text></sc-for>
+                <text class="bn bh" x="412" y="14">{{ ho.sc.head }}</text><sc-for list="{{ ho.sc.bands }}" as="b"><text class="bn" x="412" y="{{ b.y }}">{{ b.name }}</text></sc-for>
                 <polyline class="ln" points="{{ ho.sc.line }}"></polyline>
                 <sc-for list="{{ ho.sc.pts }}" as="q"><circle class="pt" cx="{{ q.cx }}" cy="{{ q.cy }}" r="5"></circle><text class="sv" x="{{ q.x }}" y="{{ q.ly }}" text-anchor="middle">{{ q.v }}</text><text x="{{ q.x }}" y="228" text-anchor="middle">{{ q.date }}</text></sc-for>
               </svg>
@@ -1676,7 +1678,9 @@ const HO_TEXT = {
     // The simple handout (review option): the scores on the PHQ-9's own scale
     simpleTitle: 'Your questionnaire scores',
     scoresNote: 'From the questionnaires you filled out. Lower scores mean fewer symptoms.',
-    bands: ['minimal', 'mild', 'moderate', 'moderately severe', 'severe'],
+    // The PHQ-9's ranges in plain words for patients; the dashboard keeps the PHQ-9's own names for clinicians
+    bandsHead: 'Symptom level',
+    bands: ['very low', 'low', 'medium', 'high', 'very high'],
     scoresAria: (from, to, first, last) => `Your questionnaire scores from ${from} to ${to}: ${first}, then ${last}, out of 27.`,
     aboutHead: 'About your check-ins',
     about: 'Your check-ins help you and Dr. Okafor see how you’re doing between visits.',
@@ -1716,7 +1720,8 @@ const HO_TEXT = {
     help988: 'En Estados Unidos, también puede llamar al 988 y marcar el 2 para hablar en español. O envíe un mensaje de texto con la palabra AYUDA al 988.',
     simpleTitle: 'Sus puntajes en los cuestionarios',
     scoresNote: 'Según los cuestionarios que completó. Un puntaje más bajo significa menos síntomas.',
-    bands: ['mínima', 'leve', 'moderada', 'moderadamente grave', 'grave'],
+    bandsHead: 'Nivel de síntomas',
+    bands: ['muy bajo', 'bajo', 'medio', 'alto', 'muy alto'],
     scoresAria: (from, to, first, last) => `Sus puntajes del ${esDate(from, true)} al ${esDate(to, true)}: de ${first} a ${last}, sobre 27.`,
     aboutHead: 'Sobre sus conversaciones con AURORA',
     about: 'Sus conversaciones con AURORA les ayudan a usted y a su terapeuta a ver cómo está entre una cita y otra.',
@@ -2470,6 +2475,7 @@ class Component extends DCLogic {
       ticks: [0, 5, 10, 15, 20, 27].map((v) => ({ y: f(HY(v) + 5), label: T(String(v)) })),
       grid: [5, 10, 15, 20].map((v) => ({ y: f(HY(v - 0.5)) })),
       bands: BANDS.map((b, j) => ({ y: f(HY((b.lo + (j === BANDS.length - 1 ? MAX : BANDS[j + 1].lo - 1)) / 2) + 5), name: T(HO.bands[j]) })),
+      head: T(HO.bandsHead),
       aria: qs.length >= 2 ? HO.scoresAria(WEEKS[qW0], WEEKS[qW1], qs[0].v, qs[qs.length - 1].v) : ''
     };
     const well = [

@@ -408,10 +408,10 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
   - A privacy line: "This page is about your care. Keep it somewhere private."
 - **Print:** clear print at 14 pt, on two pages at most. The clinician's panel and the draft labels don't print.
 - **Simple** (review option, from October 27): the review strip's Handout switch (Full, Simple; `&ho=simple`) shows the simpler handout three review notes asked for.
-  - **What it keeps:** the title "Your questionnaire scores", without a name; the patient's PHQ-9 scores on the PHQ-9's own 0 to 27 scale, each point with its score and the five ranges named lightly at the side; then things to talk about, with no lines to fill in; then the crisis line and the privacy line.
+  - **What it keeps:** the title "Your questionnaire scores", without a name; the patient's PHQ-9 scores on the PHQ-9's own 0 to 27 scale, each point with its score and the five ranges named lightly at the side, in plain words under a Symptom level caption (very low, low, medium, high, very high: the PHQ-9's minimal to severe, from a review note of October 27). The dashboard keeps the PHQ-9's own names for clinicians, and the Before you print panel maps one to the other; then things to talk about, with no lines to fill in; then the crisis line and the privacy line.
   - **What it drops:** the summary, What's going well, the goals, the next step, the note about the check-ins, and the first name field before printing.
   - **Layout:** things to talk about go below the chart, not beside it, so the chart keeps print-sized labels.
-  - **Spanish** names the ranges in Spanish (mínima to grave). The working group chooses between the two handouts (Questions tab; bead aurora-sk9).
+  - **Spanish** names the levels in Spanish (muy bajo to muy alto, under Nivel de síntomas). The working group chooses between the two handouts (Questions tab; bead aurora-sk9).
 
 **Site PI page** *(draft, from October 26)*. `#view=site`. The engagement plan's monitoring, made visible to the site PI: *which of my site's clinicians need a call or support?*
 - **Top:** the site; its study clinicians, and how many have the dashboard; patients enrolled; and when the quarterly group case consultation is due.
