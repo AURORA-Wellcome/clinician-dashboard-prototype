@@ -35,6 +35,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
   - **Questions for the working group:** the Notes panel has a Questions tab, with sixteen questions across the pages, drawn from the group's open decisions and the review notes. Answers are shared like notes, and others' answers to a question appear once you've given yours.
 - **Plainer wording** (October 27, from review notes): the patient page's tick boxes read "Today:", then "The patient brought up their AURORA data" and "I brought up their AURORA data", instead of "it". The Safety tile's link and the check-in page's steps heading say "Protocol steps".
 - **Tagline** (October 27): pointing at the AURORA mark or wordmark shows "Rich context, shared understanding". The landing page shows it the same way.
+- **PHQ-9 ranges and answers** (October 27, from review notes): wherever a PHQ-9 score's band is named, its range follows ("12 (moderate, 10 to 14)"), and the PHQ-9 tile's band has an ⓘ listing all five. Answers by question, under the PHQ-9 tile, opens the patient's answer to each question, highest first, beside the PHQ-9 before. Model Facts says the ranges are for the PHQ-9 only.
 
 ## v2: redesign
 

@@ -79,7 +79,7 @@ Interface words are labels, headers, notes and buttons, not patient data.
 - **Dates and times** are US style too: see Times under Components.
 - **No middle dots (·)** anywhere in the dashboard:
   - a note follows its text after a comma ("Safety review: moderate risk, today 9:40 AM");
-  - a value's band goes in parentheses ("20 (severe)");
+  - a PHQ-9 score's band goes in parentheses, with its range ("20 (severe, 20 to 27)"). Ranges are named for the PHQ-9 only, never the AI estimate, since they were set for PHQ-9 totals;
   - separate facts on one line are set apart by space, and screen readers hear a comma between them;
   - places use ›, as in the breadcrumb ("Landing page › Headline" in the review notes).
 - **Other languages** follow their own conventions. The patient handout can print in Spanish, which uses usted, lowercase weekdays and the day before the month ("10 ago").
@@ -328,6 +328,8 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
   - In `ink`, never a status color: it is a note, not a status. Never shown beside a flag of any kind, so it can't soften one.
   - It describes; it doesn't tell the clinician what to do (principle 8).
 - **Tile order:** the patient's PHQ-9 comes first and at the same size as the AI estimate, so the estimate reads as an adjunct to the patient's account, not its arbiter. This follows the model's "feeling believed" node, where the evidenced risk is that the estimate displaces the patient's account.
+- **PHQ-9 ranges** (from October 27): wherever a PHQ-9 score's band is named, its range follows (see Language). The PHQ-9 tile's band has an ⓘ listing all five (0 to 4 minimal, 5 to 9 mild, 10 to 14 moderate, 15 to 19 moderately severe, 20 to 27 severe; Kroenke, Spitzer and Williams, 2001), and Model Facts says the ranges are for the PHQ-9 only. From a review note asking what Mild, Moderate and Severe mean.
+- **Answers by question** (from October 27): a link under the PHQ-9 tile, like Model Facts and Latest check-in under theirs, opens a dialog with the patient's answer to each question in the latest PHQ-9, highest first, beside the PHQ-9 before. Each answer has its words (Not at all, Several days, More than half the days, Nearly every day); a positive item 9 has the safety square; the total ends the list with its range. The questions are shortened from the PHQ-9's own wording. Mock answers spread each total over the first eight questions by the patient's own mix of symptoms, and item 9 keeps its recorded answer. Whether clinicians want it, and whether the highest-scoring questions belong on the page itself, is a question for the working group (Questions tab).
 - **Disagreement:** when the PHQ-9 and the estimate differ, the callout puts the patient's account first: "The estimate supplements the patient's own account; it doesn't replace it."
 
 **Chart.** It draws the rule that applies:

@@ -507,6 +507,16 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 /* Its own class: the header's .facts lays its children out in one unbroken row */
 .mf{margin:8px 0 0}
 .mf dt{margin-top:12px;font-weight:600}
+/* PHQ-9 answers by question: a dialog like Model Facts, opened from the PHQ-9 tile */
+.pi-sub{margin:4px 0 12px;color:var(--muted)}
+.pi-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.pi-table th{padding:6px 12px 6px 0;font-size:var(--fs-sm);font-weight:600;text-align:left;white-space:nowrap;color:var(--muted);border-bottom:1px solid var(--line)}
+.pi-table td{padding:8px 12px 8px 0;vertical-align:top;border-bottom:1px solid var(--line)}
+.pi-table .pi-v{white-space:nowrap}
+.pi-table .pi-p{padding-right:0;text-align:right;color:var(--muted)}
+.pi-n{font-weight:600}
+.pi-flag{display:inline-block;width:9px;height:9px;margin-right:8px;background:var(--safety)}
+.pi-total{margin:12px 0 0}
 .mf dd{margin:2px 0 0}
 .modal .actions{justify-content:flex-end;margin-top:20px}
 
@@ -754,7 +764,8 @@ textarea.set-input{resize:vertical}
         <div class="stat">
           <div class="stat-label">PHQ-9 <span class="ai">(patient, {{ pt.phqDate }})</span></div>
           <div class="stat-value hero num">{{ pt.phqNow }}</div>
-          <div class="stat-note muted">{{ pt.phqBand }}</div>
+          <div class="stat-note muted">{{ pt.phqBand }}<sc-if value="{{ pt.phqBand }}"> <span class="tt-wrap" onMouseEnter="{{ tips.bands.enter }}" onMouseLeave="{{ tips.bands.leave }}"><button type="button" class="{{ tips.bands.btnCls }}" aria-label="About PHQ-9 ranges" aria-describedby="tt-bands" onClick="{{ tips.bands.toggle }}" onFocus="{{ tips.bands.focus }}" onBlur="{{ tips.bands.blur }}">ⓘ</button><span id="tt-bands" role="tooltip" class="{{ tips.bands.cls }}"><sc-for list="{{ tips.bands.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></sc-if></div>
+            <sc-if value="{{ pt.hasPhqItems }}"><div class="stat-note no-print"><button type="button" class="linkbtn" onClick="{{ pt.openPhqItems }}">Answers by question</button></div></sc-if>
         </div>
         <div class="stat">
           <div class="stat-label">Severity <span class="ai">(AI estimate)</span></div>
@@ -1133,7 +1144,21 @@ textarea.set-input{resize:vertical}
   </main>
   </sc-if>
 
-  <sc-if value="{{ factsOpen }}">
+  <sc-if value="{{ phqOpen }}">
+      <div class="modal-bg" onClick="{{ closePhqItems }}">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pi-title" onClick="{{ stop }}">
+          <h3 id="pi-title">{{ pi.title }}</h3>
+          <p class="pi-sub">The patient’s own answers about the last 2 weeks, highest first.</p>
+          <sc-raw-table class="pi-table">
+            <sc-raw-thead><sc-raw-tr><sc-raw-th>Question</sc-raw-th><sc-raw-th class="pi-v">{{ pi.d1 }}</sc-raw-th><sc-if value="{{ pi.hasPrev }}"><sc-raw-th class="pi-p">{{ pi.d0 }}</sc-raw-th></sc-if></sc-raw-tr></sc-raw-thead>
+            <sc-raw-tbody><sc-for list="{{ pi.rows }}" as="r"><sc-raw-tr><sc-raw-td><sc-if value="{{ r.safety }}"><span class="pi-flag" aria-hidden="true"></span></sc-if>{{ r.q }}</sc-raw-td><sc-raw-td class="pi-v"><span class="pi-n">{{ r.v }}</span> {{ r.anchor }}</sc-raw-td><sc-if value="{{ pi.hasPrev }}"><sc-raw-td class="pi-p">{{ r.prev }}</sc-raw-td></sc-if></sc-raw-tr></sc-for></sc-raw-tbody>
+          </sc-raw-table>
+          <p class="pi-total">{{ pi.total }}</p>
+          <div class="actions"><button class="btn" onClick="{{ closePhqItems }}">Close</button></div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ factsOpen }}">
     <div class="modal-bg" onClick="{{ closeFacts }}">
       <div class="modal" onClick="{{ stop }}">
         <h3>Model Facts: AI-COA (Deliberate AI)</h3>
@@ -1143,7 +1168,7 @@ textarea.set-input{resize:vertical}
           <dt>Changes</dt><dd>A change is colored when it is 6 or more points from the patient’s own baseline (their typical level in their first weeks in AURORA).</dd>
           <dt>Regulatory status</dt><dd>FDA ISTAND letter of intent only. Not FDA-qualified.</dd>
           <dt>Performance</dt><dd>ICC 0.82–0.92, reported by the company. Not independently verified; validation is ongoing.</dd>
-          <dt>Known limits</dt><dd>Less accurate below 9 of 12 check-ins in 14 days. Not validated for crisis assessment.</dd>
+          <dt>Ranges</dt><dd>The dashboard names ranges for the patient’s PHQ-9 only: 0–4 minimal, 5–9 mild, 10–14 moderate, 15–19 moderately severe, 20–27 severe (Kroenke, Spitzer and Williams, 2001). The AI estimate isn’t given a range, since the ranges were set for PHQ-9 totals.</dd> <dt>Known limits</dt><dd>Less accurate below 9 of 12 check-ins in 14 days. Not validated for crisis assessment.</dd>
         </dl>
         <div class="actions"><button class="btn" onClick="{{ closeFacts }}">Close</button></div>
       </div>
@@ -1354,6 +1379,28 @@ const driversOf = (p) => {
 
 const BANDS = [{ name: 'minimal', lo: 0 }, { name: 'mild', lo: 5 }, { name: 'moderate', lo: 10 }, { name: 'moderately severe', lo: 15 }, { name: 'severe', lo: 20 }];
 const bandOf = (v) => [...BANDS].reverse().find((b) => v >= b.lo).name;
+// A PHQ-9 band with its range, where a score is named: "severe, 20 to 27" (Kroenke, Spitzer and Williams, 2001).
+// Ranges are named for the PHQ-9 only, never the AI estimate: they were set for PHQ-9 totals.
+const bandRange = (v) => {
+  const k = BANDS.findIndex((b, j) => v >= b.lo && (j === BANDS.length - 1 || v < BANDS[j + 1].lo));
+  return `${BANDS[k].name}, ${BANDS[k].lo} to ${k === BANDS.length - 1 ? MAX : BANDS[k + 1].lo - 1}`;
+};
+// PHQ-9 answers question by question (mock): each total is spread over items 1 to 8 by the patient's own mix of
+// symptoms, and item 9 keeps its recorded answer
+const PHQ_ITEMS = ['Little interest or pleasure in doing things', 'Feeling down, depressed or hopeless', 'Trouble falling or staying asleep, or sleeping too much', 'Feeling tired or having little energy', 'Poor appetite or overeating', 'Feeling bad about yourself, or like a failure', 'Trouble concentrating on things', 'Moving or speaking slowly, or being fidgety or restless', 'Thoughts that you would be better off dead, or of hurting yourself'];
+const PHQ_ANCHORS = ['Not at all', 'Several days', 'More than half the days', 'Nearly every day'];
+const ITEM_W = { delgado: [2, 3, 4, 3, 1, 1, 3, 1], osei: [2, 4, 2, 2, 1, 4, 2, 1], whitfield: [2, 4, 3, 2, 2, 2, 2, 1], fernandez: [2, 3, 2, 2, 3, 2, 1, 1], nguyen: [3, 2, 2, 3, 1, 2, 2, 2] };
+const phqItems = (P, k) => {
+  if (k < 0 || P.phq[k] == null) return null;
+  const i9 = Math.min(3, P.item9[k] || 0), rest = Math.max(0, Math.min(24, P.phq[k] - i9));
+  const w = ITEM_W[P.id] || [2, 3, 2, 2, 1, 2, 2, 1], sw = w.reduce((a, b) => a + b, 0);
+  const share = w.map((x) => (rest * x) / sw), v = share.map((x) => Math.min(3, Math.floor(x)));
+  let left = rest - v.reduce((a, b) => a + b, 0);
+  const frac = (j) => share[j] - Math.floor(share[j]);
+  const order = w.map((_, j) => j).sort((a, b) => frac(b) - frac(a) || w[b] - w[a] || a - b);
+  while (left > 0) { let moved = false; for (const j of order) if (left > 0 && v[j] < 3) { v[j]++; left--; moved = true; } if (!moved) break; }
+  return [...v, i9];
+};
 const lastIndex = (arr) => { for (let i = arr.length - 1; i >= 0; i--) if (arr[i] != null) return i; return -1; };
 const signed = (d) => (d > 0 ? '+' : d < 0 ? '−' : '') + Math.abs(d);
 
@@ -1634,7 +1681,7 @@ const HO_TEXT = {
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {} };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {} };
 
   componentDidMount() {
     const o = {};
@@ -1675,7 +1722,7 @@ class Component extends DCLogic {
     };
     window.addEventListener('hashchange', this.onHash);
     // Escape closes hover content anywhere (WCAG 1.4.13: dismissible)
-    this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, menuOpen: false, tip: null, tipPinned: false, factsOpen: false }); } };
+    this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, menuOpen: false, tip: null, tipPinned: false, factsOpen: false, phqOpen: false }); } };
     window.addEventListener('keydown', this.onEsc);
     // A click or tap outside an open ⓘ tip closes it
     this.onDown = (e) => { if (this.state.tip && !(e.target.closest && e.target.closest('.tt-wrap'))) this.setState({ tip: null, tipPinned: false }); };
@@ -1721,7 +1768,7 @@ class Component extends DCLogic {
     clearTimeout(this.tipT);
     // The handout's name, ticks, language and edits belong to one printout: another page or patient starts fresh
     const fresh = next.view !== this.state.view || next.pid !== this.state.pid ? { hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false } : {};
-    this.setState({ ...o, ...fresh, cday: next.cday, cAt: o.cAt || null, pAt: null, tx: false, factsOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
+    this.setState({ ...o, ...fresh, cday: next.cday, cAt: o.cAt || null, pAt: null, tx: false, factsOpen: false, phqOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
     try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
   }
 
@@ -1903,8 +1950,18 @@ class Component extends DCLogic {
     // Check-ins over the last 14 days, oldest first (the tile's dots), and every completed check-in since joining
     const ciPat = ciPatOf(P);
     const ciList = checkinDays(P);
+    // PHQ-9 answers question by question, for the dialog under the PHQ-9 tile: the latest PHQ-9 beside the one before,
+    // highest first (ties: higher before, then question order)
+    const piNow = phqItems(P, iPhq), piPrevK = iPhq > 0 ? lastIndex(P.phq.slice(0, iPhq)) : -1, piPrev = phqItems(P, piPrevK);
+    const pi = !piNow ? null : {
+      title: `PHQ-9 answers, ${WEEKS[PHQ_WEEKS[iPhq]]}`, d1: WEEKS[PHQ_WEEKS[iPhq]], d0: piPrev ? WEEKS[PHQ_WEEKS[piPrevK]] : '', hasPrev: !!piPrev,
+      rows: PHQ_ITEMS.map((q, j) => ({ q, j, v: piNow[j], anchor: PHQ_ANCHORS[piNow[j]], prev: piPrev ? String(piPrev[j]) : '', safety: j === 8 && piNow[j] > 0 }))
+        .sort((a, b) => b.v - a.v || (piPrev ? piPrev[b.j] - piPrev[a.j] : 0) || a.j - b.j),
+      total: `Total ${phqNow} (${bandRange(phqNow)})` + (piPrev ? `, ${P.phq[piPrevK]} on ${WEEKS[PHQ_WEEKS[piPrevK]]}` : '')
+    };
     const pt = {
       ...P,
+      hasPhqItems: !!pi, openPhqItems: (e) => { noop(e); this.setState({ phqOpen: true }); },
       initials: P.name.replace(/\./g, '').split(/\s+/).filter(Boolean).map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
       headFacts: [...(s.dates ? [P.visitRank === NOT_SCHEDULED ? 'No visit scheduled' : 'Next visit ' + tm(P.visit)] : []), `${P.weeksIn} weeks in AURORA`].map((text, i) => ({ text, sep: i > 0 })),
       sevNow: P.estNow == null ? '—' : String(P.estNow),
@@ -2095,13 +2152,13 @@ class Component extends DCLogic {
         hasEst: e != null, est: estText, estY: eRaw == null ? 0 : f(Y(eRaw)),
         ci: ciV != null ? `estimate ${ciV}` : withheld ? 'no estimate' : ci, ciCls: 'tip-v' + (ci === 'missed' || ciV != null ? '' : ' muted'),
         hasCiDot: ciV != null, ciY: ciV == null ? 0 : f(Y(ciV)),
-        hasPhq: k >= 0, phq: phq == null ? 'not completed' : `${phq} (${bandOf(phq)})`, phqCls: 'tip-v' + (phq == null ? ' muted' : ''),
+        hasPhq: k >= 0, phq: phq == null ? 'not completed' : `${phq} (${bandRange(phq)})`, phqCls: 'tip-v' + (phq == null ? ' muted' : ''),
         hasPhqDot: phq != null, phqY: phq == null ? 0 : f(Y(phq)),
         hasI9: i9 != null, i9: i9 == null ? '' : String(i9), i9Cls: 'tip-v' + (i9 > 0 ? ' i9-pos' : ''),
         events: evs.map((ev) => ({ label: ev.label, iconEl: icon(ev.icon) })),
         hasVisit: isVisit, visit: visitText, visitIcon: icon('calendar'),
         aria: [title, e == null ? '' : `severity estimate ${estText.replace('±', 'plus or minus')}`, ciV != null ? `check-in estimate ${ciV}` : withheld ? 'check-in completed, no estimate' : ci === 'none scheduled' ? 'no check-in scheduled' : `check-in ${ci}`,
-          k < 0 ? '' : phq == null ? 'PHQ-9 not completed' : `PHQ-9 ${phq}, ${bandOf(phq)}`, i9 == null ? '' : `item 9 ${i9}`, visitText,
+          k < 0 ? '' : phq == null ? 'PHQ-9 not completed' : `PHQ-9 ${phq}, ${bandRange(phq)}`, i9 == null ? '' : `item 9 ${i9}`, visitText,
           ...evs.map((ev) => ev.label)].filter(Boolean).join('; ') + '.' + (ci === 'completed' ? ' Press Enter to open the check-in.' : '')
       });
     }
@@ -2128,7 +2185,7 @@ class Component extends DCLogic {
         dots: PHQ_WEEKS.map((w, k) => (PK.phq[k] == null || w < px0 ? null : { cx: f(PX(w)), cy: f(PY(PK.phq[k])) })).filter(Boolean),
         sev: PK.estNow == null ? 'No estimate yet'
           : `${PK.estNow} ${phi - PK.estNow === un && PK.estNow - plo === un ? `± ${un}` : `(range ${plo}–${phi})`}, baseline ${PK.baseline}`,
-        hasPhq: kq >= 0, phqDate: kq >= 0 ? WEEKS[PHQ_WEEKS[kq]] : '', phq: kq >= 0 ? `${PK.phq[kq]} (${bandOf(PK.phq[kq])})` : '',
+        hasPhq: kq >= 0, phqDate: kq >= 0 ? WEEKS[PHQ_WEEKS[kq]] : '', phq: kq >= 0 ? `${PK.phq[kq]} (${bandRange(PK.phq[kq])})` : '',
         i9: !i9k.length ? 'no PHQ-9 yet' : i9pos === 0 ? (i9k.length === 1 ? '0 at the one PHQ-9 so far' : `0 at all ${i9k.length} PHQ-9s`)
           : `${i9last} at the latest, above 0 at ${i9pos} of ${i9k.length}`,
         i9Cls: 'peek-v' + (i9last > 0 ? ' i9-pos' : ''),
@@ -2447,6 +2504,7 @@ class Component extends DCLogic {
       };
     };
     const tips = {
+      bands: tipFor('bands', [{ cls: 'tt-head', text: 'PHQ-9 ranges:' }, '0 to 4: minimal', '5 to 9: mild', '10 to 14: moderate', '15 to 19: moderately severe', '20 to 27: severe', { cls: 'tt-note', text: 'Kroenke, Spitzer and Williams, 2001. The dashboard names ranges for the patient’s PHQ-9 only, not the AI estimate.' }]),
       sev: tipFor('sev', ['AI estimate (AI-COA) of depression severity on the PHQ-9 scale, 0 to 27.', 'The number after it is the change from the patient’s own baseline, colored when it is 6 or more points.']),
       ci: tipFor('ci', ['Check-ins completed in the last 14 days, out of 12 expected. Below 9, the estimate is less certain.']),
       rule: tipFor('rule', [
@@ -2521,6 +2579,7 @@ class Component extends DCLogic {
         return { pt: !!d.pt, me: !!d.me, togglePt: set('pt'), toggleMe: set('me') };
       })(),
       factsOpen: s.factsOpen,
+      phqOpen: s.phqOpen && !!pi, pi: pi || { title: '', d1: '', d0: '', hasPrev: false, rows: [], total: '' }, closePhqItems: () => this.setState({ phqOpen: false }),
       menuOpen: s.menuOpen, menuExpanded: s.menuOpen ? 'true' : 'false',
       toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }),
       closeMenu: () => this.setState({ menuOpen: false }),
