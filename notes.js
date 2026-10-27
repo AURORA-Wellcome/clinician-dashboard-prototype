@@ -16,7 +16,7 @@
   };
   const SDK = 'https://www.gstatic.com/firebasejs/13.1.0/';
   const PAGE_FILES = { v2: 'AURORA%20Dashboard%20v2.dc.html', v3: 'AURORA%20Dashboard%20v3.dc.html', landing: 'index.html' };
-  const VIEW_NAMES = { list: 'Patients list', patient: 'Patient page', handout: 'Patient handout', checkin: 'Check-in', site: 'Site PI page', settings: 'Site settings', landing: 'Landing page' };
+  const VIEW_NAMES = { list: 'Patients list', patient: 'Patient page', handout: 'Patient handout', checkin: 'Check-in', site: 'Site PI page', settings: 'Site settings', account: 'Your settings', landing: 'Landing page' };
   const KINDS = [['idea', 'Idea'], ['problem', 'Problem'], ['question', 'Question'], ['like', 'Like']];
   const ROLES = ['Clinician', 'Supervisor', 'Researcher', 'Lived experience', 'Technology team', 'Other'];
   // Questions for the clinician working group (v3), in the panel's Questions tab. An answer is saved as a note of kind
@@ -73,7 +73,10 @@
       options: [['summary', 'An AI summary only'], ['quotes', 'The summary and the patient’s own words'], ['all', 'Those and the full transcript, collapsed, as now']] },
     { id: 'site-detail', view: 'site', part: 'site-list', short: 'What a site PI sees', show: { view: 'site' },
       title: 'What should a site PI see about the site’s clinicians?',
-      options: [['each', 'Each clinician’s enrollment and dashboard use, as now'], ['enroll', 'Each clinician’s enrollment, and dashboard use for the site as a whole'], ['totals', 'Site totals only']] }
+      options: [['each', 'Each clinician’s enrollment and dashboard use, as now'], ['enroll', 'Each clinician’s enrollment, and dashboard use for the site as a whole'], ['totals', 'Site totals only']] },
+    { id: 'set-offtrack', view: 'account', part: 'set-sec', short: 'Hearing about off-track patients', show: { view: 'account' },
+      title: 'Between visits, how would you want to hear that a patient has gone off track?',
+      options: [['dashboard', 'Only on the dashboard'], ['weekly', 'A weekly email'], ['daily', 'An email the day it happens'], ['choose', 'Let each clinician choose, as Your settings does now']] }
   ];
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const DEFAULT_STATE = { view: 'list', pid: 'delgado', order: 'visit', distinct: true, big: true, icons: true, clock24: false, drivers: false, refined: false, hero: true, dates: true, cday: null };
@@ -279,7 +282,7 @@
   const here = (n) => n.pageKey === pageKey() && (page.view === 'list' || !n.pid || n.pid === page.pid)
     && (page.view !== 'checkin' || !n.ctx || !n.ctx.day || n.ctx.day === page.cday);
   function patientName() {
-    if (['list', 'site', 'settings'].includes(page.view)) return '';
+    if (['list', 'site', 'settings', 'account'].includes(page.view)) return '';
     const parts = [...document.querySelectorAll('#dc-root .crumbs .crumb, #dc-root .crumbs .cur')].map(clean);
     return parts[1] || '';
   }
@@ -287,7 +290,7 @@
   const handoutLang = () => { const a = page.view === 'handout' && document.querySelector('#dc-root .handout'); return (a && a.getAttribute('lang')) || null; };
   function contextNow() {
     return {
-      version: VERSION, view: page.view, pid: ['list', 'site', 'settings'].includes(page.view) || STATIC ? null : page.pid, pname: STATIC ? '' : patientName(), pageKey: pageKey(),
+      version: VERSION, view: page.view, pid: ['list', 'site', 'settings', 'account'].includes(page.view) || STATIC ? null : page.pid, pname: STATIC ? '' : patientName(), pageKey: pageKey(),
       commit: BUILD.commit, built: BUILD.built,
       ctx: STATIC ? {} : { order: page.order, sort: page.sort ? page.sort + (page.sortRev ? '-reversed' : '') : null, dates: page.dates !== false, line: page.greetLine || '', style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang(), ho: page.view === 'handout' ? (page.hoStyle === 'simple' ? 'simple' : 'full') : null, flagged: page.view === 'list' && page.dates && page.order === 'visit' && !page.sort ? page.flagged || 'day' : null }
     };
@@ -942,7 +945,7 @@
     const a = document.activeElement;
     if (a && (/^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName) || a.isContentEditable)) return true;
     if (composer || ui.adding || ui.reply || ui.edit || ui.me || Object.keys(ui.draft).length) return true;
-    return !!(page.hoEdit || page.hoName || (page.hoOff || []).length || Object.keys(page.hoText || {}).length || Object.keys(page.siteSet || {}).length);
+    return !!(page.hoEdit || page.hoName || (page.hoOff || []).length || Object.keys(page.hoText || {}).length || Object.keys(page.siteSet || {}).length || Object.keys(page.acctSet || {}).length);
   }
   async function checkForUpdate() {
     if (!/^https?:$/.test(location.protocol) || !LOADED || Date.now() - lastCheck < 60000) return;

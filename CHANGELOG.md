@@ -43,6 +43,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
 - **Safety flags by next visit** (October 27, from a clinician’s review note): where visit dates are known and the list runs by next visit, a safety-flagged patient is listed under their visit day, flagged in place, rather than in a Safety flag group at the top, so the list reads as a schedule and each day lists everyone coming in. The list without visit dates, which most sites will use, still puts flags first. The review strip’s Safety flags switch shows the other options the Questions tab asks about: the group at the top, as before, or both.
 - **Page icons** (October 27, from a review note): the current page's name in the breadcrumb has its page's icon (people, person, page, speech bubble, building, gear). Patients first had a list.
 - **Ranges beside Severity** (October 27, from a review note): the caseload's Severity ⓘ lists the PHQ-9's five ranges for reference, without naming a range for any estimate.
+- **Your settings** (October 27, draft): a page for each clinician's own settings, from the menu under their name. Alerts (the safety email always on, an optional text, and how they hear between visits about patients going off track), their name on handouts in each language, the order the patients list opens in, which handout opens, and times, which move here from the menu. Only how and when: what the dashboard shows stays the same for every clinician. The Questions tab asks how clinicians would want to hear about patients going off track.
 
 ## v2: redesign
 

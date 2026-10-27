@@ -563,6 +563,14 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .set-input{width:min(40rem,100%);font-weight:400;line-height:1.5}
 textarea.set-input{resize:vertical}
 .set-list{margin:0;padding-left:1.2em}
+.set-h3{margin:20px 0 6px;font-size:var(--fs-md);line-height:var(--lh-md);font-weight:600}
+.set-opt{display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer}
+.set-opt input{margin:0}
+.set-sec .set-opt .muted{margin:0}
+.set-indent{margin-left:24px}
+.set-sec .set-eg{margin:0;font-weight:400}
+.set-sec .set-draft{margin-top:12px;max-width:70ch}
+.menu-link{display:block;padding:4px 0;text-align:left}
 .handout{max-width:760px;margin:0 auto;padding:0 48px 32px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .handout p,.handout li{font-size:var(--fs-lg);line-height:1.5}
 .handout p{margin:0 0 10px}
@@ -671,14 +679,14 @@ textarea.set-input{resize:vertical}
       <sc-if value="{{ onCheckin }}"><button type="button" class="crumb" onClick="{{ goPatient }}">{{ pt.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">{{ pageIcon }}{{ ci.crumb }}</span></sc-if>
       <sc-if value="{{ onSite }}"><span class="cur" aria-current="page">{{ pageIcon }}{{ site.name }}</span></sc-if>
       <sc-if value="{{ onSettings }}"><button type="button" class="crumb" onClick="{{ goSite }}">{{ site.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">{{ pageIcon }}Site settings</span></sc-if>
+      <sc-if value="{{ onAccount }}"><span class="cur" aria-current="page">{{ pageIcon }}Your settings</span></sc-if>
     </nav>
     <div class="who-wrap">
       <button class="who" onClick="{{ toggleMenu }}" aria-haspopup="true" aria-expanded="{{ menuExpanded }}">{{ whoName }}<span class="caret" aria-hidden="true">▾</span></button>
       <sc-if value="{{ menuOpen }}">
         <div class="menu-bg" onClick="{{ closeMenu }}"></div>
-        <div class="menu" role="dialog" aria-label="Settings">
-          <div class="menu-label">Time format</div>
-          <sc-for list="{{ clockOpts }}" as="o"><label class="menu-opt"><input type="radio" name="clock" checked="{{ o.on }}" onChange="{{ o.pick }}"> {{ o.label }}<span class="muted num">{{ o.example }}</span></label></sc-for>
+        <div class="menu" role="group" aria-label="Account">
+          <button type="button" class="linkbtn menu-link" onClick="{{ goAccount }}">Your settings</button>
         </div>
       </sc-if>
     </div>
@@ -1054,7 +1062,7 @@ textarea.set-input{resize:vertical}
       <sc-if value="{{ ho.full }}">
       <section class="ho-sec ho-about">
         <h2 class="h2">{{ ho.t.aboutHead }}<span class="scaffold no-print" lang="en">Draft wording until the consent form sets it</span></h2>
-        <p>{{ ho.t.about }}</p>
+        <p>{{ ho.about }}</p>
       </section>
       </sc-if>
       <footer class="ho-foot">{{ ho.t.foot }}</footer>
@@ -1197,6 +1205,49 @@ textarea.set-input{resize:vertical}
   </main>
   </sc-if>
 
+  <!-- YOUR SETTINGS (draft): how and when AURORA reaches the clinician, and how patients see their name. Only settings
+       that leave what the dashboard shows the same for every clinician; the rest is decided once with the CWG. A
+       mockup: nothing is saved, but the dashboard and handouts use the settings until the page is reloaded -->
+  <sc-if value="{{ onAccount }}">
+  <main class="page set-page" data-screen-label="Your settings">
+    <h1 class="h1">Your settings</h1>
+    <p class="scaffold-note no-print">Mockup: changes aren’t saved, but the dashboard and handouts use them until you reload.</p>
+    <section class="set-sec">
+      <h2 class="h2">Alerts</h2>
+      <h3 class="set-h3">Safety</h3>
+      <p class="muted">When the study team finds urgent risk in a check-in, it emails you. The study’s safety procedure requires the email, so it stays on. You can add a text message, which says only that an alert is waiting.</p>
+      <label class="set-opt"><input type="checkbox" checked="{{ acct.always }}" disabled="{{ acct.always }}"><span>Email<span class="muted">, always on</span></span></label>
+      <label class="set-opt"><input type="checkbox" checked="{{ acct.text }}" onChange="{{ acct.toggleText }}"> Text message too</label>
+      <sc-if value="{{ acct.text }}"><label class="set-field set-indent"><span>Mobile number</span><input type="tel" class="ho-input" autocomplete="tel" value="{{ acct.phone }}" onChange="{{ acct.setPhone }}"></label></sc-if>
+      <h3 class="set-h3">Patients going off track</h3>
+      <p class="muted">How you hear between visits that a patient is Worse than baseline or Not improving. Emails link to the dashboard and don’t name patients.</p>
+      <sc-for list="{{ acct.offTrack }}" as="o"><label class="set-opt"><input type="radio" name="offtrack" checked="{{ o.on }}" onChange="{{ o.pick }}"> {{ o.label }}</label></sc-for>
+      <p class="scaffold-note no-print set-draft">Draft: the study hasn’t yet decided whether AURORA reaches out between visits, or whether texts can carry safety alerts. A patient’s page could also let you ask for alerts about that patient.</p>
+    </section>
+    <section class="set-sec">
+      <h2 class="h2">Your name on handouts</h2>
+      <p class="muted">How patients see your name, in each language, written to follow “with” in English and “con” in Spanish. Spanish titles show gender (Dr., Dra.), so the choice is yours.</p>
+      <sc-for list="{{ acct.names }}" as="n"><label class="set-field"><span>{{ n.label }}</span><input type="text" class="ho-input set-input" value="{{ n.value }}" onChange="{{ n.set }}"><span class="muted set-eg">{{ n.example }}</span></label></sc-for>
+    </section>
+    <section class="set-sec">
+      <h2 class="h2">Patients list</h2>
+      <p class="muted">How the list is ordered when you open the dashboard. Sorting keeps safety flags at the top.</p>
+      <sc-for list="{{ acct.listOrder }}" as="o"><label class="set-opt"><input type="radio" name="listorder" checked="{{ o.on }}" onChange="{{ o.pick }}"> {{ o.label }}</label></sc-for>
+    </section>
+    <section class="set-sec">
+      <h2 class="h2">Patient handouts</h2>
+      <p class="muted">Which handout opens from Patient handout.</p>
+      <sc-for list="{{ acct.handout }}" as="o"><label class="set-opt"><input type="radio" name="handout" checked="{{ o.on }}" onChange="{{ o.pick }}"> {{ o.label }}</label></sc-for>
+      <p class="scaffold-note no-print set-draft">Draft: a setting only if the working group keeps both handouts.</p>
+    </section>
+    <section class="set-sec">
+      <h2 class="h2">Times</h2>
+      <sc-for list="{{ clockOpts }}" as="o"><label class="set-opt"><input type="radio" name="clock" checked="{{ o.on }}" onChange="{{ o.pick }}"><span>{{ o.label }}<span class="muted num">&nbsp;({{ o.example }})</span></span></label></sc-for>
+    </section>
+    <p class="foot"><span>Changes to these settings are recorded for the study.</span><span>What the dashboard shows is the same for every clinician in the study, so it isn’t a setting.</span></p>
+  </main>
+  </sc-if>
+
   <sc-if value="{{ phqOpen }}">
       <div class="modal-bg" onClick="{{ closePhqItems }}">
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pi-title" onClick="{{ stop }}">
@@ -1232,7 +1283,7 @@ textarea.set-input{resize:vertical}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;defaultView&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;list&quot;, &quot;options&quot;: [&quot;list&quot;, &quot;patient&quot;, &quot;handout&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}, &quot;defaultPatient&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;delgado&quot;, &quot;options&quot;: [&quot;osei&quot;, &quot;whitfield&quot;, &quot;delgado&quot;, &quot;fernandez&quot;, &quot;nguyen&quot;, &quot;mensah&quot;, &quot;santoso&quot;, &quot;kaur&quot;, &quot;brooks&quot;, &quot;ortiz&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}}">
 // Icons: Lucide v0.460.0 (lucide.dev), ISC license. Geometry only.
-const ICONS = {"briefcase":[["path",{"d":"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"}],["rect",{"width":"20","height":"14","x":"2","y":"6","rx":"2"}]],"building-2":[["path",{"d":"M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"}],["path",{"d":"M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"}],["path",{"d":"M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"}],["path",{"d":"M10 6h4"}],["path",{"d":"M10 10h4"}],["path",{"d":"M10 14h4"}],["path",{"d":"M10 18h4"}]],"calendar":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}]],"clipboard-list":[["rect",{"width":"8","height":"4","x":"8","y":"2","rx":"1","ry":"1"}],["path",{"d":"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{"d":"M12 11h4"}],["path",{"d":"M12 16h4"}],["path",{"d":"M8 11h.01"}],["path",{"d":"M8 16h.01"}]],"dumbbell":[["path",{"d":"M14.4 14.4 9.6 9.6"}],["path",{"d":"M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"}],["path",{"d":"m21.5 21.5-1.4-1.4"}],["path",{"d":"M3.9 3.9 2.5 2.5"}],["path",{"d":"M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"}]],"file-text":[["path",{"d":"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"}],["path",{"d":"M14 2v4a2 2 0 0 0 2 2h4"}],["path",{"d":"M10 9H8"}],["path",{"d":"M16 13H8"}],["path",{"d":"M16 17H8"}]],"footprints":[["path",{"d":"M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"}],["path",{"d":"M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"}],["path",{"d":"M16 17h4"}],["path",{"d":"M4 13h4"}]],"message-square":[["path",{"d":"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"}]],"moon":[["path",{"d":"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],"pencil":[["path",{"d":"M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"}],["path",{"d":"m15 5 4 4"}]],"phone":[["path",{"d":"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"}]],"pill-bottle":[["path",{"d":"M18 11h-4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h4"}],["path",{"d":"M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"}],["rect",{"width":"16","height":"5","x":"4","y":"2","rx":"1"}]],"printer":[["path",{"d":"M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"}],["path",{"d":"M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"}],["rect",{"x":"6","y":"14","width":"12","height":"8","rx":"1"}]],"settings":[["path",{"d":"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"}],["circle",{"cx":"12","cy":"12","r":"3"}]],"shield":[["path",{"d":"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"}]],"sun":[["circle",{"cx":"12","cy":"12","r":"4"}],["path",{"d":"M12 2v2"}],["path",{"d":"M12 20v2"}],["path",{"d":"m4.93 4.93 1.41 1.41"}],["path",{"d":"m17.66 17.66 1.41 1.41"}],["path",{"d":"M2 12h2"}],["path",{"d":"M20 12h2"}],["path",{"d":"m6.34 17.66-1.41 1.41"}],["path",{"d":"m19.07 4.93-1.41 1.41"}]],"user":[["path",{"d":"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"}],["circle",{"cx":"12","cy":"7","r":"4"}]],"users":[["path",{"d":"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"}],["circle",{"cx":"9","cy":"7","r":"4"}],["path",{"d":"M22 21v-2a4 4 0 0 0-3-3.87"}],["path",{"d":"M16 3.13a4 4 0 0 1 0 7.75"}]]};
+const ICONS = {"briefcase":[["path",{"d":"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"}],["rect",{"width":"20","height":"14","x":"2","y":"6","rx":"2"}]],"building-2":[["path",{"d":"M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"}],["path",{"d":"M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"}],["path",{"d":"M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"}],["path",{"d":"M10 6h4"}],["path",{"d":"M10 10h4"}],["path",{"d":"M10 14h4"}],["path",{"d":"M10 18h4"}]],"calendar":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}]],"clipboard-list":[["rect",{"width":"8","height":"4","x":"8","y":"2","rx":"1","ry":"1"}],["path",{"d":"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{"d":"M12 11h4"}],["path",{"d":"M12 16h4"}],["path",{"d":"M8 11h.01"}],["path",{"d":"M8 16h.01"}]],"dumbbell":[["path",{"d":"M14.4 14.4 9.6 9.6"}],["path",{"d":"M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"}],["path",{"d":"m21.5 21.5-1.4-1.4"}],["path",{"d":"M3.9 3.9 2.5 2.5"}],["path",{"d":"M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"}]],"file-text":[["path",{"d":"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"}],["path",{"d":"M14 2v4a2 2 0 0 0 2 2h4"}],["path",{"d":"M10 9H8"}],["path",{"d":"M16 13H8"}],["path",{"d":"M16 17H8"}]],"footprints":[["path",{"d":"M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"}],["path",{"d":"M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"}],["path",{"d":"M16 17h4"}],["path",{"d":"M4 13h4"}]],"message-square":[["path",{"d":"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"}]],"moon":[["path",{"d":"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],"pencil":[["path",{"d":"M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"}],["path",{"d":"m15 5 4 4"}]],"phone":[["path",{"d":"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"}]],"pill-bottle":[["path",{"d":"M18 11h-4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h4"}],["path",{"d":"M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"}],["rect",{"width":"16","height":"5","x":"4","y":"2","rx":"1"}]],"printer":[["path",{"d":"M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"}],["path",{"d":"M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"}],["rect",{"x":"6","y":"14","width":"12","height":"8","rx":"1"}]],"settings":[["path",{"d":"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"}],["circle",{"cx":"12","cy":"12","r":"3"}]],"shield":[["path",{"d":"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"}]],"sun":[["circle",{"cx":"12","cy":"12","r":"4"}],["path",{"d":"M12 2v2"}],["path",{"d":"M12 20v2"}],["path",{"d":"m4.93 4.93 1.41 1.41"}],["path",{"d":"m17.66 17.66 1.41 1.41"}],["path",{"d":"M2 12h2"}],["path",{"d":"M20 12h2"}],["path",{"d":"m6.34 17.66-1.41 1.41"}],["path",{"d":"m19.07 4.93-1.41 1.41"}]],"user":[["path",{"d":"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"}],["circle",{"cx":"12","cy":"7","r":"4"}]],"user-cog":[["circle",{"cx":"18","cy":"15","r":"3"}],["circle",{"cx":"9","cy":"7","r":"4"}],["path",{"d":"M10 15H6a4 4 0 0 0-4 4v2"}],["path",{"d":"m21.7 16.4-.9-.3"}],["path",{"d":"m15.2 13.9-.9-.3"}],["path",{"d":"m16.6 18.7.3-.9"}],["path",{"d":"m19.1 12.2.3-.9"}],["path",{"d":"m19.6 18.7-.4-1"}],["path",{"d":"m16.8 12.3-.4-1"}],["path",{"d":"m14.3 16.6 1-.4"}],["path",{"d":"m20.7 13.8 1-.4"}]],"users":[["path",{"d":"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"}],["circle",{"cx":"9","cy":"7","r":"4"}],["path",{"d":"M22 21v-2a4 4 0 0 0-3-3.87"}],["path",{"d":"M16 3.13a4 4 0 0 1 0 7.75"}]]};
 
 // Mock data: pseudo-realistic, no real patients. Weeks run Monday to Monday, May 25 to Aug 10; "today" is Wed, Aug 12.
 const WEEKS = ['May 25', 'Jun 1', 'Jun 8', 'Jun 15', 'Jun 22', 'Jun 29', 'Jul 6', 'Jul 13', 'Jul 20', 'Jul 27', 'Aug 3', 'Aug 10'];
@@ -1649,8 +1700,8 @@ const I9_WORDS = ['not at all', 'several days', 'more than half the days', 'near
 // The patient handout's wording. It prints in the patient's language, the one they chose for check-ins. The clinician
 // can switch to English to read it through first, so both versions say the same things. The Spanish is a draft for the
 // mockup: the study's translators would write the real wording. Spanish uses usted, lowercase weekdays and the day
-// before the month. It names the clinician "su terapeuta, E. Okafor" rather than with a title, because "Dr." or "Dra."
-// would assume the clinician's gender: the real handout would ask each clinician how to be named.
+// before the month. Each clinician writes how patients see their name, in each language, on Your settings; until then
+// Spanish says "su terapeuta, E. Okafor" rather than using a title, because "Dr." or "Dra." would assume their gender.
 const ES_DAYS = { Monday: 'lunes', Tuesday: 'martes', Wednesday: 'miércoles', Thursday: 'jueves', Friday: 'viernes', Saturday: 'sábado', Sunday: 'domingo' };
 const ES_MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'];
 const ES_MONTHS_FULL = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -1658,8 +1709,9 @@ const esDate = (s, full) => { const [m, d] = s.split(' '), i = MONTHS.indexOf(m)
 const HO_TEXT = {
   en: {
     label: 'English',
+    clin: 'Dr. Okafor',
     greet: (name) => (name ? `${name}, here’s how the last few weeks have gone` : 'Here’s how the last few weeks have gone'),
-    sub: (day) => `For your ${day ? day + ' ' : 'next '}appointment with Dr. Okafor`,
+    sub: (day, who) => `For your ${day ? day + ' ' : 'next '}appointment with ${who}`,
     // One summary line, chosen by how things are going
     summary: {
       notimp: 'Your check-ins have looked about the same for a while. That’s worth talking about at your next appointment.',
@@ -1673,7 +1725,7 @@ const HO_TEXT = {
     checkinsSome: (n) => `You did ${n} check-in${n === 1 ? '' : 's'} in the last 2 weeks. Each one helps.`,
     goodGoal: /better|good|easier/,
     easierLately: 'Your questionnaires show things getting easier.',
-    wellNone: 'You’re taking part in AURORA, and working with Dr. Okafor to feel better.',
+    wellNone: (who) => `You’re taking part in AURORA, and working with ${who} to feel better.`,
     goalsHead: 'Your goals',
     weeksHead: 'How your weeks have gone',
     // The chart's ends say what a higher score means, not how the weeks felt (review note, October 27)
@@ -1699,13 +1751,14 @@ const HO_TEXT = {
     bands: ['very low', 'low', 'medium', 'high', 'very high'],
     scoresAria: (from, to, first, last) => `Your questionnaire scores from ${from} to ${to}: ${first}, then ${last}, out of 27.`,
     aboutHead: 'About your check-ins',
-    about: 'Your check-ins help you and Dr. Okafor see how you’re doing between visits.',
+    about: (who) => `Your check-ins help you and ${who} see how you’re doing between visits.`,
     foot: 'This page is about your care. Keep it somewhere private.'
   },
   es: {
     label: 'Spanish',
+    clin: 'su terapeuta, E. Okafor',
     greet: (name) => (name ? `${name}, así han ido las últimas semanas` : 'Así han ido las últimas semanas'),
-    sub: (day) => (day ? `Para su cita del ${ES_DAYS[day]} con su terapeuta, E. Okafor` : 'Para su próxima cita con su terapeuta, E. Okafor'),
+    sub: (day, who) => (day ? `Para su cita del ${ES_DAYS[day]} con ${who}` : `Para su próxima cita con ${who}`),
     summary: {
       notimp: 'Según sus conversaciones con AURORA, parece que desde hace un tiempo las cosas no han cambiado mucho. Vale la pena hablarlo en su próxima cita.',
       nodata: 'En las últimas 2 semanas ha habido pocas conversaciones con AURORA. Todavía no son suficientes para ver cómo van las cosas.',
@@ -1718,7 +1771,7 @@ const HO_TEXT = {
     checkinsSome: (n) => `En las últimas 2 semanas, completó ${n} ${n === 1 ? 'conversación' : 'conversaciones'} con AURORA. Cada una cuenta.`,
     goodGoal: /mejor|bien|fácil/,
     easierLately: 'Sus cuestionarios muestran que las cosas se le están haciendo más fáciles.',
-    wellNone: 'Usted participa en AURORA y trabaja con su terapeuta para sentirse mejor.',
+    wellNone: () => 'Usted participa en AURORA y trabaja con su terapeuta para sentirse mejor.',
     goalsHead: 'Sus metas',
     weeksHead: 'Cómo han sido sus semanas',
     axisHigh: ['Más', 'síntomas'], axisLow: ['Menos', 'síntomas'],
@@ -1740,14 +1793,14 @@ const HO_TEXT = {
     bands: ['muy bajo', 'bajo', 'medio', 'alto', 'muy alto'],
     scoresAria: (from, to, first, last) => `Sus puntajes del ${esDate(from, true)} al ${esDate(to, true)}: de ${first} a ${last}, sobre 27.`,
     aboutHead: 'Sobre sus conversaciones con AURORA',
-    about: 'Sus conversaciones con AURORA les ayudan a usted y a su terapeuta a ver cómo está entre una cita y otra.',
+    about: () => 'Sus conversaciones con AURORA les ayudan a usted y a su terapeuta a ver cómo está entre una cita y otra.',
     foot: 'Esta hoja tiene información personal sobre su tratamiento. Guárdela en un lugar seguro.'
   }
 };
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {} };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, menuOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {}, acctSet: {} };
 
   componentDidMount() {
     const o = {};
@@ -1757,7 +1810,7 @@ class Component extends DCLogic {
     this.readHash = () => {
       const h = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
       const r = {};
-      if (['list', 'patient', 'handout', 'checkin', 'site', 'settings'].includes(h.get('view'))) r.view = h.get('view');
+      if (['list', 'patient', 'handout', 'checkin', 'site', 'settings', 'account'].includes(h.get('view'))) r.view = h.get('view');
       if (PATIENTS.some((p) => p.id === h.get('p'))) r.pid = h.get('p');
       if (h.get('d')) r.cday = h.get('d');
       if (['status', 'visit'].includes(h.get('order'))) r.order = h.get('order');
@@ -1829,7 +1882,7 @@ class Component extends DCLogic {
     clearTimeout(this.tipT);
   }
 
-  go(o) {
+  go(o, opts = {}) {
     const next = { ...this.state, ...o };
     if (next.view === 'checkin') next.cday = resolveCday(next.pid, next.cday);
     try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&dates=${next.dates ? 1 : 0}&line=${next.greetLine}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}&ho=${next.hoStyle || 'full'}&flagged=${next.flagged || 'day'}${next.sort ? `&sort=${next.sort}${next.sortRev ? '&rev=1' : ''}` : ''}`); } catch (e) { /* sandboxed preview */ }
@@ -1838,7 +1891,7 @@ class Component extends DCLogic {
     // The handout's name, ticks, language and edits belong to one printout: another page or patient starts fresh
     const fresh = next.view !== this.state.view || next.pid !== this.state.pid ? { hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false } : {};
     this.setState({ ...o, ...fresh, cday: next.cday, cAt: o.cAt || null, pAt: null, tx: false, factsOpen: false, phqOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
-    try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
+    if (!opts.keepScroll) try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
   }
 
   // Refined look: going from the patients list to a patient morphs the name in the row into the page title, and back
@@ -1914,6 +1967,8 @@ class Component extends DCLogic {
         rowKey: (ev) => { if (ev && ev.key === 'Enter') open(ev.currentTarget); }
       };
     };
+    // How patients see the clinician's name on handouts, in each language, from Your settings (DESIGN.md, Language)
+    const clinName = (l) => ((s.acctSet || {})[`name_${l}`] || '').trim() || HO_TEXT[l].clin;
     const all = PATIENTS.map((p) => {
       const estNow = p.est ? p.est[p.est.length - 1] : null;
       const d = estNow == null ? null : estNow - p.baseline;
@@ -2488,6 +2543,7 @@ class Component extends DCLogic {
     // Patient handout, in the patient's language (HO_TEXT), or in English when the clinician switches to read it through
     const hoLangs = P.lang && HO_TEXT[P.lang] && P.lang !== 'en' ? [P.lang, 'en'] : ['en'];
     const hoL = hoLangs.includes(s.hoLang) ? s.hoLang : hoLangs[0], HO = HO_TEXT[hoL];
+    const who = clinName(hoL);
     const hoTone = P.trend === 'notimp' ? 'notimp' : P.status === 'nodata' ? 'nodata'
       : P.status === 'stable' ? (P.d <= -5 ? 'easier' : 'stable') : 'harder';
     // What a patient might want to talk about: written for some mock patients, in each language they print in; a neutral
@@ -2544,10 +2600,10 @@ class Component extends DCLogic {
       hasTalk: talkHo.some((_, i) => !off.includes(i)), simpleCls: 'ho-simple' + (talkHo.some((_, i) => !off.includes(i)) ? '' : ' solo'),
       greet: s.hoStyle === 'simple' ? HO.simpleTitle : HO.greet(hoName),
       // The visit day only where visit dates are known; otherwise "your next appointment"
-      sub: HO.sub(s.dates ? P.visitDay : ''),
+      sub: HO.sub(s.dates ? P.visitDay : '', who), about: HO.about(who),
       // Patient-specific summaries are written in English for the mock; other languages use the standard line
       paras: ((hoL === 'en' && P.handout) || [HO.summary[hoTone]]).map((t, i) => editable(`p${i}`, t, `Summary, paragraph ${i + 1}`)),
-      well: (well.length ? well : [HO.wellNone]).map((t, i) => editable(`w${i}`, t, `What’s going well, item ${i + 1}`)),
+      well: (well.length ? well : [HO.wellNone(who)]).map((t, i) => editable(`w${i}`, t, `What’s going well, item ${i + 1}`)),
       hasGoals: P.goals.length > 0, goals: P.goals.map((g) => ({ ...g, iconEl: icon(g.icon, 20) })),
       chart: {
         has: qs.length >= 2, highA: T(HO.axisHigh[0]), highB: T(HO.axisHigh[1]), lowA: T(HO.axisLow[0]), lowB: T(HO.axisLow[1]),
@@ -2607,6 +2663,21 @@ class Component extends DCLogic {
       roster: SITE.clinicians.map((c) => `${c.name}${c.dash ? ', with the dashboard' : ''}`)
     };
 
+    // Your settings (draft): how and when AURORA reaches the clinician, and how patients see their name. A choice
+    // applies at once, without moving the page; sorting with a heading changes only the list in view, not the default
+    const as = s.acctSet || {};
+    const setAcct = (k) => (e) => { const v = e.target.type === 'checkbox' ? e.target.checked : e.target.value; this.setState((st) => ({ acctSet: { ...(st.acctSet || {}), [k]: v } })); };
+    const radios = (k, def, opts, also) => opts.map(([v, label]) => ({ label, on: (as[k] != null ? as[k] : def) === v,
+      pick: () => this.go({ acctSet: { ...as, [k]: v }, ...(also ? also(v) : {}) }, { keepScroll: true }) }));
+    const acct = {
+      always: true, text: !!as.text, toggleText: setAcct('text'), phone: as.phone || '', setPhone: setAcct('phone'),
+      offTrack: radios('offTrack', 'dashboard', [['dashboard', 'Only on the dashboard'], ['weekly', 'A weekly email'], ['daily', 'An email the day it happens']]),
+      names: SITE.langs.map((l) => ({ label: HO_TEXT[l].label, value: as[`name_${l}`] != null ? as[`name_${l}`] : HO_TEXT[l].clin, set: setAcct(`name_${l}`),
+        example: `“${HO_TEXT[l].sub('', clinName(l))}”` })),
+      listOrder: radios('listSort', '', [['', 'Grouped by status (by visit day, where your site has visit dates)'], ['name', 'Sorted by last name'], ['sev', 'Sorted by severity, highest first']], (v) => ({ sort: v, sortRev: false })),
+      handout: radios('hoDefault', 'full', [['full', 'Full'], ['simple', 'Simple: the scores, and things to talk about']], (v) => ({ hoStyle: v }))
+    };
+
     // ⓘ tips: open at once on hover or keyboard focus; a click or tap keeps one open until a second click, Escape or a click elsewhere
     const tipFor = (key, lines) => {
       const open = s.tip === key;
@@ -2654,7 +2725,7 @@ class Component extends DCLogic {
     const tab = (label, on, pick) => ({ label, cls: on ? 'on' : '', pick });
     return {
       onList: s.view === 'list', onPatient: s.view === 'patient', onHandout: s.view === 'handout', onCheckin: s.view === 'checkin',
-      onSite: s.view === 'site', onSettings: s.view === 'settings', clinCrumb: !['list', 'site', 'settings'].includes(s.view), site, sset,
+      onSite: s.view === 'site', onSettings: s.view === 'settings', onAccount: s.view === 'account', acct, clinCrumb: !['list', 'site', 'settings'].includes(s.view), site, sset,
       whoName: ['site', 'settings'].includes(s.view) ? `${SITE.pi}, site PI, ${SITE.name}` : 'Dr. E. Okafor, Site 03',
       goSite: () => this.go({ view: 'site' }), goSettings: () => this.go({ view: 'settings' }),
       viewTabs: [
@@ -2663,7 +2734,8 @@ class Component extends DCLogic {
         tab('Check-in', s.view === 'checkin', () => this.go({ view: 'checkin', cday: null })),
         tab('Handout', s.view === 'handout', () => this.go({ view: 'handout' })),
         tab('Site PI', s.view === 'site', () => this.go({ view: 'site' })),
-        tab('Site settings', s.view === 'settings', () => this.go({ view: 'settings' }))
+        tab('Site settings', s.view === 'settings', () => this.go({ view: 'settings' })),
+        tab('Your settings', s.view === 'account', () => this.go({ view: 'account' }))
       ],
       ci,
       exTabs: EXAMPLES.map((e) => tab(e.label, s.pid === e.pid && s.cday === e.day, () => this.go({ view: 'checkin', pid: e.pid, cday: e.day }))),
@@ -2700,7 +2772,7 @@ class Component extends DCLogic {
         label: s.sort !== 'sev' ? 'Sort by severity, highest first' : s.sortRev ? `Sorted by severity, lowest first. ${regroupLabel}` : 'Sorted by severity, highest first. Sort lowest first',
         go: () => this.go(s.sort !== 'sev' ? { sort: 'sev', sortRev: false } : s.sortRev ? { sort: '', sortRev: false } : { sortRev: true }) },
       // Wayfinding: the current page's name in the breadcrumb has its page's icon (DESIGN.md, Icons)
-      pageIcon: icon(({ list: 'users', patient: 'user', handout: 'file-text', checkin: 'message-square', site: 'building-2', settings: 'settings' })[s.view]),
+      pageIcon: icon(({ list: 'users', patient: 'user', handout: 'file-text', checkin: 'message-square', site: 'building-2', settings: 'settings', account: 'user-cog' })[s.view]),
       tips,
       drv, toggleDrivers: () => this.setState({ drivers: !s.drivers }),
       safetyShape: STATUS.safety.shape,
@@ -2721,6 +2793,7 @@ class Component extends DCLogic {
       menuOpen: s.menuOpen, menuExpanded: s.menuOpen ? 'true' : 'false',
       toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }),
       closeMenu: () => this.setState({ menuOpen: false }),
+      goAccount: () => this.go({ view: 'account', menuOpen: false }),
       hv, hoverOff: () => this.setState({ hoverDay: null }),
       chartFocus: () => { if (s.hoverDay == null) this.setState({ hoverDay: dLast }); },
       // Keys as for a slider: arrows move a day, Shift + arrow or Page Up/Down a week, Home/End the ends, Escape closes;
@@ -2734,9 +2807,10 @@ class Component extends DCLogic {
         const next = k === 'ArrowLeft' || k === 'PageDown' ? cur - step : k === 'ArrowRight' || k === 'PageUp' ? cur + step : k === 'Home' ? d0 : k === 'End' ? dLast : null;
         this.setState({ hoverDay: next == null ? null : Math.min(dLast, Math.max(d0, next)) });
       },
+      // Your settings' Times
       clockOpts: [
-        { label: '12-hour', example: '2:00\u00a0PM', on: !s.clock24, pick: () => this.go({ clock24: false }) },
-        { label: '24-hour', example: '14:00', on: s.clock24, pick: () => this.go({ clock24: true }) }
+        { label: '12-hour', example: '2:00\u00a0PM', on: !s.clock24, pick: () => this.go({ clock24: false }, { keepScroll: true }) },
+        { label: '24-hour', example: '14:00', on: s.clock24, pick: () => this.go({ clock24: true }, { keepScroll: true }) }
       ],
       openFacts: (e) => { noop(e); this.setState({ factsOpen: true }); },
       closeFacts: () => this.setState({ factsOpen: false }),

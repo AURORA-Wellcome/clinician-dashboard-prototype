@@ -18,6 +18,7 @@ The rules every mockup screen follows. Give this file, and the reference screens
    - **Check-in** (v3, draft): *what happened at this check-in, and how much weight should I give it?* It is detail on demand: nothing on it is needed for the 3-minute workflow the protocol describes.
    - **Site PI page** (v3, draft): *which of my site's clinicians need a call or support?*
    - **Site settings** (v3, draft): *what does the site set for everyone?*
+   - **Your settings** (v3, draft): *how do I want AURORA to reach me, and how do patients see my name?*
    - Anything that doesn't serve the page's question moves elsewhere.
 2. **Say it once.** Units, scales and rules appear once per page, in an ⓘ tooltip or the footer, never on each row or header. AI labeling is the exception and follows the source rule under Components.
 3. **Color means status, nothing else.** All data is in neutral ink. Color appears only for:
@@ -83,7 +84,7 @@ Interface words are labels, headers, notes and buttons, not patient data.
   - separate facts on one line are set apart by space, and screen readers hear a comma between them;
   - places use ›, as in the breadcrumb ("Landing page › Headline" in the review notes).
 - **Other languages** follow their own conventions. The patient handout can print in Spanish, which uses usted, lowercase weekdays and the day before the month ("10 ago").
-  - **The clinician's name:** Spanish titles show gender (Dr., Dra.), so the real handout needs each clinician's own choice of how to be named. Until then the mockup says "su terapeuta, E. Okafor".
+  - **The clinician's name:** Spanish titles show gender (Dr., Dra.), so each clinician writes how patients see their name, in each language, on Your settings. Until they do, Spanish says "su terapeuta, E. Okafor".
   - **Register:** the mock check-in voice says tú. An app in tú and a clinic handout in usted is a common split, but it should be a deliberate choice (bead aurora-18y).
   - **The check-ins** are "conversaciones con AURORA", never bare "sus conversaciones", which could read as the patient's own phone calls. The app, its notifications, the consent form and the handout should use the same term.
 - **Written quotations** keep their original spelling: the titles of papers and guidance, passages quoted from them, and names of organizations.
@@ -182,7 +183,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
 - **Rows are links:** Tab reaches each row, and Enter opens the patient.
 - **Check-ins:** the count is always shown. Below 9 of 12 it is bold ink, not colored, because color is reserved for status.
 - **Times:**
-  - 12-hour by default ("2:00 PM"). Clinicians can switch to 24-hour ("14:00") with the Time format setting in the account menu, which opens from their name at top right. In production, the choice is saved with their account.
+  - 12-hour by default ("2:00 PM"). Clinicians can switch to 24-hour ("14:00") under Times on Your settings, which opens from the menu under their name at top right. In production, the choice is saved with their account.
   - Every clock time follows the setting: visits, safety reviews, sources.
   - Dates put the month first, US style: "Thu, Aug 13", or "Thu, Aug 13, 2:00 PM" with a time. A space that can't break joins the time to AM or PM.
   - The patient's own words are quoted as written ("waking at 4 am").
@@ -251,7 +252,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
     - family, relationships and contact (people; v3 check-in page and drivers panel)
   - Never use icons for urgency (the status shapes and color do that), never color them, and never show one alone. Each sits next to its text and is hidden from screen readers.
   - **One action icon:** the printer beside Print, the exception to Meaning. It takes the button's color, so the button reads as one control (review note, October 26).
-  - **Page icons** (wayfinding, from October 27, from a review note): the current page's name in the breadcrumb has its page's icon: people for Patients, a person for a patient, a page for the handout, a speech bubble for a check-in (as for check-ins elsewhere), a building for the site PI page, a gear for site settings. Muted, 16 px, hidden from screen readers, and one per top bar, so the rule of one icon per row holds. People also marks family, relationships and contact (see Meaning), but here the page's name beside it says which.
+  - **Page icons** (wayfinding, from October 27, from a review note): the current page's name in the breadcrumb has its page's icon: people for Patients, a person for a patient, a page for the handout, a speech bubble for a check-in (as for check-ins elsewhere), a building for the site PI page, a gear for site settings, a person with a gear for Your settings. Muted, 16 px, hidden from screen readers, and one per top bar, so the rule of one icon per row holds. People also marks family, relationships and contact (see Meaning), but here the page's name beside it says which.
   - At most one icon per row or item.
   - Used in: caseload flags, "What changed" items (in a left gutter), chart events and the readout's visits, goals, the drivers panel's titles, the greeting band's visits (Refined look) and the Print buttons.
   - No emoji, illustrations or decorative graphics. The exceptions are the brand mark (below), the greeting band in the Refined look, and the patient handout's header.
@@ -433,7 +434,20 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 - **Number for urgent risk:** what the safety steps tell a clinician to call.
 - **Study clinicians:** the roster, which the study team keeps.
 - The mockup doesn't save, but the handout and the check-in page's safety steps use the settings until the page is reloaded, so reviewers can see what they change.
-- Each clinician's own preferences belong on a clinician settings page (bead aurora-454), set up during onboarding (bead aurora-o5n).
+- Each clinician's own settings are on Your settings (below).
+
+**Your settings** *(draft, from October 27)*. `#view=account`, from Your settings in the menu under the clinician's name, which no longer holds the time format.
+- **What can be a setting:** how and when AURORA reaches a clinician, and how patients see their name. Never what the dashboard shows, such as the look, which number comes first, the chart's dots or the greeting's line: those are decided once with the CWG, so the intervention is the same for every clinician in the trial. The page's footer says so.
+- **Alerts:**
+  - The study team's safety email is always on, because the safety procedure requires it. A clinician can add a text message, which says only that an alert is waiting.
+  - How they hear between visits that a patient has gone off track: only on the dashboard (the default), a weekly email, or an email the day it happens. Emails link to the dashboard and don't name patients.
+  - A draft until the study decides on outreach between visits (bead aurora-12g) and the safety pathway (bead aurora-c6i). Alerts about one patient, asked for from that patient's page, could follow.
+- **Your name on handouts:** one field per site language, written to follow "with" or "con", with the handout's line under it as it will read.
+- **Patients list:** the order the list opens in: grouped by status (by visit day where the site has visit dates), or sorted by last name or by severity. A heading sort changes only the list in view.
+- **Patient handouts:** which handout opens, full or simple. A draft: a setting only if the CWG keeps both.
+- **Times:** 12-hour or 24-hour.
+- A choice applies at once, without moving the page. Changes are logged (`setting_changed`), and the footer says they're recorded. The study team goes through the page with each clinician at onboarding (bead aurora-o5n).
+- The mockup doesn't save, but the dashboard and handouts use the settings until the page is reloaded.
 
 ## Refined look *(v3, the default since 2026-10-25; under review)*
 
