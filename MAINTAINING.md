@@ -6,6 +6,12 @@ Notes for whoever edits the mockups. What they are is in the [README](README.md)
 
 - There is no build step: open any `.dc.html` file in a browser, or serve the folder (`python3 -m http.server 8767`) and open `http://localhost:8767/`.
 - The published site, https://aurora-wellcome.github.io/clinician-dashboard-prototype/, updates when `main` is pushed. `index.html` is its landing page.
+- **Open tabs pick up new builds** (from October 26). Browsers may reuse a page for 10 minutes, so opening the link again already gets the latest version, but a tab left open never checks. So `notes.js` checks every 5 minutes while a page is in view, and whenever the reviewer comes back to it.
+  - **How:** GitHub Pages stamps every file with the time of the deploy (Last-Modified), so the check compares the page's own stamp (`document.lastModified`) with a fresh HEAD request for the page. Any deploy counts, even one that changes only the docs.
+  - **When the reviewer comes back** to a tab with a newer build, the page reloads itself. The address keeps the page, patient and settings. If they're typing, or partway through something a reload would lose (a note, reply, edit or answer, the handout's name, topics or wording, or the site settings), a bar offers Reload instead, as it does while they stay on the page.
+  - **Before reloading,** it fetches the page's own scripts fresh into the browser's cache, so the new page can't run with old scripts. It also saves the build it reloaded for (`aurora-reload-target` in sessionStorage), so a reload that brings back the old page shows the bar rather than looping.
+  - **Testing:** pages opened from disk aren't checked. A local server works: `python3 -m http.server` sends Last-Modified from each file's modification time, so touching a file stands in for a deploy.
+  - Tabs opened before this change need one reload by hand.
 - `support.js` is the shared runtime the pages load. Keep it alongside the HTML files.
 
 ## Deep links

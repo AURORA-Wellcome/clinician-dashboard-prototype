@@ -73,3 +73,7 @@ The first mockup had a clinical, EHR-style look, with three views (caseload tria
 - **Links** (since October 25): each version's heading is a link, and every version's review strip has an "All versions" link back to the landing page.
 - **Notes:** a Leave notes step explains that shared notes need the private review link, and offers a dialog to enter its access code. The mockups' Notes panel has the same dialog. Notes can be left on the landing page itself as well as in the mockups.
 - **Order:** How to review comes straight after v3. The earlier versions sit below it, oldest first, in a quieter "How we got here" section.
+
+## All pages
+
+- **Open tabs pick up new versions** (October 26): a reviewer who comes back to a mockup or the landing page after a new version has been published gets it without reloading, on the same page and patient. If they're partway through a note or the handout, a bar offers Reload instead. MAINTAINING.md has the details.

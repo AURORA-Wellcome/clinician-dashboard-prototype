@@ -905,6 +905,64 @@
     a.remove();
   }
 
+  /* ---------- Updates: an open tab picks up a new build ---------- */
+  // GitHub Pages stamps every file with the time of the last deploy (Last-Modified), so a page with an older stamp than
+  // the server's came from an earlier build. The check runs every 5 minutes while the tab is in view, and whenever the
+  // reviewer comes back to it. On their return the page reloads itself, since the address keeps the page, patient and
+  // settings, unless they are partway through something a reload would lose; then, as while they're on the page, a
+  // bar offers Reload. Nothing is checked when the page is opened from disk. MAINTAINING.md has the details.
+  const LOADED = Date.parse(document.lastModified);
+  const RELOAD_KEY = 'aurora-reload-target'; // the build a reload was for, so a reload that brings back the old page can't loop
+  let newer = 0, lastCheck = 0, bar = null, barDismissed = false;
+  const ssGet = (k) => { try { return sessionStorage.getItem(k); } catch (e) { return null; } };
+  const ssSet = (k, v) => { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) { /* blocked */ } };
+  // Typing, or partway through a note, reply, edit, answer or name; or, in v3, the handout's name, topics or wording,
+  // or the site settings, which the mockup keeps in the state it passes on with dc:render
+  function busy() {
+    const a = document.activeElement;
+    if (a && (/^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName) || a.isContentEditable)) return true;
+    if (composer || ui.adding || ui.reply || ui.edit || ui.me || Object.keys(ui.draft).length) return true;
+    return !!(page.hoEdit || page.hoName || (page.hoOff || []).length || Object.keys(page.hoText || {}).length || Object.keys(page.siteSet || {}).length);
+  }
+  async function checkForUpdate() {
+    if (!/^https?:$/.test(location.protocol) || !LOADED || Date.now() - lastCheck < 60000) return;
+    lastCheck = Date.now();
+    try {
+      const r = await fetch(location.href.split('#')[0], { method: 'HEAD', cache: 'no-store' });
+      const stamp = Date.parse(r.headers.get('last-modified') || '');
+      if (r.ok && stamp > LOADED + 1000) newer = Math.max(newer, stamp);
+    } catch (e) { /* offline: the next check tries again */ }
+  }
+  // The page's own scripts are fetched fresh into the browser's cache first, so the reload can't pair the new page
+  // with scripts kept from the old one
+  async function reloadNow() {
+    ssSet(RELOAD_KEY, String(newer));
+    const own = [...document.querySelectorAll('script[src], link[rel="stylesheet"][href]')].map((el) => el.src || el.href)
+      .filter((u) => { try { return new URL(u).origin === location.origin; } catch (e) { return false; } });
+    await Promise.all([location.href.split('#')[0], ...own].map((u) => fetch(u, { cache: 'reload' }).catch(() => null)));
+    location.reload();
+  }
+  function showBar() {
+    if (bar) return;
+    bar = h('div', { class: 'an-update an-ui', role: 'status' },
+      h('span', {}, 'This page has been updated since you opened it. Saved notes stay when you reload.'),
+      h('button', { type: 'button', class: 'an-btn', onclick: () => reloadNow() }, 'Reload'),
+      h('button', { type: 'button', class: 'an-x', 'aria-label': 'Not now', onclick: () => { bar.remove(); bar = null; barDismissed = true; } }, '×'));
+    document.body.append(bar);
+  }
+  async function updateCheck(returning) {
+    await checkForUpdate();
+    if (!newer) return;
+    if (returning && !busy() && Number(ssGet(RELOAD_KEY) || 0) < newer) return reloadNow();
+    if (returning || !barDismissed) { barDismissed = false; showBar(); }
+  }
+  function watchForUpdates() {
+    if (Number(ssGet(RELOAD_KEY) || 0) <= LOADED + 1000) ssSet(RELOAD_KEY, null); // the reload brought the new build
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') updateCheck(true); });
+    window.addEventListener('pageshow', (e) => { if (e.persisted) updateCheck(true); }); // back to a page the browser kept
+    setInterval(() => { if (document.visibilityState === 'visible') updateCheck(false); }, 5 * 60 * 1000);
+  }
+
   /* ---------- Styles: review scaffolding, in the review strip's colors ---------- */
   const CSS = `
 .an-fab{position:fixed;right:16px;bottom:16px;z-index:60;display:flex;align-items:center;gap:8px;padding:10px 16px;font:600 15px/20px var(--font,system-ui,sans-serif);color:#4A3B12;background:repeating-linear-gradient(45deg,#F3EFE6,#F3EFE6 12px,#EFEAE0 12px,#EFEAE0 24px);border:1px dashed #A8986F;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.16);cursor:pointer}
@@ -1008,7 +1066,11 @@
 .an-hl.below .an-hl-label{top:100%;bottom:auto;margin:4px 0 0}
 .an-adding #dc-root,.an-adding #dc-root *,.an-adding.an-static :not(.an-ui,.an-ui *){cursor:crosshair!important}
 .an-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-@media print{.an-fab,.an-panel,.an-pins,.an-composer,.an-hl,.an-sr{display:none!important}body.an-open{padding-right:0!important}}
+.an-update{position:fixed;left:16px;bottom:16px;z-index:62;box-sizing:border-box;display:flex;align-items:center;gap:10px;max-width:min(36rem,calc(100vw - 32px));padding:8px 8px 8px 14px;font:400 15px/21px var(--font,system-ui,sans-serif);color:#1F2A33;background:repeating-linear-gradient(45deg,#F3EFE6,#F3EFE6 12px,#EFEAE0 12px,#EFEAE0 24px);border:1px dashed #A8986F;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.16)}
+.an-update .an-btn,.an-update .an-x{flex:none}
+.an-update button:focus-visible{outline:2px solid #0072B2;outline-offset:2px}
+@media (max-width:640px){.an-update{right:16px;bottom:72px}}
+@media print{.an-fab,.an-panel,.an-pins,.an-composer,.an-hl,.an-sr,.an-update{display:none!important}body.an-open{padding-right:0!important}}
 `;
 
   /* ---------- Start ---------- */
@@ -1032,6 +1094,7 @@
     setInterval(() => { if (ui.open) schedule(); }, 30000); // "5 min ago" stays current
     render(true);
     connect();
+    watchForUpdates();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
