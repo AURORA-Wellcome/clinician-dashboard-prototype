@@ -116,6 +116,16 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .alert-pop .set-opt{color:var(--ink)}
 .alert-note{margin:10px 0;font-size:var(--fs-sm);line-height:var(--lh-sm)}
 .set-pts{margin:10px 0 0}
+/* Welcome (draft) and the empty caseload */
+.wel-lead{margin:12px 0 16px;max-width:70ch;font-size:var(--fs-lg);line-height:var(--lh-lg)}
+.wel-actions{margin-top:32px}
+/* Two classes, so it outranks .btn, which comes later */
+.btn.btn-primary{padding:10px 20px;color:#fff;background:var(--accent)}
+.btn.btn-primary:hover{background:#005F94}
+.btn.btn-primary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.list-empty{padding:28px 24px}
+.list-empty .empty-head{margin:0 0 6px;font-weight:600}
+.list-empty .muted{margin:0;max-width:62ch}
 
 .page{max-width:1040px;margin:0 auto;padding:32px 24px 48px}
 .h1{margin:0;font-size:var(--fs-xl);line-height:var(--lh-xl);font-weight:600}
@@ -670,6 +680,7 @@ textarea.set-input{resize:vertical}
   <div class="review no-print">
     <span class="review-label">Review: not part of the design</span>
     <span class="review-group"><span class="review-k">Page</span><span class="seg"><sc-for list="{{ viewTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span>
+    <sc-if value="{{ emptyCtl }}"><span class="review-group"><span class="review-k">Caseload</span><span class="seg"><sc-for list="{{ emptyTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
     <sc-if value="{{ hoStyleCtl }}"><span class="review-group"><span class="review-k">Handout</span><span class="seg"><sc-for list="{{ hoStyleTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
     <sc-if value="{{ datesCtl }}"><span class="review-group"><span class="review-k">Visit dates</span><span class="seg"><sc-for list="{{ datesTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
     <sc-if value="{{ orderCtl }}"><span class="review-group"><span class="review-k">List</span><span class="seg"><sc-for list="{{ orderTabs }}" as="t"><button class="{{ t.cls }}" onClick="{{ t.pick }}">{{ t.label }}</button></sc-for></span></span></sc-if>
@@ -692,6 +703,7 @@ textarea.set-input{resize:vertical}
       <sc-if value="{{ onSite }}"><span class="cur" aria-current="page">{{ pageIcon }}{{ site.name }}</span></sc-if>
       <sc-if value="{{ onSettings }}"><button type="button" class="crumb" onClick="{{ goSite }}">{{ site.name }}</button><span class="sep" aria-hidden="true">›</span><span class="cur" aria-current="page">{{ pageIcon }}Site settings</span></sc-if>
       <sc-if value="{{ onAccount }}"><span class="cur" aria-current="page">{{ pageIcon }}Your settings</span></sc-if>
+      <sc-if value="{{ onWelcome }}"><span class="cur" aria-current="page">{{ pageIcon }}Welcome</span></sc-if>
     </nav>
     <div class="who-wrap">
       <button type="button" class="who" onClick="{{ goAccount }}" aria-label="{{ whoLabel }}">{{ whoIcon }}{{ whoName }}</button>
@@ -722,6 +734,13 @@ textarea.set-input{resize:vertical}
         </div>
       </section>
     </sc-if>
+    <sc-if value="{{ listEmpty }}">
+      <div class="list list-empty">
+        <p class="empty-head">No patients yet</p>
+        <p class="muted">Your patients in AURORA appear here once they join the study. When the first one does, your site’s facilitator will go through the dashboard with you, on that patient’s page.</p>
+      </div>
+    </sc-if>
+    <sc-if value="{{ !listEmpty }}">
     <div class="{{ listCls }}">
       <div class="lrow lhead">
         <sc-if value="{{ byVisit }}"><span>Time</span></sc-if>
@@ -770,6 +789,7 @@ textarea.set-input{resize:vertical}
         </sc-for>
       </sc-for>
     </div>
+    </sc-if>
     <p class="sr-only" aria-live="polite">{{ peek.aria }}</p>
     <p class="foot"><span>Severity: AI estimate on the PHQ-9 scale. Changes of 6 or more points from the patient’s baseline are colored.</span><span>This dashboard isn’t monitored in real time. PHQ-9 item 9 answers appear without study team review. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></span></p>
   </main>
@@ -1234,6 +1254,34 @@ textarea.set-input{resize:vertical}
   </main>
   </sc-if>
 
+  <!-- WELCOME (draft): the first page after a clinician's first sign-in, in the AURORA arm only (the other arm has no
+       dashboard during the trial). It sets what can't wait and says what happens next. It never prompts recruitment,
+       which must be the same in both arms (engagement plan, section 4) -->
+  <sc-if value="{{ onWelcome }}">
+  <main class="page set-page wel-page" data-screen-label="Welcome">
+    <h1 class="h1">Welcome to AURORA, Dr. Okafor</h1>
+    <p class="wel-lead">AURORA shows how your study patients are doing between visits, from their check-ins and questionnaires. Two things to set now. You can change them, and the rest, any time from your name at top right.</p>
+    <p class="scaffold-note no-print">Draft: the first page after a clinician’s first sign-in. Clinicians in the other arm have no dashboard during the trial, so nothing here may touch recruitment.</p>
+    <section class="set-sec wel-sec">
+      <h2 class="h2">1. How patients see your name</h2>
+      <p class="muted">On handouts, in each language your site uses, written to follow “with” in English and “con” in Spanish. Spanish titles show gender (Dr., Dra.), so the choice is yours.</p>
+      <sc-for list="{{ acct.names }}" as="n"><label class="set-field"><span>{{ n.label }}</span><input type="text" class="ho-input set-input" value="{{ n.value }}" onChange="{{ n.set }}"><span class="muted set-eg">{{ n.example }}</span></label></sc-for>
+    </section>
+    <section class="set-sec wel-sec">
+      <h2 class="h2">2. Safety alerts</h2>
+      <p class="muted">When the study team finds urgent risk in a check-in, it emails you; the study’s safety procedure requires the email. You can add a text message, which says only that an alert is waiting.</p>
+      <label class="set-opt"><input type="checkbox" checked="{{ acct.always }}" disabled="{{ acct.always }}"><span>Email<span class="muted">, always on</span></span></label>
+      <label class="set-opt"><input type="checkbox" checked="{{ acct.text }}" onChange="{{ acct.toggleText }}"> Text message too</label>
+      <sc-if value="{{ acct.text }}"><label class="set-field set-indent"><span>Mobile number</span><input type="tel" class="ho-input" autocomplete="tel" value="{{ acct.phone }}" onChange="{{ acct.setPhone }}"></label></sc-if>
+    </section>
+    <section class="set-sec wel-sec">
+      <h2 class="h2">3. When your first patient joins</h2>
+      <p>Your site’s facilitator will go through the dashboard with you, on that patient’s page. Until then, your patients list is empty.</p>
+    </section>
+    <div class="wel-actions"><button type="button" class="btn btn-primary" onClick="{{ welcomeDone }}">Go to your patients</button></div>
+  </main>
+  </sc-if>
+
   <!-- YOUR SETTINGS (draft): how and when AURORA reaches the clinician, and how patients see their name. Only settings
        that leave what the dashboard shows the same for every clinician; the rest is decided once with the CWG. A
        mockup: nothing is saved, but the dashboard and handouts use the settings until the page is reloaded -->
@@ -1313,7 +1361,7 @@ textarea.set-input{resize:vertical}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;defaultView&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;list&quot;, &quot;options&quot;: [&quot;list&quot;, &quot;patient&quot;, &quot;handout&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}, &quot;defaultPatient&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;delgado&quot;, &quot;options&quot;: [&quot;osei&quot;, &quot;whitfield&quot;, &quot;delgado&quot;, &quot;fernandez&quot;, &quot;nguyen&quot;, &quot;mensah&quot;, &quot;santoso&quot;, &quot;kaur&quot;, &quot;brooks&quot;, &quot;ortiz&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo&quot;}}">
 // Icons: Lucide v0.460.0 (lucide.dev), ISC license. Geometry only.
-const ICONS = {"briefcase":[["path",{"d":"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"}],["rect",{"width":"20","height":"14","x":"2","y":"6","rx":"2"}]],"building-2":[["path",{"d":"M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"}],["path",{"d":"M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"}],["path",{"d":"M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"}],["path",{"d":"M10 6h4"}],["path",{"d":"M10 10h4"}],["path",{"d":"M10 14h4"}],["path",{"d":"M10 18h4"}]],"calendar":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}]],"clipboard-list":[["rect",{"width":"8","height":"4","x":"8","y":"2","rx":"1","ry":"1"}],["path",{"d":"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{"d":"M12 11h4"}],["path",{"d":"M12 16h4"}],["path",{"d":"M8 11h.01"}],["path",{"d":"M8 16h.01"}]],"dumbbell":[["path",{"d":"M14.4 14.4 9.6 9.6"}],["path",{"d":"M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"}],["path",{"d":"m21.5 21.5-1.4-1.4"}],["path",{"d":"M3.9 3.9 2.5 2.5"}],["path",{"d":"M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"}]],"file-text":[["path",{"d":"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"}],["path",{"d":"M14 2v4a2 2 0 0 0 2 2h4"}],["path",{"d":"M10 9H8"}],["path",{"d":"M16 13H8"}],["path",{"d":"M16 17H8"}]],"footprints":[["path",{"d":"M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"}],["path",{"d":"M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"}],["path",{"d":"M16 17h4"}],["path",{"d":"M4 13h4"}]],"message-square":[["path",{"d":"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"}]],"moon":[["path",{"d":"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],"pencil":[["path",{"d":"M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"}],["path",{"d":"m15 5 4 4"}]],"phone":[["path",{"d":"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"}]],"pill-bottle":[["path",{"d":"M18 11h-4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h4"}],["path",{"d":"M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"}],["rect",{"width":"16","height":"5","x":"4","y":"2","rx":"1"}]],"printer":[["path",{"d":"M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"}],["path",{"d":"M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"}],["rect",{"x":"6","y":"14","width":"12","height":"8","rx":"1"}]],"settings":[["path",{"d":"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"}],["circle",{"cx":"12","cy":"12","r":"3"}]],"shield":[["path",{"d":"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"}]],"sun":[["circle",{"cx":"12","cy":"12","r":"4"}],["path",{"d":"M12 2v2"}],["path",{"d":"M12 20v2"}],["path",{"d":"m4.93 4.93 1.41 1.41"}],["path",{"d":"m17.66 17.66 1.41 1.41"}],["path",{"d":"M2 12h2"}],["path",{"d":"M20 12h2"}],["path",{"d":"m6.34 17.66-1.41 1.41"}],["path",{"d":"m19.07 4.93-1.41 1.41"}]],"user":[["path",{"d":"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"}],["circle",{"cx":"12","cy":"7","r":"4"}]],"user-cog":[["circle",{"cx":"18","cy":"15","r":"3"}],["circle",{"cx":"9","cy":"7","r":"4"}],["path",{"d":"M10 15H6a4 4 0 0 0-4 4v2"}],["path",{"d":"m21.7 16.4-.9-.3"}],["path",{"d":"m15.2 13.9-.9-.3"}],["path",{"d":"m16.6 18.7.3-.9"}],["path",{"d":"m19.1 12.2.3-.9"}],["path",{"d":"m19.6 18.7-.4-1"}],["path",{"d":"m16.8 12.3-.4-1"}],["path",{"d":"m14.3 16.6 1-.4"}],["path",{"d":"m20.7 13.8 1-.4"}]],"users":[["path",{"d":"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"}],["circle",{"cx":"9","cy":"7","r":"4"}],["path",{"d":"M22 21v-2a4 4 0 0 0-3-3.87"}],["path",{"d":"M16 3.13a4 4 0 0 1 0 7.75"}]]};
+const ICONS = {"briefcase":[["path",{"d":"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"}],["rect",{"width":"20","height":"14","x":"2","y":"6","rx":"2"}]],"building-2":[["path",{"d":"M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"}],["path",{"d":"M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"}],["path",{"d":"M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"}],["path",{"d":"M10 6h4"}],["path",{"d":"M10 10h4"}],["path",{"d":"M10 14h4"}],["path",{"d":"M10 18h4"}]],"calendar":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}]],"clipboard-list":[["rect",{"width":"8","height":"4","x":"8","y":"2","rx":"1","ry":"1"}],["path",{"d":"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{"d":"M12 11h4"}],["path",{"d":"M12 16h4"}],["path",{"d":"M8 11h.01"}],["path",{"d":"M8 16h.01"}]],"dumbbell":[["path",{"d":"M14.4 14.4 9.6 9.6"}],["path",{"d":"M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"}],["path",{"d":"m21.5 21.5-1.4-1.4"}],["path",{"d":"M3.9 3.9 2.5 2.5"}],["path",{"d":"M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"}]],"file-text":[["path",{"d":"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"}],["path",{"d":"M14 2v4a2 2 0 0 0 2 2h4"}],["path",{"d":"M10 9H8"}],["path",{"d":"M16 13H8"}],["path",{"d":"M16 17H8"}]],"footprints":[["path",{"d":"M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"}],["path",{"d":"M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"}],["path",{"d":"M16 17h4"}],["path",{"d":"M4 13h4"}]],"log-in":[["path",{"d":"M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"}],["polyline",{"points":"10 17 15 12 10 7"}],["line",{"x1":"15","x2":"3","y1":"12","y2":"12"}]],"message-square":[["path",{"d":"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"}]],"moon":[["path",{"d":"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],"pencil":[["path",{"d":"M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"}],["path",{"d":"m15 5 4 4"}]],"phone":[["path",{"d":"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"}]],"pill-bottle":[["path",{"d":"M18 11h-4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h4"}],["path",{"d":"M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"}],["rect",{"width":"16","height":"5","x":"4","y":"2","rx":"1"}]],"printer":[["path",{"d":"M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"}],["path",{"d":"M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"}],["rect",{"x":"6","y":"14","width":"12","height":"8","rx":"1"}]],"settings":[["path",{"d":"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"}],["circle",{"cx":"12","cy":"12","r":"3"}]],"shield":[["path",{"d":"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"}]],"sun":[["circle",{"cx":"12","cy":"12","r":"4"}],["path",{"d":"M12 2v2"}],["path",{"d":"M12 20v2"}],["path",{"d":"m4.93 4.93 1.41 1.41"}],["path",{"d":"m17.66 17.66 1.41 1.41"}],["path",{"d":"M2 12h2"}],["path",{"d":"M20 12h2"}],["path",{"d":"m6.34 17.66-1.41 1.41"}],["path",{"d":"m19.07 4.93-1.41 1.41"}]],"user":[["path",{"d":"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"}],["circle",{"cx":"12","cy":"7","r":"4"}]],"user-cog":[["circle",{"cx":"18","cy":"15","r":"3"}],["circle",{"cx":"9","cy":"7","r":"4"}],["path",{"d":"M10 15H6a4 4 0 0 0-4 4v2"}],["path",{"d":"m21.7 16.4-.9-.3"}],["path",{"d":"m15.2 13.9-.9-.3"}],["path",{"d":"m16.6 18.7.3-.9"}],["path",{"d":"m19.1 12.2.3-.9"}],["path",{"d":"m19.6 18.7-.4-1"}],["path",{"d":"m16.8 12.3-.4-1"}],["path",{"d":"m14.3 16.6 1-.4"}],["path",{"d":"m20.7 13.8 1-.4"}]],"users":[["path",{"d":"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"}],["circle",{"cx":"9","cy":"7","r":"4"}],["path",{"d":"M22 21v-2a4 4 0 0 0-3-3.87"}],["path",{"d":"M16 3.13a4 4 0 0 1 0 7.75"}]]};
 
 // Mock data: pseudo-realistic, no real patients. Weeks run Monday to Monday, May 25 to Aug 10; "today" is Wed, Aug 12.
 const WEEKS = ['May 25', 'Jun 1', 'Jun 8', 'Jun 15', 'Jun 22', 'Jun 29', 'Jul 6', 'Jul 13', 'Jul 20', 'Jul 27', 'Aug 3', 'Aug 10'];
@@ -1836,7 +1884,7 @@ const HO_TEXT = {
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {}, acctSet: {}, alertOpen: false, ptAlerts: {}, myNotes: {}, noteDraft: {} };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {}, acctSet: {}, alertOpen: false, ptAlerts: {}, myNotes: {}, noteDraft: {}, empty: false };
 
   componentDidMount() {
     const o = {};
@@ -1846,7 +1894,7 @@ class Component extends DCLogic {
     this.readHash = () => {
       const h = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
       const r = {};
-      if (['list', 'patient', 'handout', 'checkin', 'site', 'settings', 'account'].includes(h.get('view'))) r.view = h.get('view');
+      if (['list', 'patient', 'handout', 'checkin', 'site', 'settings', 'account', 'welcome'].includes(h.get('view'))) r.view = h.get('view');
       if (PATIENTS.some((p) => p.id === h.get('p'))) r.pid = h.get('p');
       if (h.get('d')) r.cday = h.get('d');
       if (['status', 'visit'].includes(h.get('order'))) r.order = h.get('order');
@@ -1861,6 +1909,7 @@ class Component extends DCLogic {
       if (['full', 'simple'].includes(h.get('ho'))) r.hoStyle = h.get('ho');
       if (['name', 'sev'].includes(h.get('sort'))) { r.sort = h.get('sort'); r.sortRev = h.get('rev') === '1'; }
       if (['pinned', 'day', 'both'].includes(h.get('flagged'))) r.flagged = h.get('flagged');
+      if (['0', '1'].includes(h.get('empty'))) r.empty = h.get('empty') === '1';
       return r;
     };
     // The check-in page always names a real check-in of the patient shown
@@ -1924,7 +1973,7 @@ class Component extends DCLogic {
   go(o, opts = {}) {
     const next = { ...this.state, ...o };
     if (next.view === 'checkin') next.cday = resolveCday(next.pid, next.cday);
-    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&dates=${next.dates ? 1 : 0}&line=${next.greetLine}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}&ho=${next.hoStyle || 'full'}&flagged=${next.flagged || 'day'}${next.sort ? `&sort=${next.sort}${next.sortRev ? '&rev=1' : ''}` : ''}`); } catch (e) { /* sandboxed preview */ }
+    try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&dates=${next.dates ? 1 : 0}&line=${next.greetLine}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}&ho=${next.hoStyle || 'full'}&flagged=${next.flagged || 'day'}${next.empty ? '&empty=1' : ''}${next.sort ? `&sort=${next.sort}${next.sortRev ? '&rev=1' : ''}` : ''}`); } catch (e) { /* sandboxed preview */ }
     clearTimeout(this.peekT);
     clearTimeout(this.tipT);
     // The handout's name, ticks, language and edits belong to one printout: another page or patient starts fresh
@@ -2077,7 +2126,7 @@ class Component extends DCLogic {
       ? (s.sortRev ? 'by last name, Z to A' : 'by last name') : (s.sortRev ? 'by severity, lowest first' : 'by severity, highest first')}`;
     // A sort ends where the list was: by visit day where it runs by next visit, otherwise by status
     const regroupLabel = s.dates && s.order !== 'status' ? 'Group by visit day' : 'Group by status';
-    const groups = (s.sort
+    const groups = (s.empty ? [] : s.sort
       ? [statusGroup('safety', sortRows(all.filter((p) => p.status === 'safety'))),
         { isFlat: true, title: flatTitle, regroupLabel, rows: sortRows(all.filter((p) => p.status !== 'safety')), regroup: () => this.go({ sort: '', sortRev: false }) }]
       : byStatus
@@ -2125,7 +2174,8 @@ class Component extends DCLogic {
       // Where visit dates are known, the study visits, with the calendar icon: "study", because clinicians also see
       // patients who aren't in AURORA. Then the line about the clinician's own work. Safety flags aren't repeated here:
       // without visit dates their group comes first, just below, and by next visit each is on its patient's row.
-      facts: [
+      // Before the first patient, the band keeps only the greeting and the date
+      facts: s.empty ? [] : [
         ...(s.dates && (todayN || tomorrowN) ? [{ cls: 'greet-fact', mark: icon('calendar'),
           text: todayN && tomorrowN ? `${countOf(todayN, 'study visit')} today, ${tomorrowN} tomorrow` : todayN ? `${countOf(todayN, 'study visit')} today` : `${countOf(tomorrowN, 'study visit')} tomorrow` }] : []),
         ...(greetLines[s.greetLine] ? [{ cls: 'greet-fact', ...greetLines[s.greetLine] }] : [])
@@ -2795,7 +2845,11 @@ class Component extends DCLogic {
     const whoText = ['site', 'settings'].includes(s.view) ? `${SITE.pi}, site PI, ${SITE.name}` : 'Dr. E. Okafor, Site 03';
     return {
       onList: s.view === 'list', onPatient: s.view === 'patient', onHandout: s.view === 'handout', onCheckin: s.view === 'checkin',
-      onSite: s.view === 'site', onSettings: s.view === 'settings', onAccount: s.view === 'account', acct, ptAlert, notes, clinCrumb: !['list', 'site', 'settings'].includes(s.view), site, sset,
+      onSite: s.view === 'site', onSettings: s.view === 'settings', onAccount: s.view === 'account', acct, ptAlert, notes, onWelcome: s.view === 'welcome',
+      // Welcome's one action: the patients list, empty until the first patient joins
+      welcomeDone: () => this.go({ view: 'list', empty: true }),
+      listEmpty: s.empty, emptyCtl: s.view === 'list',
+      emptyTabs: [tab(`${PATIENTS.length} patients`, !s.empty, () => this.go({ empty: false })), tab('None yet', s.empty, () => this.go({ empty: true }))], clinCrumb: !['list', 'site', 'settings', 'welcome'].includes(s.view), site, sset,
       // The name at top right opens Your settings in one click, with that page's icon (DESIGN.md, Icons)
       whoName: whoText, whoLabel: `${whoText}, your settings`, whoIcon: icon('user-cog'),
       goSite: () => this.go({ view: 'site' }), goSettings: () => this.go({ view: 'settings' }),
@@ -2806,7 +2860,8 @@ class Component extends DCLogic {
         tab('Handout', s.view === 'handout', () => this.go({ view: 'handout' })),
         tab('Site PI', s.view === 'site', () => this.go({ view: 'site' })),
         tab('Site settings', s.view === 'settings', () => this.go({ view: 'settings' })),
-        tab('Your settings', s.view === 'account', () => this.go({ view: 'account' }))
+        tab('Your settings', s.view === 'account', () => this.go({ view: 'account' })),
+        tab('Welcome', s.view === 'welcome', () => this.go({ view: 'welcome' }))
       ],
       ci,
       exTabs: EXAMPLES.map((e) => tab(e.label, s.pid === e.pid && s.cday === e.day, () => this.go({ view: 'checkin', pid: e.pid, cday: e.day }))),
@@ -2843,7 +2898,7 @@ class Component extends DCLogic {
         label: s.sort !== 'sev' ? 'Sort by severity, highest first' : s.sortRev ? `Sorted by severity, lowest first. ${regroupLabel}` : 'Sorted by severity, highest first. Sort lowest first',
         go: () => this.go(s.sort !== 'sev' ? { sort: 'sev', sortRev: false } : s.sortRev ? { sort: '', sortRev: false } : { sortRev: true }) },
       // Wayfinding: the current page's name in the breadcrumb has its page's icon (DESIGN.md, Icons)
-      pageIcon: icon(({ list: 'users', patient: 'user', handout: 'file-text', checkin: 'message-square', site: 'building-2', settings: 'settings', account: 'user-cog' })[s.view]),
+      pageIcon: icon(({ list: 'users', patient: 'user', handout: 'file-text', checkin: 'message-square', site: 'building-2', settings: 'settings', account: 'user-cog', welcome: 'log-in' })[s.view]),
       tips,
       drv, toggleDrivers: () => this.setState({ drivers: !s.drivers }),
       safetyShape: STATUS.safety.shape,

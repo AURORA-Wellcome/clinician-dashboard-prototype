@@ -19,6 +19,7 @@ The rules every mockup screen follows. Give this file, and the reference screens
    - **Site PI page** (v3, draft): *which of my site's clinicians need a call or support?*
    - **Site settings** (v3, draft): *what does the site set for everyone?*
    - **Your settings** (v3, draft): *how do I want AURORA to reach me, and how do patients see my name?*
+   - **Welcome** (v3, draft): *what do I need to set before my first patient, and what happens next?*
    - Anything that doesn't serve the page's question moves elsewhere.
 2. **Say it once.** Units, scales and rules appear once per page, in an ⓘ tooltip or the footer, never on each row or header. AI labeling is the exception and follows the source rule under Components.
 3. **Color means status, nothing else.** All data is in neutral ink. Color appears only for:
@@ -189,7 +190,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - The patient's own words are quoted as written ("waking at 4 am").
 - **Buttons:**
   - Secondary actions (Patient handout, Print, Alerts) are text buttons in `accent`, with no border. Print carries the printer icon, in the button's color.
-  - A solid `accent` button is reserved for a page's single primary action; the current pages have none.
+  - A solid `accent` button is reserved for a page's single primary action. Welcome's "Go to your patients" is the only one so far.
   - No outlined buttons.
   - Caseload rows have no action buttons: the whole row opens the patient.
 - **Breadcrumbs:** the top bar shows where you are: "Patients › M. Delgado › Patient handout". Pages above this one are links in `accent`, like every other link, with an underline on hover; the current page is `ink`, weight 600. Separators are a muted ›. On phones (below 32rem) the top bar wraps to two rows, the brand and account and then the breadcrumb, which drops the current page when the page has a visible title saying it. No back-arrow icon: it would double up with the separators, and the link color is the standard cue. The current page carries its page icon (see Icons).
@@ -252,7 +253,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
     - family, relationships and contact (people; v3 check-in page and drivers panel)
   - Never use icons for urgency (the status shapes and color do that), never color them, and never show one alone. Each sits next to its text and is hidden from screen readers.
   - **Two action icons,** the exceptions to Meaning: the printer beside Print (review note, October 26), and the person with a gear beside the clinician's name at top right, which opens Your settings in one click (October 27). Each takes its button's color, so the button reads as one control.
-  - **Page icons** (wayfinding, from October 27, from a review note): the current page's name in the breadcrumb has its page's icon: people for Patients, a person for a patient, a page for the handout, a speech bubble for a check-in (as for check-ins elsewhere), a building for the site PI page, a gear for site settings, a person with a gear for Your settings. Muted, 16 px, hidden from screen readers, and one per top bar, so the rule of one icon per row holds. People also marks family, relationships and contact (see Meaning), but here the page's name beside it says which.
+  - **Page icons** (wayfinding, from October 27, from a review note): the current page's name in the breadcrumb has its page's icon: people for Patients, a person for a patient, a page for the handout, a speech bubble for a check-in (as for check-ins elsewhere), a building for the site PI page, a gear for site settings, a person with a gear for Your settings, an arrow into a door for Welcome. Muted, 16 px, hidden from screen readers, and one per top bar, so the rule of one icon per row holds. People also marks family, relationships and contact (see Meaning), but here the page's name beside it says which.
   - At most one icon per row or item.
   - Used in: caseload flags, "What changed" items (in a left gutter), chart events and the readout's visits, goals, the drivers panel's titles, the greeting band's visits (Refined look), the Print buttons and the clinician's name at top right.
   - No emoji, illustrations or decorative graphics. The exceptions are the brand mark (below), the greeting band in the Refined look, and the patient handout's header.
@@ -457,6 +458,13 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 - **Times:** 12-hour or 24-hour.
 - A choice applies at once, without moving the page. Changes are logged (`setting_changed`), and the footer says they're recorded. The study team goes through the page with each clinician at onboarding (bead aurora-o5n).
 - The mockup doesn't save, but the dashboard and handouts use the settings until the page is reloaded.
+
+**Welcome** *(draft, from October 27)*. `#view=welcome`: the first page after a clinician's first sign-in (bead aurora-o5n; the whole flow is in `Clinician onboarding workflow` in the project's Clinicians folder).
+- Only clinicians in the AURORA arm have the dashboard during the trial, so nothing on Welcome may touch recruitment: no prompt to refer patients, no targets, no praise for enrolling. Recruitment support is the same in both arms and happens outside the dashboard (engagement plan, section 4).
+- Two things that can't wait: how patients see the clinician's name on handouts, and the safety alert channel (the email always on, a text optional). Everything else takes its default and lives on Your settings.
+- What happens next: the site's facilitator goes through the dashboard with the clinician on their first patient's page (the plan's just-in-time walkthrough).
+- "Go to your patients" is the page's one action, as a solid `accent` button, and opens the empty caseload.
+- **No patients yet:** before the first patient, the list says so, and what happens when the first one joins, with no prompt to recruit. The greeting band keeps only the greeting and the date. The review strip's Caseload switch shows it (`&empty=1`).
 
 ## Refined look *(v3, the default since 2026-10-25; under review)*
 

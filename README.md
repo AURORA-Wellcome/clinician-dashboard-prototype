@@ -15,6 +15,7 @@ v3 has these pages:
 - **Patient handout:** a plain-language page to go through with the patient, then print, in the patient's language. A. Fernández's is in Spanish. The clinician can edit the parts written by AI first, or print it as it is.
 - **Site PI page and Site settings** (draft): for a site's lead, which of the site's clinicians need a call or support, and what the site sets for everyone, such as its crisis line.
 - **Your settings** (draft): each clinician's own settings, opened from their name at top right: alerts, their name on handouts, how the list opens, and times.
+- **Welcome** (draft): the first page after a clinician signs in, and the patients list before their first patient.
 
 The landing page links to v2 and v1 for comparison. What changed in each version is in [CHANGELOG.md](CHANGELOG.md).
 

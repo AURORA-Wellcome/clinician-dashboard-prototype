@@ -16,7 +16,7 @@
   };
   const SDK = 'https://www.gstatic.com/firebasejs/13.1.0/';
   const PAGE_FILES = { v2: 'AURORA%20Dashboard%20v2.dc.html', v3: 'AURORA%20Dashboard%20v3.dc.html', landing: 'index.html' };
-  const VIEW_NAMES = { list: 'Patients list', patient: 'Patient page', handout: 'Patient handout', checkin: 'Check-in', site: 'Site PI page', settings: 'Site settings', account: 'Your settings', landing: 'Landing page' };
+  const VIEW_NAMES = { list: 'Patients list', patient: 'Patient page', handout: 'Patient handout', checkin: 'Check-in', site: 'Site PI page', settings: 'Site settings', account: 'Your settings', welcome: 'Welcome', landing: 'Landing page' };
   const KINDS = [['idea', 'Idea'], ['problem', 'Problem'], ['question', 'Question'], ['like', 'Like']];
   const ROLES = ['Clinician', 'Supervisor', 'Researcher', 'Lived experience', 'Technology team', 'Other'];
   // Questions for the clinician working group (v3), in the panel's Questions tab. An answer is saved as a note of kind
@@ -173,6 +173,7 @@
     { k: 'site-cols', sel: '.site-list > .lhead', label: () => 'Clinicians list headings' },
     { k: 'site-list', sel: '.site-list', label: () => 'Clinicians list' },
     { k: 'site-head', sel: '.site-head', label: () => 'Site heading' },
+    { k: 'wel-sec', sel: '.wel-sec', id: (el) => clean(el.querySelector('.h2')), label: (id) => `Welcome: ${id}` },
     { k: 'set-sec', sel: '.set-sec', id: (el) => clean(el.querySelector('.h2')), label: (id) => `Settings: ${id}` },
     { k: 'row', sel: '.list > .row', id: (el) => clean(el.querySelector('.pt-name')), label: (id) => `Row: ${id}` },
     { k: 'group', sel: '.list > .grp', id: (el) => without(el, '.count, .rel'), label: (id) => `Group: ${id}` },
@@ -283,7 +284,7 @@
   const here = (n) => n.pageKey === pageKey() && (page.view === 'list' || !n.pid || n.pid === page.pid)
     && (page.view !== 'checkin' || !n.ctx || !n.ctx.day || n.ctx.day === page.cday);
   function patientName() {
-    if (['list', 'site', 'settings', 'account'].includes(page.view)) return '';
+    if (['list', 'site', 'settings', 'account', 'welcome'].includes(page.view)) return '';
     const parts = [...document.querySelectorAll('#dc-root .crumbs .crumb, #dc-root .crumbs .cur')].map(clean);
     return parts[1] || '';
   }
@@ -291,9 +292,9 @@
   const handoutLang = () => { const a = page.view === 'handout' && document.querySelector('#dc-root .handout'); return (a && a.getAttribute('lang')) || null; };
   function contextNow() {
     return {
-      version: VERSION, view: page.view, pid: ['list', 'site', 'settings', 'account'].includes(page.view) || STATIC ? null : page.pid, pname: STATIC ? '' : patientName(), pageKey: pageKey(),
+      version: VERSION, view: page.view, pid: ['list', 'site', 'settings', 'account', 'welcome'].includes(page.view) || STATIC ? null : page.pid, pname: STATIC ? '' : patientName(), pageKey: pageKey(),
       commit: BUILD.commit, built: BUILD.built,
-      ctx: STATIC ? {} : { order: page.order, sort: page.sort ? page.sort + (page.sortRev ? '-reversed' : '') : null, dates: page.dates !== false, line: page.greetLine || '', style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang(), ho: page.view === 'handout' ? (page.hoStyle === 'simple' ? 'simple' : 'full') : null, flagged: page.view === 'list' && page.dates && page.order === 'visit' && !page.sort ? page.flagged || 'day' : null }
+      ctx: STATIC ? {} : { order: page.order, sort: page.sort ? page.sort + (page.sortRev ? '-reversed' : '') : null, dates: page.dates !== false, line: page.greetLine || '', style: page.distinct ? 'distinct' : 'plain', text: page.big ? 'larger' : 'current', icons: !!page.icons, clock: page.clock24 ? 24 : 12, drivers: !!page.drivers, look: page.refined ? 'refined' : 'current', hero: page.hero !== false, day: page.view === 'checkin' ? page.cday || null : null, lang: handoutLang(), ho: page.view === 'handout' ? (page.hoStyle === 'simple' ? 'simple' : 'full') : null, flagged: page.view === 'list' && page.dates && page.order === 'visit' && !page.sort ? page.flagged || 'day' : null, empty: page.view === 'list' && page.empty ? true : null }
     };
   }
   // After posting: a reviewer sees others' notes on a page once they have added one there. Facilitators see all, and
@@ -795,6 +796,7 @@
     if (c.line) hp.set('line', c.line);
     if (c.ho) hp.set('ho', c.ho);
     if (c.flagged) hp.set('flagged', c.flagged);
+    if (c.empty) hp.set('empty', '1');
     if (c.sort) { hp.set('sort', c.sort.replace('-reversed', '')); if (c.sort.endsWith('-reversed')) hp.set('rev', '1'); }
     ui.focus = n.id;
     if (n.version !== VERSION && PAGE_FILES[n.version]) { location.href = `${PAGE_FILES[n.version]}${location.search}#${hp}&note=${n.id}`; return; }
@@ -913,13 +915,13 @@
       return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const iso = (ms) => (ms ? new Date(ms).toISOString().replace('T', ' ').slice(0, 16) : '');
-    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'list_sort', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day', 'handout_language', 'handout_style', 'visit_dates', 'flagged_visits', 'question', 'choice', 'greeting_line'];
+    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'list_sort', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day', 'handout_language', 'handout_style', 'visit_dates', 'flagged_visits', 'caseload_empty', 'question', 'choice', 'greeting_line'];
     // Notes, their replies, and the answers to the questions you may see
     const rows = [...m.visible, ...m.visible.flatMap((n) => m.replies(n.id)), ...m.answersShown].sort(byTime).map((n) => {
       const c = n.ctx || {};
       return [n.id, iso(n.createdAt), n.name, n.role, n.kind, n.text, n.parent || '', Object.keys(n.plus || {}).length, n.resolved ? 'yes' : '', n.resolvedBy || '',
         n.version, VIEW_NAMES[n.view] || n.view, n.pname || n.pid || '', n.anchorLabel, n.x == null ? '' : n.x.toFixed(3), n.y == null ? '' : n.y.toFixed(3),
-        c.order, c.sort || '', c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || '', c.lang || '', c.ho || '', c.dates === false ? 'not known' : 'known', c.flagged || '', n.q || '', n.choice || '', c.line || ''];
+        c.order, c.sort || '', c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || '', c.lang || '', c.ho || '', c.dates === false ? 'not known' : 'known', c.flagged || '', c.empty ? 'yes' : '', n.q || '', n.choice || '', c.line || ''];
     });
     const csv = [head, ...rows].map((r) => r.map(cell).join(',')).join('\r\n');
     const d = new Date(), pad = (v) => String(v).padStart(2, '0');
