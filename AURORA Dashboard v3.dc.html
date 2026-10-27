@@ -221,7 +221,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .chart .noest{font-size:15px}
 .key{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:8px;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
 .key span{display:inline-flex;align-items:center;gap:6px}
-/* Who raised the AURORA data at this visit: two tick boxes at the foot of the summary band */
+/* Who brought up the AURORA data today: two tick boxes at the foot of the summary band */
 .disc{display:flex;flex-wrap:wrap;align-items:center;column-gap:24px;row-gap:8px;margin-top:20px}
 .disc-q{font-weight:600}
 .disc label{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
@@ -779,7 +779,7 @@ textarea.set-input{resize:vertical}
         </div>
       </div>
       <sc-if value="{{ pt.discordant }}"><p class="callout">The patient’s PHQ-9 and the AI estimate differ by more than the estimate’s uncertainty. The estimate supplements the patient’s own account; it doesn’t replace it.</p></sc-if>
-      <div class="disc no-print" role="group" aria-labelledby="disc-q"><span class="disc-q" id="disc-q">AURORA data at this visit:</span><label><input type="checkbox" checked="{{ disc.pt }}" onChange="{{ disc.togglePt }}"> The patient raised it</label><label><input type="checkbox" checked="{{ disc.me }}" onChange="{{ disc.toggleMe }}"> I raised it</label></div>
+      <div class="disc no-print" role="group" aria-labelledby="disc-q"><span class="disc-q" id="disc-q">Today:</span><label><input type="checkbox" checked="{{ disc.pt }}" onChange="{{ disc.togglePt }}"> The patient brought up their AURORA data</label><label><input type="checkbox" checked="{{ disc.me }}" onChange="{{ disc.toggleMe }}"> I brought up their AURORA data</label></div>
     </div>
   </div>
 
@@ -1018,7 +1018,7 @@ textarea.set-input{resize:vertical}
         <sc-for list="{{ ci.sf.after }}" as="l"><p class="{{ l.cls }}">{{ l.text }}</p></sc-for>
         <sc-if value="{{ ci.sf.hasSteps }}">
           <div class="ci-steps">
-            <div class="ci-steps-head">What the protocol asks of you<span class="scaffold no-print">Example wording until the IRB safety text is written</span></div>
+            <div class="ci-steps-head">Protocol steps<span class="scaffold no-print">Example wording until the IRB safety text is written</span></div>
             <ul><sc-for list="{{ ci.sf.steps }}" as="t"><li>{{ t }}</li></sc-for></ul>
           </div>
         </sc-if>
@@ -1926,7 +1926,7 @@ class Component extends DCLogic {
       safetyWhen: P.safety ? tm(P.safety.when) : 'As of today',
       // A safety flag links to what the protocol asks, on the check-in page of the day it was raised
       safetyCi: !!(P.safety && P.safety.ci),
-      safetyCiLabel: 'What the protocol asks',
+      safetyCiLabel: 'Protocol steps',
       openSafetyCi: () => { if (P.safety && P.safety.ci) this.openCheckin(dayOfIso(P.safety.ci)); },
       openLatestCi: () => { if (ciList.length) this.openCheckin(ciList[ciList.length - 1]); },
       discordant: P.estNow != null && phqNow != null && Math.abs(phqNow - P.estNow) > uncNow,
@@ -2509,7 +2509,7 @@ class Component extends DCLogic {
       goHandout: () => this.go({ view: 'handout' }),
       doPrint: () => { try { window.print(); } catch (e) { /* ignore */ } },
       printIcon: icon('printer'),
-      // Who raised the AURORA data at this visit, kept per patient. Either tick counts as discussed (aurora-1w3).
+      // Who brought up the AURORA data today, kept per patient. Either tick counts as discussed (aurora-1w3).
       disc: (() => {
         const d = s.disc[P.id] || {};
         const set = (k) => () => this.setState({ disc: { ...s.disc, [P.id]: { ...d, [k]: !d[k] } } });

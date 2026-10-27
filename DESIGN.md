@@ -200,7 +200,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - Its notes, such as review status, are `text-md`: safety wording is never in the smallest size.
   - The footer, also `text-md`, says that item 9 answers appear without study team review.
   - The wording follows the IRB safety text.
-  - In v3, a flagged tile has a "What the protocol asks" link. It goes to the check-in page for the day the flag was raised, which opens on the review record and the response steps. Moderate risk isn't emailed, so the steps must be one click from the flag.
+  - In v3, a flagged tile has a "Protocol steps" link. It goes to the check-in page for the day the flag was raised, which opens on the review record and the response steps. Moderate risk isn't emailed, so the steps must be one click from the flag.
 - **AI label (source rule):** label AI-derived values at the smallest unit where the source is uniform:
   - once in the header of an all-AI column;
   - on each item where AI and non-AI items mix (flags, changes, chart events);
@@ -275,7 +275,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - The capsule "pill" icon was replaced by the pill bottle because at 16 px it read as a hyperlink symbol.
 - **Brand mark:** a 24 px rounded square in a blue-to-violet gradient (`#2E6FD6` to `#7B5CC9`) with two level white aurora ribbons, the lower one shorter and fainter. It sits beside the AURORA wordmark in the top bar (v3 and the landing page) and is the browser-tab icon (`favicon.svg`). Cool hues only, like the greeting band, so it never reads as a status. The ribbons stay level: a rising line would read as rising severity, and two identical waves as "≈".
 - **Discussed checkbox** (v2): "Discussed AURORA data with the patient at this visit", at the foot of the patient page. This feeds the discussion-rate measure in the supervisor audit-and-feedback (A&F) playbook.
-- **Discussion tick boxes** (v3, from October 26): at the foot of the patient page's summary band, "AURORA data at this visit:" with two tick boxes, "The patient raised it" and "I raised it". They replace v2's checkbox: the clinical group's dashboard suggestions (August 31) asked to record who raised the measures, and the review notes asked for a more prominent place. Either tick counts as discussed for the A&F playbook's discussion rate, and the logging spec records which (bead aurora-1w3). Each patient keeps its own ticks. Not printed.
+- **Discussion tick boxes** (v3, from October 26): at the foot of the patient page's summary band, "Today:" with two tick boxes, "The patient brought up their AURORA data" and "I brought up their AURORA data". Each names what was brought up, not "it" (review note, October 27), and "Today" is what a tick records, since the dashboard doesn't know visit dates. They replace v2's checkbox: the clinical group's dashboard suggestions (August 31) asked to record who raised the measures, and the review notes asked for a more prominent place. Either tick counts as discussed for the A&F playbook's discussion rate, and the logging spec records which (bead aurora-1w3). Each patient keeps its own ticks. Not printed.
 - **ⓘ tooltip:** the place for scales, thresholds and definitions. The page draws it; don't use the browser's `title` tooltip, which appears only after a delay and never by keyboard or touch.
   - The ⓘ is a button. Pointing at it, or reaching it with Tab, opens the tip at once.
   - A click or tap keeps the tip open, with the ⓘ in `ink`. A second click, Escape, or a click elsewhere closes it. This is how it works on touch screens.
@@ -353,7 +353,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 - **Opens from:**
   - the trend chart (see Chart);
   - the Check-ins tile's dots and its "Latest check-in" link;
-  - the Safety tile's "What the protocol asks" link (see Safety flag);
+  - the Safety tile's "Protocol steps" link (see Safety flag);
   - What changed items that cite a check-in, which open it at the summary point that cites the passage.
 - **Moving around:** the breadcrumb reads "Patients › M. Delgado › Check-in, Mon, Aug 10". Previous and Next step through the patient's check-ins. They stay in the same place on every check-in, and are disabled, not removed, at either end.
 - **Summary band:**

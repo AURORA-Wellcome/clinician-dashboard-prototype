@@ -4,7 +4,7 @@ Three versions are kept side by side so the working group can compare them; the 
 
 ## v3: progress-focused
 
-`AURORA Dashboard v3.dc.html`, October 24, 2026, with additions on October 25 and 26.
+`AURORA Dashboard v3.dc.html`, October 24, 2026, with additions from October 25 to 27.
 
 v2, changed to follow the theoretical model (`Theoretical model/` in the project folder) and the off-track rules in `Study design/Measurement/AURORA_additional_data_collection.md`. The rules are in the v3 section of DESIGN.md.
 - **Off-track flag:** a two-branch flag on the AI estimate. "Not improving" (▬) is a new status for patients who aren't improving early in care, or who remain symptomatic after 3 months; "Stable or better" becomes "On track". In this trial only, when check-ins are too few for an estimate, the flag falls back on the PHQ-9 and says so.
@@ -33,6 +33,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
   - **Editable handout:** Edit the wording, beside Print, turns the AI-written lines (the summary, What's going well, Things to talk about) into text boxes in place; the goals stay as the patient wrote them. Editing is optional, edits are for that printout only, and Restore the AI wording undoes them. For a handout in another language, editing happens in English and the edited lines are translated. Without visit dates, the handout says "your next appointment" rather than a day.
   - **Site PI page and site settings** (draft): for the site PI, which clinicians need a call or support. One row per study clinician, with enrollment for everyone, dashboard use for those with the dashboard, and the engagement plan's step where one is due. No patient names, outcomes or comparisons between the groups. Site settings hold the languages, the crisis line in each language, the number for urgent risk and the roster; the handout and the check-in page use them. The review strip's Page switch reaches both.
   - **Questions for the working group:** the Notes panel has a Questions tab, with sixteen questions across the pages, drawn from the group's open decisions and the review notes. Answers are shared like notes, and others' answers to a question appear once you've given yours.
+- **Plainer wording** (October 27, from review notes): the patient page's tick boxes read "Today:", then "The patient brought up their AURORA data" and "I brought up their AURORA data", instead of "it". The Safety tile's link and the check-in page's steps heading say "Protocol steps".
 
 ## v2: redesign
 
