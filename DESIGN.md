@@ -203,6 +203,11 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - The footer, also `text-md`, says that item 9 answers appear without study team review.
   - The wording follows the IRB safety text.
   - In v3, a flagged tile has a "Protocol steps" link. It goes to the check-in page for the day the flag was raised, which opens on the review record and the response steps. Moderate risk isn't emailed, so the steps must be one click from the flag.
+  - **Record what you did** (v3, draft, from October 27; bead aurora-khx): a link under Protocol steps opens a short dialog: what the clinician did about the flag and when they first reached the patient. The actions are placeholders until the safety pathway is set (November 2). Saved, the record shows on the tile ("Recorded: Called or messaged the patient; contact Aug 12, 10:30 AM"), and the link becomes "Change what you recorded".
+    - Only the dashboard arm has it (decided October 27): it is part of the intervention, so it isn't compared across arms.
+    - It records after the fact, so it isn't a Respond button (principle 6), and the dialog says it doesn't replace the protocol's steps or the patient's record.
+    - The flag keeps its status: whether a record should change how a flag shows waits on the pathway, because "handled" could falsely reassure a backup recipient.
+    - It doesn't print, and it is logged without free text (`safety_action_recorded`).
 - **AI label (source rule):** label AI-derived values at the smallest unit where the source is uniform:
   - once in the header of an all-AI column;
   - on each item where AI and non-AI items mix (flags, changes, chart events);

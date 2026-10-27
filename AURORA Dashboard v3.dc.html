@@ -550,6 +550,11 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .pi-total{margin:12px 0 0}
 .mf dd{margin:2px 0 0}
 .modal .actions{justify-content:flex-end;margin-top:20px}
+/* Record what you did about a safety flag (draft) */
+.rec-acts{margin:12px 0 0;padding:0;border:0}
+.rec-legend{margin-bottom:4px;padding:0;font-weight:600}
+.rec-note{margin:12px 0}
+.set-field > span .muted{font-weight:400}
 
 /* Patient handout: a page to go through with the patient, then print in clear print (14 pt). Plain words, and nothing
    that identifies the patient unless the clinician adds a first name when printing. The brand's blue-violet, not
@@ -833,6 +838,8 @@ textarea.set-input{resize:vertical}
           <div class="stat-note safety-note muted">{{ pt.safetyNote }}</div>
           <div class="stat-note muted">{{ pt.safetyWhen }}</div>
           <sc-if value="{{ pt.safetyCi }}"><div class="stat-note no-print"><button type="button" class="linkbtn" onClick="{{ pt.openSafetyCi }}">{{ pt.safetyCiLabel }}</button></div></sc-if>
+          <sc-if value="{{ rec.has }}"><div class="stat-note muted no-print">{{ rec.summary }}</div></sc-if>
+          <sc-if value="{{ rec.on }}"><div class="stat-note no-print"><button type="button" class="linkbtn" onClick="{{ rec.open }}">{{ rec.label }}</button></div></sc-if>
         </div>
         <!-- The PHQ-9 tile comes before the AI estimate's, or after it with the review strip's First number set to AI
              estimate (bead aurora-dar). It is drawn in one place or the other, so screen readers and Tab follow the order seen -->
@@ -1358,6 +1365,21 @@ textarea.set-input{resize:vertical}
           </sc-raw-table>
           <p class="pi-total">{{ pi.total }}</p>
           <div class="actions"><button class="btn" onClick="{{ closePhqItems }}">Close</button></div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ rec.isOpen }}">
+      <div class="modal-bg" onClick="{{ rec.close }}">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rec-title" onClick="{{ stop }}">
+          <h3 id="rec-title">What you did about this flag</h3>
+          <p class="pi-sub">{{ rec.flagText }}</p>
+          <fieldset class="rec-acts"><legend class="rec-legend">What you did</legend>
+            <sc-for list="{{ rec.opts }}" as="o"><label class="set-opt"><input type="checkbox" checked="{{ o.on }}" onChange="{{ o.toggle }}"><span>{{ o.label }}</span></label></sc-for>
+          </fieldset>
+          <label class="set-field"><span>When you first reached the patient <span class="muted">(if you did)</span></span><input type="datetime-local" class="ho-input" value="{{ rec.when }}" onChange="{{ rec.setWhen }}"></label>
+          <p class="muted rec-note">This tells the study team what was done. It doesn’t replace the protocol’s steps, or your notes in the patient’s record.</p>
+          <p class="scaffold-note">Draft: the actions are placeholders until the study’s safety pathway is set (November 2).</p>
+          <div class="actions"><button type="button" class="btn" onClick="{{ rec.close }}">Cancel</button><button type="button" class="btn" disabled="{{ rec.cantSave }}" onClick="{{ rec.save }}">Save</button></div>
         </div>
       </div>
     </sc-if>
@@ -1915,7 +1937,7 @@ const HO_TEXT = {
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {}, acctSet: {}, alertOpen: false, ptAlerts: {}, myNotes: {}, noteDraft: {}, empty: false, lead: 'phq', hoMeasure: 'phq' };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {}, acctSet: {}, alertOpen: false, ptAlerts: {}, myNotes: {}, noteDraft: {}, empty: false, lead: 'phq', hoMeasure: 'phq', recOpen: false, recDraft: null, safetyRec: {} };
 
   componentDidMount() {
     const o = {};
@@ -1962,7 +1984,7 @@ class Component extends DCLogic {
     };
     window.addEventListener('hashchange', this.onHash);
     // Escape closes hover content anywhere (WCAG 1.4.13: dismissible)
-    this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, tip: null, tipPinned: false, factsOpen: false, phqOpen: false, alertOpen: false }); } };
+    this.onEsc = (e) => { if (e.key === 'Escape') { clearTimeout(this.peekT); clearTimeout(this.tipT); this.setState({ peek: null, tip: null, tipPinned: false, factsOpen: false, phqOpen: false, alertOpen: false, recOpen: false }); } };
     window.addEventListener('keydown', this.onEsc);
     // A click or tap outside an open ⓘ tip closes it
     this.onDown = (e) => {
@@ -2011,7 +2033,7 @@ class Component extends DCLogic {
     clearTimeout(this.tipT);
     // The handout's name, ticks, language and edits belong to one printout: another page or patient starts fresh
     const fresh = next.view !== this.state.view || next.pid !== this.state.pid ? { hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false } : {};
-    this.setState({ ...o, ...fresh, cday: next.cday, cAt: o.cAt || null, pAt: null, tx: false, factsOpen: false, phqOpen: false, alertOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
+    this.setState({ ...o, ...fresh, cday: next.cday, cAt: o.cAt || null, pAt: null, tx: false, factsOpen: false, phqOpen: false, alertOpen: false, recOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
     if (!opts.keepScroll) try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
   }
 
@@ -2837,6 +2859,30 @@ class Component extends DCLogic {
     const todayShort = `${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`;
     const noteList = [...((s.myNotes || {})[P.id] || []), ...(CLIN_NOTES[P.id] || [])];
     const noteDraft = (s.noteDraft || {})[P.id] || '';
+    // Record what you did about a safety flag (draft; bead aurora-khx): the dashboard arm's own record, for the study team
+    // (decided October 27: the dashboard arm may have a fuller safety response). The flag keeps its status: whether a
+    // record should change how it shows waits on the safety pathway, since "handled" could falsely reassure a backup
+    // recipient. The actions are placeholders until the pathway is set (November 2).
+    const REC_ACTS = ['Called or messaged the patient', 'Saw the patient', 'Went over their safety plan', 'Referred them for urgent assessment', 'Couldn’t reach them yet', 'No further action needed: already addressed'];
+    const recSaved = (s.safetyRec || {})[P.id];
+    const recDraft = s.recDraft || { acts: [], when: '' };
+    const whenText = (v) => { const [d, t] = v.split('T'); const dt = new Date(`${d}T00:00`); return `${MONTHS[dt.getMonth()]} ${dt.getDate()}, ${tm(t || '')}`; };
+    const rec = {
+      on: !!P.safety, has: !!recSaved, isOpen: !!s.recOpen && !!P.safety,
+      label: recSaved ? 'Change what you recorded' : 'Record what you did',
+      summary: recSaved ? `Recorded: ${recSaved.acts.map((a, i) => (i ? a.charAt(0).toLowerCase() + a.slice(1) : a)).join('; ')}${recSaved.when ? `; contact ${whenText(recSaved.when)}` : ''}` : '',
+      flagText: P.safety ? `${P.safety.head} (${tm(P.safety.when).replace(/^Today/, 'today')})` : '',
+      open: () => this.setState({ recOpen: true, recDraft: recSaved ? { acts: [...recSaved.acts], when: recSaved.when || '' } : { acts: [], when: '' } }),
+      close: () => this.setState({ recOpen: false }),
+      opts: REC_ACTS.map((a) => ({ label: a, on: recDraft.acts.includes(a),
+        toggle: () => this.setState((st) => { const d = st.recDraft || { acts: [], when: '' }; return { recDraft: { ...d, acts: d.acts.includes(a) ? d.acts.filter((x) => x !== a) : [...d.acts, a] } }; }) })),
+      when: recDraft.when, setWhen: (e) => { const v = e.target.value; this.setState((st) => ({ recDraft: { ...(st.recDraft || { acts: [] }), when: v } })); },
+      cantSave: recDraft.acts.length === 0,
+      save: () => this.setState((st) => {
+        const d = st.recDraft || { acts: [], when: '' };
+        return d.acts.length ? { safetyRec: { ...(st.safetyRec || {}), [P.id]: { acts: REC_ACTS.filter((a) => d.acts.includes(a)), when: d.when } }, recOpen: false } : null;
+      })
+    };
     const notes = {
       list: noteList.map((n) => ({ date: n.date === todayShort ? 'Today' : n.date, text: n.text })), has: noteList.length > 0,
       draft: noteDraft, cantSave: !noteDraft.trim(),
@@ -2895,7 +2941,7 @@ class Component extends DCLogic {
     const whoText = ['site', 'settings'].includes(s.view) ? `${SITE.pi}, site PI, ${SITE.name}` : 'Dr. E. Okafor, Site 03';
     return {
       onList: s.view === 'list', onPatient: s.view === 'patient', onHandout: s.view === 'handout', onCheckin: s.view === 'checkin',
-      onSite: s.view === 'site', onSettings: s.view === 'settings', onAccount: s.view === 'account', acct, ptAlert, notes, onWelcome: s.view === 'welcome',
+      onSite: s.view === 'site', onSettings: s.view === 'settings', onAccount: s.view === 'account', acct, ptAlert, notes, rec, onWelcome: s.view === 'welcome',
       // Welcome's one action: the patients list, empty until the first patient joins
       welcomeDone: () => this.go({ view: 'list', empty: true }),
       listEmpty: s.empty, emptyCtl: s.view === 'list',

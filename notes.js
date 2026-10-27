@@ -951,7 +951,8 @@
     if (a && (/^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName) || a.isContentEditable)) return true;
     if (composer || ui.adding || ui.reply || ui.edit || ui.me || Object.keys(ui.draft).length) return true;
     return !!(page.hoEdit || page.hoName || (page.hoOff || []).length || Object.keys(page.hoText || {}).length || Object.keys(page.siteSet || {}).length || Object.keys(page.acctSet || {}).length || Object.values(page.ptAlerts || {}).some(Boolean)
-      || Object.values(page.myNotes || {}).some((a) => a.length) || Object.values(page.noteDraft || {}).some((v) => (v || '').trim()) || Object.values(page.disc || {}).some((d) => d && d.said));
+      || Object.values(page.myNotes || {}).some((a) => a.length) || Object.values(page.noteDraft || {}).some((v) => (v || '').trim()) || Object.values(page.disc || {}).some((d) => d && d.said)
+      || page.recOpen || Object.keys(page.safetyRec || {}).length);
   }
   async function checkForUpdate() {
     if (!/^https?:$/.test(location.protocol) || !LOADED || Date.now() - lastCheck < 60000) return;
