@@ -554,6 +554,8 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .rec-acts{margin:12px 0 0;padding:0;border:0}
 .rec-legend{margin-bottom:4px;padding:0;font-weight:600}
 .rec-note{margin:12px 0}
+.ci-rec{margin-top:12px}
+.ci-safety .ci-rec p{margin:0 0 4px}
 .set-field > span .muted{font-weight:400}
 
 /* Patient handout: a page to go through with the patient, then print in clear print (14 pt). Plain words, and nothing
@@ -1174,6 +1176,7 @@ textarea.set-input{resize:vertical}
           <div class="ci-steps">
             <div class="ci-steps-head">Protocol steps<span class="scaffold no-print">Example wording until the IRB safety text is written</span></div>
             <ul><sc-for list="{{ ci.sf.steps }}" as="t"><li>{{ t }}</li></sc-for></ul>
+            <sc-if value="{{ rec.onCheckin }}"><div class="ci-rec no-print"><sc-if value="{{ rec.has }}"><p class="muted">{{ rec.summary }}</p></sc-if><button type="button" class="linkbtn" onClick="{{ rec.open }}">{{ rec.label }}</button></div></sc-if>
           </div>
         </sc-if>
       </section>
@@ -1473,7 +1476,7 @@ const PATIENTS = [
       { icon: 'footprints', text: 'Get back to morning walks with Ana', status: 'on pause (3 weeks ago)', handoutStatus: 'on pause for now' },
       { icon: 'briefcase', text: 'Feel like myself at work again', status: 'some better days (last week)', handoutStatus: 'some better days' }
     ],
-    handout: ['The questionnaires you filled out suggest the last few weeks have been harder than the month before, especially with sleep and morning energy.'] },
+    handout: ['Your questionnaire scores have gone up over the last few weeks compared with the month before, especially on the questions about sleep and energy.'] },
   { id: 'fernandez', name: 'A. Fernández', first: 'Alejandro', dx: '+ GAD', status: 'worse',
     tenure: 6, lang: 'es',
     visit: 'Mon, Aug 17, 13:00', visitDay: 'Monday', visitRank: 5, weeksIn: 11,
@@ -1843,18 +1846,18 @@ const HO_TEXT = {
     summary: {
       notimp: 'Your check-ins have looked about the same for a while. That’s worth talking about at your next appointment.',
       nodata: 'We have only a few check-ins from the last 2 weeks. That isn’t enough yet to see how things are going.',
-      easier: 'Your check-ins suggest things have been getting easier over the last few weeks.',
+      easier: 'Your check-ins over the last few weeks suggest fewer symptoms than before.',
       stable: 'Your check-ins look about the same as usual.',
-      harder: 'Your check-ins suggest the last few weeks have been harder than usual. That’s worth talking about at your next appointment.'
+      harder: 'Your check-ins over the last few weeks suggest more symptoms than usual for you. That’s worth talking about at your next appointment.'
     },
     wellHead: 'What’s going well',
     checkinsDone: (n, of) => `You did ${n} of ${of} check-ins in the last 2 weeks.`,
     checkinsSome: (n) => `You did ${n} check-in${n === 1 ? '' : 's'} in the last 2 weeks. Each one helps.`,
     goodGoal: /better|good|easier/,
-    easierLately: 'Your questionnaires show things getting easier.',
+    easierLately: 'Your questionnaire scores have come down.',
     wellNone: (who) => `You’re taking part in AURORA, and working with ${who} to feel better.`,
     goalsHead: 'Your goals',
-    weeksHead: 'How your weeks have gone',
+    weeksHead: 'Your scores over the last few weeks',
     // The chart's ends say what a higher score means, not how the weeks felt (review note, October 27)
     axisHigh: ['More', 'symptoms'], axisLow: ['Fewer', 'symptoms'],
     date: (w) => w,
@@ -1894,18 +1897,18 @@ const HO_TEXT = {
     summary: {
       notimp: 'Según sus conversaciones con AURORA, parece que desde hace un tiempo las cosas no han cambiado mucho. Vale la pena hablarlo en su próxima cita.',
       nodata: 'En las últimas 2 semanas ha habido pocas conversaciones con AURORA. Todavía no son suficientes para ver cómo van las cosas.',
-      easier: 'Según sus conversaciones con AURORA, parece que en las últimas semanas las cosas se le han hecho más fáciles.',
+      easier: 'Sus conversaciones con AURORA de las últimas semanas sugieren menos síntomas que antes.',
       stable: 'Según sus conversaciones con AURORA, parece que las cosas siguen como de costumbre.',
-      harder: 'Según sus conversaciones con AURORA, parece que las últimas semanas han sido más difíciles de lo habitual. Vale la pena hablarlo en su próxima cita.'
+      harder: 'Sus conversaciones con AURORA de las últimas semanas sugieren más síntomas de lo habitual. Vale la pena hablarlo en su próxima cita.'
     },
     wellHead: 'Lo que va bien',
     checkinsDone: (n, of) => `En las últimas 2 semanas, completó ${n} de ${of} conversaciones con AURORA.`,
     checkinsSome: (n) => `En las últimas 2 semanas, completó ${n} ${n === 1 ? 'conversación' : 'conversaciones'} con AURORA. Cada una cuenta.`,
     goodGoal: /mejor|bien|fácil/,
-    easierLately: 'Sus cuestionarios muestran que las cosas se le están haciendo más fáciles.',
+    easierLately: 'Sus puntajes en los cuestionarios han bajado.',
     wellNone: () => 'Usted participa en AURORA y trabaja con su terapeuta para sentirse mejor.',
     goalsHead: 'Sus metas',
-    weeksHead: 'Cómo han sido sus semanas',
+    weeksHead: 'Sus puntajes en las últimas semanas',
     axisHigh: ['Más', 'síntomas'], axisLow: ['Menos', 'síntomas'],
     date: (w) => esDate(w),
     chartAria: (from, to, move, first, last) => `Sus cuestionarios del ${esDate(from, true)} al ${esDate(to, true)} muestran ${move >= 3 ? 'más síntomas' : move <= -3 ? 'menos síntomas' : 'más o menos lo mismo'} últimamente, con puntajes de ${first} a ${last} sobre 27.`,
@@ -2869,6 +2872,8 @@ class Component extends DCLogic {
     const whenText = (v) => { const [d, t] = v.split('T'); const dt = new Date(`${d}T00:00`); return `${MONTHS[dt.getMonth()]} ${dt.getDate()}, ${tm(t || '')}`; };
     const rec = {
       on: !!P.safety, has: !!recSaved, isOpen: !!s.recOpen && !!P.safety,
+      // Also after the protocol steps, on the check-in that raised the flag
+      onCheckin: !!P.safety && s.view === 'checkin' && P.safety.ci === s.cday,
       label: recSaved ? 'Change what you recorded' : 'Record what you did',
       summary: recSaved ? `Recorded: ${recSaved.acts.map((a, i) => (i ? a.charAt(0).toLowerCase() + a.slice(1) : a)).join('; ')}${recSaved.when ? `; contact ${whenText(recSaved.when)}` : ''}` : '',
       flagText: P.safety ? `${P.safety.head} (${tm(P.safety.when).replace(/^Today/, 'today')})` : '',
