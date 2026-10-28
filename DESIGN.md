@@ -403,7 +403,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 - **Not printed** with the session brief, and not part of the patient handout.
 
 **Patient handout.** A page to go through with the patient, then print. Its question is "what would the patient want to know?" It uses plain words, at about a 6th-to-8th-grade reading level, and the brand's blue-violet rather than status colors, so nothing on it reads as a judgment.
-- **Before you print** (on screen only): an optional first name, which isn't saved; a tick box for each topic, to leave out anything the patient wouldn't want on paper; and a reminder to read the handout through, because parts of it are written by AI. Moving to another patient or page clears the name, ticks, language and edits.
+- **Before you print** (on screen only): a tick box for each topic, to leave out anything the patient wouldn't want on paper; on the full handout, a tick box for the lines to fill in, off by default; and a reminder to read the handout through, because parts of it are written by AI. Moving to another patient or page clears the name, ticks, language and edits.
 - **Editing** (from October 26): the clinician can change any line written by AI, or print the handout as it is; printing stays one click (clinical planning, October 26).
   - **Edit the wording**, beside Print, turns the AI-written lines into text boxes in place: the summary, What's going well and Things to talk about. The goals stay as the patient wrote them, and the fixed wording (crisis line, the note about the check-ins) stays as the protocol sets it.
   - The button reads Done editing while editing, and the panel counts the edited lines, with Restore the AI wording to undo them. Edits are for that printout only, like the name.
@@ -416,13 +416,13 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
   - What's going well: check-ins done, goals with better days, and lower questionnaire scores when they've come down;
   - the goals as cards, in the patient's words;
   - Your scores over the last few weeks ("How your weeks have gone" until October 27, from the same review note): a simple line of the patient's own PHQ-9 answers, not the AI estimate, with the PHQ-9's scale on its side (0 to 27) and each point's score above it, as on the simple handout (from October 27, as review notes asked), and its ends labeled "More symptoms" and "Fewer symptoms" (Spanish "Más síntomas" and "Menos síntomas"), on two lines each so they fit beside the scale. They say what a higher score means rather than judging how the weeks went, which is for the clinician and patient to talk through (review note, October 27). For the CWG (bead aurora-dar), the review strip's Chart can show the AI estimate instead, weekly from the patient's first week on the same scale, with every other week dated (`&hom=ai`), or both, the estimate as an amber line under the questionnaires' points, with a key (`&hom=both`). The note under the chart and its description for screen readers follow. The simple handout stays on the PHQ-9, because it names ranges, which are for PHQ-9 totals only;
-  - Things to talk about at the next visit, with a line to add their own;
-  - Your next step, with lines to fill in together;
+  - Things to talk about at the next visit;
+  - only when Before you print's Lines to fill in is ticked: a line for something the patient would like to add, and Your next step, with lines to fill in together. Off by default, from a review note of October 27 (keep it simple, and useful across services and countries); the tick stays set from one patient to the next, as a preference;
   - If things get hard: the site's crisis line, from the site settings, and 988 at US sites only (example wording until the protocol sets it). Each site supplies its line in each language as a whole phrase, because Spanish changes the words around a number ("al 024", "a la línea…");
   - About your check-ins (draft wording until the consent form sets it). It doesn't remind patients that they can stop: the consent form covers that, and a reminder on every printout was felt unhelpful (review note, October 26; bead aurora-ubn);
   - a privacy line.
 - **Printout rules.** The protocol and consent forms still need to describe the handout (bead aurora-ubn).
-  - Nothing that identifies the patient: no full name, date of birth, study ID, medical record number, address or site. A first name appears only if the clinician adds it when printing; otherwise the patient can write it in. How names reach the dashboard at all is still open (bead aurora-il5).
+  - Nothing that identifies the patient: no full name, date of birth, study ID, medical record number, address or site. No name either: the patient or clinician can write one in by hand (the first name field went on October 27, from a review note: keep it simple). How names reach the dashboard at all is still open (bead aurora-il5).
   - Nothing about safety flags, PHQ-9 item 9 or transcripts.
   - No AI numbers or labels, and time spans stated plainly ("in the last 2 weeks").
   - Nothing that reads as blame: "You did 9 of 12 check-ins", not "you missed 3".
@@ -430,7 +430,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 - **Print:** clear print at 14 pt, on two pages at most. The clinician's panel and the draft labels don't print.
 - **Simple** (review option, from October 27): the review strip's Handout switch (Full, Simple; `&ho=simple`) shows the simpler handout three review notes asked for.
   - **What it keeps:** the title "Your questionnaire scores", without a name; the patient's PHQ-9 scores on the PHQ-9's own 0 to 27 scale, each point with its score and the five ranges named lightly at the side, in plain words under a Symptom level caption (very low, low, medium, high, very high: the PHQ-9's minimal to severe, from a review note of October 27). The dashboard keeps the PHQ-9's own names for clinicians, and the Before you print panel maps one to the other; then things to talk about, with no lines to fill in; then the crisis line and the privacy line.
-  - **What it drops:** the summary, What's going well, the goals, the next step, the note about the check-ins, and the first name field before printing.
+  - **What it drops:** the summary, What's going well, the goals, the next step and the note about the check-ins.
   - **Layout:** things to talk about go below the chart, not beside it, so the chart keeps print-sized labels.
   - **Spanish** names the levels in Spanish (muy bajo to muy alto, under Nivel de síntomas). The working group chooses between the two handouts (Questions tab; bead aurora-sk9).
 

@@ -1029,10 +1029,6 @@ textarea.set-input{resize:vertical}
     <!-- For the clinician, before printing: never printed -->
     <section class="ho-prep no-print" aria-label="Before you print">
       <h2 class="h2">Before you print</h2>
-      <sc-if value="{{ ho.full }}">
-      <label class="ho-field"><span>First name on the handout (optional)</span><input type="text" class="ho-input" placeholder="First name" value="{{ ho.name }}" onChange="{{ ho.setName }}"></label>
-      <p class="muted">Not saved. You can also leave it blank and write it in by hand.</p>
-      </sc-if>
       <sc-if value="{{ ho.langs.many }}">
         <fieldset class="ho-langs">
           <legend>Language<span class="scaffold">{{ ho.langs.draft }}</span></legend>
@@ -1042,6 +1038,10 @@ textarea.set-input{resize:vertical}
       </sc-if>
       <div class="ho-field"><span>Things to talk about</span></div>
       <sc-for list="{{ ho.talk }}" as="t"><label class="ho-check"><input type="checkbox" checked="{{ t.on }}" onChange="{{ t.toggle }}"> {{ t.text }}</label></sc-for>
+      <sc-if value="{{ ho.full }}">
+        <div class="ho-field"><span>Lines to fill in</span></div>
+        <label class="ho-check"><input type="checkbox" checked="{{ ho.lines }}" onChange="{{ ho.toggleLines }}"> Include them: something the patient would like to add, and their next step</label>
+      </sc-if>
       <sc-if value="{{ ho.simple }}"><p class="muted">The simple handout names the PHQ-9’s ranges in plain words: very low (minimal), low (mild), medium (moderate), high (moderately severe) and very high (severe).</p></sc-if>
       <p class="muted">Untick anything the patient wouldn’t want on paper. Read the handout through before printing: parts of it are written by AI. You can edit them, or print it as it is.</p>
       <sc-if value="{{ ho.editNote }}"><p class="muted">{{ ho.editNote }}<sc-if value="{{ ho.edited }}"> <button type="button" class="linkbtn" onClick="{{ ho.resetEdits }}">Restore the AI wording</button></sc-if></p></sc-if>
@@ -1099,9 +1099,11 @@ textarea.set-input{resize:vertical}
       <section class="ho-sec ho-talk">
         <h2 class="h2">{{ ho.icons.talk }}{{ ho.talkHead }}</h2>
         <ul><sc-for list="{{ ho.talkOn }}" as="t"><li><sc-if value="{{ ho.editing }}"><textarea class="ho-edit no-print" rows="{{ t.rows }}" aria-label="{{ t.label }}" value="{{ t.text }}" onChange="{{ t.set }}"></textarea><span class="print-only">{{ t.text }}</span></sc-if><sc-if value="{{ !ho.editing }}">{{ t.text }}</sc-if></li></sc-for></ul>
-        <p>{{ ho.t.talkAdd }}</p>
-        <div class="ho-line"></div>
+        <sc-if value="{{ ho.lines }}"><p>{{ ho.t.talkAdd }}</p>
+        <div class="ho-line"></div></sc-if>
       </section>
+      <!-- The lines to fill in, only when Before you print asks for them (review note, October 27: keep the handout simple) -->
+      <sc-if value="{{ ho.lines }}">
       <section class="ho-sec ho-next">
         <h2 class="h2">{{ ho.icons.next }}{{ ho.t.nextHead }}</h2>
         <p>{{ ho.t.nextTry }}</p>
@@ -1109,6 +1111,7 @@ textarea.set-input{resize:vertical}
         <p>{{ ho.t.nextWay }}</p>
         <div class="ho-line"></div>
       </section>
+      </sc-if>
       </sc-if>
       <!-- The simple handout (review option, from a review note of October 26): the scores on the PHQ-9's own scale,
            then things to talk about, and no lines to fill in. Below the chart rather than beside it, so the chart
@@ -1840,7 +1843,7 @@ const HO_TEXT = {
   en: {
     label: 'English',
     clin: 'Dr. Okafor',
-    greet: (name) => (name ? `${name}, here’s how the last few weeks have gone` : 'Here’s how the last few weeks have gone'),
+    greet: 'Here’s how the last few weeks have gone',
     sub: (day, who) => `For your ${day ? day + ' ' : 'next '}appointment with ${who}`,
     // One summary line, chosen by how things are going
     summary: {
@@ -1892,7 +1895,7 @@ const HO_TEXT = {
   es: {
     label: 'Spanish',
     clin: 'su terapeuta, E. Okafor',
-    greet: (name) => (name ? `${name}, así han ido las últimas semanas` : 'Así han ido las últimas semanas'),
+    greet: 'Así han ido las últimas semanas',
     sub: (day, who) => (day ? `Para su cita del ${ES_DAYS[day]} con ${who}` : `Para su próxima cita con ${who}`),
     summary: {
       notimp: 'Según sus conversaciones con AURORA, parece que desde hace un tiempo las cosas no han cambiado mucho. Vale la pena hablarlo en su próxima cita.',
@@ -1940,7 +1943,7 @@ const HO_TEXT = {
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {}, acctSet: {}, alertOpen: false, ptAlerts: {}, myNotes: {}, noteDraft: {}, empty: false, lead: 'phq', hoMeasure: 'phq', recOpen: false, recDraft: null, safetyRec: {} };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {}, acctSet: {}, alertOpen: false, ptAlerts: {}, myNotes: {}, noteDraft: {}, empty: false, lead: 'phq', hoMeasure: 'phq', recOpen: false, recDraft: null, safetyRec: {}, hoLines: false };
 
   componentDidMount() {
     const o = {};
@@ -1983,7 +1986,7 @@ class Component extends DCLogic {
     this.onHash = () => {
       const r = withDay(this.readHash());
       const moved = ['view', 'pid', 'cday'].some((k) => k in r && r[k] !== this.state[k]);
-      this.setState(moved ? { ...r, tx: false, cAt: null, pAt: null, hoName: '', hoOff: [], hoLang: r.hoLang || null, hoText: {}, hoEdit: false } : r);
+      this.setState(moved ? { ...r, tx: false, cAt: null, pAt: null, hoOff: [], hoLang: r.hoLang || null, hoText: {}, hoEdit: false } : r);
     };
     window.addEventListener('hashchange', this.onHash);
     // Escape closes hover content anywhere (WCAG 1.4.13: dismissible)
@@ -2034,8 +2037,8 @@ class Component extends DCLogic {
     try { history.replaceState(null, '', `#view=${next.view}&p=${next.pid}${next.view === 'checkin' ? `&d=${next.cday}` : ''}&order=${next.order}&dates=${next.dates ? 1 : 0}&line=${next.greetLine}&icons=${next.icons ? 1 : 0}&style=${next.distinct ? 'distinct' : 'plain'}&text=${next.big ? 'larger' : 'current'}&clock=${next.clock24 ? 24 : 12}&look=${next.refined ? 'refined' : 'current'}&hero=${next.hero ? 1 : 0}&ho=${next.hoStyle || 'full'}&flagged=${next.flagged || 'day'}${next.empty ? '&empty=1' : ''}${next.lead === 'ai' ? '&lead=ai' : ''}${next.hoMeasure && next.hoMeasure !== 'phq' ? `&hom=${next.hoMeasure}` : ''}${next.sort ? `&sort=${next.sort}${next.sortRev ? '&rev=1' : ''}` : ''}`); } catch (e) { /* sandboxed preview */ }
     clearTimeout(this.peekT);
     clearTimeout(this.tipT);
-    // The handout's name, ticks, language and edits belong to one printout: another page or patient starts fresh
-    const fresh = next.view !== this.state.view || next.pid !== this.state.pid ? { hoName: '', hoOff: [], hoLang: null, hoText: {}, hoEdit: false } : {};
+    // The handout's ticks, language and edits belong to one printout: another page or patient starts fresh
+    const fresh = next.view !== this.state.view || next.pid !== this.state.pid ? { hoOff: [], hoLang: null, hoText: {}, hoEdit: false } : {};
     this.setState({ ...o, ...fresh, cday: next.cday, cAt: o.cAt || null, pAt: null, tx: false, factsOpen: false, phqOpen: false, alertOpen: false, recOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
     if (!opts.keepScroll) try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
   }
@@ -2745,7 +2748,6 @@ class Component extends DCLogic {
       ...P.goals.filter((g) => HO.goodGoal.test(g.handoutStatus)).map((g) => `“${g.text}”: ${g.handoutStatus}.`),
       qMove <= -5 ? HO.easierLately : null
     ].filter(Boolean);
-    const hoName = (s.hoName || '').trim();
     const setLang = (l) => {
       this.setState({ hoLang: l });
       try { const h = new URLSearchParams((location.hash || '').replace(/^#/, '')); h.set('lang', l); history.replaceState(null, '', '#' + h.toString()); } catch (e) { /* sandboxed preview */ }
@@ -2755,7 +2757,7 @@ class Component extends DCLogic {
       simple: s.hoStyle === 'simple', full: s.hoStyle !== 'simple', sc: scoreChart,
       // With every topic left out, the simple handout drops the empty heading and gives the chart the width
       hasTalk: talkHo.some((_, i) => !off.includes(i)), simpleCls: 'ho-simple' + (talkHo.some((_, i) => !off.includes(i)) ? '' : ' solo'),
-      greet: s.hoStyle === 'simple' ? HO.simpleTitle : HO.greet(hoName),
+      greet: s.hoStyle === 'simple' ? HO.simpleTitle : HO.greet,
       // The visit day only where visit dates are known; otherwise "your next appointment"
       sub: HO.sub(s.dates ? P.visitDay : '', who), about: HO.about(who),
       // Patient-specific summaries are written in English for the mock; other languages use the standard line
@@ -2797,7 +2799,8 @@ class Component extends DCLogic {
         note: `${HO_TEXT[hoLangs[0]].label} is the language of the patient’s check-ins. Switch to English to read the handout through first: both say the same things.`,
         draft: `Draft ${HO_TEXT[hoLangs[0]].label} until the study’s translators write it`
       },
-      name: s.hoName || '', setName: (e) => this.setState({ hoName: e.target.value }),
+      // The lines to fill in: a preference, so it stays set from one patient to the next, unlike the topics
+      lines: !!s.hoLines, toggleLines: () => this.setState({ hoLines: !s.hoLines }),
       icons: { sun: icon('sun', 20), talk: icon('message-square', 20), next: icon('pencil', 20), help: icon('phone', 20) },
       // The site's crisis line, from the site settings once a site has written its own
       helpCall: (s.siteSet || {})[`crisis_${hoL}`] || HO.helpCall

@@ -944,13 +944,13 @@
   let newer = 0, lastCheck = 0, bar = null, barDismissed = false;
   const ssGet = (k) => { try { return sessionStorage.getItem(k); } catch (e) { return null; } };
   const ssSet = (k, v) => { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) { /* blocked */ } };
-  // Typing, or partway through a note, reply, edit, answer or name; or, in v3, the handout's name, topics or wording,
+  // Typing, or partway through a note, reply, edit, answer or name; or, in v3, the handout's topics or wording,
   // or the site settings, which the mockup keeps in the state it passes on with dc:render
   function busy() {
     const a = document.activeElement;
     if (a && (/^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName) || a.isContentEditable)) return true;
     if (composer || ui.adding || ui.reply || ui.edit || ui.me || Object.keys(ui.draft).length) return true;
-    return !!(page.hoEdit || page.hoName || (page.hoOff || []).length || Object.keys(page.hoText || {}).length || Object.keys(page.siteSet || {}).length || Object.keys(page.acctSet || {}).length || Object.values(page.ptAlerts || {}).some(Boolean)
+    return !!(page.hoEdit || (page.hoOff || []).length || Object.keys(page.hoText || {}).length || Object.keys(page.siteSet || {}).length || Object.keys(page.acctSet || {}).length || Object.values(page.ptAlerts || {}).some(Boolean)
       || Object.values(page.myNotes || {}).some((a) => a.length) || Object.values(page.noteDraft || {}).some((v) => (v || '').trim()) || Object.values(page.disc || {}).some((d) => d && d.said)
       || page.recOpen || Object.keys(page.safetyRec || {}).length);
   }

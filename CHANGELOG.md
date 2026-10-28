@@ -50,6 +50,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
 - **PHQ-9 or AI estimate first** (October 27, for review): on the patient page, the review strip's First number puts the AI estimate's tile before the PHQ-9's. On the full handout, Chart shows the AI estimate instead of the PHQ-9, or both. They let the group compare what two of the Questions tab's questions ask.
 - **Record what you did** (October 27, draft): a flagged Safety tile has a link that opens a short record of what the clinician did about the flag and when they reached the patient, for the study team, with placeholder actions until the safety pathway is set. The same link follows the protocol steps on the check-in that raised the flag. The flag keeps its status.
 - **Handout wording that describes** (October 27, from a review note): the full handout's chart is titled "Your scores over the last few weeks" instead of "How your weeks have gone", and its summary and What's going well describe symptoms and scores ("more symptoms than usual for you", "Your questionnaire scores have come down") instead of saying the weeks were harder or easier, in English and Spanish.
+- **A simpler full handout** (October 27, from review notes): no first name field before printing (the patient or clinician can write a name in), and the lines to fill in (something to add, the next step) only when Before you print's Lines to fill in is ticked, which it isn't by default.
 
 ## v2: redesign
 
