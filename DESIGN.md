@@ -372,7 +372,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 - what clinicians may see of check-in conversations (aurora-3yt);
 - the wording of the safety response steps (aurora-c6i).
 
-**Check-in page** *(draft)*. `#view=checkin&p=delgado&d=2026-08-10`. The spec is in the project folder (`Clinicians/Check-in detail view spec 2026-10-25.md`). What clinicians may see of the conversations waits on the IRB, so a hatched note at the top says the page is a draft. Only the review strip's seven examples have written conversations.
+**Check-in page** *(draft)*. `#view=checkin&p=delgado&d=2026-08-10`. The spec is in the project folder (`Clinicians/Dashboard/Check-in detail view spec 2026-10-25.md`). What clinicians may see of the conversations waits on the IRB, so a hatched note at the top says the page is a draft. Only the review strip's seven examples have written conversations.
 - **Opens from:**
   - the trend chart (see Chart);
   - the Check-ins tile's dots and its "Latest check-in" link;
