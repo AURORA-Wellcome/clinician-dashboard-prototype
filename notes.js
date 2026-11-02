@@ -366,7 +366,7 @@
     }
     if (auth.authStateReady) await auth.authStateReady();
     const user = auth.currentUser || (await authSdk.signInAnonymously(auth)).user;
-    const col = fs.collection(db, 'boards', board, 'notes');
+    const col = fs.collection(db, 'boards', board, 'notes'), scores = fs.collection(db, 'boards', board, 'scores');
     const ref = (id) => fs.doc(col, id);
     const millis = (t) => (t && typeof t.toMillis === 'function' ? t.toMillis() : t || 0);
     return {
@@ -381,7 +381,12 @@
       update: (id, patch) => fs.updateDoc(ref(id), { ...patch, updatedAt: fs.serverTimestamp() }),
       remove: (id) => fs.deleteDoc(ref(id)),
       // +1s change only the plus map, as the rules require
-      plus: (id, on) => fs.updateDoc(ref(id), { [`plus.${user.uid}`]: on ? true : fs.deleteField() })
+      plus: (id, on) => fs.updateDoc(ref(id), { [`plus.${user.uid}`]: on ? true : fs.deleteField() }),
+      // The landing page's shooting star game shares its high scores through this connection
+      leaderboard: {
+        top: () => fs.getDocs(fs.query(scores, fs.orderBy('points', 'desc'), fs.limit(10))).then((snap) => snap.docs.map((d) => d.data())),
+        add: (initials, points) => fs.addDoc(scores, { uid: user.uid, initials, points, at: fs.serverTimestamp() })
+      }
     };
   }
   // Copies notes kept in this browser to the shared board, notes before their replies, then forgets the copies
@@ -408,6 +413,7 @@
     if (cfg && BOARD && /^https?:$/.test(location.protocol)) {
       try {
         store = await sharedStore(cfg, BOARD);
+        window.auroraLeaderboard = store.leaderboard;
         let carried = 0;
         if (lsGet('aurora-notes-carry') === '1') { lsSet('aurora-notes-carry', null); carried = await carryOver(store); }
         status = { ok: true, text: 'Shared with everyone who has the review link.' + (carried ? ` Copied ${plural(carried, 'note')} from this browser.` : '') };

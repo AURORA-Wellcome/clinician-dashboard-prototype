@@ -96,6 +96,108 @@ img{display:block;max-width:100%;height:auto}
 /* The third crosses to the right, so its tail is mirrored to trail up and to the left */
 .bn-m3{left:16%;top:5%}
 .bn-m3 i{width:95px;transform:scaleX(-1) rotate(-25deg)}
+/* The shooting star game: falling stars, whose color, size and tail come from the page's script; a spark from the
+   chimney and the bloom it makes; shards and points where a star bursts; and the score */
+.banner{-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.bn-playing{cursor:crosshair}
+.bn-playing .bn-meteor{visibility:hidden}
+.bn-fall,.bn-shot,.bn-bloom,.bn-shard,.bn-pop{position:absolute;left:0;top:0;opacity:0}
+.bn-fall{--c:246 249 255;--z:2px;--len:90px;width:0;height:0}
+.bn-fall b{position:absolute;left:0;top:calc(var(--z) / -2);width:var(--len);height:var(--z);background:linear-gradient(90deg,rgb(var(--c)/.95),rgb(var(--c)/0));clip-path:polygon(0 0,100% 50%,0 100%)}
+.bn-fall::before{content:"";position:absolute;left:calc(var(--z) * -2);top:calc(var(--z) * -2);width:calc(var(--z) * 4);height:calc(var(--z) * 4);border-radius:50%;background:radial-gradient(closest-side,rgb(255 255 255/.95),rgb(var(--c)/.7) 40%,rgb(var(--c)/0))}
+.bn-shot{height:2px;margin-top:-1px;border-radius:2px;transform-origin:0 50%;width:calc(var(--bn-h) * .14);background:linear-gradient(90deg,#FFE3B0,rgba(255,176,96,0));box-shadow:0 0 5px rgba(255,170,90,.75)}
+.bn-bloom{--r:calc(var(--bn-h) * .2);width:calc(var(--r) * 2);height:calc(var(--r) * 2);margin:calc(var(--r) * -1) 0 0 calc(var(--r) * -1);border-radius:50%;background:radial-gradient(closest-side,rgba(255,240,214,.8),rgba(255,206,140,.5) 42%,rgba(255,176,96,.2) 72%,rgba(255,176,96,0))}
+.bn-shard{--c:246 249 255;width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border-radius:50%;background:rgb(var(--c));box-shadow:0 0 4px rgb(var(--c)/.8)}
+.bn-caught-stars,.bn-front{position:absolute;inset:0}
+.bn-front{pointer-events:none}
+/* A star landing: the flash lies behind the forest, so the trees show against it; the ring, debris and smoke lie in front */
+.bn-flash,.bn-ring,.bn-debris,.bn-haze,.bn-ember{--c:255 178 104;position:absolute;left:0;top:0;opacity:0}
+.bn-flash{width:200px;height:200px;margin:-100px 0 0 -100px;border-radius:50%;background:radial-gradient(closest-side,rgb(255 255 255/.95),rgb(var(--c)/.8) 26%,rgb(var(--c)/.28) 60%,rgb(var(--c)/0))}
+.bn-ring{width:200px;height:200px;margin:-100px 0 0 -100px;border-radius:50%;background:radial-gradient(closest-side,rgb(var(--c)/0) 62%,rgb(var(--c)/.5) 84%,rgb(var(--c)/.75) 92%,rgb(var(--c)/0))}
+.bn-debris{width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border-radius:50%;background:rgb(var(--c));box-shadow:0 0 5px 1px rgb(var(--c)/.8)}
+.bn-haze{width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;background:radial-gradient(closest-side,rgba(196,204,232,.42),rgba(196,204,232,0))}
+.bn-ember{width:44px;height:26px;margin:-13px 0 0 -22px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,206,120,.9),rgba(255,146,70,.42) 52%,rgba(255,120,60,0))}
+.bn-caught{--c:246 249 255;position:absolute;left:0;top:0;width:20px;height:20px;margin:-10px 0 0 -10px;opacity:0;background:radial-gradient(circle,rgb(255 255 255/.95) 0 1px,rgb(var(--c)/.8) 2px,rgb(var(--c)/0) 6.5px),linear-gradient(90deg,rgb(var(--c)/0),rgb(var(--c)/.75),rgb(var(--c)/0)) center/100% 1px no-repeat,linear-gradient(0deg,rgb(var(--c)/0),rgb(var(--c)/.75),rgb(var(--c)/0)) center/1px 100% no-repeat}
+.bn-pop{--c:246 249 255;font-size:.8125rem;font-style:normal;font-weight:600;line-height:1;color:rgb(var(--c));text-shadow:0 0 6px #060D26,0 0 2px #060D26;white-space:nowrap}
+.bn-score{position:absolute;left:50%;top:10px;transform:translateX(-50%);font-size:.875rem;font-weight:600;line-height:1;letter-spacing:.02em;color:rgba(232,238,255,.95);text-shadow:0 0 6px #060D26,0 0 2px #060D26;white-space:nowrap;opacity:0;transition:opacity .9s ease-in-out}
+.bn-score.on{opacity:1;transition-duration:.3s}
+.bn-score.link{pointer-events:auto;cursor:pointer}
+.bn-score.link span{text-decoration:underline;text-underline-offset:3px}
+/* The game's high score table: an arcade's table set under the banner's own sky, with the aurora, tonight's moon and the
+   treeline. The font (from Press Start 2P, SIL Open Font License) loads only when the table opens; it is sharpest at 8, 16
+   and 24 px, or 12 px on a high-resolution screen. */
+@font-face{font-family:"AURORA Arcade";src:url(design/landing/arcade.woff2) format("woff2");font-display:swap}
+.arcade{box-sizing:border-box;width:min(94vw,520px);max-height:94vh;padding:0;scrollbar-width:thin;scrollbar-color:#5B7BE0 transparent;border:4px solid transparent;border-radius:6px;color:#E8EEFF;background:linear-gradient(180deg,#060A22,#0B1338 58%,#16235E) padding-box,linear-gradient(135deg,#62C9B8,#5B7BE0 34%,#B98BEF 66%,#D96AE8) border-box;box-shadow:0 0 34px rgba(91,123,224,.6),0 0 110px rgba(185,139,239,.38);font:400 16px/1.75 "AURORA Arcade",ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase;-webkit-font-smoothing:none}
+.arcade::backdrop{background:rgba(3,5,18,.66);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.arcade-screen{position:relative;isolation:isolate;overflow:hidden;padding:32px 34px 56px}
+.arcade-sky{position:absolute;inset:0;z-index:-1;pointer-events:none}
+.arcade-sky::before{content:"";position:absolute;inset:-6% -6% 50%;background:repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 3px,rgba(255,255,255,0) 3px 12px),radial-gradient(52% 62% at 16% 0,rgba(98,201,184,.42),rgba(98,201,184,0) 72%),radial-gradient(50% 72% at 52% 0,rgba(91,123,224,.5),rgba(91,123,224,0) 74%),radial-gradient(42% 62% at 86% 0,rgba(217,106,232,.34),rgba(217,106,232,0) 74%);-webkit-mask-image:linear-gradient(180deg,#000 12%,transparent 88%);mask-image:linear-gradient(180deg,#000 12%,transparent 88%)}
+.arcade-sky::after{content:"";position:absolute;inset:0;background-repeat:no-repeat;background-image:radial-gradient(circle,#fff 0 1px,transparent 1.6px),radial-gradient(circle,#DDE7FF 0 1px,transparent 1.6px),radial-gradient(circle,#fff 0 .8px,transparent 1.4px),radial-gradient(circle,#C9D8FF 0 1px,transparent 1.6px),radial-gradient(circle,#fff 0 .8px,transparent 1.4px),radial-gradient(circle,#DDE7FF 0 1px,transparent 1.6px),radial-gradient(circle,#fff 0 .8px,transparent 1.4px),radial-gradient(circle,#C9D8FF 0 .8px,transparent 1.4px);background-size:6px 6px;background-position:6% 5%,22% 11%,36% 3%,63% 8%,74% 13%,93% 22%,3% 60%,97% 72%;opacity:.8}
+.arcade-moon{position:absolute;top:14px;right:16px;width:40px;height:40px;background-size:contain;filter:drop-shadow(0 0 8px rgba(255,226,160,.55))}
+.arcade-forest{position:absolute;left:0;right:0;bottom:0;height:72px;background:#04071A;-webkit-mask:url(design/landing/forest.svg) 22% calc(100% + 2.2em)/360% auto no-repeat;mask:url(design/landing/forest.svg) 22% calc(100% + 2.2em)/360% auto no-repeat}
+.arcade-cabin{position:absolute;right:13%;bottom:9px;width:7px;height:4px;background:#FFC46B;box-shadow:0 0 9px 2px rgba(255,170,80,.75)}
+.arcade-streak{position:absolute;left:0;top:0;width:70px;height:2px;opacity:0;background:linear-gradient(90deg,#F6F9FF,rgba(220,232,255,0));transform-origin:0 50%}
+.arcade-screen::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.13) 0 1px,transparent 1px 3px),radial-gradient(115% 90% at 50% 42%,rgba(0,0,0,0) 62%,rgba(0,0,0,.42))}
+.arcade h3{display:flex;align-items:center;justify-content:center;gap:14px;margin:0 0 22px;font:inherit;font-size:24px;line-height:1.25;color:#FFC44D}
+.arcade h3 span{color:transparent;background:linear-gradient(180deg,#FFF8D2 0 44%,#FFC44D 44% 60%,#FF8A3D 60% 100%);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 3px 0 #8E2B4E) drop-shadow(0 0 12px rgba(255,180,90,.5))}
+.arcade h3 i,.arcade tbody tr:nth-child(-n+3) td:first-child::before{background:radial-gradient(circle,#fff 0 12%,currentColor 18%,transparent 46%),linear-gradient(90deg,transparent,currentColor,transparent) center/100% 2px no-repeat,linear-gradient(0deg,transparent,currentColor,transparent) center/2px 100% no-repeat}
+.arcade h3 i{flex:none;width:20px;height:20px}
+.arcade table{width:100%;border-collapse:separate;border-spacing:0}
+.arcade th{padding:0 0 10px;font-weight:400;font-size:.75em;letter-spacing:.06em;text-align:left;color:#A8B9F2}
+.arcade th:first-child,.arcade td:first-child{padding-left:1.25em;padding-right:.75em;width:1%;white-space:nowrap}
+.arcade tbody td{position:relative;padding-top:.28em;padding-bottom:.28em;line-height:1.3;text-shadow:0 0 9px color-mix(in srgb,currentColor 60%,transparent)}
+.arcade th:last-child,.arcade td:last-child{width:1%;padding-left:.75em;padding-right:.2em;text-align:right;white-space:nowrap}
+.arcade tbody td:nth-child(2){background:linear-gradient(90deg,color-mix(in srgb,currentColor 55%,transparent) 0 .25em,transparent .25em) 3.5em 62%/.75em .25em repeat-x}
+.arcade tbody tr:nth-child(-n+3) td:first-child::before{content:"";position:absolute;left:0;top:50%;width:.9em;height:.9em;margin-top:-.45em}
+.arcade tbody tr:nth-child(1) td{color:#FFE27A}
+.arcade tbody tr:nth-child(2) td{color:#E9EEFF}
+.arcade tbody tr:nth-child(3) td{color:#FFB98A}
+.arcade tbody tr:nth-child(4) td{color:#8CF0D6}
+.arcade tbody tr:nth-child(5) td{color:#7FE5E6}
+.arcade tbody tr:nth-child(6) td{color:#7FD1FF}
+.arcade tbody tr:nth-child(7) td{color:#92BEFF}
+.arcade tbody tr:nth-child(8) td{color:#AEAAFF}
+.arcade tbody tr:nth-child(9) td{color:#C8A6FF}
+.arcade tbody tr:nth-child(10) td{color:#E6A4F2}
+.arcade tbody tr.empty td{opacity:.42}
+.arcade tbody tr.empty td:nth-child(2){background:none}
+.arcade tbody tr.mine td{color:#120B2E;text-shadow:none;background:#FFD66B}
+.arcade tbody tr.mine td:first-child{border-radius:3px 0 0 3px}
+.arcade tbody tr.mine td:last-child{border-radius:0 3px 3px 0;padding-right:.4em}
+.arcade form,.arcade-done{margin-top:20px;text-align:center}
+.arcade p{margin:0 0 8px}
+.arcade-made{color:#8CF0D6;text-shadow:0 0 12px rgba(140,240,214,.75)}
+.arcade label{display:block;font-size:.75em;color:#E8EEFF}
+.arcade input{display:block;box-sizing:content-box;width:4.2em;margin:8px auto 10px;padding:4px 0 8px .4em;border:0;border-radius:0;color:#FFE27A;background:linear-gradient(90deg,#FFC44D 0 1em,transparent 1em) .4em 100%/1.4em 4px repeat-x;font:inherit;font-size:1.5em;line-height:1.2;letter-spacing:.4em;text-transform:uppercase;text-shadow:0 0 12px rgba(255,214,120,.75);caret-color:#FFE27A;outline:none}
+.arcade-note{font-size:.625em;color:#A8B9F2}
+.arcade-err{color:#FFB46A}
+.arcade-err:empty{display:none}
+.arcade button{margin:10px 7px 0;padding:11px 16px;border:0;border-radius:3px;color:#1A1033;background:linear-gradient(180deg,#FFE27A,#FFB24A);box-shadow:0 4px 0 #A8512A,0 0 16px rgba(255,180,90,.35);font:inherit;font-size:.75em;line-height:1;text-transform:uppercase;cursor:pointer}
+.arcade button:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 #A8512A}
+.arcade button:disabled{opacity:.6;cursor:default}
+.arcade button.quiet{color:#D6E0FF;background:rgba(159,178,240,.14);box-shadow:inset 0 0 0 2px rgba(159,178,240,.6)}
+.arcade button:hover:not(:disabled),.arcade button:focus-visible{outline:2px solid #F6F9FF;outline-offset:3px}
+.arcade [hidden]{display:none}
+@media (max-width:480px){.arcade{font-size:12px}.arcade-screen{padding:24px 18px 44px}.arcade h3{gap:10px;margin-bottom:18px;font-size:16px}.arcade h3 i{width:14px;height:14px}.arcade-moon{top:9px;right:10px;width:26px;height:26px}.arcade-forest{height:46px}}
+@media (max-width:340px){.arcade{font-size:10px}.arcade-screen{padding:20px 14px 38px}}
+@media (max-height:760px){.arcade-screen{padding-top:22px;padding-bottom:40px}.arcade h3{margin-bottom:14px}.arcade tbody td{padding-top:.16em;padding-bottom:.16em}.arcade form,.arcade-done{margin-top:12px}.arcade p{margin-bottom:4px}.arcade input{margin:4px auto 6px}.arcade button{margin-top:6px}.arcade-forest{height:56px}}
+@media (prefers-reduced-motion:no-preference){
+  .arcade-rows-reveal tr{animation:arcade-row .32s steps(4) both;animation-delay:calc(var(--i) * 60ms)}
+  .arcade h3 i{animation:arcade-twinkle 1.5s ease-in-out infinite alternate}
+  .arcade h3 i:last-child{animation-delay:-.7s}
+  .arcade tbody tr:nth-child(1) td:first-child::before{animation:arcade-twinkle 1.2s ease-in-out infinite alternate}
+  .arcade-sky::before{animation:arcade-aurora 7s ease-in-out infinite alternate}
+  .arcade-sky::after{animation:arcade-stars 2.6s ease-in-out infinite alternate}
+  .arcade-streak{animation:arcade-streak 6.5s linear -2s infinite}
+  .arcade tbody tr.mine td{animation:arcade-mine 1.1s ease-in-out infinite alternate}
+  .arcade-made{animation:arcade-mine 1.1s ease-in-out infinite alternate}
+}
+@keyframes arcade-row{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+@keyframes arcade-twinkle{from{opacity:.55;transform:scale(.72)}to{opacity:1;transform:scale(1.08) rotate(20deg)}}
+@keyframes arcade-aurora{from{opacity:.72;transform:translateX(-2.5%)}to{opacity:1;transform:translateX(2.5%)}}
+@keyframes arcade-stars{from{opacity:.55}to{opacity:.95}}
+@keyframes arcade-streak{0%,74%{opacity:0;transform:translate(400px,8px) rotate(-155deg)}78%{opacity:1}90%,100%{opacity:0;transform:translate(150px,120px) rotate(-155deg)}}
+@keyframes arcade-mine{from{opacity:.78}to{opacity:1}}
 /* A far-off airliner now and then: its red beacon and a white strobe blink in turn as it crosses slowly, as an
    airliner's lights look from the ground. It is much nearer than the aurora, so it passes in front of the curtains. The
    wrapper covers the banner, so its path can be set in percent of the banner's width and height; the lights sit at the
@@ -122,7 +224,7 @@ img{display:block;max-width:100%;height:auto}
 /* The Big Dipper's lines and names: shown while the pointer is near it, or for a few seconds after a tap */
 .bn-figure,.bn-label{opacity:0;transition:opacity .9s ease-in-out}
 .bn-dipper-on .bn-figure,.bn-dipper-on .bn-label{opacity:1;transition-duration:.5s}
-.bn-labels{position:absolute;inset:0;pointer-events:none}
+.bn-labels{position:absolute;inset:0;z-index:1;pointer-events:none}
 .bn-label{position:absolute;left:0;top:0;font-size:.8125rem;line-height:1;letter-spacing:.02em;color:rgba(222,230,255,.88);text-shadow:0 0 6px #060D26,0 0 2px #060D26;white-space:nowrap}
 /* Clicking the cabin stokes its fire: a puff of smoke (i) and a few sparks (b) from the chimney */
 .bn-puff{position:absolute;width:0;height:0}
@@ -652,7 +754,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       { opacity: 0, transform: `${to} scale(.45) rotate(50deg)` }
     ], { duration: GLINT_MS });
     if (!st.accent) st.el.animate([{ opacity: st.base, easing: 'ease-in-out' }, { opacity: 1, offset: 0.2, easing: 'ease-in-out' }, { opacity: st.base }], { duration: STAR_MS });
-    lightTrees(st, now);
+    if (st.el) lightTrees(st, now); // (a star caught in the game has no element, and lights no trees)
     return true;
   };
   const tick = () => {
@@ -671,7 +773,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     // Near the cabin, it warms, and the pointer says it can be clicked
     const near = (at.x - cabin.x) ** 2 + (at.y - cabin.y) ** 2 < cabin.r ** 2;
     if (near !== cozyOn) { cozyOn = near; cozy.classList.toggle('on', near); banner.style.cursor = near ? 'pointer' : ''; }
-    const over = inDipper(at.x, at.y);
+    const over = !game && inDipper(at.x, at.y);
     if (over !== overDipper) { overDipper = over; showDipper(over ? 0 : 1200); }
   };
   banner.addEventListener('pointermove', (e) => {
@@ -696,7 +798,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     const b = banner.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top, now = performance.now();
     const d2 = (st) => (st.x - x) ** 2 + (st.y - y) ** 2;
     stars.filter((st) => now - st.last >= STAR_MS && d2(st) < 70 * 70).sort((p, q) => d2(p) - d2(q)).slice(0, 3).forEach((st) => sparkle(st, now));
-    if (inDipper(x, y)) showDipper(6000);
+    if (!game && inDipper(x, y)) showDipper(6000);
   });
   // Clicking the cabin stokes its fire: a puff of smoke and a few sparks from the chimney, and the window flares. Late
   // at night, when the fire has burned low, it burns bright again for half a minute.
@@ -730,10 +832,274 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       stokeTimer = setTimeout(() => banner.classList.remove('bn-stoked'), 30000);
     }
   };
+  // Clicking the sky starts a game of catching shooting stars, in the spirit of Missile Command. Each click sends a spark
+  // up from the chimney that blooms there, and a shooting star that touches a bloom bursts for points. As with real
+  // meteors, a star's color follows its speed, from slow and orange to fast and violet, and its size varies separately.
+  // Faster, smaller stars score more, and catching several in one bloom multiplies their points. A caught star stays where
+  // it was, twinkling, for the rest of the game. Stars come gradually faster and more often until five have landed, each in
+  // a flash behind the trees, and an ember stays glowing where it fell. A game also ends if the banner is scrolled away, the
+  // tab is hidden or the window is resized. Scores stay in the browser, to compare one game with the others.
+  const LIVES = 5, BLOOM_MS = 1200, BLOOM_GROWN = 0.27, BLOOM_ACTIVE = 0.66, SCORES_KEY = 'aurora-banner-scores';
+  const STAR_COLORS = [[0, 255, 178, 104], [0.35, 255, 232, 184], [0.6, 242, 246, 255], [0.8, 136, 240, 214], [1, 196, 164, 255]];
+  const starColor = (speed) => {
+    const i = Math.max(1, STAR_COLORS.findIndex((c) => c[0] >= speed)), lo = STAR_COLORS[i - 1], hi = STAR_COLORS[i], t = (speed - lo[0]) / (hi[0] - lo[0]);
+    return [1, 2, 3].map((k) => Math.round(lo[k] + (hi[k] - lo[k]) * t)).join(' ');
+  };
+  const gamePiece = (className) => glints.appendChild(Object.assign(document.createElement('i'), { className }));
+  const falling = Array.from({ length: 16 }, () => { const el = gamePiece('bn-fall'); el.appendChild(document.createElement('b')); return { el, anim: null }; });
+  const shots = Array.from({ length: 6 }, () => ({ el: gamePiece('bn-shot'), until: 0 }));
+  const blooms = Array.from({ length: 6 }, () => ({ el: gamePiece('bn-bloom'), until: 0, start: 0, x: 0, y: 0, r: 0, hits: 0 }));
+  const shards = Array.from({ length: 30 }, () => gamePiece('bn-shard')), pops = Array.from({ length: 8 }, () => gamePiece('bn-pop'));
+  const caughtBox = glints.appendChild(Object.assign(document.createElement('div'), { className: 'bn-caught-stars' }));
+  const caughtStars = Array.from({ length: 40 }, () => caughtBox.appendChild(Object.assign(document.createElement('i'), { className: 'bn-caught' })));
+  const front = banner.appendChild(Object.assign(document.createElement('div'), { className: 'bn-front' }));
+  const frontPiece = (className) => front.appendChild(Object.assign(document.createElement('i'), { className }));
+  const flashes = Array.from({ length: 3 }, () => gamePiece('bn-flash')), rings = Array.from({ length: 3 }, () => frontPiece('bn-ring'));
+  const debris = Array.from({ length: 48 }, () => frontPiece('bn-debris')), hazes = Array.from({ length: 15 }, () => frontPiece('bn-haze'));
+  const embers = Array.from({ length: LIVES }, () => caughtBox.appendChild(Object.assign(document.createElement('i'), { className: 'bn-ember' })));
+  const score = banner.querySelector('.bn-labels').appendChild(Object.assign(document.createElement('span'), { className: 'bn-score' }));
+  score.addEventListener('click', (e) => { e.stopPropagation(); window.auroraArcade.show(); });
+  let game = null, gameOver = -Infinity, scoreTimer = 0, shardNext = 0, popNext = 0, caughtNext = 0, caughtFade = null, flashNext = 0, debrisNext = 0, hazeNext = 0;
+  const number = (n) => n.toLocaleString('en-US');
+  const ordinal = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'}`;
+  // The hundred best scores and how many games were played, in this browser. Nothing leaves it.
+  const readScores = () => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SCORES_KEY));
+      if (saved && Array.isArray(saved.scores) && Number.isFinite(saved.games)) return saved;
+    } catch (e) { /* blocked or unreadable */ }
+    return { games: 0, scores: [] };
+  };
+  const saveScore = (points) => {
+    const saved = readScores(), best = saved.scores[0] || 0;
+    saved.games += 1;
+    saved.scores = [...saved.scores, points].sort((p, q) => q - p).slice(0, 100);
+    try { localStorage.setItem(SCORES_KEY, JSON.stringify(saved)); } catch (e) { /* blocked */ }
+    return { best, games: saved.games, rank: saved.scores.indexOf(points) + 1 };
+  };
+  const clearCaught = () => {
+    if (caughtFade) { caughtFade.cancel(); caughtFade = null; }
+    [...caughtStars, ...embers].forEach((el) => el.getAnimations().forEach((a) => a.cancel()));
+  };
+  const launch = (x, y) => {
+    const now = performance.now(), shot = shots.find((s) => s.until <= now), bloom = blooms.find((s) => s.until <= now);
+    if (!shot || !bloom) return;
+    // From the chimney, or from the forest when a narrow banner crops the cabin; blooms stay above the trees
+    const b = banner.getBoundingClientRect(), p = puffBox.getBoundingClientRect(), px = p.left - b.left;
+    const from = px >= 0 && px <= b.width ? { x: px, y: p.top - b.top } : { x: b.width / 2, y: b.height * 0.85 };
+    const toY = Math.min(y, b.height * 0.8), ms = Math.min(450, Math.max(160, Math.hypot(x - from.x, toY - from.y) / 2));
+    const turn = `rotate(${Math.atan2(from.y - toY, from.x - x).toFixed(3)}rad)`;
+    shot.until = now + ms;
+    shot.el.animate([
+      { opacity: 1, transform: `translate(${from.x.toFixed(1)}px, ${from.y.toFixed(1)}px) ${turn}` },
+      { opacity: 1, transform: `translate(${x.toFixed(1)}px, ${toY.toFixed(1)}px) ${turn}` }
+    ], { duration: ms, easing: 'cubic-bezier(.3,.6,.5,1)' });
+    Object.assign(bloom, { until: now + ms + BLOOM_MS, start: now + ms, x, y: toY, r: b.height * 0.2, hits: 0 });
+    const to = `translate(${x.toFixed(1)}px, ${toY.toFixed(1)}px)`;
+    bloom.el.animate([
+      { opacity: 0.95, transform: `${to} scale(.12)` },
+      { opacity: 0.85, transform: `${to} scale(1)`, offset: BLOOM_GROWN },
+      { opacity: 0.55, transform: `${to} scale(1.03)`, offset: BLOOM_ACTIVE },
+      { opacity: 0, transform: `${to} scale(1.08)` }
+    ], { duration: BLOOM_MS, delay: ms, easing: 'ease-out' });
+  };
+  // A larger star reaches a bloom a little sooner
+  const bloomAt = (x, y, reach, now) => blooms.find((g) => {
+    const t = (now - g.start) / BLOOM_MS;
+    return t >= 0 && t < BLOOM_ACTIVE && Math.hypot(x - g.x, y - g.y) < g.r * Math.min(1, t / BLOOM_GROWN) + reach;
+  });
+  const dropStar = (now, heat) => {
+    const s = falling.find((f) => !f.anim);
+    if (!s) return;
+    // Across the middle of a very wide banner, within reach, and down toward the forest. Fast stars grow more common as
+    // the game heats up.
+    const { w, h, ground } = game, span = Math.min(w, 1500), left = (w - span) / 2, speed = Math.random() ** (1.7 - heat), size = Math.random();
+    const x0 = left + span * (0.04 + 0.92 * Math.random()), y0 = -h * 0.06;
+    const x1 = Math.min(left + span * 0.98, Math.max(left + span * 0.02, x0 + (Math.random() * 2 - 1) * h * 1.1)), y1 = ground;
+    const turn = `rotate(${Math.atan2(y0 - y1, x0 - x1).toFixed(3)}rad)`, ms = (4200 - 2600 * speed) * (1 - 0.25 * heat), color = starColor(speed);
+    const points = 5 * Math.round((10 + 50 * speed + 30 * (1 - size) + 60 * speed * (1 - size)) / 5);
+    Object.assign(s, { x0, y0, x1, y1, start: now, ms, color, size, speed, points, reach: h * 0.05 * size });
+    s.el.style.cssText = `--c:${color};--z:${((1.4 + 3.4 * size) * h / 216).toFixed(1)}px;--len:${(h * (0.22 + 0.5 * speed)).toFixed(0)}px`;
+    s.anim = s.el.animate([
+      { opacity: 0, transform: `translate(${x0.toFixed(1)}px, ${y0.toFixed(1)}px) ${turn}` },
+      { opacity: 1, offset: 0.08 },
+      { opacity: 1, transform: `translate(${x1.toFixed(1)}px, ${y1.toFixed(1)}px) ${turn}` }
+    ], { duration: ms, easing: 'linear' });
+  };
+  // A burst: a sparkle, shards in the star's color, more for a larger star, and its points. Then the star stays where it was,
+  // twinkling, unless that would crowd the moon.
+  const burst = (s, x, y, times, now) => {
+    sparkle({ x, y, accent: true, base: 1, last: 0 }, now);
+    for (let i = 4 + Math.round(4 * s.size); i > 0; i--) {
+      const el = shards[shardNext++ % shards.length], a = Math.random() * 2 * Math.PI, d = 10 + Math.random() * 16 + 14 * s.size;
+      el.style.setProperty('--c', s.color);
+      el.animate([
+        { opacity: 1, transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)` },
+        { opacity: 0, transform: `translate(${(x + Math.cos(a) * d).toFixed(1)}px, ${(y + Math.sin(a) * d).toFixed(1)}px) scale(.4)` }
+      ], { duration: 450 + Math.random() * 250, easing: 'cubic-bezier(.15,.7,.35,1)' });
+    }
+    if (Math.hypot(x - game.moonX, y - game.moonY) > game.moonClear) {
+      const star = caughtStars[caughtNext++ % caughtStars.length], to = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+      star.getAnimations().forEach((a) => a.cancel());
+      star.style.setProperty('--c', s.color);
+      star.animate([
+        { opacity: 0, transform: `${to} scale(.2) rotate(0deg)` },
+        { opacity: 1, transform: `${to} scale(${(1.5 + 0.5 * s.size).toFixed(2)}) rotate(45deg)`, offset: 0.4 },
+        { opacity: 0.9, transform: `${to} scale(.7) rotate(90deg)` }
+      ], { duration: 900, easing: 'ease-out' });
+      star.animate([
+        { opacity: 0.9, transform: `${to} scale(.7) rotate(90deg)` },
+        { opacity: 0.45, transform: `${to} scale(.45) rotate(90deg)` }
+      ], { duration: 900 + Math.random() * 1100, delay: 900, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' });
+    }
+    const pop = pops[popNext++ % pops.length], px = Math.min(game.w - 34, Math.max(34, x)), py = Math.max(22, y);
+    pop.textContent = times > 1 ? `+${number(s.points * times)} ×${times}` : `+${s.points}`;
+    pop.style.setProperty('--c', s.color);
+    pop.animate([
+      { opacity: 0, transform: `translate(${px.toFixed(1)}px, ${(py - 4).toFixed(1)}px) translate(-50%, -100%) scale(.8)` },
+      { opacity: 1, transform: `translate(${px.toFixed(1)}px, ${(py - 9).toFixed(1)}px) translate(-50%, -100%) scale(1)`, offset: 0.15 },
+      { opacity: 1, transform: `translate(${px.toFixed(1)}px, ${(py - 15).toFixed(1)}px) translate(-50%, -100%) scale(1)`, offset: 0.6 },
+      { opacity: 0, transform: `translate(${px.toFixed(1)}px, ${(py - 24).toFixed(1)}px) translate(-50%, -100%) scale(1)` }
+    ], { duration: 1000, easing: 'ease-out' });
+  };
+  // A landing, in the star's color: a larger star makes a bigger flash and more debris, and a faster one throws it higher.
+  // The treetops catch the light, and a landing near the cabin stirs its fire.
+  const landing = (s, now) => {
+    const { h } = game, x = s.x1, y = s.y1, to = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`, reach = h * (0.28 + 0.42 * s.size) / 100;
+    const flash = flashes[flashNext % flashes.length], ring = rings[flashNext % rings.length];
+    flashNext += 1;
+    flash.style.setProperty('--c', s.color);
+    flash.animate([
+      { opacity: 1, transform: `${to} scale(${(reach * 0.25).toFixed(2)})`, easing: 'cubic-bezier(.1,.8,.3,1)' },
+      { opacity: 0.85, transform: `${to} scale(${reach.toFixed(2)})`, offset: 0.28, easing: 'ease-in' },
+      { opacity: 0, transform: `${to} scale(${(reach * 1.25).toFixed(2)})` }
+    ], { duration: 800 });
+    ring.style.setProperty('--c', s.color);
+    ring.animate([
+      { opacity: 0.95, transform: `${to} scale(${(reach * 0.1).toFixed(2)}, ${(reach * 0.03).toFixed(2)})` },
+      { opacity: 0, transform: `${to} scale(${(reach * 1.5).toFixed(2)}, ${(reach * 0.34).toFixed(2)})` }
+    ], { duration: 650, easing: 'cubic-bezier(.15,.7,.35,1)' });
+    // Debris in arcs, sampled along its fall
+    for (let i = 6 + Math.round(10 * s.size); i > 0; i--) {
+      const el = debris[debrisNext++ % debris.length], vx = (Math.random() * 2 - 1) * h * (0.4 + 0.5 * s.size), vy = h * (0.5 + Math.random() * 0.5) * (0.8 + 0.9 * s.speed), fall = h * 2.1, T = 0.9 + Math.random() * 0.5;
+      el.style.setProperty('--c', i % 3 ? s.color : '255 196 110');
+      el.animate(Array.from({ length: 7 }, (_, k) => {
+        const u = T * k / 6;
+        return { opacity: k < 4 ? 1 : (6 - k) / 3, transform: `translate(${(x + vx * u).toFixed(1)}px, ${(y - vy * u + 0.5 * fall * u * u).toFixed(1)}px)` };
+      }), { duration: T * 1000, easing: 'linear' });
+    }
+    // Smoke, rising and drifting on the same wind as the chimney's
+    for (let i = 3; i > 0; i--) {
+      const el = hazes[hazeNext++ % hazes.length], dx = 10 + Math.random() * 26, rise = h * (0.14 + Math.random() * 0.16), big = 0.9 + 1.1 * s.size;
+      el.animate([
+        { opacity: 0, transform: `${to} scale(.25)` },
+        { opacity: 0.85, transform: `translate(${(x + dx * 0.2).toFixed(1)}px, ${(y - rise * 0.25).toFixed(1)}px) scale(${(big * 0.6).toFixed(2)})`, offset: 0.2 },
+        { opacity: 0, transform: `translate(${(x + dx).toFixed(1)}px, ${(y - rise).toFixed(1)}px) scale(${(big * 1.5).toFixed(2)})` }
+      ], { duration: 2000 + Math.random() * 900, delay: 120 * (3 - i), easing: 'cubic-bezier(.2,.6,.4,1)', fill: 'backwards' });
+    }
+    // An ember stays where it fell until the game's stars fade
+    const ember = embers[game.missed % embers.length], at = `translate(${x.toFixed(1)}px, ${(y + 2).toFixed(1)}px)`;
+    ember.getAnimations().forEach((a) => a.cancel());
+    ember.animate([{ opacity: 0.45, transform: `${at} scale(.8)` }, { opacity: 1, transform: `${at} scale(${(0.9 + 0.5 * s.size).toFixed(2)})` }], { duration: 500 + Math.random() * 700, delay: 500, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out', fill: 'backwards' });
+    lightTrees({ x, y: h * 0.5, accent: false, base: 0.5 + 0.35 * s.size }, now);
+    if (Math.abs(x - cabin.x) < h * 0.4) stoke();
+    // What it cost
+    const pop = pops[popNext++ % pops.length], px = Math.min(game.w - 34, Math.max(34, x)), py = y - h * 0.14;
+    pop.textContent = '−1 life';
+    pop.style.setProperty('--c', '255 196 130');
+    pop.animate([
+      { opacity: 0, transform: `translate(${px.toFixed(1)}px, ${py.toFixed(1)}px) translate(-50%, -100%) scale(.8)` },
+      { opacity: 1, transform: `translate(${px.toFixed(1)}px, ${(py - 6).toFixed(1)}px) translate(-50%, -100%) scale(1)`, offset: 0.15 },
+      { opacity: 1, transform: `translate(${px.toFixed(1)}px, ${(py - 12).toFixed(1)}px) translate(-50%, -100%) scale(1)`, offset: 0.6 },
+      { opacity: 0, transform: `translate(${px.toFixed(1)}px, ${(py - 20).toFixed(1)}px) translate(-50%, -100%) scale(1)` }
+    ], { duration: 1100, easing: 'ease-out' });
+    score.animate([{ color: '#FFB46A' }, { color: 'rgba(232,238,255,.95)' }], { duration: 800, easing: 'ease-out' });
+  };
+  const showScore = () => {
+    const left = LIVES - game.missed, beat = game.best && game.points > game.best;
+    score.textContent = `${beat ? 'New best! ' : ''}${number(game.points)} points · ${left} ${left === 1 ? 'life' : 'lives'} left`;
+  };
+  const endGame = (showResult) => {
+    // The stars still falling fade where they are
+    falling.forEach((s) => {
+      if (!s.anim) return;
+      const fall = s.anim;
+      s.anim = null;
+      fall.pause();
+      s.el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500 }).onfinish = () => fall.cancel();
+    });
+    banner.classList.remove('bn-playing');
+    const { points, w: width } = game;
+    game = null;
+    gameOver = performance.now();
+    const past = points ? saveScore(points) : null;
+    if (showResult && past) {
+      if (!past.best) score.textContent = `${number(points)} points`;
+      else if (points > past.best) score.textContent = `New best: ${number(points)} points!`;
+      else score.textContent = `${number(points)} points · ${past.rank <= 100 ? `${ordinal(past.rank)} best of ${past.games} · ` : ''}Best ${number(past.best)}`;
+      const hideScore = () => score.classList.remove('on', 'link');
+      scoreTimer = setTimeout(hideScore, 6000);
+      // With the review link, the shared high scores: a top ten score opens them, and this line does too. (On a phone, the
+      // line drops the comparison to make room.)
+      window.auroraArcade.gameEnded(points).then((shared) => {
+        if (!shared || game) return;
+        if (width < 520) score.textContent = `${number(points)} points`;
+        score.append(' · ', Object.assign(document.createElement('span'), { textContent: 'High scores' }));
+        score.classList.add('link');
+        clearTimeout(scoreTimer);
+        scoreTimer = setTimeout(hideScore, 12000);
+      });
+    } else score.classList.remove('on');
+    // The caught stars and embers outlast the score a little, then fade
+    if (showResult) {
+      caughtFade = caughtBox.animate([{ opacity: 1 }, { opacity: 1, offset: 0.6 }, { opacity: 0 }], { duration: 9000 });
+      caughtFade.onfinish = clearCaught;
+    } else clearCaught();
+  };
+  const gameFrame = () => {
+    if (!game) return;
+    const now = performance.now(), b = banner.getBoundingClientRect();
+    if (document.hidden || b.bottom < 0 || b.width !== game.w) { endGame(false); return; }
+    // The pace: from one star every 1.6 s toward one every 0.32 s, about half way there after 35 s
+    const heat = 1 - Math.exp((game.start - now) / 50000);
+    if (now >= game.next) { dropStar(now, heat); game.next = now + 1600 - 1280 * heat; }
+    let changed = false;
+    for (const s of falling) {
+      if (!s.anim) continue;
+      const t = (now - s.start) / s.ms, x = s.x0 + (s.x1 - s.x0) * t, y = s.y0 + (s.y1 - s.y0) * t, g = t < 1 && bloomAt(x, y, s.reach, now);
+      if (t >= 1) {
+        s.anim = null; changed = true;
+        landing(s, now);
+        game.missed += 1;
+      } else if (g) {
+        s.anim.cancel(); s.anim = null; g.hits += 1; game.points += s.points * g.hits; changed = true;
+        burst(s, x, y, g.hits, now);
+      }
+    }
+    if (changed) showScore();
+    if (game.missed >= LIVES) endGame(true); else requestAnimationFrame(gameFrame);
+  };
+  const startGame = () => {
+    const now = performance.now(), b = banner.getBoundingClientRect(), moonBox = moonFace.getBoundingClientRect(), best = readScores().scores[0] || 0;
+    game = { start: now, next: now + 400, points: 0, missed: 0, w: b.width, h: b.height, best, ground: b.height - 44 * Math.max(b.width / 1600, b.height / 240),
+      moonX: moonBox.left + moonBox.width / 2 - b.left, moonY: moonBox.top + moonBox.height / 2 - b.top, moonClear: moonBox.width * 1.5 };
+    banner.classList.add('bn-playing');
+    clearTimeout(scoreTimer);
+    score.classList.remove('link');
+    clearCaught();
+    score.textContent = `Catch the shooting stars${best ? ` · Best ${number(best)}` : ''}`;
+    score.classList.add('on');
+    requestAnimationFrame(gameFrame);
+  };
+  // Outside a game, the cabin and the Big Dipper do what they always did; during one, every click sends a spark. The moment
+  // after a game ends, a click doesn't start another, so the last clicks don't hide the score.
   banner.addEventListener('click', (e) => {
     if (!stars) measure();
     const b = banner.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top;
-    if ((x - cabin.x) ** 2 + (y - cabin.y) ** 2 < cabin.r ** 2) stoke();
+    const onCabin = (x - cabin.x) ** 2 + (y - cabin.y) ** 2 < cabin.r ** 2;
+    if (onCabin) stoke();
+    if (!game && !onCabin && !inDipper(x, y) && performance.now() - gameOver > 1200) startGame();
+    if (game) launch(x, y);
   });
   // Now and then the aurora surges, as in a substorm: the main curtain brightens and greens over a pink fringe, and its
   // rays shimmer faster and ripple, for about 14 seconds. The first surge comes about a minute after the page opens,
@@ -763,6 +1129,109 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     <div class="code-actions"><button type="submit" class="button">Save</button><button type="button" class="linkbtn" id="code-cancel">Cancel</button></div>
   </form>
 </dialog>
+<dialog class="arcade" id="arcade" aria-labelledby="arcade-title">
+  <div class="arcade-screen">
+    <div class="arcade-sky" aria-hidden="true"><i class="arcade-moon" id="arcade-moon"></i><i class="arcade-streak"></i><i class="arcade-forest"></i><i class="arcade-cabin"></i></div>
+    <h3 id="arcade-title"><i aria-hidden="true"></i><span>High scores</span><i aria-hidden="true"></i></h3>
+    <table><thead><tr><th scope="col">Rank</th><th scope="col">Name</th><th scope="col">Score</th></tr></thead><tbody id="arcade-rows"></tbody></table>
+    <form id="arcade-form" hidden>
+      <p class="arcade-made" id="arcade-made"></p>
+      <label for="arcade-initials">Enter your initials</label>
+      <input id="arcade-initials" type="text" maxlength="3" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="arcade-note">
+      <p class="arcade-note" id="arcade-note">Shown to everyone with the review link</p>
+      <p class="arcade-err" id="arcade-err" role="alert"></p>
+      <button type="submit" id="arcade-save" disabled>Save</button><button type="button" class="quiet" id="arcade-skip">Skip</button>
+    </form>
+    <div class="arcade-done" id="arcade-done"><button type="button" id="arcade-close">Close</button></div>
+  </div>
+</dialog>
+<script>
+// The shooting star game's high scores, in the style of an arcade: the ten best among everyone with the review link. notes.js
+// makes the connection (window.auroraLeaderboard) when this browser holds the access code. Without one, or if the Firestore
+// rules refuse, the game keeps its scores in this browser only.
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const dlg = $('arcade'), rows = $('arcade-rows'), form = $('arcade-form'), input = $('arcade-initials'), save = $('arcade-save'), err = $('arcade-err');
+  const INITIALS_KEY = 'aurora-banner-initials', RANKS = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
+  let top = [], pending = null, saved = null;
+  const render = () => {
+    const list = pending ? [...top, pending].sort((p, q) => q.points - p.points).slice(0, 10) : top.slice(0, 10);
+    rows.replaceChildren(...RANKS.map((rank, i) => {
+      const entry = list[i], tr = document.createElement('tr');
+      tr.style.setProperty('--i', i);
+      if (!entry) tr.className = 'empty';
+      else if (entry === pending || entry === saved) tr.className = 'mine';
+      [rank, entry ? entry.initials : '---', entry ? entry.points.toLocaleString('en-US') : '---'].forEach((text) => tr.appendChild(Object.assign(document.createElement('td'), { textContent: text })));
+      return tr;
+    }));
+  };
+  const open = (entering) => {
+    form.hidden = !entering;
+    $('arcade-done').hidden = entering;
+    if (dlg.open) rows.classList.remove('arcade-rows-reveal'); // saving doesn't bring the rows in again
+    render();
+    if (!dlg.open) {
+      // The rows come in one by one, and the table shows tonight's moon, as drawn for the banner
+      rows.classList.add('arcade-rows-reveal');
+      setTimeout(() => rows.classList.remove('arcade-rows-reveal'), 1100);
+      const face = document.querySelector('.bn-moon-face'), moon = document.querySelector('.bn-moon');
+      $('arcade-moon').style.backgroundImage = moon.classList.contains('on') ? `url("${face.getAttribute('href')}")` : '';
+      dlg.showModal();
+    }
+    (entering ? input : $('arcade-close')).focus();
+  };
+  const load = async () => { top = await window.auroraLeaderboard.top(); };
+  input.addEventListener('input', () => {
+    if (!pending) return;
+    input.value = input.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
+    pending.initials = input.value.padEnd(3, '_');
+    save.disabled = !input.value;
+    err.textContent = '';
+    rows.querySelector('.mine td:nth-child(2)').textContent = pending.initials;
+  });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!input.value || !pending || save.disabled) return;
+    const initials = input.value, { points } = pending;
+    save.disabled = true;
+    try {
+      await window.auroraLeaderboard.add(initials, points);
+      try { localStorage.setItem(INITIALS_KEY, initials); } catch (x) { /* blocked */ }
+      await load();
+      pending = null;
+      saved = top.find((r) => r.initials === initials && r.points === points) || null;
+      open(false);
+    } catch (x) {
+      err.textContent = 'Not saved. Try again.';
+      save.disabled = false;
+    }
+  });
+  $('arcade-skip').addEventListener('click', () => dlg.close());
+  $('arcade-close').addEventListener('click', () => dlg.close());
+  dlg.addEventListener('close', () => { pending = null; saved = null; });
+  window.auroraArcade = {
+    // After a game: whether the shared scores can be reached. A score in the top ten opens them, to enter initials.
+    gameEnded: async (points) => {
+      if (!window.auroraLeaderboard) return false;
+      try { await load(); } catch (e) { return false; }
+      if (top.length < 10 || points > top[9].points) {
+        let last = '';
+        try { last = localStorage.getItem(INITIALS_KEY) || ''; } catch (e) { /* blocked */ }
+        input.value = last;
+        save.disabled = !last;
+        err.textContent = '';
+        $('arcade-made').textContent = !top.length || points > top[0].points ? 'New top score!' : 'You made the top 10!';
+        setTimeout(() => { pending = { initials: last.padEnd(3, '_'), points }; open(true); }, 800);
+      }
+      return true;
+    },
+    show: async () => {
+      try { await load(); } catch (e) { return; }
+      open(false);
+    }
+  };
+})();
+</script>
 <script>
 // Review notes are shared when this browser holds the review link's access code. notes.js reads it on every mockup
 // page (localStorage, same site), so this page can save it: from ?board= in its own link, or from the dialog.
