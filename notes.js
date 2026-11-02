@@ -485,6 +485,11 @@
   const panelFoot = h('div', { class: 'an-foot' });
   const panel = h('aside', { id: 'an-panel', class: 'an-panel an-ui', 'aria-label': 'Review notes', hidden: true }, panelHead, panelBody, panelFoot);
   const pins = h('div', { class: 'an-pins' });
+  // Pins a reviewer has dragged out of the way, as offsets in pixels from the spots they mark. They're kept in this
+  // browser, so a note stays where its writer put it for everyone else.
+  const readMoved = () => { try { return JSON.parse(lsGet('aurora-notes-moved') || '{}') || {}; } catch (e) { return {}; } };
+  const saveMoved = () => lsSet('aurora-notes-moved', Object.keys(moved).length ? JSON.stringify(moved) : null);
+  let moved = readMoved(), drag = null, dragged = false;
   const hlLabel = h('span', { class: 'an-hl-label' });
   const hl = h('div', { class: 'an-hl', hidden: true, 'aria-hidden': 'true' }, hlLabel);
   const live = h('p', { class: 'an-sr', 'aria-live': 'polite' });
@@ -510,6 +515,8 @@
     }
   }
   function renderPins(m) {
+    if (drag) return; // the pin being dragged stays put; the drop renders them again
+    const a = document.activeElement, keep = a && a.matches && a.matches('.an-pin') ? a.dataset.id : null;
     pins.replaceChildren();
     if (!ui.open) return;
     for (const n of m.visible) {
@@ -518,17 +525,80 @@
       if (!el) continue;
       const r = el.getBoundingClientRect();
       if (!r.width && !r.height) continue;
-      const left = r.left + window.scrollX + (n.x == null ? 0.03 : n.x) * r.width;
-      const top = r.top + window.scrollY + (n.y == null ? 0.1 : n.y) * r.height;
       const k = m.num.get(n.id);
       const what = { handout: 'handout', checkin: 'check-in' }[n.view] || 'page';
       const from = sameSpot(n) ? '' : n.pid !== page.pid ? `, written on ${n.pname || 'another patient'}’s ${what}` : ', written on another check-in';
-      pins.append(h('button', {
-        type: 'button', class: 'an-pin' + (ui.focus === n.id ? ' on' : '') + (n.resolved ? ' resolved' : ''),
-        style: `left:${left.toFixed(1)}px;top:${top.toFixed(1)}px`, 'aria-label': `Note ${k} by ${n.name}${from}: ${n.text}`,
-        onclick: () => focusNote(n.id, false)
-      }, String(k)));
+      const state = (ui.focus === n.id ? ' on' : '') + (n.resolved ? ' resolved' : '');
+      const pin = {
+        id: n.id, x: r.left + window.scrollX + (n.x == null ? 0.03 : n.x) * r.width, y: r.top + window.scrollY + (n.y == null ? 0.1 : n.y) * r.height,
+        line: h('div', { class: 'an-tail' + state, 'aria-hidden': 'true' }),
+        el: h('button', {
+          type: 'button', class: 'an-pin' + state, 'data-id': n.id, title: 'Drag to move it out of the way',
+          'aria-label': `Note ${k} by ${n.name}${from}: ${n.text}`,
+          onclick: () => { if (!dragged) focusNote(n.id, false); },
+          onpointerdown: (e) => startDrag(e, pin), onpointermove: moveDrag, onpointerup: endDrag, onpointercancel: endDrag,
+          onkeydown: (e) => nudge(e, pin)
+        }, String(k))
+      };
+      place(pin);
+      pins.prepend(pin.line); // under every pin
+      pins.append(pin.el);
     }
+    // A pin with focus keeps it when the pins are redrawn
+    const p = keep && pins.querySelector(`.an-pin[data-id="${keep}"]`);
+    if (p) p.focus({ preventScroll: true });
+  }
+  // A pin sits where it was dragged to, with a dashed line back to the spot it marks
+  function place(pin) {
+    const [dx, dy] = moved[pin.id] || [0, 0];
+    const left = Math.max(14, pin.x + dx), top = Math.max(14, pin.y + dy), len = Math.hypot(left - pin.x, top - pin.y);
+    Object.assign(pin.el.style, { left: `${left.toFixed(1)}px`, top: `${top.toFixed(1)}px` });
+    pin.line.hidden = len < 16; // a short line hides under the pin
+    Object.assign(pin.line.style, { left: `${pin.x.toFixed(1)}px`, top: `${pin.y.toFixed(1)}px`, width: `${len.toFixed(1)}px`, transform: `rotate(${Math.atan2(top - pin.y, left - pin.x).toFixed(4)}rad)` });
+  }
+  function startDrag(e, pin) {
+    if (e.button !== 0) return;
+    const [dx, dy] = moved[pin.id] || [0, 0];
+    drag = { pin, sx: e.clientX, sy: e.clientY, dx, dy, on: false };
+    pin.el.setPointerCapture(e.pointerId);
+  }
+  function moveDrag(e) {
+    if (!drag) return;
+    const mx = e.clientX - drag.sx, my = e.clientY - drag.sy;
+    if (!drag.on && Math.hypot(mx, my) < 5) return; // a click, so far
+    drag.on = true;
+    drag.pin.el.classList.add('dragging');
+    moved[drag.pin.id] = [Math.round(drag.dx + mx), Math.round(drag.dy + my)];
+    place(drag.pin);
+  }
+  function endDrag() {
+    if (!drag) return;
+    const d = drag;
+    drag = null;
+    d.pin.el.classList.remove('dragging');
+    if (!d.on) return;
+    // The click that ends a drag doesn't open the note
+    dragged = true;
+    setTimeout(() => { dragged = false; }, 0);
+    saveMoved();
+    schedule(); // the panel offers to put it back
+  }
+  // The arrow keys move a pin too, 10 pixels at a time, or 50 with Shift
+  function nudge(e, pin) {
+    const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    const step = e.shiftKey ? 50 : 10, [dx, dy] = moved[pin.id] || [0, 0];
+    moved[pin.id] = [dx + d[0] * step, dy + d[1] * step];
+    saveMoved();
+    place(pin);
+    schedule();
+  }
+  function putBack() {
+    notes.filter(here).forEach((n) => { delete moved[n.id]; });
+    saveMoved();
+    render(true);
+    announce('The pins are back in place.');
   }
   const typing = () => { const a = document.activeElement; return panel.contains(a) && /^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName); };
   function renderPanel(m, force) {
@@ -542,7 +612,8 @@
     const list = m.visible.filter((n) => (!onPage || n.pageKey === pk) && (ui.showResolved || !n.resolved));
     const resolvedN = m.visible.filter((n) => (!onPage || n.pageKey === pk) && n.resolved).length;
     const hidden = m.hidden.filter((n) => !onPage || n.pageKey === pk);
-    const seg = (label, value) => h('button', { type: 'button', class: ui.filter === value ? 'on' : '', 'aria-pressed': String(ui.filter === value), onclick: () => { ui.filter = value; render(true); } }, label);
+    const movedN = m.visible.filter((n) => here(n) && moved[n.id] && (ui.showResolved || !n.resolved)).length;
+    const seg =(label, value) => h('button', { type: 'button', class: ui.filter === value ? 'on' : '', 'aria-pressed': String(ui.filter === value), onclick: () => { ui.filter = value; render(true); } }, label);
     // Notes or Questions: the questions for the working group are on v3 only
     const qs = VERSION === 'v3' && !STATIC ? QUESTIONS : [];
     const toAnswer = qs.filter((q) => q.view === page.view && !m.answered.has(q.id)).length;
@@ -580,6 +651,8 @@
         h('button', { type: 'button', class: 'an-tool', onclick: () => setShowOthers(true) }, 'Show them now')) : null,
       ui.showOthers && !FACILITATOR ? h('p', { class: 'an-gate' }, 'You’re seeing others’ notes before adding your own. ',
         h('button', { type: 'button', class: 'an-tool', onclick: () => setShowOthers(false) }, 'Hide them until I add mine')) : null,
+      movedN ? h('p', { class: 'an-gate' }, `You’ve moved ${plural(movedN, 'pin')} on this page. Others still see ${movedN === 1 ? 'it' : 'them'} in place. `,
+        h('button', { type: 'button', class: 'an-tool', onclick: putBack }, movedN === 1 ? 'Put it back' : 'Put them back')) : null,
       items.length ? h('ol', { class: 'an-list' }, items)
         : h('p', { class: 'an-empty' }, onPage ? 'No notes on this page yet. What do you notice, like or suggest?' : 'No notes yet.'),
       resolvedN ? h('label', { class: 'an-check' }, h('input', { type: 'checkbox', checked: ui.showResolved, onchange: (e) => { ui.showResolved = e.target.checked; render(true); } }), ` Show resolved (${resolvedN})`) : null
@@ -958,12 +1031,12 @@
   let newer = 0, lastCheck = 0, bar = null, barDismissed = false;
   const ssGet = (k) => { try { return sessionStorage.getItem(k); } catch (e) { return null; } };
   const ssSet = (k, v) => { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) { /* blocked */ } };
-  // Typing, or partway through a note, reply, edit, answer or name; or, in v3, the handout's topics or wording,
+  // Typing, dragging a pin, or partway through a note, reply, edit, answer or name; or, in v3, the handout's topics or wording,
   // or the site settings, which the mockup keeps in the state it passes on with dc:render
   function busy() {
     const a = document.activeElement;
     if (a && (/^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName) || a.isContentEditable)) return true;
-    if (composer || ui.adding || ui.reply || ui.edit || ui.me || Object.keys(ui.draft).length) return true;
+    if (composer || ui.adding || drag || ui.reply || ui.edit || ui.me || Object.keys(ui.draft).length) return true;
     return !!(page.hoEdit || (page.hoOff || []).length || Object.keys(page.hoText || {}).length || Object.keys(page.siteSet || {}).length || Object.keys(page.acctSet || {}).length || Object.values(page.ptAlerts || {}).some(Boolean)
       || Object.values(page.myNotes || {}).some((a) => a.length) || Object.values(page.noteDraft || {}).some((v) => (v || '').trim()) || Object.values(page.disc || {}).some((d) => d && d.said)
       || page.recOpen || Object.keys(page.safetyRec || {}).length || page.noteEdit);
@@ -1102,9 +1175,14 @@
 .an-count{font-weight:600;font-variant-numeric:tabular-nums}
 .an-others li{margin-top:6px;color:#4C6272}
 .an-pins{position:absolute;top:0;left:0;width:100%;height:0;z-index:55}
-.an-pin{position:absolute;transform:translate(-50%,-50%) rotate(-3deg);display:grid;place-items:center;min-width:28px;height:28px;padding:0 4px;font:700 15px/1 var(--font,system-ui,sans-serif);color:#4A3B12;background:#FFD54A;border:1px solid #C9A227;border-radius:3px 3px 3px 10px;box-shadow:0 3px 8px rgba(0,0,0,.25);cursor:pointer}
+.an-pin{position:absolute;transform:translate(-50%,-50%) rotate(-3deg);display:grid;place-items:center;min-width:28px;height:28px;padding:0 4px;font:700 15px/1 var(--font,system-ui,sans-serif);color:#4A3B12;background:#FFD54A;border:1px solid #C9A227;border-radius:3px 3px 3px 10px;box-shadow:0 3px 8px rgba(0,0,0,.25);cursor:grab;touch-action:none}
 .an-pin:hover,.an-pin.on{background:#FFC107;box-shadow:0 0 0 3px rgba(184,134,11,.45),0 3px 8px rgba(0,0,0,.25)}
-.an-pin.resolved{opacity:.55}
+.an-pin.dragging{cursor:grabbing;box-shadow:0 0 0 3px rgba(184,134,11,.45),0 8px 18px rgba(0,0,0,.3)}
+.an-pin.resolved,.an-tail.resolved{opacity:.55}
+.an-tail{position:absolute;height:0;margin-top:-1px;border-top:2px dashed #B8860B;transform-origin:0 50%;pointer-events:none}
+.an-tail::before{content:'';position:absolute;left:-5px;top:-6px;width:8px;height:8px;border-radius:50%;background:#FFD54A;border:1px solid #B8860B}
+.an-tail.on{border-top-style:solid}
+.an-tail[hidden]{display:none}
 .an-hl{position:fixed;z-index:58;box-sizing:border-box;pointer-events:none;border:2px dashed #B8860B;border-radius:6px;background:rgba(255,213,74,.14)}
 .an-hl-label{position:absolute;left:-2px;bottom:100%;margin-bottom:4px;padding:2px 8px;font:600 15px/21px var(--font,system-ui,sans-serif);color:#fff;background:#4A3B12;border-radius:4px;white-space:nowrap}
 .an-hl.below .an-hl-label{top:100%;bottom:auto;margin:4px 0 0}
