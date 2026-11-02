@@ -152,10 +152,10 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 
 /* Caseload */
 .list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
-.list.by-status{--cols:minmax(160px,1.2fr) 156px 116px 80px minmax(0,2.6fr)}
-.list.by-visit{--cols:84px minmax(130px,1fr) 170px 116px 80px minmax(0,2.4fr)}
+.list.by-status{--cols:minmax(160px,1.2fr) 156px 116px 136px minmax(0,2.6fr)}
+.list.by-visit{--cols:84px minmax(130px,1fr) 170px 116px 136px minmax(0,2.4fr)}
 /* Without visit dates: no Next visit column */
-.list.by-status.no-dates{--cols:minmax(160px,1.4fr) 116px 80px minmax(0,2.6fr)}
+.list.by-status.no-dates{--cols:minmax(160px,1.4fr) 116px 136px minmax(0,2.6fr)}
 .lrow{display:grid;grid-template-columns:var(--cols);column-gap:16px;align-items:center;min-height:40px;padding:0 20px}
 .lhead{font-size:var(--fs-sm);font-weight:600;color:var(--muted);border-bottom:1px solid var(--line)}
 .grp{display:flex;align-items:center;padding:20px 20px 6px;font-size:var(--fs-sm);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
@@ -303,7 +303,6 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .chart .persist{stroke:var(--muted);stroke-width:1.4;stroke-dasharray:1 3}
 .drv-toggle{margin-top:6px;padding-left:0;padding-right:0}
 .drivers{margin-top:4px}
-.drv-note{margin:0 0 6px;max-width:70ch;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
 .drv{display:block;width:100%;height:auto}
 .drv text{font-family:var(--font);font-size:13px;fill:var(--muted)}
 .big .drv text{font-size:14px}
@@ -433,9 +432,9 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .distinct .grp.day{background:var(--tint)}
 /* Larger text: wider column and table columns, safety wording and footers at body size, lines kept short */
 .big .page,.big .band-inner{max-width:70rem}
-.big .list.by-status{--cols:minmax(170px,1.2fr) 184px 116px 96px minmax(0,2.6fr)}
-.big .list.by-visit{--cols:90px minmax(140px,1fr) 172px 116px 88px minmax(0,2.4fr)}
-.big .list.by-status.no-dates{--cols:minmax(170px,1.4fr) 116px 96px minmax(0,2.6fr)}
+.big .list.by-status{--cols:minmax(170px,1.2fr) 184px 116px 148px minmax(0,2.6fr)}
+.big .list.by-visit{--cols:90px minmax(140px,1fr) 172px 116px 148px minmax(0,2.4fr)}
+.big .list.by-status.no-dates{--cols:minmax(170px,1.4fr) 116px 148px minmax(0,2.6fr)}
 .big.distinct .pt-sections{grid-template-columns:minmax(0,1fr) 21rem}
 .big .safety-note{font-size:var(--fs-md);line-height:var(--lh-md)}
 .big .foot{font-size:var(--fs-md);line-height:var(--lh-md)}
@@ -762,7 +761,7 @@ textarea.set-input{resize:vertical}
         <sc-if value="{{ visitCol }}"><span>Next visit</span></sc-if>
         <sc-if value="{{ byVisit }}"><span>Status</span></sc-if>
         <span><button type="button" class="sort-btn" aria-label="{{ sortSev.label }}" onClick="{{ sortSev.go }}">Severity <span class="ai">(AI)</span><sc-if value="{{ sortSev.mark }}"><span class="sort-mark" aria-hidden="true">{{ sortSev.mark }}</span></sc-if></button> <span class="tt-wrap" onMouseEnter="{{ tips.sev.enter }}" onMouseLeave="{{ tips.sev.leave }}"><button type="button" class="{{ tips.sev.btnCls }}" aria-label="About severity" aria-describedby="tt-sev" onClick="{{ tips.sev.toggle }}" onFocus="{{ tips.sev.focus }}" onBlur="{{ tips.sev.blur }}">ⓘ</button><span id="tt-sev" role="tooltip" class="{{ tips.sev.cls }}"><sc-for list="{{ tips.sev.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span>
-        <span>Check-ins <span class="tt-wrap" onMouseEnter="{{ tips.ci.enter }}" onMouseLeave="{{ tips.ci.leave }}"><button type="button" class="{{ tips.ci.btnCls }}" aria-label="About check-ins" aria-describedby="tt-ci" onClick="{{ tips.ci.toggle }}" onFocus="{{ tips.ci.focus }}" onBlur="{{ tips.ci.blur }}">ⓘ</button><span id="tt-ci" role="tooltip" class="{{ tips.ci.cls }}"><sc-for list="{{ tips.ci.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span>
+        <span class="nowrap">Check-ins done <span class="tt-wrap" onMouseEnter="{{ tips.ci.enter }}" onMouseLeave="{{ tips.ci.leave }}"><button type="button" class="{{ tips.ci.btnCls }}" aria-label="About check-ins" aria-describedby="tt-ci" onClick="{{ tips.ci.toggle }}" onFocus="{{ tips.ci.focus }}" onBlur="{{ tips.ci.blur }}">ⓘ</button><span id="tt-ci" role="tooltip" class="{{ tips.ci.cls }}"><sc-for list="{{ tips.ci.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span>
         <span>Flag</span>
       </div>
       <sc-for list="{{ groups }}" as="g">
@@ -797,7 +796,7 @@ textarea.set-input{resize:vertical}
             <sc-if value="{{ visitCol }}"><span class="num {{ p.visitCls }}">{{ p.visitText }}</span></sc-if>
             <sc-if value="{{ byVisit }}"><span class="status {{ p.stCls }}"><svg class="mk" viewBox="0 0 10 10"><path d="{{ p.shape }}" fill="currentColor" fill-rule="evenodd"></path><path d="{{ p.shape2 }}" fill="currentColor"></path></svg>{{ p.stLabel }}</span></sc-if>
             <span class="num"><span class="sev">{{ p.sevText }}</span><span class="chg {{ p.deltaCls }}">{{ p.deltaText }}</span></span>
-            <span class="num {{ p.ciCls }}"><span class="ci">{{ p.checkins }}</span></span>
+            <span class="num {{ p.ciCls }}"><span class="ci">{{ p.ciText }}</span></span>
             <span>{{ p.flagIconEl }}<span class="{{ p.flagCls }}">{{ p.flag }}</span><sc-if value="{{ p.flagSrc }}"><span class="ai">&nbsp;{{ p.flagSrc }}</span></sc-if><sc-if value="{{ p.flagNote }}"><span class="muted nowrap">, {{ p.flagNote }}</span></sc-if></span>
           </div>
         </sc-for>
@@ -881,8 +880,8 @@ textarea.set-input{resize:vertical}
         </div>
         </sc-if>
         <div class="stat">
-          <div class="stat-label">Check-ins <span class="ai">(14 days)</span></div>
-          <div class="stat-value num">{{ pt.checkins }}</div>
+          <div class="stat-label">Check-ins done <span class="ai">(14 days)</span></div>
+          <div class="stat-value num">{{ pt.ciText }}</div>
           <sc-if value="{{ distinct }}"><div class="tt-wrap dots-wrap" aria-hidden="true" onMouseEnter="{{ tips.dots.enter }}" onMouseLeave="{{ tips.dots.leave }}"><div class="dots"><sc-for list="{{ pt.ciDots }}" as="d"><span class="{{ d.cls }}" onClick="{{ d.open }}"></span></sc-for></div><span id="tt-dots" class="{{ tips.dots.cls }}"><sc-for list="{{ tips.dots.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></div></sc-if>
           <div class="stat-note muted">{{ pt.ciNote }}</div>
           <div class="stat-note no-print"><button type="button" class="linkbtn" onClick="{{ pt.openLatestCi }}">Latest check-in</button></div>
@@ -960,16 +959,15 @@ textarea.set-input{resize:vertical}
         <p class="sr-only" aria-live="polite">{{ hv.aria }}</p>
         <div class="key">
           <span><svg width="22" height="10" viewBox="0 0 22 10"><rect x="0" y="1" width="22" height="8" fill="rgba(198,127,0,.16)"></rect><line x1="0" y1="5" x2="22" y2="5" stroke="#C67F00" stroke-width="2.5"></line></svg>AI estimate, smoothed; shading shows its uncertainty</span>
-          <span><svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="2.6" fill="#C67F00" fill-opacity=".45"></circle></svg>Each check-in’s own estimate</span>
+          <span><svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="2.6" fill="#C67F00" fill-opacity=".45"></circle></svg>The AI’s estimate at each check-in</span>
           <span><svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4.5" fill="#1F2A33"></circle></svg>PHQ-9 (patient’s answers)</span>
           <span>Item 9: the PHQ-9 question on thoughts of death or self-harm, 0 to 3</span>
           <sc-if value="{{ ch.hasExp }}"><span><svg width="22" height="10" viewBox="0 0 22 10"><rect x="0" y="1" width="22" height="8" fill="rgba(91,107,120,.12)"></rect></svg>Expected range in the first 3 months of care</span></sc-if>
         </div>
         <div class="no-print">
-          <button class="btn drv-toggle" onClick="{{ toggleDrivers }}" aria-expanded="{{ drv.expanded }}">{{ drv.toggleLabel }}</button>
+          <button class="btn drv-toggle" onClick="{{ toggleDrivers }}" aria-expanded="{{ drv.expanded }}">{{ drv.toggleLabel }}</button><sc-if value="{{ drv.show }}"> <span class="tt-wrap" onMouseEnter="{{ tips.drv.enter }}" onMouseLeave="{{ tips.drv.leave }}"><button type="button" class="{{ tips.drv.btnCls }}" aria-label="About sleep, activity and contact" aria-describedby="tt-drv" onClick="{{ tips.drv.toggle }}" onFocus="{{ tips.drv.focus }}" onBlur="{{ tips.drv.blur }}">ⓘ</button><span id="tt-drv" role="tooltip" class="{{ tips.drv.cls }}"><sc-for list="{{ tips.drv.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></sc-if>
           <sc-if value="{{ drv.show }}">
             <div class="drivers">
-              <p class="drv-note">{{ drv.note }}</p>
               <svg class="drv" viewBox="{{ drv.viewBox }}" role="img" aria-label="{{ drv.aria }}" onMouseLeave="{{ hoverOff }}">
                 <text class="drv-when" x="{{ drv.endX }}" y="13">{{ drv.when }}</text>
                 <sc-for list="{{ drv.rows }}" as="r">
@@ -1430,7 +1428,7 @@ const STATUS = {
   safety: { label: 'Safety flag', cls: 'st-safety', shape: 'M0.5 0.5H9.5V9.5H0.5Z' },
   worse: { label: 'Worse than baseline', cls: 'st-worse', shape: 'M5 0.4L9.8 9.6H0.2Z' },
   notimp: { label: 'Not improving', cls: 'st-notimp', shape: 'M0.4 3.2H9.6V6.8H0.4Z' },
-  nodata: { label: 'Too few check-ins', cls: 'st-nodata', shape: 'M5 0A5 5 0 1 0 5 10A5 5 0 1 0 5 0ZM5 1.6A3.4 3.4 0 1 1 5 8.4A3.4 3.4 0 1 1 5 1.6Z', shape2: 'M5 1.6A3.4 3.4 0 0 0 5 8.4Z' },
+  nodata: { label: 'Too few check-ins for a status', cls: 'st-nodata', shape: 'M5 0A5 5 0 1 0 5 10A5 5 0 1 0 5 0ZM5 1.6A3.4 3.4 0 1 1 5 8.4A3.4 3.4 0 1 1 5 1.6Z', shape2: 'M5 1.6A3.4 3.4 0 0 0 5 8.4Z' },
   stable: { label: 'On track', cls: 'st-stable', shape: 'M5 0A5 5 0 1 0 5 10A5 5 0 1 0 5 0Z' }
 };
 const GROUP_ORDER = ['safety', 'worse', 'notimp', 'nodata', 'stable'];
@@ -1847,11 +1845,11 @@ const HO_TEXT = {
     sub: (day, who) => `For your ${day ? day + ' ' : 'next '}appointment with ${who}`,
     // One summary line, chosen by how things are going
     summary: {
-      notimp: 'Your check-ins have looked about the same for a while. That’s worth talking about at your next appointment.',
+      notimp: 'Your check-ins have looked about the same for a while. Consider bringing this up at your next appointment.',
       nodata: 'We have only a few check-ins from the last 2 weeks. That isn’t enough yet to see how things are going.',
       easier: 'Your check-ins over the last few weeks suggest fewer symptoms than before.',
       stable: 'Your check-ins look about the same as usual.',
-      harder: 'Your check-ins over the last few weeks suggest more symptoms than usual for you. That’s worth talking about at your next appointment.'
+      harder: 'Your check-ins over the last few weeks suggest more symptoms than usual for you. Consider bringing this up at your next appointment.'
     },
     wellHead: 'What’s going well',
     checkinsDone: (n, of) => `You did ${n} of ${of} check-ins in the last 2 weeks.`,
@@ -1898,11 +1896,11 @@ const HO_TEXT = {
     greet: 'Así han ido las últimas semanas',
     sub: (day, who) => (day ? `Para su cita del ${ES_DAYS[day]} con ${who}` : `Para su próxima cita con ${who}`),
     summary: {
-      notimp: 'Según sus conversaciones con AURORA, parece que desde hace un tiempo las cosas no han cambiado mucho. Vale la pena hablarlo en su próxima cita.',
+      notimp: 'Según sus conversaciones con AURORA, parece que desde hace un tiempo las cosas no han cambiado mucho. Puede comentarlo en su próxima cita.',
       nodata: 'En las últimas 2 semanas ha habido pocas conversaciones con AURORA. Todavía no son suficientes para ver cómo van las cosas.',
       easier: 'Sus conversaciones con AURORA de las últimas semanas sugieren menos síntomas que antes.',
       stable: 'Según sus conversaciones con AURORA, parece que las cosas siguen como de costumbre.',
-      harder: 'Sus conversaciones con AURORA de las últimas semanas sugieren más síntomas de lo habitual. Vale la pena hablarlo en su próxima cita.'
+      harder: 'Sus conversaciones con AURORA de las últimas semanas sugieren más síntomas de lo habitual. Puede comentarlo en su próxima cita.'
     },
     wellHead: 'Lo que va bien',
     checkinsDone: (n, of) => `En las últimas 2 semanas, completó ${n} de ${of} conversaciones con AURORA.`,
@@ -2139,7 +2137,7 @@ class Component extends DCLogic {
         sevText: estNow == null ? '—' : String(estNow),
         deltaText: d == null ? '' : signed(d),
         deltaCls: !marked ? 'muted' : d > 0 ? 'up' : 'down',
-        ciCls: cn / cd < 0.7 ? 'low' : 'muted',
+        ciCls: cn / cd < 0.7 ? 'low' : 'muted', ciText: `${cn} of ${cd}`,
         visitCls: p.visitRank === NOT_SCHEDULED ? 'muted' : '',
         flagCls: p.status === 'safety' ? 'flag-safety' : '',
         flagNote: autoFlag ? (ot.branch === 'early' ? 'early in care' : `${Math.round(ot.months)} months in care`) : tm(p.flagNote),
@@ -2534,7 +2532,8 @@ class Component extends DCLogic {
     const drv = {
       show: s.drivers, expanded: s.drivers ? 'true' : 'false', refined: s.refined,
       toggleLabel: s.drivers ? 'Hide sleep, activity and contact' : 'Show sleep, activity and contact',
-      note: `From phone sensors, over the same weeks as the trend. Dotted lines show each measure’s usual level (its average over the first 4 weeks)${s.refined ? ', and the shading shows how far it has moved from it' : ''}. Point at either chart to see a week. Changes that line up with symptoms are possible contributors, not causes.`,
+      // What the panel shows, in its ⓘ (review note, October 30: the paragraph above the charts moved there)
+      noteLines: ['From phone sensors, over the same weeks as the trend.', `Dotted lines show each measure’s usual level (its average over the first 4 weeks)${s.refined ? ', and the shading shows how far it has moved from it' : ''}.`, 'Point at either chart to see a week.', { cls: 'tt-note', text: 'Changes that line up with symptoms are possible contributors, not causes.' }],
       when: T(showHw ? `Week of ${WEEKS[hw]}` : 'Latest week'),
       L, R, endX: f(R + 10), head: DHEAD, h: DHEAD + DROW * drvDefs.length, viewBox: `0 0 880 ${DHEAD + DROW * drvDefs.length}`, dotR: s.refined ? 4 : 3.5,
       events: ch.events.map((e) => ({ x: e.x })),
@@ -2935,6 +2934,7 @@ class Component extends DCLogic {
       ]),
       // The check-in dots: pointer only, as the count and note beside them say the same in words
       dots: tipFor('dots', [pt.ciTitle]),
+      drv: tipFor('drv', drv.noteLines),
       // Why the Worse than baseline line (baseline + 6) stands out in the chart
       thr: tipFor('thr', [
         { cls: 'tt-head', text: 'Why this line stands out:' },

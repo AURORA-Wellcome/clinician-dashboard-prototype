@@ -48,7 +48,7 @@
       title: 'Under the PHQ-9, “Answers by question” shows the patient’s answer to each question, highest first. Would you use it?',
       options: [['all', 'Yes, when I ask for them, as now'], ['top', 'Yes, and show the highest-scoring questions on the page'], ['total', 'No, the total and item 9 are enough']] },
     { id: 'pt-dots', view: 'patient', part: 'chart', short: 'Each check-in’s estimate on the chart', show: { view: 'patient', p: 'delgado' },
-      title: 'The faint dots around the trend line are each check-in’s own estimate. Do they help?',
+      title: 'The faint dots around the trend line are the AI’s estimate at each check-in. Do they help?',
       options: [['keep', 'Yes, keep them, as now'], ['hover', 'Show them only when pointing at the chart'], ['drop', 'No, remove them']] },
     { id: 'pt-ai-label', view: 'patient', part: 'band', short: 'How AI values are labeled', show: { view: 'patient', p: 'delgado' },
       title: 'How should values that come from the AI be labeled?',

@@ -28,7 +28,7 @@ The rules every mockup screen follows. Give this file, and the reference screens
    
    Decorative or "category" color is not allowed. *(The Refined look proposes one exception: the drivers panel's three cool identity hues; see Refined look.)* Faint tints of the status colors may mark a status group or a flagged tile (see Section styles). The neutral `tint` is a surface, not a color cue.
 4. **Whitespace before borders.** Separate items with space and alignment. Panels hold groups of content. No bordered chips or pills (small rounded labels) anywhere.
-5. **Status is always triple-encoded** as shape + color + word: ■ Safety flag, ▲ Worse than baseline, ● Stable or better, ◐ Too few check-ins. This survives color blindness and grayscale printing. Every shape must differ: v1's octagon for crisis looked like a circle at 10 px.
+5. **Status is always triple-encoded** as shape + color + word: ■ Safety flag, ▲ Worse than baseline, ● Stable or better, ◐ Too few check-ins for a status ("Too few check-ins" until a review note of October 30). This survives color blindness and grayscale printing. Every shape must differ: v1's octagon for crisis looked like a circle at 10 px.
 6. **Safety flags lead, but the dashboard is not a crisis channel.**
    - Under the safety design agreed on October 19, the study team reviews AI-detected risk and emails the clinician if it is urgent. Risk information doesn't reach the treating clinician in real time (August 13).
    - Safety flags come first: first group in the caseload, first tile on the patient page. The schedule view varies this: by next visit, the visits set the order, and a flag shows on its patient’s row under their visit day (see Caseload order). The list without visit dates, which most sites will use, keeps flags first.
@@ -147,7 +147,7 @@ Two weights only, 400 and 600. Numbers always use `font-variant-numeric: tabular
 | `tint` | `#EEF2F6` | neutral card behind the goals and the check-in page's signals, and the check-in page's Awaiting review panel; day headers in the caseload (distinct style); the summary point or transcript passage a link has just opened |
 | `safety-tint` | `rgba(192,39,26,.06)` | flagged Safety tile, Safety flag group band |
 | `worse-tint` | `rgba(213,94,0,.07)` | Worse than baseline group band |
-| `nodata-tint` | `rgba(118,134,146,.09)` | Too few check-ins group band |
+| `nodata-tint` | `rgba(118,134,146,.09)` | Too few check-ins for a status group band |
 | `stable-tint` | `rgba(0,158,115,.07)` | Stable or better group band |
 | `worse-zone` | `rgba(213,94,0,.06)` | chart shading above the deterioration line (baseline + 5 in v2, + 6 in v3) |
 | `expected` | `rgba(91,107,120,.12)` | v3: expected range in the first 3 months of care (chart and key) |
@@ -163,10 +163,10 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - **Visit dates** (v3, from October 26): AURORA isn't assumed to link to a site's EHR, so by default the caseload doesn't know when patients' next visits are (bead aurora-8ok). Without them, patients are grouped by status, by last name within each group. There is no Time or Next visit column, the greeting band doesn't count visits, the patient page has no next-visit line and no Visits row on the chart, and the handout says "your next appointment" rather than a day. The review strip's Visit dates switch (or `&dates=1`) shows a site that has them, from its EHR or from patients reporting their next visit in check-ins; the list can then also run by next visit.
   - **By next visit** (with visit dates, their default): one group per day, with a "Not scheduled" group last. Each day has a full-width header giving the full date, after "Today" or "Tomorrow" where it applies ("Tomorrow, Thursday, August 13"). Day headers carry no count: the greeting band already counts today’s and tomorrow’s study visits, and where flagged patients appear only in the top group, a day’s count disagrees with its rows (review note, October 26). The date is in the header, so the rows show only the time, under the column heading "Time". Safety-flagged patients sit under their visit day like everyone else, flagged in place by their status and flag, so the list reads as a schedule and each day lists everyone coming in (from October 27, from a clinician’s review note). This varies principle 6: the list without visit dates, the one most sites will use, keeps flags first, and a clinician’s study patients fit on a screen or two. Not scheduled has no times, so it runs by status, flags first. The review strip’s Safety flags switch shows the other placements the CWG is asked about: a Safety flag group pinned above the day headers, whose rows show their visit date above the time, either instead of the day (`&flagged=pinned`, the design before October 27) or as well (`&flagged=both`).
   - Day headers are neutral, because color means status. In the distinct style they sit on the neutral `tint`, with no edge.
-  - **Grouped by status:** Safety flag, Worse than baseline, Too few check-ins, Stable or better, with patients in visit order within each group, or by last name without visit dates.
+  - **Grouped by status:** Safety flag, Worse than baseline, Too few check-ins for a status, Stable or better, with patients in visit order within each group, or by last name without visit dates.
 - **Caseload columns:** the column you look patients up by comes first, then the rest in order of importance.
-  - **Grouped by status:** Patient (with the status shape), Next visit (the order within each group; only with visit dates), Severity, Check-ins, Flag.
-  - **By next visit:** Time, Patient, Status, Severity, Check-ins, Flag. Time comes first, as in a day schedule. The Status column (shape and word) stands in for the status groups.
+  - **Grouped by status:** Patient (with the status shape), Next visit (the order within each group; only with visit dates), Severity, Check-ins done, Flag.
+  - **By next visit:** Time, Patient, Status, Severity, Check-ins done, Flag. Time comes first, as in a day schedule. The Status column (shape and word) stands in for the status groups.
   - Severity and Check-ins sit together, because check-ins say how far to trust the estimate.
   - Flag is last: it is the longest column, and it is empty for stable patients, so a blank never splits a row.
   - Numbers line up by place value: severity, change and check-in counts sit in fixed-width, right-aligned slots. Dates and times are left-aligned.
@@ -182,7 +182,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - The card stays open while the pointer is on it, clicking it opens the patient, and Escape closes it.
   - Screen readers hear the card's contents when a row gets keyboard focus.
 - **Rows are links:** Tab reaches each row, and Enter opens the patient.
-- **Check-ins:** the count is always shown. Below 9 of 12 it is bold ink, not colored, because color is reserved for status.
+- **Check-ins:** the count is always shown, as "10 of 12", since "10/12" can read as a date. The column and the tile say "Check-ins done", because in the EHR "checked in" means arriving for an appointment (review notes, October 30). Below 9 of 12 it is bold ink, not colored, because color is reserved for status.
 - **Times:**
   - 12-hour by default ("2:00 PM"). Clinicians can switch to 24-hour ("14:00") under Times on Your settings, which opens from their name at top right. In production, the choice is saved with their account.
   - Every clock time follows the setting: visits, safety reviews, sources.
@@ -218,7 +218,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
 - **Chart:**
   - The y axis is the PHQ-9 scale, 0–27, with numeric ticks. Don't label severity bands next to lines, because baseline lines then read as severity cutoffs.
   - The AI estimate is a line in `ai-series` with an `ai-band` uncertainty band. The patient's PHQ-9 answers are ink dots.
-  - Each check-in's own estimate is a small, faint `ai-series` dot. The line is the smoothed estimate, which the status rules read, so one high or low reading doesn't change a patient's status. *(Mock data: as the detection-latency simulation assumes, the scatter combines day-to-day change with each reading's error, so most readings land within about 4 points of the line. To be confirmed with Deliberate AI and the WP3 idiographic study.)*
+  - The AI's estimate at each check-in, as the key calls it (review note, October 30), is a small, faint `ai-series` dot. The line is the smoothed estimate, which the status rules read, so one high or low reading doesn't change a patient's status. *(Mock data: as the detection-latency simulation assumes, the scatter combines day-to-day change with each reading's error, so most readings land within about 4 points of the line. To be confirmed with Deliberate AI and the WP3 idiographic study.)*
   - Baseline is dotted and baseline + 5 (+ 6 in v3) is dashed in `worse`, each labeled at the line end. v2 labels the dashed line "Baseline + 5"; v3 labels it with the status it starts, Worse than baseline.
   - The dashed line's label has an ⓘ explaining why the line stands out. It says that the line is where Worse than baseline begins, measured from the patient's own baseline, so it is not a severity cutoff, and that its number is a placeholder. The label is drawn in HTML over the chart, so that it can hold the ⓘ button, and is sized to match the chart's own labels. In v3 it takes two lines in the label column, with its last word kept on the same line as the ⓘ. The ⓘ doesn't print.
   - Item 9 answers are numbers under the PHQ-9 dates, in bold `safety` when above 0. Don't use badges.
@@ -331,7 +331,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 | Safety flag | ■ square | `safety` | unchanged |
 | Worse than baseline | ▲ triangle | `worse` | 6 or more above baseline, at any time |
 | Not improving | ▬ flat bar | `worse` | under 3 months in care: above the expected range for 2 weeks in a row, after a 4-week grace period. From 3 months: 10 or more for 2 weeks in a row |
-| Too few check-ins | ◐ half circle | `nodata` | no AI estimate, and the PHQ-9 fallback hasn't fired |
+| Too few check-ins for a status | ◐ half circle | `nodata` | no AI estimate, and the PHQ-9 fallback hasn't fired |
 | On track | ● circle | `stable` | none of the above (was "Stable or better") |
 
 - **The rules run on the AI estimate.** This was decided on October 24, because the PHQ-9 is mainly for validation and the detection-latency simulation puts the AI flag about a week ahead of a PHQ-9 flag.
@@ -361,7 +361,7 @@ v2 stays as built, so the working group can compare the two. Where v3 differs fr
 - **Content:** sleep, activity and contact from phone sensing, on the trend's weeks. Each measure's usual level is dotted, and event lines run through.
 - **Pointing:** pointing at the trend or the panel marks that week on each measure, and the values at the right switch to it under "Week of Jul 13" ("Latest week" at rest). Sensing is weekly, so a day shows the week it falls in. The trend's readout adds the week's sensing for screen readers, and a click opens a completed check-in, as on the trend.
 - **Color:** ink in the Original look. The Refined look gives each measure its own cool hue (see Refined look).
-- **Wording:** the note says these are possible contributors, not causes. This is the model's claim discipline for "shared understanding of symptom drivers".
+- **Wording:** the panel's ⓘ, beside Hide sleep, activity and contact, says where the measures come from and that they are possible contributors, not causes. It was a paragraph above the charts until a review note of October 30 (say it once, in an ⓘ). This is the model's claim discipline for "shared understanding of symptom drivers".
 - **Print:** the panel is not printed.
 
 **Open decisions:**
