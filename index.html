@@ -225,6 +225,10 @@ img{display:block;max-width:100%;height:auto}
 .bn-figure,.bn-label{opacity:0;transition:opacity .9s ease-in-out}
 .bn-dipper-on .bn-figure,.bn-dipper-on .bn-label{opacity:1;transition-duration:.5s}
 .bn-labels{position:absolute;inset:0;z-index:1;pointer-events:none}
+/* While the pointer lights the moon, a canvas takes the place of its image, so it can change every frame */
+.bn-moon-live{position:absolute;display:none;pointer-events:none}
+.bn-moon-label{position:absolute;left:0;top:0;font-size:.8125rem;line-height:1.35;letter-spacing:.02em;text-align:center;white-space:pre-line;color:rgba(232,238,255,.94);text-shadow:0 0 6px #060D26,0 0 2px #060D26;opacity:0;transition:opacity .5s ease-in-out}
+.bn-moon-label.on{opacity:1;transition-duration:.25s}
 .bn-label{position:absolute;left:0;top:0;font-size:.8125rem;line-height:1;letter-spacing:.02em;color:rgba(222,230,255,.88);text-shadow:0 0 6px #060D26,0 0 2px #060D26;white-space:nowrap}
 /* Clicking the cabin stokes its fire: a puff of smoke (i) and a few sparks (b) from the chimney */
 .bn-puff{position:absolute;width:0;height:0}
@@ -575,19 +579,21 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   // level, since at night it is below the horizon. Hidden within about a day of new moon, when it can't be seen.
   const SUN_TIP = 20 * Math.PI / 180;
   const moon = banner.querySelector('.bn-moon'), moonHalo = moon.querySelector('.bn-moon-halo'), moonFace = moon.querySelector('.bn-moon-face');
-  let moonMaps = null, moonPhase = 0, moonDrawn = -1;
-  const drawMoon = () => {
-    // A small change of phase doesn't show, so the moon is redrawn only about every 1.5 hours
-    if (!moonMaps || Math.abs(moonPhase - moonDrawn) < 0.002) return;
-    moonDrawn = moonPhase;
-    const [albedo, relief] = moonMaps, S = Math.sqrt(albedo.length), angle = 2 * Math.PI * moonPhase;
-    const f = (1 - Math.cos(angle)) / 2; // the fraction lit
-    const sunX = Math.sin(angle) * Math.cos(SUN_TIP), sunY = -Math.abs(Math.sin(angle)) * Math.sin(SUN_TIP), sunZ = -Math.cos(angle);
+  let moonMaps = null, moonPhase = 0, moonDrawn = -1, moonImage = null;
+  // Where the sun is for a phase, as a direction: x to the right, y up, z toward the viewer
+  const sunAt = (p) => {
+    const angle = 2 * Math.PI * p;
+    return { x: Math.sin(angle) * Math.cos(SUN_TIP), y: -Math.abs(Math.sin(angle)) * Math.sin(SUN_TIP), z: -Math.cos(angle) };
+  };
+  // Lights the moon from a direction, into a canvas, and sets the glare to match
+  const lightMoon = (ctx, { x: sunX, y: sunY, z: sunZ }) => {
+    const [albedo, relief] = moonMaps, S = Math.sqrt(albedo.length);
+    const f = (1 + sunZ) / 2; // the fraction lit
     // A half moon is a little dimmer than a full one. Earthshine, the dark part's faint glow, shows only beside a thin
     // crescent.
     const gain = 0.8 + 0.2 * f, earth = 0.12 * clamp01((0.35 - f) / 0.3);
-    const canvas = Object.assign(document.createElement('canvas'), { width: S, height: S });
-    const ctx = canvas.getContext('2d'), image = ctx.createImageData(S, S), px = image.data;
+    moonImage = moonImage || ctx.createImageData(S, S);
+    const px = moonImage.data;
     for (let j = 0, k = 0; j < S; j++) for (let i = 0; i < S; i++, k++) {
       const x = (2 * i + 1) / S - 1, y = 1 - (2 * j + 1) / S, rr = x * x + y * y;
       const edge = clamp01((1 - Math.sqrt(rr)) * S / 2 + 0.5); // a smooth limb
@@ -608,21 +614,31 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       px[q] = 159 + (138 + 117 * ground - 159) * t; px[q + 1] = 156 + (122 + 116 * ground - 156) * t; px[q + 2] = 157 + (98 + 100 * ground - 157) * t;
       px[q + 3] = 255 * Math.min(1, sun + glow) * edge;
     }
-    ctx.putImageData(image, 0, 0);
-    moonFace.setAttribute('href', canvas.toDataURL());
+    ctx.putImageData(moonImage, 0, 0);
     // The glare, stronger the more is lit, gathers around the lit part
     const off = (1 - f) * moonFace.getAttribute('width') / 4;
     moonHalo.setAttribute('opacity', (0.15 + 0.65 * f).toFixed(2));
     moonHalo.setAttribute('transform', `translate(${(sunX * off).toFixed(2)} ${(-sunY * off).toFixed(2)})`);
-    moon.classList.toggle('on', f >= 0.03);
+  };
+  const drawMoon = () => {
+    // A small change of phase doesn't show, so the moon is redrawn only about every 1.5 hours
+    if (!moonMaps || Math.abs(moonPhase - moonDrawn) < 0.002) return;
+    moonDrawn = moonPhase;
+    const S = Math.sqrt(moonMaps[0].length), canvas = Object.assign(document.createElement('canvas'), { width: S, height: S }), sun = sunAt(moonPhase);
+    lightMoon(canvas.getContext('2d'), sun);
+    moonFace.setAttribute('href', canvas.toDataURL());
+    moon.classList.toggle('on', (1 + sun.z) / 2 >= 0.03);
   };
   // The phase, 0 new and .5 full, from the moon's and sun's motions (Meeus, Astronomical Algorithms, ch. 48), within about
   // half an hour of published times; an average lunar month can be most of a day off
-  const setMoon = (d) => {
+  const phaseAt = (d) => {
     const T = (d - Date.UTC(2000, 0, 1, 12)) / 864e5 / 36525, sin = (deg) => Math.sin(deg * Math.PI / 180);
     const D = 297.8501921 + 445267.1114034 * T, M = 357.5291092 + 35999.0502909 * T, Mm = 134.9633964 + 477198.8675055 * T;
     const angle = D + 6.289 * sin(Mm) - 2.1 * sin(M) + 1.274 * sin(2 * D - Mm) + 0.658 * sin(2 * D) + 0.214 * sin(2 * Mm) + 0.11 * sin(D);
-    moonPhase = ((angle / 360) % 1 + 1) % 1;
+    return ((angle / 360) % 1 + 1) % 1;
+  };
+  const setMoon = (d) => {
+    moonPhase = phaseAt(d);
     drawMoon();
   };
   // The textures, as arrays of gray levels
@@ -757,6 +773,116 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     if (st.el) lightTrees(st, now); // (a star caught in the game has no element, and lights no trees)
     return true;
   };
+  // The pointer is the sun. Over the moon's middle it is full, and farther out it is lit from that side, thinning to a
+  // crescent at the edge of the clear sky around it, with the shadows moving across the real terrain. A click or tap on the
+  // moon plays a month of phases in five seconds. A label gives the facts. On leaving, the light eases back to tonight's.
+  const MOON_REACH = 3.2, MOON_FARTHEST = 155 * Math.PI / 180, MONTH_MS = 5000, MONTH_DAYS = 29.53;
+  const live = Object.assign(document.createElement('canvas'), { className: 'bn-moon-live' }), liveCtx = live.getContext('2d');
+  moonFace.ownerSVGElement.after(live);
+  const moonLabel = banner.querySelector('.bn-labels').appendChild(Object.assign(document.createElement('span'), { className: 'bn-moon-label' }));
+  let moonSpot = null, lightNow = null, lightGoal = null, lightFrame = 0, month = null, moonOver = false, moonLabelTimer = 0, lightTime = 0;
+  window.addEventListener('resize', () => { moonSpot = null; });
+  const spot = () => {
+    if (!moonSpot) {
+      const b = banner.getBoundingClientRect(), f = moonFace.getBoundingClientRect();
+      moonSpot = { x: f.left + f.width / 2 - b.left, y: f.top + f.height / 2 - b.top, r: f.width / 2, w: b.width };
+    }
+    return moonSpot;
+  };
+  const moonName = (p) => (p < 0.02 || p > 0.98 ? 'New moon' : p < 0.23 ? 'Waxing crescent' : p < 0.27 ? 'First quarter' : p < 0.48 ? 'Waxing gibbous' : p < 0.52 ? 'Full moon' : p < 0.73 ? 'Waning gibbous' : p < 0.77 ? 'Last quarter' : 'Waning crescent');
+  const shortDate = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const nextFull = (from) => {
+    let t = from.getTime(), before = phaseAt(from);
+    for (let i = 0; i < 248; i++) {
+      t += 3 * 36e5;
+      const p = phaseAt(new Date(t));
+      if (before < 0.5 && p >= 0.5) return new Date(t);
+      before = p;
+    }
+    return from;
+  };
+  // Below the moon, kept inside the banner; its width is about 230 px at most
+  const showLabel = (text) => {
+    const s = spot();
+    if (moonLabel.textContent !== text) moonLabel.textContent = text;
+    if (!moonLabel.classList.contains('on')) {
+      moonLabel.style.transform = `translate(${Math.min(s.w - 124, Math.max(124, s.x)).toFixed(1)}px, ${(s.y + s.r + 8).toFixed(1)}px) translateX(-50%)`;
+      moonLabel.classList.add('on');
+    }
+  };
+  const showTonight = () => {
+    const d = new Date(Date.now() + offset), p = phaseAt(d);
+    showLabel(`Tonight: ${moonName(p).toLowerCase()}, ${Math.round(50 * (1 - Math.cos(2 * Math.PI * p)))}% lit\nNext full moon ${shortDate(nextFull(d))}`);
+  };
+  const stepLight = () => {
+    lightFrame = 0;
+    // The light eases toward its goal at the same speed however fast the frames come
+    const now = performance.now(), tonight = sunAt(moonPhase);
+    let goal = lightGoal || tonight, ease = 1 - Math.exp(-(now - lightTime) / 110);
+    lightTime = now;
+    if (month) {
+      const t = (now - month.start) / MONTH_MS;
+      if (t >= 1) {
+        // Tonight's facts, for a moment if nothing is pointing at it
+        month = null;
+        moonLabel.classList.remove('on');
+        showTonight();
+        if (!lightGoal) moonLabelTimer = setTimeout(() => { if (!lightGoal && !month) moonLabel.classList.remove('on'); }, 4000);
+      } else {
+        const d = new Date(month.from + t * MONTH_DAYS * 864e5), p = phaseAt(d);
+        goal = sunAt(p); ease = 1;
+        showLabel(`${shortDate(d)}: ${moonName(p)}`);
+      }
+    }
+    const mix = (k) => lightNow[k] + (goal[k] - lightNow[k]) * ease, x = mix('x'), y = mix('y'), z = mix('z'), n = Math.hypot(x, y, z) || 1;
+    lightNow = { x: x / n, y: y / n, z: z / n };
+    lightMoon(liveCtx, lightNow);
+    const settled = Math.hypot(lightNow.x - goal.x, lightNow.y - goal.y, lightNow.z - goal.z) < 0.004;
+    if (!month && settled && !lightGoal) {
+      // Back to tonight: the image takes over again
+      lightNow = null;
+      live.style.display = 'none';
+      moonFace.style.visibility = '';
+      lightMoon(liveCtx, tonight);
+    } else if (month || !settled) lightFrame = requestAnimationFrame(stepLight);
+  };
+  const startLight = () => {
+    if (!lightNow) {
+      const s = spot(), S = Math.sqrt(moonMaps[0].length);
+      lightNow = sunAt(moonPhase);
+      if (live.width !== S) live.width = live.height = S;
+      live.style.cssText = `display:block;left:${(s.x - s.r).toFixed(1)}px;top:${(s.y - s.r).toFixed(1)}px;width:${(2 * s.r).toFixed(1)}px;height:${(2 * s.r).toFixed(1)}px`;
+      lightMoon(liveCtx, lightNow);
+      moonFace.style.visibility = 'hidden';
+    }
+    if (!lightFrame) { lightTime = performance.now(); lightFrame = requestAnimationFrame(stepLight); }
+  };
+  const moonVisible = () => moonMaps && moon.classList.contains('on');
+  const releaseMoon = () => {
+    clearTimeout(moonLabelTimer);
+    lightGoal = null; month = null; moonOver = false;
+    moonLabel.classList.remove('on');
+    if (lightNow) startLight();
+  };
+  const pointMoon = (x, y) => {
+    if (game || !moonVisible()) { if (lightGoal || month) releaseMoon(); return; }
+    const s = spot(), dx = (x - s.x) / s.r, dy = (y - s.y) / s.r, far = Math.hypot(dx, dy);
+    moonOver = far < 1.25;
+    if (far > MOON_REACH) {
+      if (lightGoal) { lightGoal = null; if (!month) moonLabel.classList.remove('on'); startLight(); }
+      return;
+    }
+    const angle = far / MOON_REACH * MOON_FARTHEST, k = far ? Math.sin(angle) / far : 0;
+    if (!lightGoal && !month) showTonight();
+    lightGoal = { x: dx * k, y: -dy * k, z: Math.cos(angle) };
+    startLight();
+  };
+  const playMonth = () => {
+    clearTimeout(moonLabelTimer);
+    month = { start: performance.now(), from: Date.now() + offset };
+    moonLabel.classList.remove('on');
+    startLight();
+  };
   const tick = () => {
     frame = 0;
     if (!at) return;
@@ -772,7 +898,9 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     shift(at.x / at.w - 0.5, at.y / at.h - 0.5);
     // Near the cabin, it warms, and the pointer says it can be clicked
     const near = (at.x - cabin.x) ** 2 + (at.y - cabin.y) ** 2 < cabin.r ** 2;
-    if (near !== cozyOn) { cozyOn = near; cozy.classList.toggle('on', near); banner.style.cursor = near ? 'pointer' : ''; }
+    if (near !== cozyOn) { cozyOn = near; cozy.classList.toggle('on', near); }
+    pointMoon(at.x, at.y);
+    banner.style.cursor = near || (moonOver && !game) ? 'pointer' : '';
     const over = !game && inDipper(at.x, at.y);
     if (over !== overDipper) { overDipper = over; showDipper(over ? 0 : 1200); }
   };
@@ -787,6 +915,9 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   banner.addEventListener('pointerleave', () => {
     at = null; resting = true; banner.classList.add('bn-resting'); shift(0, 0);
     cozyOn = false; cozy.classList.remove('on'); banner.style.cursor = '';
+    lightGoal = null; moonOver = false;
+    if (!month) moonLabel.classList.remove('on');
+    if (lightNow) startLight();
     if (overDipper) { overDipper = false; showDipper(1200); }
   });
   window.addEventListener('resize', () => { stars = null; });
@@ -1084,6 +1215,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     game = { start: now, next: now + 400, points: 0, missed: 0, w: b.width, h: b.height, best, ground: b.height - 44 * Math.max(b.width / 1600, b.height / 240),
       moonX: moonBox.left + moonBox.width / 2 - b.left, moonY: moonBox.top + moonBox.height / 2 - b.top, moonClear: moonBox.width * 1.5 };
     banner.classList.add('bn-playing');
+    releaseMoon();
     clearTimeout(scoreTimer);
     score.classList.remove('link');
     clearCaught();
@@ -1091,13 +1223,14 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     score.classList.add('on');
     requestAnimationFrame(gameFrame);
   };
-  // Outside a game, the cabin and the Big Dipper do what they always did; during one, every click sends a spark. The moment
+  // Outside a game, the cabin, the Big Dipper and the moon do what they always did; during one, every click sends a spark. The moment
   // after a game ends, a click doesn't start another, so the last clicks don't hide the score.
   banner.addEventListener('click', (e) => {
     if (!stars) measure();
     const b = banner.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top;
     const onCabin = (x - cabin.x) ** 2 + (y - cabin.y) ** 2 < cabin.r ** 2;
     if (onCabin) stoke();
+    if (!game && moonVisible() && Math.hypot(x - spot().x, y - spot().y) < spot().r * 1.25) { if (!month) playMonth(); return; }
     if (!game && !onCabin && !inDipper(x, y) && performance.now() - gameOver > 1200) startGame();
     if (game) launch(x, y);
   });
