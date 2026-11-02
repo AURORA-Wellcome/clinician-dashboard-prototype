@@ -98,7 +98,7 @@ The first mockup had a clinical, EHR-style look, with three views (caseload tria
 - **Notes:** a Leave notes step explains that shared notes need the private review link, and offers a dialog to enter its access code. The mockups' Notes panel has the same dialog. Notes can be left on the landing page itself as well as in the mockups.
 - **Tagline** (October 27): pointing at the AURORA mark shows "Rich context, shared understanding", as in v3.
 - **Order:** How to review comes straight after v3. The earlier versions sit below it, oldest first, in a quieter "How we got here" section.
-- **Plane lights** (November 1): the far-off airliner's red beacon now alternates with a white strobe, as an airliner's lights look from the ground.
+- **Plane lights** (November 1): the far-off airliner's red beacon now alternates with a white strobe, as an airliner's lights look from the ground. Each flashes every 2.4 s, so the plane still blinks only every 1.2 s.
 
 ## All pages
 
