@@ -79,6 +79,8 @@ Interface words are labels, headers, notes and buttons, not patient data.
 
 - **American English** in everything a person reads: the interface, the patient handout, the landing page, these docs and code comments. For example: color, gray, center, behavior, labeled, license, toward, and -ize endings (summarize, prioritize).
 - **Dates and times** are US style too: see Times under Components.
+- **Sentence case** for labels and the short notes under tile values: "Severe range", "Enough for the AI estimate". All lowercase reads as unprofessional (review notes, November 1).
+- **Name the estimate:** "the AI estimate", never just "the estimate", so it can't be mistaken for anything else (review note, November 1).
 - **No human verbs for statuses, estimates, flags or the AI.** They don't "take in", "notice", "think" or "know" anything. Say precisely what a thing is calculated from or shows: the AI estimate is calculated from a patient's check-ins; the status comes from the estimate's trend, or from the PHQ-9 when check-ins are too few; safety flags come from the study team's review. Prefer "calculated from" to the vaguer "based on" (November 1).
 - **No middle dots (·)** anywhere in the dashboard:
   - a note follows its text after a comma ("Safety review: moderate risk, today 9:40 AM");
@@ -258,11 +260,12 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
     - study team safety review (shield)
     - scheduling (calendar)
     - family, relationships and contact (people; v3 check-in page and drivers panel)
+    - the clinician's own notes (a notebook with a pen, beside the Your notes heading; review note, November 1)
   - Never use icons for urgency (the status shapes and color do that), never color them, and never show one alone. Each sits next to its text and is hidden from screen readers.
   - **Two action icons,** the exceptions to Meaning: the printer beside Print (review note, October 26), and the person with a gear beside the clinician's name at top right, which opens Your settings in one click (October 27). Each takes its button's color, so the button reads as one control.
   - **Page icons** (wayfinding, from October 27, from a review note): the current page's name in the breadcrumb has its page's icon: people for Patients, a person for a patient, a page for the handout, a speech bubble for a check-in (as for check-ins elsewhere), a building for the site PI page, a gear for site settings, a person with a gear for Your settings, an arrow into a door for Welcome. Muted, 16 px, hidden from screen readers, and one per top bar, so the rule of one icon per row holds. People also marks family, relationships and contact (see Meaning), but here the page's name beside it says which.
   - At most one icon per row or item.
-  - Used in: caseload flags, "What changed" items (in a left gutter), chart events and the readout's visits, goals, the drivers panel's titles, the greeting band's visits (Refined look), the Print buttons and the clinician's name at top right.
+  - Used in: caseload flags, "What changed" items (in a left gutter), chart events and the readout's visits, goals, the drivers panel's titles, the greeting band's visits (Refined look), the Print buttons, the clinician's name at top right and the Your notes heading.
   - No emoji, illustrations or decorative graphics. The exceptions are the brand mark (below), the greeting band in the Refined look, and the patient handout's header.
   - **Landing banner:** outside the dashboard, the landing page opens with a banner. It sets the stage on a page where nobody is working, and it moves calmly but visibly. `design/landing/banner_gen.py` draws it as SVG layers.
     - **Scene:** a night sky with aurora curtains over a low horizon of boreal forest: black spruce on two ridges, as in northern Canada, with a log cabin in a clearing. The forest and cabin are anchored to the bottom of the banner, so a wide screen crops sky rather than forest.
