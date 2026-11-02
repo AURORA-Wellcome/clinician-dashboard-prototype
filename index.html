@@ -436,6 +436,8 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   .hero .wrap{grid-template-columns:1fr;gap:36px;padding-top:48px;padding-bottom:44px}
   h1{font-size:2.25rem;line-height:2.75rem}
   .featured{grid-template-columns:1fr;gap:28px}
+  /* The glow stops at the page's 24 px margin here, or the page would scroll sideways */
+  .glow::before{left:-24px;right:-24px}
   .cards,.steps{grid-template-columns:1fr}
   .top-note{display:none}
 }
