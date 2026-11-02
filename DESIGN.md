@@ -79,6 +79,7 @@ Interface words are labels, headers, notes and buttons, not patient data.
 
 - **American English** in everything a person reads: the interface, the patient handout, the landing page, these docs and code comments. For example: color, gray, center, behavior, labeled, license, toward, and -ize endings (summarize, prioritize).
 - **Dates and times** are US style too: see Times under Components.
+- **No human verbs for statuses, estimates, flags or the AI.** They don't "take in", "notice", "think" or "know" anything. Say precisely what a thing is calculated from or shows: the AI estimate is calculated from a patient's check-ins; the status comes from the estimate's trend, or from the PHQ-9 when check-ins are too few; safety flags come from the study team's review. Prefer "calculated from" to the vaguer "based on" (November 1).
 - **No middle dots (·)** anywhere in the dashboard:
   - a note follows its text after a comma ("Safety review: moderate risk, today 9:40 AM");
   - a PHQ-9 score's band goes in parentheses, with its range ("20 (severe, 20 to 27)"). Ranges are named for the PHQ-9 only, never the AI estimate, since they were set for PHQ-9 totals;
