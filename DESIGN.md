@@ -168,8 +168,8 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - Day headers are neutral, because color means status. In the distinct style they sit on the neutral `tint`, with no edge.
   - **Grouped by status:** Safety flag, Worse than baseline, Too few check-ins for a status, Stable or better, with patients in visit order within each group, or by last name without visit dates.
 - **Caseload columns:** the column you look patients up by comes first, then the rest in order of importance.
-  - **Grouped by status:** Patient (with the status shape), Next visit (the order within each group; only with visit dates), Severity, Check-ins done, Flag.
-  - **By next visit:** Time, Patient, Status, Severity, Check-ins done, Flag. Time comes first, as in a day schedule. The Status column (shape and word) stands in for the status groups.
+  - **Grouped by status:** Patient (with the status shape), Next visit (the order within each group; only with visit dates), Severity, AURORA check-ins, Flag.
+  - **By next visit:** Time, Patient, Status, Severity, AURORA check-ins, Flag. Time comes first, as in a day schedule. The Status column (shape and word) stands in for the status groups.
   - Severity and Check-ins sit together, because check-ins say how far to trust the estimate.
   - Flag is last: it is the longest column, and it is empty for stable patients, so a blank never splits a row.
   - Numbers line up by place value: severity, change and check-in counts sit in fixed-width, right-aligned slots. Dates and times are left-aligned.
@@ -185,7 +185,7 @@ The striped "Review controls" strip is scaffolding for reviewers. Its colors are
   - The card stays open while the pointer is on it, clicking it opens the patient, and Escape closes it.
   - Screen readers hear the card's contents when a row gets keyboard focus.
 - **Rows are links:** Tab reaches each row, and Enter opens the patient.
-- **Check-ins:** the count is always shown, as "10 of 12", since "10/12" can read as a date. The column and the tile say "Check-ins done", because in the EHR "checked in" means arriving for an appointment (review notes, October 30). Below 9 of 12 it is bold ink, not colored, because color is reserved for status.
+- **Check-ins:** the count is always shown, as "10 of 12", since "10/12" can read as a date. The column and the tile say "AURORA check-ins", because in the EHR "checked in" means arriving for an appointment; the program's name says which check-ins these are, as the handout's "check-ins with AURORA" does (review notes, October 30 and November 1; "Check-ins done" for a day in between). Below 9 of 12 it is bold ink, not colored, because color is reserved for status.
 - **Times:**
   - 12-hour by default ("2:00 PM"). Clinicians can switch to 24-hour ("14:00") under Times on Your settings, which opens from their name at top right. In production, the choice is saved with their account.
   - Every clock time follows the setting: visits, safety reviews, sources.

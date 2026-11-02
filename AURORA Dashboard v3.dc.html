@@ -769,7 +769,7 @@ textarea.set-input{resize:vertical}
         <sc-if value="{{ visitCol }}"><span>Next visit</span></sc-if>
         <sc-if value="{{ byVisit }}"><span>Status</span></sc-if>
         <span><button type="button" class="sort-btn" aria-label="{{ sortSev.label }}" onClick="{{ sortSev.go }}">Severity <span class="ai">(AI)</span><sc-if value="{{ sortSev.mark }}"><span class="sort-mark" aria-hidden="true">{{ sortSev.mark }}</span></sc-if></button> <span class="tt-wrap" onMouseEnter="{{ tips.sev.enter }}" onMouseLeave="{{ tips.sev.leave }}"><button type="button" class="{{ tips.sev.btnCls }}" aria-label="About severity" aria-describedby="tt-sev" onClick="{{ tips.sev.toggle }}" onFocus="{{ tips.sev.focus }}" onBlur="{{ tips.sev.blur }}">ⓘ</button><span id="tt-sev" role="tooltip" class="{{ tips.sev.cls }}"><sc-for list="{{ tips.sev.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span>
-        <span class="nowrap">Check-ins done <span class="tt-wrap" onMouseEnter="{{ tips.ci.enter }}" onMouseLeave="{{ tips.ci.leave }}"><button type="button" class="{{ tips.ci.btnCls }}" aria-label="About check-ins" aria-describedby="tt-ci" onClick="{{ tips.ci.toggle }}" onFocus="{{ tips.ci.focus }}" onBlur="{{ tips.ci.blur }}">ⓘ</button><span id="tt-ci" role="tooltip" class="{{ tips.ci.cls }}"><sc-for list="{{ tips.ci.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span>
+        <span class="nowrap">AURORA check-ins <span class="tt-wrap" onMouseEnter="{{ tips.ci.enter }}" onMouseLeave="{{ tips.ci.leave }}"><button type="button" class="{{ tips.ci.btnCls }}" aria-label="About check-ins" aria-describedby="tt-ci" onClick="{{ tips.ci.toggle }}" onFocus="{{ tips.ci.focus }}" onBlur="{{ tips.ci.blur }}">ⓘ</button><span id="tt-ci" role="tooltip" class="{{ tips.ci.cls }}"><sc-for list="{{ tips.ci.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></span></span>
         <span>Flag</span>
       </div>
       <sc-for list="{{ groups }}" as="g">
@@ -888,7 +888,7 @@ textarea.set-input{resize:vertical}
         </div>
         </sc-if>
         <div class="stat">
-          <div class="stat-label">Check-ins done <span class="ai">(14 days)</span></div>
+          <div class="stat-label">AURORA check-ins <span class="ai">(14 days)</span></div>
           <div class="stat-value num">{{ pt.ciText }}</div>
           <sc-if value="{{ distinct }}"><div class="tt-wrap dots-wrap" aria-hidden="true" onMouseEnter="{{ tips.dots.enter }}" onMouseLeave="{{ tips.dots.leave }}"><div class="dots"><sc-for list="{{ pt.ciDots }}" as="d"><span class="{{ d.cls }}" onClick="{{ d.open }}"></span></sc-for></div><span id="tt-dots" class="{{ tips.dots.cls }}"><sc-for list="{{ tips.dots.lines }}" as="l"><span class="{{ l.cls }}">{{ l.text }}</span></sc-for></span></div></sc-if>
           <div class="stat-note muted">{{ pt.ciNote }}</div>
