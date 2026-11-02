@@ -1,12 +1,12 @@
 """Landing-page banner: a night sky with blue-violet aurora curtains over a low, forested horizon (SVG, no animation).
 
 Usage: python3 design/landing/banner_gen.py banner.html   then paste the output over the <div class="banner"> in index.html.
-Layers (sky, with the stars, the Big Dipper and the moon; back curtain; three ray patterns, color, a surge layer and a
-bright edge for the main curtain; hills) are separate SVGs inside drift and sway wrappers, so the page can move and
+Layers (sky, with the stars and the Big Dipper; back curtain; three ray patterns, color, a surge layer and a bright edge
+for the main curtain; the moon; hills) are separate SVGs inside drift and sway wrappers, so the page can move and
 cross-fade them cheaply with CSS transforms and opacity, without redrawing the blur and noise filters.
 Mostly blue-violet, with natural green and violet shimmer. (The dashboard itself keeps to cool hues: green means
 "on track" there.)"""
-import math, os, random, sys
+import base64, math, os, random, sys
 W, H = 1600, 240
 rnd = random.Random(11)
 
@@ -208,16 +208,22 @@ dipper = (f'<g class="bn-dipper" data-top="{fig_top:.1f}"><g class="bn-dipper-st
           f'<path d="{outline}" stroke-width="1" vector-effect="non-scaling-stroke"/>'
           f'<path d="M{p0[0]:.1f},{p0[1]:.1f}L{p1[0]:.1f},{p1[1]:.1f}" stroke-width="1" stroke-dasharray="2 3" vector-effect="non-scaling-stroke"/></g></g>')
 
-# The moon, upper right, behind the curtains' faint upper rays. The page sets its phase from today's date and shows it
-# (.on), except near new moon. A disk the color of the sky there hides the stars behind it; earthshine, which the page
-# shows only for a thin crescent; the lit part; and over them the glare, which also hides the dark part, as in the sky.
-# .bn-moon-pin lets the page keep it in view on a narrow or wide banner (data-top: its top edge). It is drawn about
-# five times its true size for this wide view, as a prominent part of the sky.
-MOON = (1392, 44, 18)
-moon = (f'<g class="bn-moon-pin" data-top="{MOON[1] - MOON[2]:g}"><g class="bn-moon" transform="translate({MOON[0]} {MOON[1]})">'
-        f'<circle class="bn-moon-disk" r="{MOON[2]}" fill="#09112F"/><circle class="bn-moon-shine" r="{MOON[2]}" fill="#9FB0E0" opacity="0"/>'
-        '<path class="bn-moon-lit" fill="#EEF2FF"/>'
-        f'<circle class="bn-moon-halo" r="{MOON[2] * 3.4:g}" fill="url(#bn-moon-glow)" opacity="0"/></g></g>')
+# The moon, upper right, in its own layer above the curtains, since the aurora's light adds to the moon's rather than
+# blocking it. The page lights the textures from moon_gen.py for today's phase and shows the result (.on), except near new
+# moon. The glare lies under the moon's face, so it doesn't wash out the maria, and it covers the dark part, as in the sky.
+# A patch of the sky, clipped to the moon's disk (.bn-moon-hole), hides the stars behind it; the page moves it with the
+# moon. .bn-moon-pin lets the page keep it in view on a narrow or wide banner (data-top: its top edge; data-right: the room
+# to its right). It is drawn about seven times its true size for this wide view, as a prominent part of the sky.
+MOON = (1392, 44, 24)
+
+def data_uri(name):
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), name), 'rb') as f:
+        return 'data:image/webp;base64,' + base64.b64encode(f.read()).decode()
+
+moon = (f'<g class="bn-moon-pin" data-top="{MOON[1] - MOON[2]:g}" data-right="{W - MOON[0] - MOON[2]:g}"><g class="bn-moon" transform="translate({MOON[0]} {MOON[1]})" '
+        f'data-albedo="{data_uri("moon_albedo.webp")}" data-relief="{data_uri("moon_relief.webp")}">'
+        f'<circle class="bn-moon-halo" r="{MOON[2] * 4.2:g}" fill="url(#bn-moon-glow)" opacity="0"/>'
+        f'<image class="bn-moon-face" x="{-MOON[2]}" y="{-MOON[2]}" width="{2 * MOON[2]}" height="{2 * MOON[2]}"/></g></g>')
 
 def seg_dist(p, a, b):
     """Distance from p to the segment ab"""
@@ -233,10 +239,10 @@ def clear(x, y):
     return (math.hypot(x - MOON[0], y - MOON[1]) > MOON[2] + 5 and all(math.hypot(x - fx, y - fy) > 6 for fx, fy in FIG.values())
             and all(seg_dist((x, y), a, b) > 3 for a, b in FIG_LINES))
 
-sky = layer('bn-sky', f'<rect width="{W}" height="{H}" fill="url(#bn-sky)"/><g fill="#E8EEFF">{"".join(s for x, y, s in stars if clear(x, y))}</g>{accents}{dipper}{moon}',
+sky = layer('bn-sky', f'<rect width="{W}" height="{H}" fill="url(#bn-sky)"/><g fill="#E8EEFF">{"".join(s for x, y, s in stars if clear(x, y))}</g>{accents}{dipper}<clipPath id="bn-moon-hole"><circle class="bn-moon-hole" cx="{MOON[0]}" cy="{MOON[1]}" r="{MOON[2]}"/></clipPath><rect width="{W}" height="{H}" fill="url(#bn-sky)" clip-path="url(#bn-moon-hole)"/>',
             '<linearGradient id="bn-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060D26"/><stop offset=".6" stop-color="#0F1B4B"/><stop offset=".86" stop-color="#1B2C6A"/><stop offset="1" stop-color="#26397E"/></linearGradient>'
-            '<radialGradient id="bn-star-glow"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".9"/><stop offset=".25" stop-color="#DDE7FF" stop-opacity=".45"/><stop offset="1" stop-color="#C9D8FF" stop-opacity="0"/></radialGradient>'
-            '<radialGradient id="bn-moon-glow"><stop offset="0" stop-color="#E8EEFF" stop-opacity=".3"/><stop offset=".3" stop-color="#E8EEFF" stop-opacity=".32"/><stop offset=".55" stop-color="#D6E0FF" stop-opacity=".1"/><stop offset="1" stop-color="#C9D6FF" stop-opacity="0"/></radialGradient>')
+            '<radialGradient id="bn-star-glow"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".9"/><stop offset=".25" stop-color="#DDE7FF" stop-opacity=".45"/><stop offset="1" stop-color="#C9D8FF" stop-opacity="0"/></radialGradient>')
+moon_layer = layer('bn-moonlayer', moon, '<radialGradient id="bn-moon-glow"><stop offset="0" stop-color="#E8EEFF" stop-opacity=".34"/><stop offset=".24" stop-color="#E8EEFF" stop-opacity=".34"/><stop offset=".3" stop-color="#E6ECFF" stop-opacity=".265"/><stop offset=".4" stop-color="#E2E9FF" stop-opacity=".166"/><stop offset=".5" stop-color="#DDE5FF" stop-opacity=".097"/><stop offset=".6" stop-color="#D8E1FF" stop-opacity=".05"/><stop offset=".7" stop-color="#D2DCFF" stop-opacity=".021"/><stop offset=".85" stop-color="#CCD8FF" stop-opacity=".003"/><stop offset="1" stop-color="#C9D6FF" stop-opacity="0"/></radialGradient>')
 back_defs = ('<linearGradient id="bn-back" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#B7A4F1" stop-opacity=".6"/><stop offset=".45" stop-color="#9C88E8" stop-opacity=".25"/><stop offset="1" stop-color="#8873DD" stop-opacity="0"/></linearGradient>'
              + hfade('bn-hf-back', [(0, 0), (.15, .7), (.4, .35), (.6, .8), (.85, .45), (1, 0)])
              + f'<mask id="bn-m-back" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}"><rect width="{W}" height="{H}" fill="url(#bn-hf-back)"/></mask>'
@@ -323,6 +329,7 @@ html = ('<div class="banner" aria-hidden="true">\n  ' + sky
         + '\n  <div class="bn-twilight"></div><div class="bn-sat"><i></i></div>'
         + '\n  <div class="bn-px bn-px-back"><div class="bn-back"><div class="bn-sway-b">\n    ' + back_svg + '\n  </div></div></div>'
         + '\n  <div class="bn-px bn-px-main"><div class="bn-main"><div class="bn-sway">\n    ' + main_a + '\n    ' + main_b + '\n    ' + main_c + '\n    ' + tint_g + '\n    ' + tint_p + '\n    ' + tint_m + '\n    ' + surge_l + '\n    ' + edge_l + '\n  </div></div></div>'
+        + '\n  ' + moon_layer
         + '\n  <div class="bn-meteor bn-m1"><i></i></div><div class="bn-meteor bn-m2"><i></i></div><div class="bn-meteor bn-m3"><i></i></div>'
         + '\n  <div class="bn-plane bn-plane-a"><i></i><i class="bn-strobe"></i></div><div class="bn-plane bn-plane-b"><i></i><i class="bn-strobe"></i></div>'
         + '\n  <div class="bn-glints"></div>'
