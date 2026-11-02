@@ -40,7 +40,7 @@
       options: [['encouraging', 'Encouraging'], ['fine', 'Fine, but I wouldn’t miss it'], ['patronizing', 'Patronizing']] },
     { id: 'greet-line', view: 'list', part: 'greet', short: 'Which greeting line', show: { view: 'list', look: 'refined', hero: '1' },
       title: 'Which line would you want in the greeting?',
-      options: [['checkins', 'Your patients’ check-ins, as now'], ['pages', 'How many of your patients’ pages you opened this week'], ['clinicians', 'That you’re one of the AURORA clinicians'], ['rotate', 'A different one each day'], ['none', 'None']] },
+      options: [['checkins', 'Your patients’ check-ins, as now'], ['pages', 'How many of your patients you looked at this week'], ['flags', 'Whether you looked at new flags within 3 days'], ['group', 'How much AURORA clinicians used the dashboard this month'], ['tips', 'A tip on using the dashboard'], ['clinicians', 'That you’re one of the AURORA clinicians'], ['rotate', 'A different one each day'], ['none', 'None']] },
     { id: 'pt-lead', view: 'patient', part: 'band', short: 'PHQ-9 or AI estimate first', show: { view: 'patient', p: 'delgado' },
       title: 'Which number should come first on the patient page? Switch between them with First number in the striped strip.',
       options: [['phq', 'The patient’s PHQ-9, their own account, as now'], ['ai', 'The AI estimate, which the status is based on'], ['none', 'No preference']] },

@@ -488,8 +488,9 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .greet{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,1fr);column-gap:32px;overflow:hidden;margin:0 0 20px;padding:16px 20px;background:var(--surface);border:1px solid transparent;border-radius:var(--r);box-shadow:0 1px 2px rgba(16,24,40,.05),0 4px 12px rgba(16,24,40,.05)}
 .greet-hello{font-size:var(--fs-lg);line-height:var(--lh-lg);font-weight:600}
 .greet-sub{display:flex;flex-wrap:wrap;align-items:center;column-gap:24px;row-gap:4px;margin-top:4px;color:var(--muted)}
-.greet-fact{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.greet-fact{display:inline-flex;align-items:center;gap:8px}
 .greet-fact .ic{margin:0}
+.greet-note{margin-top:4px;color:var(--muted)}
 .greet-date .short{display:none}
 /* The art bleeds to the band's top, right and bottom edges. It is at most 28rem wide, anchored right, and fades in
    over 8rem from its left, so it keeps its shape at any width and never reaches the text */
@@ -738,6 +739,7 @@ textarea.set-input{resize:vertical}
         <div class="greet-text">
           <div class="greet-hello">{{ hero.hello }}</div>
           <div class="greet-sub"><span class="greet-date"><span class="long">{{ hero.date }}</span><span class="short" aria-hidden="true">{{ hero.dateShort }}</span></span><sc-for list="{{ hero.facts }}" as="x"><span class="{{ x.cls }}"><span class="sr-only">. </span>{{ x.mark }}{{ x.text }}</span></sc-for><span class="sr-only">.</span></div>
+          <sc-if value="{{ hero.note }}"><div class="greet-note">{{ hero.note }}<span class="sr-only">.</span></div></sc-if>
         </div>
         <div class="greet-art" aria-hidden="true">
         <svg viewBox="0 0 480 96" preserveAspectRatio="xMaxYMax slice" focusable="false">
@@ -1973,7 +1975,7 @@ class Component extends DCLogic {
       if (['current', 'refined'].includes(h.get('look'))) r.refined = h.get('look') === 'refined';
       if (['0', '1'].includes(h.get('hero'))) r.hero = h.get('hero') === '1';
       if (['0', '1'].includes(h.get('dates'))) r.dates = h.get('dates') === '1';
-      if (['checkins', 'pages', 'clinicians', 'none'].includes(h.get('line'))) r.greetLine = h.get('line');
+      if (['checkins', 'pages', 'flags', 'group', 'tips', 'clinicians', 'none'].includes(h.get('line'))) r.greetLine = h.get('line');
       if (Object.keys(HO_TEXT).includes(h.get('lang'))) r.hoLang = h.get('lang');
       if (['full', 'simple'].includes(h.get('ho'))) r.hoStyle = h.get('ho');
       if (['name', 'sev'].includes(h.get('sort'))) { r.sort = h.get('sort'); r.sortRev = h.get('rev') === '1'; }
@@ -2229,12 +2231,21 @@ class Component extends DCLogic {
     };
     const tod = BANDS_TOD[hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening'];
     // The greeting's last line: positive and descriptive, about the clinician's own work in AURORA. Never a comparison
-    // with other clinicians, patient outcomes, or anything about enrollment (DESIGN.md, Greeting band). In production,
-    // one a day, rotating among those that apply; 'pages' only when the share is high. Mock numbers.
+    // with other clinicians, patient outcomes, or anything about enrollment (DESIGN.md, Greeting band). Each line changes
+    // over time, so the band stays worth reading. In production, one a day, rotating among those that apply: 'pages'
+    // only when the share is high, 'flags' only when true, 'tips' in a clinician's first month. Mock numbers.
     const ciTotal = PATIENTS.reduce((a, p) => a + rateOf(p)[0], 0);
+    const TIPS = ['Tip: point at a week on the trend chart to see that week’s check-in', 'Tip: the Patient and Severity headings sort this list', 'Tip: rest the pointer on a patient for a quick summary'];
     const greetLines = {
-      checkins: { mark: icon('message-square'), text: `Your patients completed ${ciTotal} check-ins in the last 2 weeks` },
-      pages: { mark: null, text: `You opened ${all.length - 1} of your ${all.length} patients’ pages this week` },
+      // Then, on its own line, what the check-ins are already used for, so 107 doesn't read as 107 to review (review note,
+      // October 30). A line of its own, not a third fact, so the band's text column, and the art beside it, keep their width
+      checkins: { mark: icon('message-square'), text: `Your patients completed ${ciTotal} check-ins in the last 2 weeks`, note: 'Each patient’s AI estimate below is calculated from their check-ins' },
+      // Reviews as the logging spec defines them (a patient's page with at least 10 seconds of active use), so the line
+      // and the trial's review measure agree, and opening a page just to move the number doesn't count
+      pages: { mark: null, text: `You looked at ${all.length - 1} of your ${all.length} patients’ pages this week` },
+      flags: { mark: null, text: 'You looked at each patient with a new flag within 3 days this month' },
+      group: { mark: null, text: 'AURORA clinicians looked at their patients’ pages 1,240 times this month' },
+      tips: { mark: null, text: TIPS[TODAY.getDate() % TIPS.length] },
       clinicians: { mark: null, text: 'You’re one of 40 AURORA clinicians in 8 countries' }
     };
     const hero = {
@@ -2246,10 +2257,11 @@ class Component extends DCLogic {
       // patients who aren't in AURORA. Then the line about the clinician's own work. Safety flags aren't repeated here:
       // without visit dates their group comes first, just below, and by next visit each is on its patient's row.
       // Before the first patient, the band keeps only the greeting and the date
+      note: !s.empty && greetLines[s.greetLine] ? greetLines[s.greetLine].note || '' : '',
       facts: s.empty ? [] : [
         ...(s.dates && (todayN || tomorrowN) ? [{ cls: 'greet-fact', mark: icon('calendar'),
           text: todayN && tomorrowN ? `${countOf(todayN, 'study visit')} today, ${tomorrowN} tomorrow` : todayN ? `${countOf(todayN, 'study visit')} today` : `${countOf(tomorrowN, 'study visit')} tomorrow` }] : []),
-        ...(greetLines[s.greetLine] ? [{ cls: 'greet-fact', ...greetLines[s.greetLine] }] : [])
+        ...(greetLines[s.greetLine] ? [{ cls: 'greet-fact', mark: greetLines[s.greetLine].mark, text: greetLines[s.greetLine].text }] : [])
       ]
     };
 
@@ -3026,7 +3038,7 @@ class Component extends DCLogic {
       hero, heroOn: s.refined && s.hero && s.view === 'list', refined: s.refined,
       lookTabs: [tab('Refined', s.refined, () => this.go({ refined: true })), tab('Original', !s.refined, () => this.go({ refined: false }))],
       heroTabs: [tab('On', s.hero, () => this.go({ hero: true })), tab('Off', !s.hero, () => this.go({ hero: false }))],
-      lineTabs: [['checkins', 'Check-ins'], ['pages', 'Pages opened'], ['clinicians', 'Clinicians'], ['none', 'None']].map(([k, l]) => tab(l, s.greetLine === k, () => this.go({ greetLine: k }))),
+      lineTabs: [['checkins', 'Check-ins'], ['pages', 'Pages looked at'], ['flags', 'Flag response'], ['group', 'Group activity'], ['tips', 'Tip'], ['clinicians', 'Clinician count'], ['none', 'None']].map(([k, l]) => tab(l, s.greetLine === k, () => this.go({ greetLine: k }))),
       lineCtl: s.refined && s.view === 'list' && s.hero,
       greetCtl: s.refined && s.view === 'list',
       peekOut: () => { clearTimeout(this.peekT); this.peekT = setTimeout(() => this.setState({ peek: null }), 150); },
