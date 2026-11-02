@@ -252,15 +252,21 @@
     }
     return root ? { el: root, key: 'page', label: 'Whole page' } : null;
   }
+  // Parts renamed since notes were pinned to them, so those notes keep their place. The old name is tried first,
+  // since v2 keeps some of them.
+  const RENAMED = { 'tile:Check-ins': 'tile:AURORA check-ins', 'tile:Check-ins done': 'tile:AURORA check-ins', 'group:Too few check-ins': 'group:Too few check-ins for a status' };
   function findAnchor(key) {
     const root = dcRoot();
     if (!root || !key) return null;
     if (key === 'page') return root;
-    const i = key.indexOf(':'), k = i < 0 ? key : key.slice(0, i), id = i < 0 ? '' : key.slice(i + 1);
-    const s = PARTS.find((x) => x.k === k);
-    if (!s) return null;
-    for (const el of root.querySelectorAll(s.sel)) if (!s.id || s.id(el) === id) return el;
-    return null;
+    const find = (key) => {
+      const i = key.indexOf(':'), k = i < 0 ? key : key.slice(0, i), id = i < 0 ? '' : key.slice(i + 1);
+      const s = PARTS.find((x) => x.k === k);
+      if (!s) return null;
+      for (const el of root.querySelectorAll(s.sel)) if (!s.id || s.id(el) === id) return el;
+      return null;
+    };
+    return find(key) || (RENAMED[key] ? find(RENAMED[key]) : null);
   }
   // Every part on screen, in page order, for the note form's "On" menu
   function sectionsOnPage() {
@@ -280,8 +286,11 @@
 
   /* ---------- What is on screen ---------- */
   const pageKey = () => `${VERSION}:${page.view}`;
-  // On the check-in page, a note belongs to its check-in as well as its patient
-  const here = (n) => n.pageKey === pageKey() && (page.view === 'list' || !n.pid || n.pid === page.pid)
+  // On this page, as the panel's This page lists it. Every patient's page has the same parts, so a note written on one
+  // patient's page, handout or check-in is pinned to that part on the others too.
+  const here = (n) => n.pageKey === pageKey();
+  // Written on what is on screen: the same patient and, on the check-in page, the same check-in
+  const sameSpot = (n) => here(n) && (page.view === 'list' || !n.pid || n.pid === page.pid)
     && (page.view !== 'checkin' || !n.ctx || !n.ctx.day || n.ctx.day === page.cday);
   function patientName() {
     if (['list', 'site', 'settings', 'account', 'welcome'].includes(page.view)) return '';
@@ -495,7 +504,7 @@
     fab.classList.toggle('open', ui.open);
     fab.setAttribute('aria-expanded', String(ui.open));
     fab.setAttribute('aria-label', ui.open ? 'Close review notes' : `Review notes: ${plural(k, 'note')} on this page`);
-    if (pendingScroll && m.visible.some((n) => n.id === pendingScroll && here(n))) {
+    if (pendingScroll && m.visible.some((n) => n.id === pendingScroll && sameSpot(n))) {
       const p = pins.querySelector('.an-pin.on');
       if (p) { p.scrollIntoView({ block: 'center' }); pendingScroll = null; }
     }
@@ -512,9 +521,11 @@
       const left = r.left + window.scrollX + (n.x == null ? 0.03 : n.x) * r.width;
       const top = r.top + window.scrollY + (n.y == null ? 0.1 : n.y) * r.height;
       const k = m.num.get(n.id);
+      const what = { handout: 'handout', checkin: 'check-in' }[n.view] || 'page';
+      const from = sameSpot(n) ? '' : n.pid !== page.pid ? `, written on ${n.pname || 'another patient'}’s ${what}` : ', written on another check-in';
       pins.append(h('button', {
         type: 'button', class: 'an-pin' + (ui.focus === n.id ? ' on' : '') + (n.resolved ? ' resolved' : ''),
-        style: `left:${left.toFixed(1)}px;top:${top.toFixed(1)}px`, 'aria-label': `Note ${k} by ${n.name}: ${n.text}`,
+        style: `left:${left.toFixed(1)}px;top:${top.toFixed(1)}px`, 'aria-label': `Note ${k} by ${n.name}${from}: ${n.text}`,
         onclick: () => focusNote(n.id, false)
       }, String(k)));
     }
@@ -671,7 +682,10 @@
     const plusN = Object.keys(n.plus || {}).length, iPlus = !!(n.plus || {})[m.uid];
     const reps = m.replies(n.id);
     const where = [VIEW_NAMES[n.view] || n.view, n.pname, n.anchorLabel].filter(Boolean).join(' › ');
-    const shownHere = here(n) && !!findAnchor(n.anchor);
+    // Its pin is on screen. Clicking the note finds the pin, or opens the page the note was written on: another
+    // patient's page or check-in, or this one with the settings that show its part.
+    const pinned = here(n) && !!findAnchor(n.anchor);
+    const shownHere = pinned && sameSpot(n);
     const tool = (label, onclick, extra = {}) => h('button', { type: 'button', class: 'an-tool', onclick, ...extra }, label);
     return h('li', {
       class: 'an-card' + (ui.focus === n.id ? ' on' : '') + (n.resolved ? ' resolved' : '') + (mine ? ' mine' : ''), 'data-id': n.id,
@@ -679,7 +693,7 @@
     },
     h('div', { class: 'an-meta' }, h('span', { class: 'an-num', 'aria-hidden': 'true' }, String(m.num.get(n.id))),
       h('span', { class: 'an-who' }, n.name + (n.role ? ` (${n.role})` : '')), h('span', { class: 'an-when' }, ago(n.createdAt))),
-    h('div', { class: 'an-where' }, n.version === n.view ? where : `${where} (${n.version})`, shownHere ? null : [' ', tool('Show', () => goTo(n), { class: 'an-tool an-inline' })]),
+    h('div', { class: 'an-where' }, n.version === n.view ? where : `${where} (${n.version})`, pinned ? null : [' ', tool('Show', () => goTo(n), { class: 'an-tool an-inline' })]),
     n.kind ? h('div', { class: 'an-kind' }, kindName(n.kind)) : null,
     ui.edit === n.id ? editBox(n) : h('p', { class: 'an-text' }, n.text),
     n.resolved ? h('div', { class: 'an-where' }, `Resolved${n.resolvedBy ? ' by ' + n.resolvedBy : ''}`) : null,
