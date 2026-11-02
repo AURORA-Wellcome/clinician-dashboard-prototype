@@ -1,9 +1,9 @@
 """Landing-page banner: a night sky with blue-violet aurora curtains over a low, forested horizon (SVG, no animation).
 
 Usage: python3 design/landing/banner_gen.py banner.html   then paste the output over the <div class="banner"> in index.html.
-Layers (sky and stars, back curtain, three ray patterns and a bright edge for the main curtain, hills) are separate
-SVGs inside drift and sway wrappers, so the page can move and cross-fade them cheaply with CSS transforms and opacity,
-without redrawing the blur and noise filters.
+Layers (sky, with the stars, the Big Dipper and the moon; back curtain; three ray patterns, color, a surge layer and a
+bright edge for the main curtain; hills) are separate SVGs inside drift and sway wrappers, so the page can move and
+cross-fade them cheaply with CSS transforms and opacity, without redrawing the blur and noise filters.
 Mostly blue-violet, with natural green and violet shimmer. (The dashboard itself keeps to cool hues: green means
 "on track" there.)"""
 import math, os, random, sys
@@ -40,11 +40,11 @@ def ridge(base, terms, step=16):
     pts = [(x, base + sum(a * math.sin(x / f + p) for a, f, p in terms)) for x in range(-20, W + 21, step)]
     return f"M{pts[0][0]:.1f},{pts[0][1]:.1f}" + smooth(pts) + f" L{W + 20},{H + 2} L-20,{H + 2} Z"
 
-stars = []
+stars = []  # (x, y, circle), so stars that would crowd the Big Dipper or sit behind the moon can be left out
 for _ in range(110):
     x, y = rnd.uniform(0, W), rnd.uniform(3, 165)
     r = rnd.choice([0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5])
-    stars.append(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="{r}" opacity="{rnd.uniform(0.25, 0.85):.2f}"/>')
+    stars.append((x, y, f'<circle cx="{x:.0f}" cy="{y:.0f}" r="{r}" opacity="{rnd.uniform(0.25, 0.85):.2f}"/>'))
 
 # A main curtain sweeping up to the right, a fainter violet one crossing it, and a thin bright lower edge
 main = curtain(182, 104, [(14, 190, 0.6), (7, 83, 1.9)], 70, 118, [(18, 140, 2.1), (8, 51, 0.7)])
@@ -162,9 +162,80 @@ accents = ''.join(
     f'<circle r="6.5" fill="url(#bn-star-glow)"/><path d="{SPARKLE}" fill="#F4F7FF" opacity=".5"/><circle r="1.5" fill="#FFFFFF"/></g></g>'
     for x, y, k, dur, delay in ACCENTS)
 
-sky = layer('bn-sky', f'<rect width="{W}" height="{H}" fill="url(#bn-sky)"/><g fill="#E8EEFF">{"".join(stars)}</g>{accents}',
+# The Big Dipper and the North Star, at the upper left, where the sky above the curtains is clearest. The Dipper's
+# shape is true: a stereographic projection about the celestial pole, turned as the sky turns at some hour, never
+# mirrored. The North Star lies on the line through the two pointer stars (Merak, then Dubhe), as in the sky, but
+# nearer: 2.2 times the pointers' spacing rather than about 5.3, so the whole figure fits above the curtains. Brighter
+# stars are drawn larger. Lines and names (.bn-figure, and .bn-labels in the page) show when the pointer comes near.
+DIPPER = {'Dubhe': (11.0621, 61.751, 1.79), 'Merak': (11.0307, 56.383, 2.37), 'Phecda': (11.8972, 53.695, 2.44),
+          'Megrez': (12.2571, 57.033, 3.31), 'Alioth': (12.9005, 55.960, 1.77), 'Mizar': (13.3988, 54.925, 2.27),
+          'Alkaid': (13.7923, 49.313, 1.86)}  # right ascension (hours), declination (degrees), magnitude
+NORTH_STAR_MAG, DIPPER_TURN, POINTER_GAP = 1.98, 44, 2.2
+DIPPER_BOX = (250, 34, 60)  # the whole figure's left edge, top and height, in scene units
+
+def pole_xy(ra, dec):
+    r = 2 * math.degrees(math.tan(math.radians((90 - dec) / 2)))
+    a = math.radians(ra * 15)
+    return r * math.sin(a), -r * math.cos(a)
+
+def dipper_layout():
+    t, pts = math.radians(DIPPER_TURN), {}
+    for name, (ra, dec, _) in DIPPER.items():
+        x, y = pole_xy(ra, dec)
+        pts[name] = (x * math.cos(t) - y * math.sin(t), x * math.sin(t) + y * math.cos(t))
+    (mx, my), (dx, dy) = pts['Merak'], pts['Dubhe']
+    pts['North Star'] = (dx + (dx - mx) * POINTER_GAP, dy + (dy - my) * POINTER_GAP)
+    x0, y0 = min(p[0] for p in pts.values()), min(p[1] for p in pts.values())
+    k = DIPPER_BOX[2] / (max(p[1] for p in pts.values()) - y0)
+    return {n: (DIPPER_BOX[0] + (x - x0) * k, DIPPER_BOX[1] + (y - y0) * k) for n, (x, y) in pts.items()}
+
+FIG = dipper_layout()
+mags = {**{n: m for n, (_, _, m) in DIPPER.items()}, 'North Star': NORTH_STAR_MAG}
+radius = {n: 0.9 + (3.4 - mags[n]) * 0.5 for n in FIG}
+fig_stars = ''.join(f'<circle data-star="{n}" cx="{x:.1f}" cy="{y:.1f}" r="{radius[n]:.2f}" opacity=".95"/>' for n, (x, y) in FIG.items())
+fig_top = min(y - radius[n] for n, (x, y) in FIG.items())
+
+def towards(a, b, d):
+    """The point d units from a toward b"""
+    (ax, ay), (bx, by) = a, b
+    n = math.hypot(bx - ax, by - ay)
+    return ax + (bx - ax) * d / n, ay + (by - ay) * d / n
+
+outline = 'M' + 'L'.join(f'{FIG[n][0]:.1f},{FIG[n][1]:.1f}' for n in ('Alkaid', 'Mizar', 'Alioth', 'Megrez', 'Dubhe', 'Merak', 'Phecda', 'Megrez'))
+p0, p1 = towards(FIG['Dubhe'], FIG['North Star'], 4), towards(FIG['North Star'], FIG['Dubhe'], 4)
+dipper = (f'<g class="bn-dipper" data-top="{fig_top:.1f}"><g class="bn-dipper-stars" fill="#F2F5FF">{fig_stars}</g>'
+          '<g class="bn-figure" fill="none" stroke="#CFDBFF" stroke-opacity=".55">'
+          f'<path d="{outline}" stroke-width="1" vector-effect="non-scaling-stroke"/>'
+          f'<path d="M{p0[0]:.1f},{p0[1]:.1f}L{p1[0]:.1f},{p1[1]:.1f}" stroke-width="1" stroke-dasharray="2 3" vector-effect="non-scaling-stroke"/></g></g>')
+
+# The moon, upper right, behind the curtains' faint upper rays. The page sets its phase from today's date and shows it
+# (.on), except near new moon. A disk the color of the sky there hides the stars behind it; earthshine, which the page
+# shows only for a thin crescent; the lit part; and over them the glare, which also hides the dark part, as in the sky.
+# .bn-moon-pin lets the page keep it in view on a narrow or wide banner (data-top: its top edge).
+MOON = (1392, 44, 6.5)
+moon = (f'<g class="bn-moon-pin" data-top="{MOON[1] - MOON[2]:g}"><g class="bn-moon" transform="translate({MOON[0]} {MOON[1]})">'
+        f'<circle class="bn-moon-disk" r="{MOON[2]}" fill="#09112F"/><circle class="bn-moon-shine" r="{MOON[2]}" fill="#9FB0E0" opacity="0"/>'
+        '<path class="bn-moon-lit" fill="#EEF2FF"/>'
+        f'<circle class="bn-moon-halo" r="{MOON[2] * 3.4:g}" fill="url(#bn-moon-glow)" opacity="0"/></g></g>')
+
+def seg_dist(p, a, b):
+    """Distance from p to the segment ab"""
+    (px, py), (ax, ay), (bx, by) = p, a, b
+    t = max(0, min(1, ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / ((bx - ax) ** 2 + (by - ay) ** 2)))
+    return math.hypot(px - ax - t * (bx - ax), py - ay - t * (by - ay))
+
+FIG_LINES = [(FIG[a], FIG[b]) for a, b in [('Alkaid', 'Mizar'), ('Mizar', 'Alioth'), ('Alioth', 'Megrez'), ('Megrez', 'Dubhe'),
+                                           ('Dubhe', 'Merak'), ('Merak', 'Phecda'), ('Phecda', 'Megrez'), ('Dubhe', 'North Star')]]
+
+def clear(x, y):
+    """Leave out stars behind the moon, and stars crowding the Dipper's stars or lying on its lines"""
+    return (math.hypot(x - MOON[0], y - MOON[1]) > MOON[2] + 5 and all(math.hypot(x - fx, y - fy) > 6 for fx, fy in FIG.values())
+            and all(seg_dist((x, y), a, b) > 3 for a, b in FIG_LINES))
+
+sky = layer('bn-sky', f'<rect width="{W}" height="{H}" fill="url(#bn-sky)"/><g fill="#E8EEFF">{"".join(s for x, y, s in stars if clear(x, y))}</g>{accents}{dipper}{moon}',
             '<linearGradient id="bn-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060D26"/><stop offset=".6" stop-color="#0F1B4B"/><stop offset=".86" stop-color="#1B2C6A"/><stop offset="1" stop-color="#26397E"/></linearGradient>'
-            '<radialGradient id="bn-star-glow"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".9"/><stop offset=".25" stop-color="#DDE7FF" stop-opacity=".45"/><stop offset="1" stop-color="#C9D8FF" stop-opacity="0"/></radialGradient>')
+            '<radialGradient id="bn-star-glow"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".9"/><stop offset=".25" stop-color="#DDE7FF" stop-opacity=".45"/><stop offset="1" stop-color="#C9D8FF" stop-opacity="0"/></radialGradient>'
+            '<radialGradient id="bn-moon-glow"><stop offset="0" stop-color="#E8EEFF" stop-opacity=".3"/><stop offset=".3" stop-color="#E8EEFF" stop-opacity=".32"/><stop offset=".55" stop-color="#D6E0FF" stop-opacity=".1"/><stop offset="1" stop-color="#C9D6FF" stop-opacity="0"/></radialGradient>')
 back_defs = ('<linearGradient id="bn-back" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#B7A4F1" stop-opacity=".6"/><stop offset=".45" stop-color="#9C88E8" stop-opacity=".25"/><stop offset="1" stop-color="#8873DD" stop-opacity="0"/></linearGradient>'
              + hfade('bn-hf-back', [(0, 0), (.15, .7), (.4, .35), (.6, .8), (.85, .45), (1, 0)])
              + f'<mask id="bn-m-back" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}"><rect width="{W}" height="{H}" fill="url(#bn-hf-back)"/></mask>'
@@ -201,6 +272,12 @@ mag_defs = ('<linearGradient id="bn-magenta" x1="0" y1="1" x2="0" y2="0"><stop o
 tint_m = layer('bn-magenta', f'<g mask="url(#bn-m-magenta)"><path d="{main}" fill="url(#bn-magenta)" filter="url(#bn-rays-m)"/>'
                f'<path d="{edge}" transform="translate(0 4)" fill="#FF5CB8" opacity=".75" filter="url(#bn-border)"/></g>', mag_defs)
 edge_l = layer('bn-edge', f'<g mask="url(#bn-m-main)"><path d="{edge}" fill="url(#bn-edge)" filter="url(#bn-soft)" opacity=".75"/></g>')
+# A surge, as in a substorm: bright green rays rising from the curtain's lower edge, over a pink fringe. Hidden by day;
+# the page shows a little of it around midnight and brings it up now and then for a surge.
+surge_defs = ('<linearGradient id="bn-surge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#D6FFE4" stop-opacity=".55"/><stop offset=".1" stop-color="#7DF7A8" stop-opacity=".9"/><stop offset=".35" stop-color="#45DB7A" stop-opacity=".45"/><stop offset=".7" stop-color="#36C76A" stop-opacity=".12"/><stop offset="1" stop-color="#36C76A" stop-opacity="0"/></linearGradient>'
+              + rays_filter('bn-rays-s', 88))
+surge_l = layer('bn-surge', f'<g mask="url(#bn-m-main)"><path d="{main}" fill="url(#bn-surge)" filter="url(#bn-rays-s)"/>'
+                f'<path d="{edge}" transform="translate(0 4)" fill="#FF6FCB" opacity=".8" filter="url(#bn-border)"/></g>', surge_defs)
 # The cabin, seen three-quarters on: its gable end faces right, and its long side recedes to the left, toward the
 # middle of the scene, with one larger window lit warm from inside, a soft halo, and a little of its light on the ground.
 # The roof edges catch a faint rim of skylight. Drawn around its base at (0, 0), then placed and scaled. Its smoke and
@@ -211,13 +288,13 @@ window = '-7.5,-2.45 -7.5,-6.35 -1.5,-6.6 -1.5,-2.3'
 cabin_defs = ('<filter id="bn-warm" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.6"/></filter>'
               '<filter id="bn-spill" x="-30%" y="-150%" width="160%" height="400%"><feGaussianBlur stdDeviation="2.5"/></filter>')
 cabin = (f'<g transform="translate({cx:g} {by:g}) scale({CABIN_K:g})">'
-         '<ellipse cx="-6" cy="2.8" rx="13" ry="2.4" fill="#FFB25A" opacity=".16" filter="url(#bn-spill)"/>'
+         '<ellipse class="bn-spill" cx="-6" cy="2.8" rx="13" ry="2.4" fill="#FFB25A" opacity=".16" filter="url(#bn-spill)"/>'
          '<path d="M-12,-.5V-8L4,-9V2H-12ZM-9.8,-12V-18.6H-7.4V-12ZM-10.2,-18.6H-7V-19.3H-10.2Z" fill="#050A1F"/>'
          '<path d="M4,2V-9L9,-15L14,-9V2Z" fill="#08102C"/>'
          '<path d="M9,-15L-8,-14.2L-12.8,-7.7L3.4,-8.8Z" fill="#060B22"/>'
          '<path d="M3.4,-8.8L9,-15.2L14.6,-8.8" fill="none" stroke="#060B22" stroke-width=".9" stroke-linejoin="round"/>'
          '<path d="M-8,-14.45L9,-15.45L14.8,-8.95" fill="none" stroke="#96AAE6" stroke-opacity=".28" stroke-width=".35"/>'
-         f'<polygon points="{window}" fill="#FFB04D" opacity=".85" filter="url(#bn-warm)"/>'
+         f'<polygon class="bn-win-glow" points="{window}" fill="#FFB04D" opacity=".85" filter="url(#bn-warm)"/>'
          f'<polygon class="bn-win" points="{window}" fill="#FFD08A"/>'
          '<path d="M-4.5,-6.48V-2.37M-7.5,-4.4L-1.5,-4.45" fill="none" stroke="#3A230C" stroke-width=".4" opacity=".7"/></g>')
 # The forest and cabin are anchored at the bottom of the banner, so a wide banner crops sky rather than forest
@@ -227,23 +304,28 @@ forest_mask = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" p
                f'<path d="{far_forest}"/><path d="{near_forest}"/></svg>\n')
 open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'forest.svg'), 'w').write(forest_mask)
 # Where the page puts the smoke (the chimney top), the firelight and the warmer glow when the pointer is near the
-# cabin (both on the window), in percent of the scene
+# cabin (both on the window), and the puff and sparks when the cabin is clicked (the chimney top), in percent of the scene
 chimney = (round(cx - 8.6 * CABIN_K, 2), round(by - 19.3 * CABIN_K, 2))
 hearth = (cx - 4.5 * CABIN_K, by - 4.45 * CABIN_K)
+at_chimney = f'left:{chimney[0] / W * 100:.3f}%;top:{chimney[1] / H * 100:.3f}%'
 scene = (f'<div class="bn-scene"><div class="bn-hearth" style="left:{hearth[0] / W * 100:.3f}%;top:{hearth[1] / H * 100:.3f}%"></div>'
          f'<div class="bn-cozy" style="left:{hearth[0] / W * 100:.3f}%;top:{hearth[1] / H * 100:.3f}%"></div>'
-         f'<div class="bn-smoke" data-at="{chimney[0]:g},{chimney[1]:g}" style="left:{chimney[0] / W * 100:.3f}%;top:{chimney[1] / H * 100:.3f}%">'
-         + '<i></i>' * 8 + '</div></div>')
+         f'<div class="bn-smoke" data-at="{chimney[0]:g},{chimney[1]:g}" style="{at_chimney}">'
+         + '<i></i>' * 8 + f'</div><div class="bn-puff" style="{at_chimney}"></div></div>')
 
 # The curtains sit in .bn-px wrappers, which the page shifts a little with the pointer for depth. The stars and the
-# forest (.bn-ground) stay put: a moving foreground can bring on motion sickness. .bn-glints holds the sparkles the
-# page adds near the pointer, and .bn-treeglow, above the forest, the faint starlight it adds to the treetops.
+# forest (.bn-ground) stay put: a moving foreground can bring on motion sickness. .bn-twilight is the glow the page
+# lights over the horizon at dusk and dawn, behind the curtains, and .bn-sat a satellite, which passes behind them too.
+# .bn-glints holds the sparkles the page adds near the pointer, .bn-labels the Big Dipper's names, and .bn-treeglow,
+# above the forest, the faint starlight the page adds to the treetops.
 html = ('<div class="banner" aria-hidden="true">\n  ' + sky
+        + '\n  <div class="bn-twilight"></div><div class="bn-sat"><i></i></div>'
         + '\n  <div class="bn-px bn-px-back"><div class="bn-back"><div class="bn-sway-b">\n    ' + back_svg + '\n  </div></div></div>'
-        + '\n  <div class="bn-px bn-px-main"><div class="bn-main"><div class="bn-sway">\n    ' + main_a + '\n    ' + main_b + '\n    ' + main_c + '\n    ' + tint_g + '\n    ' + tint_p + '\n    ' + tint_m + '\n    ' + edge_l + '\n  </div></div></div>'
+        + '\n  <div class="bn-px bn-px-main"><div class="bn-main"><div class="bn-sway">\n    ' + main_a + '\n    ' + main_b + '\n    ' + main_c + '\n    ' + tint_g + '\n    ' + tint_p + '\n    ' + tint_m + '\n    ' + surge_l + '\n    ' + edge_l + '\n  </div></div></div>'
         + '\n  <div class="bn-meteor bn-m1"><i></i></div><div class="bn-meteor bn-m2"><i></i></div><div class="bn-meteor bn-m3"><i></i></div>'
         + '\n  <div class="bn-plane bn-plane-a"><i></i><i class="bn-strobe"></i></div><div class="bn-plane bn-plane-b"><i></i><i class="bn-strobe"></i></div>'
         + '\n  <div class="bn-glints"></div>'
+        + '\n  <div class="bn-labels"><span class="bn-label bn-label-dipper">Big Dipper</span><span class="bn-label bn-label-north">North Star</span></div>'
         + '\n  <div class="bn-ground">' + hills + '</div>'
         + '\n  <div class="bn-treeglow"></div>'
         + '\n  ' + scene + '\n</div>')

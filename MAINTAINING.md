@@ -53,7 +53,9 @@ Reviewers can pin notes to any part of the v2 and v3 pages and the landing page.
   2. Paste `banner.html` over the banner in `index.html`.
   3. Paste `plane.css` over the `bn-plane-a` and `bn-plane-b` keyframes (the far-off plane's arcing paths).
 
-  The script also writes `design/landing/forest.svg`, the forest's silhouette alone, which masks the starlight the page adds to the treetops. The banner HTML includes `.bn-scene`, which holds the cabin's smoke and firelight at positions computed from the drawing. `.bn-scene` covers the same box as the forest layer, so its `cqw` units are the drawing's (1cqw is 16 units).
+  The script also writes `design/landing/forest.svg`, the forest's silhouette alone, which masks the starlight the page adds to the treetops. The banner HTML includes `.bn-scene`, which holds the cabin's smoke and firelight, and the puff and sparks when someone clicks it, at positions computed from the drawing. `.bn-scene` covers the same box as the forest layer, so its `cqw` units are the drawing's (1cqw is 16 units).
+
+  The script also places the Big Dipper and the North Star (from the stars' coordinates; `DIPPER_TURN`, `POINTER_GAP` and `DIPPER_BOX` set its turn, the North Star's spacing and its place) and the moon (`MOON`), and leaves out random stars that would sit behind the moon or crowd the figure. The page's script sets the moon's phase and the time of day. To see another date and time, add `?at=` to the address, for example `index.html?at=2026-11-24T22:30` (a full moon, near midnight).
 - `design/screenshots/`: dated before/after screenshots for each redesign round.
 - Content audits quote the planning meetings, so they stay out of this public repo (`.gitignore`).
 - `design/type-check.html` lists the words at each rendered text size. Serve the repo first, then open `http://localhost:8767/design/type-check.html`.

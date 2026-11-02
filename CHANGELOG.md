@@ -99,6 +99,14 @@ The first mockup had a clinical, EHR-style look, with three views (caseload tria
 - **Tagline** (October 27): pointing at the AURORA mark shows "Rich context, shared understanding", as in v3.
 - **Order:** How to review comes straight after v3. The earlier versions sit below it, oldest first, in a quieter "How we got here" section.
 - **Plane lights** (November 1): the far-off airliner's red beacon now alternates with a white strobe, as an airliner's lights look from the ground. Each flashes every 2.4 s, so the plane still blinks only every 1.2 s.
+- **A livelier sky** (November 1), still calm. With the reduced-motion setting nothing moves, but the time of day and the moon still show.
+  - the sky follows the viewer's clock: a blue glow over the horizon at dusk, a paler one before dawn, a brighter, greener aurora around midnight, and late at night the cabin's fire burning low
+  - tonight's moon, in its real phase
+  - now and then an aurora surge, as in a substorm, for about 14 seconds
+  - now and then a satellite, crossing behind the curtains and fading into the earth's shadow
+  - the Big Dipper and the North Star, whose lines and names show when the pointer comes near
+  - taps: the stars nearest a tap sparkle, and a tap on the Big Dipper shows it
+  - clicking the cabin stokes its fire, with a puff of smoke and a few sparks; late at night it burns bright again for half a minute
 
 ## All pages
 
