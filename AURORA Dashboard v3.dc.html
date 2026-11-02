@@ -271,8 +271,8 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .note-add{display:grid;justify-items:start;gap:8px;margin-top:12px}
 .note-input{width:100%;resize:vertical;line-height:1.5}
 .notes-draft{margin-top:12px}
-.disc .disc-said{flex-basis:100%;flex-wrap:wrap;cursor:auto}
-.disc-said .ho-input{width:min(32rem,100%)}
+.disc .disc-said{flex-basis:100%;flex-direction:column;align-items:flex-start;gap:4px;cursor:auto}
+.disc-said .ho-input{width:min(32rem,100%);resize:vertical;line-height:1.5}
 .scale{display:flex;align-items:center;gap:6px;max-width:240px;margin-top:6px;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
 .scale svg{flex:1;min-width:0;width:100%;height:auto}
 .scale-track{stroke:var(--line-strong);stroke-width:3;stroke-linecap:round}
@@ -896,7 +896,7 @@ textarea.set-input{resize:vertical}
         </div>
       </div>
       <sc-if value="{{ pt.discordant }}"><p class="callout">The patient’s PHQ-9 and the AI severity estimate differ by more than its uncertainty. The AI severity estimate supplements the patient’s own account; it doesn’t replace it.</p></sc-if>
-      <div class="disc no-print" role="group" aria-labelledby="disc-q"><span class="disc-q" id="disc-q">Today:</span><label><input type="checkbox" checked="{{ disc.pt }}" onChange="{{ disc.togglePt }}"> The patient brought up their AURORA data</label><label><input type="checkbox" checked="{{ disc.me }}" onChange="{{ disc.toggleMe }}"> I brought up their AURORA data</label><sc-if value="{{ disc.any }}"><span class="disc-saved muted">Saved, in Your notes</span></sc-if><sc-if value="{{ disc.any }}"><label class="disc-said"><span>What the patient made of it <span class="muted">(optional)</span></span><input type="text" class="ho-input" value="{{ disc.said }}" onChange="{{ disc.setSaid }}"></label></sc-if></div>
+      <div class="disc no-print" role="group" aria-labelledby="disc-q"><span class="disc-q" id="disc-q">Today:</span><label><input type="checkbox" checked="{{ disc.pt }}" onChange="{{ disc.togglePt }}"> The patient brought up their AURORA data</label><label><input type="checkbox" checked="{{ disc.me }}" onChange="{{ disc.toggleMe }}"> I brought up their AURORA data</label><sc-if value="{{ disc.any }}"><span class="disc-saved muted">Saved, in Your notes</span></sc-if><sc-if value="{{ disc.any }}"><label class="disc-said"><span>Patient’s reaction <span class="muted">(optional)</span></span><textarea class="ho-input" rows="3" value="{{ disc.said }}" onChange="{{ disc.setSaid }}"></textarea></label></sc-if></div>
     </div>
   </div>
 
@@ -2889,11 +2889,11 @@ class Component extends DCLogic {
     // A patient's notes are the mock ones until the clinician first adds, edits or deletes one; from then on, their own list
     const noteList = (s.myNotes || {})[P.id] || CLIN_NOTES[P.id] || [];
     const setNotes = (fn) => this.setState((st) => ({ myNotes: { ...(st.myNotes || {}), [P.id]: fn((st.myNotes || {})[P.id] || CLIN_NOTES[P.id] || []) }, noteEdit: null, noteDel: null }));
-    // Today's ticks, and what the patient made of their data, show as today's entry (review note, October 30: where do
+    // Today's ticks, and the patient's reaction, show as today's entry (review note, October 30: where do
     // they go?). They change with the ticks, not here
     const dToday = (s.disc || {})[P.id] || {};
     const ticksText = dToday.pt && dToday.me ? 'The patient brought up their AURORA data, and so did you.' : dToday.pt ? 'The patient brought up their AURORA data.' : dToday.me ? 'You brought up their AURORA data.' : '';
-    const ticksNote = ticksText ? [{ date: 'Today', fromTicks: true, text: `${ticksText}${(dToday.said || '').trim() ? ` What they made of it: “${dToday.said.trim()}”` : ''}` }] : [];
+    const ticksNote = ticksText ? [{ date: 'Today', fromTicks: true, text: `${ticksText}${(dToday.said || '').trim() ? ` Patient’s reaction: “${dToday.said.trim()}”` : ''}` }] : [];
     const noteEdit = s.noteEdit && s.noteEdit.pid === P.id ? s.noteEdit : null;
     const noteDel = s.noteDel && s.noteDel.pid === P.id ? s.noteDel : null;
     const noteDraft = (s.noteDraft || {})[P.id] || '';
@@ -3067,7 +3067,7 @@ class Component extends DCLogic {
       disc: (() => {
         const d = s.disc[P.id] || {};
         const set = (k) => () => this.setState({ disc: { ...s.disc, [P.id]: { ...d, [k]: !d[k] } } });
-        // What the patient made of their data, in a line, once either box is ticked (draft; bead aurora-hv1)
+        // The patient's reaction to their data, in a three-line box, once either box is ticked (draft; bead aurora-hv1)
         const setSaid = (e) => { const v = e.target.value; this.setState((st) => ({ disc: { ...st.disc, [P.id]: { ...(st.disc[P.id] || {}), said: v } } })); };
         return { pt: !!d.pt, me: !!d.me, togglePt: set('pt'), toggleMe: set('me'), any: !!(d.pt || d.me), said: d.said || '', setSaid };
       })(),

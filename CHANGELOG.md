@@ -56,6 +56,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
 - **Greeting lines that change** (November 1, from a review note and discussion): the check-ins line adds "Each patient's AI estimate below is calculated from their check-ins", so the count doesn't read as a review backlog. The pages line counts real reviews ("You looked at 11 of your 12 patients' pages"). New lines for review: prompt flag response, the group's activity this month, and a tip; the clinician count stays for comparison. The Questions tab lists them all.
 - **Sentence case and "the AI estimate"** (November 1, from review notes): the tiles' notes start with a capital ("Severe range", "Enough for the AI estimate"), "the estimate" says "the AI estimate" wherever it appears, and Your notes has a notebook icon.
 - **"The AI severity estimate"** (November 1, from a review note): running text names the estimate in full, in the Check-ins notes and tips, the status and threshold tips, the callout, the chart key, Model Facts, the footer ("AI estimate of depression severity") and the greeting.
+- **Patient's reaction** (November 1, from review notes): the Today ticks' optional box is labeled "Patient's reaction" instead of "What the patient made of it", and is three lines tall instead of one; Your notes shows it the same way.
 
 ## v2: redesign
 
