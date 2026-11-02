@@ -812,7 +812,7 @@ textarea.set-input{resize:vertical}
     </div>
     </sc-if>
     <p class="sr-only" aria-live="polite">{{ peek.aria }}</p>
-    <p class="foot"><span>Severity: AI estimate on the PHQ-9 scale. Changes of 6 or more points from the patient’s baseline are colored.</span><span>This dashboard isn’t monitored in real time. PHQ-9 item 9 answers appear without study team review. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></span></p>
+    <p class="foot"><span>Severity: AI estimate of depression severity, on the PHQ-9 scale. Changes of 6 or more points from the patient’s baseline are colored.</span><span>This dashboard isn’t monitored in real time. PHQ-9 item 9 answers appear without study team review. <button type="button" class="linkbtn" onClick="{{ openFacts }}">Model Facts</button></span></p>
   </main>
   </sc-if>
 
@@ -895,7 +895,7 @@ textarea.set-input{resize:vertical}
           <div class="stat-note no-print"><button type="button" class="linkbtn" onClick="{{ pt.openLatestCi }}">Latest check-in</button></div>
         </div>
       </div>
-      <sc-if value="{{ pt.discordant }}"><p class="callout">The patient’s PHQ-9 and the AI estimate differ by more than the estimate’s uncertainty. The estimate supplements the patient’s own account; it doesn’t replace it.</p></sc-if>
+      <sc-if value="{{ pt.discordant }}"><p class="callout">The patient’s PHQ-9 and the AI severity estimate differ by more than its uncertainty. The AI severity estimate supplements the patient’s own account; it doesn’t replace it.</p></sc-if>
       <div class="disc no-print" role="group" aria-labelledby="disc-q"><span class="disc-q" id="disc-q">Today:</span><label><input type="checkbox" checked="{{ disc.pt }}" onChange="{{ disc.togglePt }}"> The patient brought up their AURORA data</label><label><input type="checkbox" checked="{{ disc.me }}" onChange="{{ disc.toggleMe }}"> I brought up their AURORA data</label><sc-if value="{{ disc.any }}"><span class="disc-saved muted">Saved, in Your notes</span></sc-if><sc-if value="{{ disc.any }}"><label class="disc-said"><span>What the patient made of it <span class="muted">(optional)</span></span><input type="text" class="ho-input" value="{{ disc.said }}" onChange="{{ disc.setSaid }}"></label></sc-if></div>
     </div>
   </div>
@@ -966,8 +966,8 @@ textarea.set-input{resize:vertical}
         </div>
         <p class="sr-only" aria-live="polite">{{ hv.aria }}</p>
         <div class="key">
-          <span><svg width="22" height="10" viewBox="0 0 22 10"><rect x="0" y="1" width="22" height="8" fill="rgba(198,127,0,.16)"></rect><line x1="0" y1="5" x2="22" y2="5" stroke="#C67F00" stroke-width="2.5"></line></svg>AI estimate, smoothed; shading shows its uncertainty</span>
-          <span><svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="2.6" fill="#C67F00" fill-opacity=".45"></circle></svg>The AI’s estimate at each check-in</span>
+          <span><svg width="22" height="10" viewBox="0 0 22 10"><rect x="0" y="1" width="22" height="8" fill="rgba(198,127,0,.16)"></rect><line x1="0" y1="5" x2="22" y2="5" stroke="#C67F00" stroke-width="2.5"></line></svg>AI severity estimate, smoothed; shading shows its uncertainty</span>
+          <span><svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="2.6" fill="#C67F00" fill-opacity=".45"></circle></svg>The AI severity estimate at each check-in</span>
           <span><svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4.5" fill="#1F2A33"></circle></svg>PHQ-9 (patient’s answers)</span>
           <span>Item 9: the PHQ-9 question on thoughts of death or self-harm, 0 to 3</span>
           <sc-if value="{{ ch.hasExp }}"><span><svg width="22" height="10" viewBox="0 0 22 10"><rect x="0" y="1" width="22" height="8" fill="rgba(91,107,120,.12)"></rect></svg>Expected range in the first 3 months of care</span></sc-if>
@@ -1411,7 +1411,7 @@ textarea.set-input{resize:vertical}
           <dt>Changes</dt><dd>A change is colored when it is 6 or more points from the patient’s own baseline (their typical level in their first weeks in AURORA).</dd>
           <dt>Regulatory status</dt><dd>FDA ISTAND letter of intent only. Not FDA-qualified.</dd>
           <dt>Performance</dt><dd>ICC 0.82–0.92, reported by the company. Not independently verified; validation is ongoing.</dd>
-          <dt>Ranges</dt><dd>The dashboard names ranges for the patient’s PHQ-9 only: 0–4 minimal, 5–9 mild, 10–14 moderate, 15–19 moderately severe, 20–27 severe (Kroenke, Spitzer and Williams, 2001). The AI estimate isn’t given a range, since the ranges were set for PHQ-9 totals.</dd> <dt>Known limits</dt><dd>Less accurate below 9 of 12 check-ins in 14 days. Not validated for crisis assessment.</dd>
+          <dt>Ranges</dt><dd>The dashboard names ranges for the patient’s PHQ-9 only: 0–4 minimal, 5–9 mild, 10–14 moderate, 15–19 moderately severe, 20–27 severe (Kroenke, Spitzer and Williams, 2001). The AI severity estimate isn’t given a range, since the ranges were set for PHQ-9 totals.</dd> <dt>Known limits</dt><dd>Less accurate below 9 of 12 check-ins in 14 days. Not validated for crisis assessment.</dd>
         </dl>
         <div class="actions"><button class="btn" onClick="{{ closeFacts }}">Close</button></div>
       </div>
@@ -1508,7 +1508,7 @@ const PATIENTS = [
     phq: [13, 13, 15, null, 17, null], item9: [0, 0, 0, null, 0, null], checkins: '6/12',
     ciPattern: '111101100000', flagIcon: 'message-square', flag: 'Few check-ins',
     drivers: { sleep: [6.9, 7.0, 6.8, 7.0, 6.9, 6.8, 6.9, 6.7, 6.8, 6.6, 6.7, 6.5], steps: [6.2, 6.0, 6.3, 6.1, 5.9, 6.0, 5.8, 5.9, 5.7, 5.8, 5.6, 5.7], contact: [9, 9, 10, 9, 8, 8, 7, 7, 6, 6, 5, 5] },
-    changes: [{ icon: 'message-square', title: 'Fewer check-ins: 6 of 12 in the last 14 days', src: 'Check-in log: the AI estimate is less certain, and the last PHQ-9 was missed' }],
+    changes: [{ icon: 'message-square', title: 'Fewer check-ins: 6 of 12 in the last 14 days', src: 'Check-in log: the AI severity estimate is less certain, and the last PHQ-9 was missed' }],
     goals: [] },
   { id: 'mensah', name: 'K. Mensah', first: 'Kwame', dx: '', status: 'worse',
     tenure: 20,
@@ -1527,8 +1527,8 @@ const PATIENTS = [
     visit: 'Not scheduled', visitDay: '', visitRank: NOT_SCHEDULED, weeksIn: 3,
     baseline: null, est: null, unc: null,
     phq: [null, null, null, null, 11, null], item9: [null, null, null, null, 0, null], checkins: '2/12',
-    ciPattern: '110000000000', flagIcon: 'message-square', flag: 'No estimate yet',
-    changes: [{ icon: 'message-square', title: 'Only 2 of 12 check-ins in the last 14 days', src: 'Check-in log: no estimate until there are more check-ins' }],
+    ciPattern: '110000000000', flagIcon: 'message-square', flag: 'No AI severity estimate yet',
+    changes: [{ icon: 'message-square', title: 'Only 2 of 12 check-ins in the last 14 days', src: 'Check-in log: no AI severity estimate until there are more check-ins' }],
     goals: [] },
   { id: 'kaur', name: 'S. Kaur', first: 'Simran', dx: '', status: 'stable',
     tenure: 4,
@@ -1549,14 +1549,14 @@ const PATIENTS = [
     baseline: 12, est: [12, 12, 11, 12, 12, 11, 12, 11, 12, 11, 11, 11], unc: U3,
     phq: [12, 12, 12, 11, 11, 11], item9: [0, 0, 0, 0, 0, 0], checkins: '12/12',
     drivers: { sleep: [6.1, 6.0, 6.2, 6.1, 6.0, 6.1, 6.2, 6.0, 6.1, 6.0, 6.1, 6.0], steps: [3.2, 3.1, 3.3, 3.2, 3.0, 3.1, 3.2, 3.1, 3.0, 3.2, 3.1, 3.1], contact: [3, 3, 4, 3, 3, 3, 3, 4, 3, 3, 3, 3] },
-    flag: '', changes: [{ icon: 'clipboard-list', title: 'Symptoms steady around 11 for 12 weeks', src: 'AI estimate and PHQ-9 agree, 21 months in care' }], goals: [] },
+    flag: '', changes: [{ icon: 'clipboard-list', title: 'Symptoms steady around 11 for 12 weeks', src: 'AI severity estimate and PHQ-9 agree, 21 months in care' }], goals: [] },
   { id: 'haddad', name: 'R. Haddad', first: 'Rana', dx: '', status: 'notimp',
     tenure: 0.5,
     visit: 'Mon, Aug 17, 09:30', visitDay: 'Monday', visitRank: 4.5, weeksIn: 8,
     baseline: 18, est: [null, null, null, 18, 18, 17, 18, 17, 17, 18, 18, 17], unc: U3,
     phq: [null, 18, 17, 18, 17, 17], item9: [null, 0, 0, 0, 0, 0], checkins: '11/12',
     drivers: { sleep: [null, null, null, 6.4, 6.5, 6.3, 6.4, 6.4, 6.3, 6.5, 6.4, 6.3], steps: [null, null, null, 4.1, 4.0, 4.2, 3.9, 4.0, 4.1, 3.9, 4.0, 4.0], contact: [null, null, null, 5, 5, 6, 5, 5, 5, 4, 5, 5] },
-    flag: '', changes: [{ icon: 'clipboard-list', title: 'Little change since starting care 2 months ago', src: 'AI estimate and PHQ-9: above the expected range for the first 3 months of care' }],
+    flag: '', changes: [{ icon: 'clipboard-list', title: 'Little change since starting care 2 months ago', src: 'AI severity estimate and PHQ-9: above the expected range for the first 3 months of care' }],
     goals: [{ icon: 'briefcase', text: 'Get through a full week at work', status: 'no change yet', handoutStatus: 'no change yet' }] },
   { id: 'novak', name: 'B. Novak', first: 'Bojan', dx: '', status: 'notimp',
     tenure: 9,
@@ -1564,7 +1564,7 @@ const PATIENTS = [
     baseline: null, est: null, unc: null,
     phq: [null, null, 15, 14, 16, 15], item9: [null, null, 0, 0, 0, 0], checkins: '2/12',
     ciPattern: '100000000010',
-    flag: '', changes: [{ icon: 'message-square', title: 'Only 2 of 12 check-ins in the last 14 days', src: 'Check-in log: no AI estimate, so in this trial the trend is judged from the PHQ-9' }],
+    flag: '', changes: [{ icon: 'message-square', title: 'Only 2 of 12 check-ins in the last 14 days', src: 'Check-in log: no AI severity estimate, so in this trial the trend is judged from the PHQ-9' }],
     goals: [] }
 ];
 
@@ -2239,7 +2239,7 @@ class Component extends DCLogic {
     const greetLines = {
       // Then, on its own line, what the check-ins are already used for, so 107 doesn't read as 107 to review (review note,
       // October 30). A line of its own, not a third fact, so the band's text column, and the art beside it, keep their width
-      checkins: { mark: icon('message-square'), text: `Your patients completed ${ciTotal} check-ins in the last 2 weeks`, note: 'Each patient’s AI estimate below is calculated from their check-ins' },
+      checkins: { mark: icon('message-square'), text: `Your patients completed ${ciTotal} check-ins in the last 2 weeks`, note: 'Each patient’s AI severity estimate below is calculated from their check-ins' },
       // Reviews as the logging spec defines them (a patient's page with at least 10 seconds of active use), so the line
       // and the trial's review measure agree, and opening a page just to move the number doesn't count
       pages: { mark: null, text: `You looked at ${all.length - 1} of your ${all.length} patients’ pages this week` },
@@ -2302,11 +2302,11 @@ class Component extends DCLogic {
       statusShape: STATUS[P.trend].shape, statusShape2: STATUS[P.trend].shape2 || 'M0 0',
       statusText: P.ot.kind === 'notimp' ? P.ot.reason : STATUS[P.trend].label,
       statusNote: P.trend === 'nodata' ? ', too little data to judge the trend'
-        : `${P.impW ? `, improving for ${P.impW} weeks` : ''}, ${P.ot.source === 'PHQ-9' ? 'from the PHQ-9 (too few check-ins for an AI estimate)' : 'from the AI estimate'}, ${P.ot.branch === 'early' ? `early in care (${countOf(Math.max(1, Math.round(P.ot.months)), 'month')})` : `${Math.round(P.ot.months)} months in care`}`,
+        : `${P.impW ? `, improving for ${P.impW} weeks` : ''}, ${P.ot.source === 'PHQ-9' ? 'from the PHQ-9 (too few check-ins for an AI severity estimate)' : 'from the AI severity estimate'}, ${P.ot.branch === 'early' ? `early in care (${countOf(Math.max(1, Math.round(P.ot.months)), 'month')})` : `${Math.round(P.ot.months)} months in care`}`,
       phqNow: phqNow == null ? '—' : String(phqNow),
       phqDate: iPhq >= 0 ? WEEKS[PHQ_WEEKS[iPhq]] : 'none yet',
       phqBand: phqNow == null ? '' : bandOf(phqNow).charAt(0).toUpperCase() + bandOf(phqNow).slice(1) + ' range',
-      ciNote: P.cn / P.cd < 0.25 ? 'Too few for an AI estimate' : P.cn / P.cd < 0.7 ? 'AI estimate less certain' : 'Enough for the AI estimate',
+      ciNote: P.cn / P.cd < 0.25 ? 'Too few for an AI severity estimate' : P.cn / P.cd < 0.7 ? 'AI severity estimate less certain' : 'Enough for the AI severity estimate',
       safetyHead: P.safety ? P.safety.head : 'No safety flags',
       safetyCls: P.safety ? 'flag-safety' : '',
       safetyNote: P.safety ? P.safety.note
@@ -2679,7 +2679,7 @@ class Component extends DCLogic {
       ].filter(Boolean),
       // Which number counts, and anything in the recording that weakens this one
       estNote: [
-        cn.short ? `No estimate: the check-in ended after ${minutes}.` : cn.face < 0.6 ? `Less certain than usual: the patient’s face was in view ${Math.round(cn.face * 100)}% of the time.` : '',
+        cn.short ? `No AI severity estimate: the check-in ended after ${minutes}.` : cn.face < 0.6 ? `Less certain than usual: the patient’s face was in view ${Math.round(cn.face * 100)}% of the time.` : '',
         est.length ? 'The patient’s status is based on the trend, not single check-ins.' : ''
       ].filter(Boolean).join(' '),
       hasTopics: !held && !!(cn.topics && cn.topics.length),
@@ -2964,19 +2964,19 @@ class Component extends DCLogic {
     // The PHQ-9's ranges, one line each (Kroenke, Spitzer and Williams, 2001)
     const rangeLines = BANDS.map((b, i) => `${b.lo} to ${i < BANDS.length - 1 ? BANDS[i + 1].lo - 1 : MAX}: ${b.name}`);
     const tips = {
-      bands: tipFor('bands', [{ cls: 'tt-head', text: 'PHQ-9 ranges:' }, ...rangeLines, { cls: 'tt-note', text: 'Kroenke, Spitzer and Williams, 2001. The dashboard names ranges for the patient’s PHQ-9 only, not the AI estimate.' }]),
+      bands: tipFor('bands', [{ cls: 'tt-head', text: 'PHQ-9 ranges:' }, ...rangeLines, { cls: 'tt-note', text: 'Kroenke, Spitzer and Williams, 2001. The dashboard names ranges for the patient’s PHQ-9 only, not the AI severity estimate.' }]),
       // The ranges for reference beside the estimate's scale, without naming one for any estimate (review note, October 27)
       sev: tipFor('sev', ['AI estimate (AI-COA) of depression severity on the PHQ-9 scale, 0 to 27.', 'The number after it is the change from the patient’s own baseline, colored when it is 6 or more points.',
         { cls: 'tt-head', text: 'PHQ-9 ranges, for reference:' }, ...rangeLines,
-        { cls: 'tt-note', text: 'Kroenke, Spitzer and Williams, 2001. They were set for PHQ-9 totals, so the estimate isn’t given one.' }]),
-      ci: tipFor('ci', ['Check-ins completed in the last 14 days, out of 12 expected. Below 9, the AI estimate is less certain.']),
+        { cls: 'tt-note', text: 'Kroenke, Spitzer and Williams, 2001. They were set for PHQ-9 totals, so the AI severity estimate isn’t given one.' }]),
+      ci: tipFor('ci', ['Check-ins completed in the last 14 days, out of 12 expected. Below 9, the AI severity estimate is less certain.']),
       rule: tipFor('rule', [
-        { cls: 'tt-head', text: 'How the trend is judged, from the AI estimate:' },
+        { cls: 'tt-head', text: 'How the trend is judged, from the AI severity estimate:' },
         'In the first 3 months of care: above the expected range for 2 weeks in a row, after the first 4 weeks.',
         'From 3 months: 10 or more for 2 weeks in a row.',
         'At any time: 6 or more above baseline.',
-        'If check-ins are too few for an AI estimate, the same rules use the PHQ-9 (this trial only).',
-        { cls: 'tt-note', text: 'Thresholds are placeholders until set from the estimate’s measured reliability.' }
+        'If check-ins are too few for an AI severity estimate, the same rules use the PHQ-9 (this trial only).',
+        { cls: 'tt-note', text: 'Thresholds are placeholders until set from the AI severity estimate’s measured reliability.' }
       ]),
       // The check-in dots: pointer only, as the count and note beside them say the same in words
       dots: tipFor('dots', [pt.ciTitle]),
@@ -2984,10 +2984,10 @@ class Component extends DCLogic {
       // Why the Worse than baseline line (baseline + 6) stands out in the chart
       thr: tipFor('thr', [
         { cls: 'tt-head', text: 'Why this line stands out:' },
-        `When the AI estimate is ${RULES.deterioration} or more points above this patient’s baseline, the status becomes Worse than baseline.`,
+        `When the AI severity estimate is ${RULES.deterioration} or more points above this patient’s baseline, the status becomes Worse than baseline.`,
         'The baseline is the patient’s own typical level in their first weeks in AURORA, so the line is specific to this patient, not a severity cutoff.',
         ...(ch.showZone ? ['The shading above the line marks the Worse than baseline zone.'] : []),
-        { cls: 'tt-note', text: `The ${RULES.deterioration}-point threshold is a placeholder until it is set from the estimate’s measured reliability.` }
+        { cls: 'tt-note', text: `The ${RULES.deterioration}-point threshold is a placeholder until it is set from the AI severity estimate’s measured reliability.` }
       ])
     };
 
@@ -3001,9 +3001,9 @@ class Component extends DCLogic {
       listEmpty: s.empty, emptyCtl: s.view === 'list',
       // For the CWG: which number comes first on the patient page, and what the full handout's chart shows (bead aurora-dar)
       aiFirst: s.lead === 'ai', leadCtl: s.view === 'patient',
-      leadTabs: [tab('PHQ-9', s.lead !== 'ai', () => this.go({ lead: 'phq' })), tab('AI estimate', s.lead === 'ai', () => this.go({ lead: 'ai' }))],
+      leadTabs: [tab('PHQ-9', s.lead !== 'ai', () => this.go({ lead: 'phq' })), tab('AI severity estimate', s.lead === 'ai', () => this.go({ lead: 'ai' }))],
       homCtl: s.view === 'handout' && s.hoStyle !== 'simple',
-      homTabs: [['phq', 'PHQ-9'], ['ai', 'AI estimate'], ['both', 'Both']].map(([k, l]) => tab(l, (s.hoMeasure || 'phq') === k, () => this.go({ hoMeasure: k }))),
+      homTabs: [['phq', 'PHQ-9'], ['ai', 'AI severity estimate'], ['both', 'Both']].map(([k, l]) => tab(l, (s.hoMeasure || 'phq') === k, () => this.go({ hoMeasure: k }))),
       emptyTabs: [tab(`${PATIENTS.length} patients`, !s.empty, () => this.go({ empty: false })), tab('None yet', s.empty, () => this.go({ empty: true }))], clinCrumb: !['list', 'site', 'settings', 'welcome'].includes(s.view), site, sset,
       // The name at top right opens Your settings in one click, with that page's icon (DESIGN.md, Icons)
       whoName: whoText, whoLabel: `${whoText}, your settings`, whoIcon: icon('user-cog'),
