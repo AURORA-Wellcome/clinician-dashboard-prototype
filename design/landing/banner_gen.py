@@ -40,7 +40,7 @@ def ridge(base, terms, step=16):
     pts = [(x, base + sum(a * math.sin(x / f + p) for a, f, p in terms)) for x in range(-20, W + 21, step)]
     return f"M{pts[0][0]:.1f},{pts[0][1]:.1f}" + smooth(pts) + f" L{W + 20},{H + 2} L-20,{H + 2} Z"
 
-stars = []  # (x, y, circle), so stars that would crowd the Big Dipper or sit behind the moon can be left out
+stars = []  # (x, y, circle), so stars that would crowd the Big Dipper can be left out
 for _ in range(110):
     x, y = rnd.uniform(0, W), rnd.uniform(3, 165)
     r = rnd.choice([0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5])
@@ -211,9 +211,9 @@ dipper = (f'<g class="bn-dipper" data-top="{fig_top:.1f}"><g class="bn-dipper-st
 # The moon, upper right, in its own layer above the curtains, since the aurora's light adds to the moon's rather than
 # blocking it. The page lights the textures from moon_gen.py for today's phase and shows the result (.on), except near new
 # moon. The glare lies under the moon's face, so it doesn't wash out the maria, and it covers the dark part, as in the sky.
-# A patch of the sky, clipped to the moon's disk (.bn-moon-hole), hides the stars behind it; the page moves it with the
-# moon. .bn-moon-pin lets the page keep it in view on a narrow or wide banner (data-top: its top edge; data-right: the room
-# to its right). It is drawn about seven times its true size for this wide view, as a prominent part of the sky.
+# .bn-moon-pin lets the page keep it in view on a narrow or wide banner (data-top: its top edge; data-right: the room to
+# its right), and the page hides the stars near it, wherever that puts it. It is drawn about seven times its true size for
+# this wide view, as a prominent part of the sky.
 MOON = (1392, 44, 24)
 
 def data_uri(name):
@@ -235,11 +235,11 @@ FIG_LINES = [(FIG[a], FIG[b]) for a, b in [('Alkaid', 'Mizar'), ('Mizar', 'Aliot
                                            ('Dubhe', 'Merak'), ('Merak', 'Phecda'), ('Phecda', 'Megrez'), ('Dubhe', 'North Star')]]
 
 def clear(x, y):
-    """Leave out stars behind the moon, and stars crowding the Dipper's stars or lying on its lines"""
-    return (math.hypot(x - MOON[0], y - MOON[1]) > MOON[2] + 5 and all(math.hypot(x - fx, y - fy) > 6 for fx, fy in FIG.values())
+    """Leave out stars crowding the Dipper's stars or lying on its lines"""
+    return (all(math.hypot(x - fx, y - fy) > 6 for fx, fy in FIG.values())
             and all(seg_dist((x, y), a, b) > 3 for a, b in FIG_LINES))
 
-sky = layer('bn-sky', f'<rect width="{W}" height="{H}" fill="url(#bn-sky)"/><g fill="#E8EEFF">{"".join(s for x, y, s in stars if clear(x, y))}</g>{accents}{dipper}<clipPath id="bn-moon-hole"><circle class="bn-moon-hole" cx="{MOON[0]}" cy="{MOON[1]}" r="{MOON[2]}"/></clipPath><rect width="{W}" height="{H}" fill="url(#bn-sky)" clip-path="url(#bn-moon-hole)"/>',
+sky = layer('bn-sky', f'<rect width="{W}" height="{H}" fill="url(#bn-sky)"/><g fill="#E8EEFF">{"".join(s for x, y, s in stars if clear(x, y))}</g>{accents}{dipper}',
             '<linearGradient id="bn-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060D26"/><stop offset=".6" stop-color="#0F1B4B"/><stop offset=".86" stop-color="#1B2C6A"/><stop offset="1" stop-color="#26397E"/></linearGradient>'
             '<radialGradient id="bn-star-glow"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".9"/><stop offset=".25" stop-color="#DDE7FF" stop-opacity=".45"/><stop offset="1" stop-color="#C9D8FF" stop-opacity="0"/></radialGradient>')
 moon_layer = layer('bn-moonlayer', moon, '<radialGradient id="bn-moon-glow"><stop offset="0" stop-color="#E8EEFF" stop-opacity=".34"/><stop offset=".24" stop-color="#E8EEFF" stop-opacity=".34"/><stop offset=".3" stop-color="#E6ECFF" stop-opacity=".265"/><stop offset=".4" stop-color="#E2E9FF" stop-opacity=".166"/><stop offset=".5" stop-color="#DDE5FF" stop-opacity=".097"/><stop offset=".6" stop-color="#D8E1FF" stop-opacity=".05"/><stop offset=".7" stop-color="#D2DCFF" stop-opacity=".021"/><stop offset=".85" stop-color="#CCD8FF" stop-opacity=".003"/><stop offset="1" stop-color="#C9D6FF" stop-opacity="0"/></radialGradient>')
