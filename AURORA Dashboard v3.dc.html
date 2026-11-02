@@ -262,6 +262,12 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .note{padding:8px 0}
 .note + .note{border-top:1px solid var(--line)}
 .note-date{display:block;color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh-sm)}
+.note-text{display:block}
+.note-acts{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;margin-top:4px;font-size:var(--fs-sm)}
+.note .note-input{margin-top:4px}
+/* Wider than .ho-input's 18 rem, now that the notes sit in the wide column */
+.pt-notes .ho-input.note-input{width:min(40rem,100%)}
+.disc-saved{font-size:var(--fs-sm)}
 .note-add{display:grid;justify-items:start;gap:8px;margin-top:12px}
 .note-input{width:100%;resize:vertical;line-height:1.5}
 .notes-draft{margin-top:12px}
@@ -284,7 +290,7 @@ a{color:var(--accent);text-decoration:none;cursor:pointer}a:hover{text-decoratio
 .distinct .stat.flagged{background:var(--safety-tint);box-shadow:inset 3px 0 0 var(--safety);border-radius:var(--r)}
 .distinct .stat.flagged + .stat{border-left-color:transparent}
 .distinct .pt-page{padding-top:8px}
-.distinct .pt-sections{display:grid;grid-template-columns:minmax(0,1fr) 320px;grid-template-areas:"changes goals" "changes notes" "trend trend";column-gap:24px;align-items:start}
+.distinct .pt-sections{display:grid;grid-template-columns:minmax(0,1fr) 320px;grid-template-areas:"changes goals" "trend trend" "notes .";column-gap:24px;align-items:start}
 .distinct .pt-changes{grid-area:changes}.distinct .pt-goals{grid-area:goals}.distinct .pt-trend{grid-area:trend}.distinct .pt-notes{grid-area:notes}
 .distinct .notes-wrap{padding:12px 20px 16px;background:var(--tint);border-radius:var(--r)}
 .distinct .goals-wrap{padding:12px 20px;background:var(--tint);border-radius:var(--r)}
@@ -888,7 +894,7 @@ textarea.set-input{resize:vertical}
         </div>
       </div>
       <sc-if value="{{ pt.discordant }}"><p class="callout">The patient’s PHQ-9 and the AI estimate differ by more than the estimate’s uncertainty. The estimate supplements the patient’s own account; it doesn’t replace it.</p></sc-if>
-      <div class="disc no-print" role="group" aria-labelledby="disc-q"><span class="disc-q" id="disc-q">Today:</span><label><input type="checkbox" checked="{{ disc.pt }}" onChange="{{ disc.togglePt }}"> The patient brought up their AURORA data</label><label><input type="checkbox" checked="{{ disc.me }}" onChange="{{ disc.toggleMe }}"> I brought up their AURORA data</label><sc-if value="{{ disc.any }}"><label class="disc-said"><span>What the patient made of it <span class="muted">(optional)</span></span><input type="text" class="ho-input" value="{{ disc.said }}" onChange="{{ disc.setSaid }}"></label></sc-if></div>
+      <div class="disc no-print" role="group" aria-labelledby="disc-q"><span class="disc-q" id="disc-q">Today:</span><label><input type="checkbox" checked="{{ disc.pt }}" onChange="{{ disc.togglePt }}"> The patient brought up their AURORA data</label><label><input type="checkbox" checked="{{ disc.me }}" onChange="{{ disc.toggleMe }}"> I brought up their AURORA data</label><sc-if value="{{ disc.any }}"><span class="disc-saved muted">Saved, in Your notes</span></sc-if><sc-if value="{{ disc.any }}"><label class="disc-said"><span>What the patient made of it <span class="muted">(optional)</span></span><input type="text" class="ho-input" value="{{ disc.said }}" onChange="{{ disc.setSaid }}"></label></sc-if></div>
     </div>
   </div>
 
@@ -1006,7 +1012,13 @@ textarea.set-input{resize:vertical}
       <section class="pt-notes no-print">
         <h2 class="h2">Your notes</h2>
         <div class="notes-wrap">
-          <sc-if value="{{ notes.has }}"><ul class="note-list"><sc-for list="{{ notes.list }}" as="n"><li class="note"><span class="note-date">{{ n.date }}</span>{{ n.text }}</li></sc-for></ul></sc-if>
+          <sc-if value="{{ notes.has }}"><ul class="note-list"><sc-for list="{{ notes.list }}" as="n"><li class="note">
+            <span class="note-date">{{ n.date }}<sc-if value="{{ n.edited }}">, edited {{ n.edited }}</sc-if><sc-if value="{{ n.fromTicks }}">, from the Today ticks</sc-if></span>
+            <sc-if value="{{ !n.editing }}"><span class="note-text">{{ n.text }}</span></sc-if>
+            <sc-if value="{{ n.editing }}"><textarea class="ho-input note-input" rows="3" aria-label="Edit the note from {{ n.date }}" value="{{ notes.editText }}" onChange="{{ notes.setEditText }}"></textarea><span class="note-acts"><button type="button" class="linkbtn" disabled="{{ notes.cantSaveEdit }}" onClick="{{ notes.saveEdit }}">Save</button><button type="button" class="linkbtn" onClick="{{ notes.cancel }}">Cancel</button></span></sc-if>
+            <sc-if value="{{ n.confirming }}"><span class="note-acts"><span>Delete this note?</span><button type="button" class="linkbtn" onClick="{{ n.remove }}">Delete</button><button type="button" class="linkbtn" onClick="{{ notes.cancel }}">Keep it</button></span></sc-if>
+            <sc-if value="{{ n.actions }}"><span class="note-acts"><button type="button" class="linkbtn" aria-label="Edit the note from {{ n.date }}" onClick="{{ n.edit }}">Edit</button><button type="button" class="linkbtn" aria-label="Delete the note from {{ n.date }}" onClick="{{ n.del }}">Delete</button></span></sc-if>
+          </li></sc-for></ul></sc-if>
           <sc-if value="{{ !notes.has }}"><p class="empty">No notes yet.</p></sc-if>
           <div class="note-add">
             <textarea class="ho-input note-input" rows="3" aria-label="New note about {{ pt.name }}" placeholder="Your impressions and plans" value="{{ notes.draft }}" onChange="{{ notes.setDraft }}"></textarea>
@@ -1941,7 +1953,7 @@ const HO_TEXT = {
 
 class Component extends DCLogic {
   // cday: the check-in on the check-in page; cAt and pAt: the summary point and transcript passage to mark; tx: transcript open
-  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {}, acctSet: {}, alertOpen: false, ptAlerts: {}, myNotes: {}, noteDraft: {}, empty: false, lead: 'phq', hoMeasure: 'phq', recOpen: false, recDraft: null, safetyRec: {}, hoLines: false };
+  state = { view: 'list', pid: 'delgado', order: 'visit', icons: true, distinct: true, big: true, clock24: false, hoverDay: null, peek: null, tip: null, tipPinned: false, drivers: false, refined: true, hero: true, dates: false, greetLine: 'checkins', factsOpen: false, phqOpen: false, hoStyle: 'full', sort: '', sortRev: false, flagged: 'day', disc: {}, cday: null, cAt: null, pAt: null, tx: false, hoOff: [], hoLang: null, hoText: {}, hoEdit: false, siteSet: {}, acctSet: {}, alertOpen: false, ptAlerts: {}, myNotes: {}, noteDraft: {}, empty: false, lead: 'phq', hoMeasure: 'phq', recOpen: false, recDraft: null, safetyRec: {}, hoLines: false, noteEdit: null, noteDel: null };
 
   componentDidMount() {
     const o = {};
@@ -2037,7 +2049,7 @@ class Component extends DCLogic {
     clearTimeout(this.tipT);
     // The handout's ticks, language and edits belong to one printout: another page or patient starts fresh
     const fresh = next.view !== this.state.view || next.pid !== this.state.pid ? { hoOff: [], hoLang: null, hoText: {}, hoEdit: false } : {};
-    this.setState({ ...o, ...fresh, cday: next.cday, cAt: o.cAt || null, pAt: null, tx: false, factsOpen: false, phqOpen: false, alertOpen: false, recOpen: false, hoverDay: null, peek: null, tip: null, tipPinned: false });
+    this.setState({ ...o, ...fresh, cday: next.cday, cAt: o.cAt || null, pAt: null, tx: false, factsOpen: false, phqOpen: false, alertOpen: false, recOpen: false, noteEdit: null, noteDel: null, hoverDay: null, peek: null, tip: null, tipPinned: false });
     if (!opts.keepScroll) try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
   }
 
@@ -2862,7 +2874,16 @@ class Component extends DCLogic {
     // Your notes (draft; bead aurora-hv1): the clinician's own impressions, dated, newest first, seen only by them.
     // Clinical free text, so where it's kept and who else may read it wait on the data flow and the consent form.
     const todayShort = `${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`;
-    const noteList = [...((s.myNotes || {})[P.id] || []), ...(CLIN_NOTES[P.id] || [])];
+    // A patient's notes are the mock ones until the clinician first adds, edits or deletes one; from then on, their own list
+    const noteList = (s.myNotes || {})[P.id] || CLIN_NOTES[P.id] || [];
+    const setNotes = (fn) => this.setState((st) => ({ myNotes: { ...(st.myNotes || {}), [P.id]: fn((st.myNotes || {})[P.id] || CLIN_NOTES[P.id] || []) }, noteEdit: null, noteDel: null }));
+    // Today's ticks, and what the patient made of their data, show as today's entry (review note, October 30: where do
+    // they go?). They change with the ticks, not here
+    const dToday = (s.disc || {})[P.id] || {};
+    const ticksText = dToday.pt && dToday.me ? 'The patient brought up their AURORA data, and so did you.' : dToday.pt ? 'The patient brought up their AURORA data.' : dToday.me ? 'You brought up their AURORA data.' : '';
+    const ticksNote = ticksText ? [{ date: 'Today', fromTicks: true, text: `${ticksText}${(dToday.said || '').trim() ? ` What they made of it: “${dToday.said.trim()}”` : ''}` }] : [];
+    const noteEdit = s.noteEdit && s.noteEdit.pid === P.id ? s.noteEdit : null;
+    const noteDel = s.noteDel && s.noteDel.pid === P.id ? s.noteDel : null;
     const noteDraft = (s.noteDraft || {})[P.id] || '';
     // Record what you did about a safety flag (draft; bead aurora-khx): the dashboard arm's own record, for the study team
     // (decided October 27: the dashboard arm may have a fuller safety response). The flag keeps its status: whether a
@@ -2890,13 +2911,25 @@ class Component extends DCLogic {
         return d.acts.length ? { safetyRec: { ...(st.safetyRec || {}), [P.id]: { acts: REC_ACTS.filter((a) => d.acts.includes(a)), when: d.when } }, recOpen: false } : null;
       })
     };
+    const dayName = (d) => (d === todayShort ? 'Today' : d);
     const notes = {
-      list: noteList.map((n) => ({ date: n.date === todayShort ? 'Today' : n.date, text: n.text })), has: noteList.length > 0,
+      list: [...ticksNote, ...noteList.map((n, i) => {
+        const editing = !!noteEdit && noteEdit.i === i, confirming = !!noteDel && noteDel.i === i;
+        return { date: dayName(n.date), text: n.text, edited: n.edited ? (n.edited === todayShort ? 'today' : n.edited) : '', editing, confirming, actions: !editing && !confirming,
+          edit: () => this.setState({ noteEdit: { pid: P.id, i, text: n.text }, noteDel: null }),
+          del: () => this.setState({ noteDel: { pid: P.id, i }, noteEdit: null }),
+          remove: () => setNotes((l) => l.filter((_, k) => k !== i)) };
+      })],
+      has: noteList.length + ticksNote.length > 0,
+      editText: noteEdit ? noteEdit.text : '', cantSaveEdit: !(noteEdit && noteEdit.text.trim()),
+      setEditText: (e) => { const v = e.target.value; this.setState((st) => ({ noteEdit: { ...st.noteEdit, text: v } })); },
+      saveEdit: () => { const t = ((this.state.noteEdit || {}).text || '').trim(); const i = (this.state.noteEdit || {}).i; if (t) setNotes((l) => l.map((n, k) => (k === i ? { ...n, text: t, edited: n.text === t ? n.edited : todayShort } : n))); },
+      cancel: () => this.setState({ noteEdit: null, noteDel: null }),
       draft: noteDraft, cantSave: !noteDraft.trim(),
       setDraft: (e) => { const v = e.target.value; this.setState((st) => ({ noteDraft: { ...(st.noteDraft || {}), [P.id]: v } })); },
       save: () => this.setState((st) => {
         const t = ((st.noteDraft || {})[P.id] || '').trim();
-        return t ? { myNotes: { ...(st.myNotes || {}), [P.id]: [{ date: todayShort, text: t }, ...((st.myNotes || {})[P.id] || [])] }, noteDraft: { ...(st.noteDraft || {}), [P.id]: '' } } : null;
+        return t ? { myNotes: { ...(st.myNotes || {}), [P.id]: [{ date: todayShort, text: t }, ...((st.myNotes || {})[P.id] || CLIN_NOTES[P.id] || [])] }, noteDraft: { ...(st.noteDraft || {}), [P.id]: '' } } : null;
       })
     };
 

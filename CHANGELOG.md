@@ -52,6 +52,7 @@ v2, changed to follow the theoretical model (`Theoretical model/` in the project
 - **Handout wording that describes** (October 27, from a review note): the full handout's chart is titled "Your scores over the last few weeks" instead of "How your weeks have gone", and its summary and What's going well describe symptoms and scores ("more symptoms than usual for you", "Your questionnaire scores have come down") instead of saying the weeks were harder or easier, in English and Spanish.
 - **A simpler full handout** (October 27, from review notes): no first name field before printing (the patient or clinician can write a name in), and the lines to fill in (something to add, the next step) only when Before you print's Lines to fill in is ticked, which it isn't by default.
 - **Clearer wording** (from review notes of October 30): check-in counts read "10 of 12" rather than "10/12"; the column and tile say "Check-ins done"; the status without an estimate is "Too few check-ins for a status"; the handout's summary says "Consider bringing this up at your next appointment" ("Puede comentarlo en su próxima cita"); the chart key says "The AI's estimate at each check-in"; and the sleep, activity and contact panel's paragraph moved into an ⓘ.
+- **Your notes, continued** (November 1, from review notes): Your notes moved below the trend, closing the gap it left under What changed; each note can be edited or deleted; and the Today ticks say "Saved, in Your notes" and show there as today's entry, with what the patient made of it.
 
 ## v2: redesign
 
