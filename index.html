@@ -109,6 +109,15 @@ img{display:block;max-width:100%;height:auto}
 .bn-bloom{--r:calc(var(--bn-h) * .2);width:calc(var(--r) * 2);height:calc(var(--r) * 2);margin:calc(var(--r) * -1) 0 0 calc(var(--r) * -1);border-radius:50%;background:radial-gradient(closest-side,rgba(255,240,214,.8),rgba(255,206,140,.5) 42%,rgba(255,176,96,.2) 72%,rgba(255,176,96,0))}
 .bn-shard{--c:246 249 255;width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border-radius:50%;background:rgb(var(--c));box-shadow:0 0 4px rgb(var(--c)/.8)}
 .bn-caught-stars,.bn-front{position:absolute;inset:0}
+/* The end of a game: lines between the caught stars, and credits rising from behind the trees */
+.bn-line{position:absolute;left:0;top:0;height:1px;opacity:0;background:rgba(214,226,255,.75);box-shadow:0 0 4px rgba(190,210,255,.55);transform-origin:0 50%}
+.bn-credits{position:absolute;left:50%;top:0;opacity:0;font:400 16px/1.7 "AURORA Arcade",ui-monospace,Menlo,Consolas,monospace;text-align:center;text-transform:uppercase;white-space:nowrap;color:#E8EEFF;text-shadow:0 2px 0 #060D26,0 0 9px #060D26,0 0 3px #060D26;-webkit-font-smoothing:none}
+.bn-credits b{display:block;font-weight:400;color:#FFD66B}
+.bn-credits span{display:block}
+.bn-credits i{display:block;height:1.1em}
+@media (max-width:480px){.bn-credits{font-size:12px}}
+.bn-skip{position:absolute;left:50%;bottom:8px;font-size:.75rem;line-height:1;color:rgba(232,238,255,.8);text-shadow:0 0 4px #04071A;transform:translateX(-50%);white-space:nowrap}
+.bn-finale .bn-meteor{visibility:hidden}
 .bn-front{pointer-events:none}
 /* A star landing: the flash lies behind the forest, so the trees show against it; the ring, debris and smoke lie in front */
 .bn-flash,.bn-ring,.bn-debris,.bn-haze,.bn-ember{--c:255 178 104;position:absolute;left:0;top:0;opacity:0}
@@ -983,6 +992,8 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const shards = Array.from({ length: 30 }, () => gamePiece('bn-shard')), pops = Array.from({ length: 8 }, () => gamePiece('bn-pop'));
   const caughtBox = glints.appendChild(Object.assign(document.createElement('div'), { className: 'bn-caught-stars' }));
   const caughtStars = Array.from({ length: 40 }, () => caughtBox.appendChild(Object.assign(document.createElement('i'), { className: 'bn-caught' })));
+  const lines = Array.from({ length: 39 }, () => caughtBox.appendChild(Object.assign(document.createElement('i'), { className: 'bn-line' })));
+  const credits = glints.appendChild(Object.assign(document.createElement('div'), { className: 'bn-credits' }));
   const front = banner.appendChild(Object.assign(document.createElement('div'), { className: 'bn-front' }));
   const frontPiece = (className) => front.appendChild(Object.assign(document.createElement('i'), { className }));
   const flashes = Array.from({ length: 3 }, () => gamePiece('bn-flash')), rings = Array.from({ length: 3 }, () => frontPiece('bn-ring'));
@@ -990,7 +1001,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const embers = Array.from({ length: LIVES }, () => caughtBox.appendChild(Object.assign(document.createElement('i'), { className: 'bn-ember' })));
   const score = banner.querySelector('.bn-labels').appendChild(Object.assign(document.createElement('span'), { className: 'bn-score' }));
   score.addEventListener('click', (e) => { e.stopPropagation(); window.auroraArcade.show(); });
-  let game = null, gameOver = -Infinity, scoreTimer = 0, shardNext = 0, popNext = 0, caughtNext = 0, caughtFade = null, flashNext = 0, debrisNext = 0, hazeNext = 0;
+  let game = null, gameOver = -Infinity, scoreTimer = 0, shardNext = 0, popNext = 0, caughtNext = 0, caughtFade = null, flashNext = 0, debrisNext = 0, hazeNext = 0, finale = null;
   const number = (n) => n.toLocaleString('en-US');
   const ordinal = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'}`;
   // The hundred best scores and how many games were played, in this browser. Nothing leaves it.
@@ -1010,7 +1021,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   };
   const clearCaught = () => {
     if (caughtFade) { caughtFade.cancel(); caughtFade = null; }
-    [...caughtStars, ...embers].forEach((el) => el.getAnimations().forEach((a) => a.cancel()));
+    [...caughtStars, ...embers, ...lines].forEach((el) => el.getAnimations().forEach((a) => a.cancel()));
   };
   const launch = (x, y) => {
     const now = performance.now(), shot = shots.find((s) => s.until <= now), bloom = blooms.find((s) => s.until <= now);
@@ -1073,6 +1084,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       const star = caughtStars[caughtNext++ % caughtStars.length], to = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
       star.getAnimations().forEach((a) => a.cancel());
       star.style.setProperty('--c', s.color);
+      game.stars.push({ x, y });
       star.animate([
         { opacity: 0, transform: `${to} scale(.2) rotate(0deg)` },
         { opacity: 1, transform: `${to} scale(${(1.5 + 0.5 * s.size).toFixed(2)}) rotate(45deg)`, offset: 0.4 },
@@ -1150,6 +1162,62 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     const left = LIVES - game.missed, beat = game.best && game.points > game.best;
     score.textContent = `${beat ? 'New best! ' : ''}${number(game.points)} points · ${left} ${left === 1 ? 'life' : 'lives'} left`;
   };
+  // The end of a game worth celebrating. After the last landing, the caught stars join into a constellation, named for its
+  // size, the aurora surges, and credits with the game's numbers rise from behind the trees. A click skips to the end.
+  const CONSTELLATIONS = [[28, ['The Moose', 'The Timber Wolf', 'The Northern Bear']], [18, ['The Great Owl', 'The Black Spruce', 'The Log Cabin']], [11, ['The Lynx', 'The Loon', 'The Raven']], [6, ['The Snow Hare', 'The Red Fox', 'The Chickadee']], [0, ['The Firefly', 'The Lantern', 'The Ember']]];
+  // Grows outward from the first star, always by the shortest line, leaving out any that would cross the moon or span too much sky
+  const joinStars = (stars, { moonX, moonY, moonClear, h }) => {
+    const joined = [], reached = [stars[0]], left = stars.slice(1);
+    while (left.length) {
+      let best = null;
+      for (const a of reached) for (const b of left) { const d = Math.hypot(a.x - b.x, a.y - b.y); if (!best || d < best.d) best = { a, b, d }; }
+      reached.push(best.b);
+      left.splice(left.indexOf(best.b), 1);
+      const dx = best.b.x - best.a.x, dy = best.b.y - best.a.y, t = clamp01(((moonX - best.a.x) * dx + (moonY - best.a.y) * dy) / (dx * dx + dy * dy || 1));
+      if (best.d < h * 2.4 && Math.hypot(best.a.x + t * dx - moonX, best.a.y + t * dy - moonY) > moonClear / 2.5) joined.push(best);
+    }
+    return joined;
+  };
+  const startFinale = (played, points, newBest, done) => {
+    const stars = played.stars.slice(-40), joined = stars.length > 1 ? joinStars(stars, played) : [], step = Math.min(120, 2400 / Math.max(1, joined.length)), timers = [];
+    joined.forEach(({ a, b, d }, i) => {
+      const line = lines[i], at = `translate(${a.x.toFixed(1)}px, ${a.y.toFixed(1)}px) rotate(${Math.atan2(b.y - a.y, b.x - a.x).toFixed(3)}rad)`, delay = 900 + i * step;
+      line.style.width = `${d.toFixed(1)}px`;
+      line.animate([{ opacity: 1, transform: `${at} scaleX(0)` }, { opacity: 1, transform: `${at} scaleX(1)` }], { duration: Math.max(step * 1.6, 180), delay, easing: 'ease-out', fill: 'forwards' });
+      timers.push(setTimeout(() => sparkle({ x: b.x, y: b.y, accent: true, base: 1, last: 0 }, performance.now()), delay + 120));
+    });
+    const names = CONSTELLATIONS.find(([least]) => played.caught >= least)[1], seconds = Math.round((performance.now() - played.start) / 1000);
+    const rows = [...(newBest ? ['New best!', ''] : []), 'Your constellation', names[Math.floor(Math.random() * names.length)], '', `${played.caught} stars caught`, `Best catch +${number(played.bestCatch)}`, ...(played.bestBloom > 1 ? [`Best bloom ×${played.bestBloom}`] : []), `Time ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Moon maps: NASA', 'Thanks for playing'];
+    const heads = new Set(['New best!', 'Your constellation', 'Final score']);
+    credits.replaceChildren(...rows.map((text) => (text ? Object.assign(document.createElement(heads.has(text) ? 'b' : 'span'), { textContent: text }) : document.createElement('i'))));
+    const { h } = played, tall = credits.offsetHeight;
+    const rise = credits.animate([{ opacity: 1, transform: `translate(-50%, ${h.toFixed(1)}px)` }, { opacity: 1, transform: `translate(-50%, ${(-tall).toFixed(1)}px)` }], { duration: (h + tall) / (h * 0.33) * 1000, delay: 1500, easing: 'linear' });
+    timers.push(setTimeout(() => { if (!document.hidden) surgeOnce(); }, 900));
+    const hint = score.parentNode.appendChild(Object.assign(document.createElement('span'), { className: 'bn-skip', textContent: matchMedia('(hover: none)').matches ? 'Tap to skip' : 'Click to skip' }));
+    banner.classList.add('bn-finale');
+    score.classList.remove('on');
+    const finish = () => {
+      if (!finale) return;
+      finale = null;
+      timers.forEach(clearTimeout);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
+      rise.onfinish = null;
+      rise.cancel();
+      hint.remove();
+      banner.classList.remove('bn-finale');
+      score.classList.add('on');
+      lines.forEach((el) => el.getAnimations().forEach((a) => a.finish()));
+      done();
+    };
+    // Scrolled away, nothing is left to watch; resized, the stars no longer line up with the sky
+    const onScroll = () => { if (banner.getBoundingClientRect().bottom < 0) finish(); };
+    const onResize = () => { finish(); clearCaught(); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize);
+    rise.onfinish = finish;
+    finale = { skip: finish };
+  };
   const endGame = (showResult) => {
     // The stars still falling fade where they are
     falling.forEach((s) => {
@@ -1160,7 +1228,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       s.el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500 }).onfinish = () => fall.cancel();
     });
     banner.classList.remove('bn-playing');
-    const { points, w: width } = game;
+    const played = game, { points, w: width } = played;
     game = null;
     gameOver = performance.now();
     const past = points ? saveScore(points) : null;
@@ -1168,10 +1236,17 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       if (!past.best) score.textContent = `${number(points)} points`;
       else if (points > past.best) score.textContent = `New best: ${number(points)} points!`;
       else score.textContent = `${number(points)} points · ${past.rank <= 100 ? `${ordinal(past.rank)} best of ${past.games} · ` : ''}Best ${number(past.best)}`;
+    } else score.classList.remove('on');
+    if (!showResult) { clearCaught(); return; }
+    // After any finale: the result line, the shared high scores with the review link, and the caught stars and embers
+    // outlasting the score a little, then fading. A top ten score opens the high scores, and the line does too. (On a phone,
+    // the line drops the comparison to make room.)
+    const wrapUp = () => {
       const hideScore = () => score.classList.remove('on', 'link');
+      caughtFade = caughtBox.animate([{ opacity: 1 }, { opacity: 1, offset: 0.6 }, { opacity: 0 }], { duration: 9000 });
+      caughtFade.onfinish = clearCaught;
+      if (!past) return;
       scoreTimer = setTimeout(hideScore, 6000);
-      // With the review link, the shared high scores: a top ten score opens them, and this line does too. (On a phone, the
-      // line drops the comparison to make room.)
       window.auroraArcade.gameEnded(points).then((shared) => {
         if (!shared || game) return;
         if (width < 520) score.textContent = `${number(points)} points`;
@@ -1180,12 +1255,8 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
         clearTimeout(scoreTimer);
         scoreTimer = setTimeout(hideScore, 12000);
       });
-    } else score.classList.remove('on');
-    // The caught stars and embers outlast the score a little, then fade
-    if (showResult) {
-      caughtFade = caughtBox.animate([{ opacity: 1 }, { opacity: 1, offset: 0.6 }, { opacity: 0 }], { duration: 9000 });
-      caughtFade.onfinish = clearCaught;
-    } else clearCaught();
+    };
+    if (past && played.caught >= 3) startFinale(played, points, past.best && points > past.best, wrapUp); else wrapUp();
   };
   const gameFrame = () => {
     if (!game) return;
@@ -1204,6 +1275,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
         game.missed += 1;
       } else if (g) {
         s.anim.cancel(); s.anim = null; g.hits += 1; game.points += s.points * g.hits; changed = true;
+        game.caught += 1; game.bestCatch = Math.max(game.bestCatch, s.points * g.hits); game.bestBloom = Math.max(game.bestBloom, g.hits);
         burst(s, x, y, g.hits, now);
       }
     }
@@ -1212,13 +1284,14 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   };
   const startGame = () => {
     const now = performance.now(), b = banner.getBoundingClientRect(), moonBox = moonFace.getBoundingClientRect(), best = readScores().scores[0] || 0;
-    game = { start: now, next: now + 400, points: 0, missed: 0, w: b.width, h: b.height, best, ground: b.height - 44 * Math.max(b.width / 1600, b.height / 240),
+    game = { start: now, next: now + 400, points: 0, missed: 0, caught: 0, bestCatch: 0, bestBloom: 1, stars: [], w: b.width, h: b.height, best, ground: b.height - 44 * Math.max(b.width / 1600, b.height / 240),
       moonX: moonBox.left + moonBox.width / 2 - b.left, moonY: moonBox.top + moonBox.height / 2 - b.top, moonClear: moonBox.width * 1.5 };
     banner.classList.add('bn-playing');
     releaseMoon();
     clearTimeout(scoreTimer);
     score.classList.remove('link');
     clearCaught();
+    if (document.fonts) document.fonts.load('16px "AURORA Arcade"');
     score.textContent = `Catch the shooting stars${best ? ` · Best ${number(best)}` : ''}`;
     score.classList.add('on');
     requestAnimationFrame(gameFrame);
@@ -1226,6 +1299,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   // Outside a game, the cabin, the Big Dipper and the moon do what they always did; during one, every click sends a spark. The moment
   // after a game ends, a click doesn't start another, so the last clicks don't hide the score.
   banner.addEventListener('click', (e) => {
+    if (finale) { finale.skip(); return; }
     if (!stars) measure();
     const b = banner.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top;
     const onCabin = (x - cabin.x) ** 2 + (y - cabin.y) ** 2 < cabin.r ** 2;
@@ -1238,15 +1312,16 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   // rays shimmer faster and ripple, for about 14 seconds. The first surge comes about a minute after the page opens,
   // then one every 2.5 to 5 minutes, more often around midnight. None while the tab is hidden.
   const surgeEl = banner.querySelector('.bn-surge'), SURGE_MS = 14000;
-  const surge = () => {
-    if (!document.hidden) {
+  const surgeOnce = () => {
       const base = Number(getComputedStyle(surgeEl).opacity) || 0;
       surgeEl.animate([{ opacity: base }, { opacity: 0.9, offset: 0.2 }, { opacity: 0.75, offset: 0.55 }, { opacity: base }], { duration: SURGE_MS, easing: 'ease-in-out' });
       surgeEl.animate(Array.from({ length: 15 }, (_, i) => ({ transform: `translateX(${((i % 2 ? 1 : -1) * 0.7 * Math.sin(Math.PI * i / 14)).toFixed(2)}%)` })), { duration: SURGE_MS, easing: 'ease-in-out' });
       const quick = banner.getAnimations({ subtree: true }).filter((a) => /^bn-(shimmer|pulse|glow-)/.test(a.animationName || ''));
       quick.forEach((a) => a.updatePlaybackRate(3));
       setTimeout(() => quick.forEach((a) => a.updatePlaybackRate(1)), SURGE_MS * 0.8);
-    }
+  };
+  const surge = () => {
+    if (!document.hidden) surgeOnce();
     setTimeout(surge, (150 + Math.random() * 150) * 1000 * (1 - 0.45 * night));
   };
   setTimeout(surge, (55 + Math.random() * 25) * 1000);
