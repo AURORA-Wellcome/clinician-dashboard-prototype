@@ -211,8 +211,9 @@ dipper = (f'<g class="bn-dipper" data-top="{fig_top:.1f}"><g class="bn-dipper-st
 # The moon, upper right, behind the curtains' faint upper rays. The page sets its phase from today's date and shows it
 # (.on), except near new moon. A disk the color of the sky there hides the stars behind it; earthshine, which the page
 # shows only for a thin crescent; the lit part; and over them the glare, which also hides the dark part, as in the sky.
-# .bn-moon-pin lets the page keep it in view on a narrow or wide banner (data-top: its top edge).
-MOON = (1392, 44, 6.5)
+# .bn-moon-pin lets the page keep it in view on a narrow or wide banner (data-top: its top edge). It is drawn about
+# five times its true size for this wide view, as a prominent part of the sky.
+MOON = (1392, 44, 18)
 moon = (f'<g class="bn-moon-pin" data-top="{MOON[1] - MOON[2]:g}"><g class="bn-moon" transform="translate({MOON[0]} {MOON[1]})">'
         f'<circle class="bn-moon-disk" r="{MOON[2]}" fill="#09112F"/><circle class="bn-moon-shine" r="{MOON[2]}" fill="#9FB0E0" opacity="0"/>'
         '<path class="bn-moon-lit" fill="#EEF2FF"/>'
@@ -337,7 +338,8 @@ print(len(html), 'bytes')
 # rises from low on one side, is highest where it passes nearest, then sinks toward the horizon, looking fastest and
 # brightest when nearest. The banner is treated as a panorama about 120 degrees wide and 18 tall, with the horizon at
 # 84% of its height (the ridges). Each crossing is sampled at even times, a steady ground speed, so the changes of
-# apparent speed come from the geometry alone.
+# apparent speed come from the geometry alone. In the page's 600 s cycle the crossings take 135 and 150 s: slower than
+# the satellite throughout, though still 7 to 10 times an airliner's real speed on these paths.
 FOV_X, FOV_Y, HORIZON = 120, 18, 84
 
 def pct(v):
@@ -364,7 +366,7 @@ def plane_keyframes(name, start, end, nearest, peak, rightward=True, n=24):
     return f'@keyframes {name}{{' + ''.join(frames) + '}'
 
 if len(sys.argv) > 2:
-    css = (plane_keyframes('bn-plane-a', 7, 29.5, nearest=-5, peak=11.2) + '\n'
-           + plane_keyframes('bn-plane-b', 57, 82, nearest=12, peak=8, rightward=False) + '\n')
+    css = (plane_keyframes('bn-plane-a', 1, 23.5, nearest=-5, peak=11.2) + '\n'
+           + plane_keyframes('bn-plane-b', 51, 76, nearest=12, peak=8, rightward=False) + '\n')
     open(sys.argv[2], 'w').write(css)
     print(len(css), 'bytes of plane keyframes')

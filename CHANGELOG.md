@@ -107,6 +107,7 @@ The first mockup had a clinical, EHR-style look, with three views (caseload tria
   - the Big Dipper and the North Star, whose lines and names show when the pointer comes near
   - taps: the stars nearest a tap sparkle, and a tap on the Big Dipper shows it
   - clicking the cabin stokes its fire, with a puff of smoke and a few sparks; late at night it burns bright again for half a minute
+- **Larger moon, slower plane** (November 2): the moon is nearly three times as wide, a prominent part of the sky. The far-off airliner takes about 2¼ to 2½ minutes to cross rather than 45 to 50 s, and comes about every 5 minutes rather than every 100 s or so, so it is in the sky about as much as before.
 
 ## All pages
 
