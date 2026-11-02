@@ -211,6 +211,7 @@ dipper = (f'<g class="bn-dipper" data-top="{fig_top:.1f}"><g class="bn-dipper-st
 # The moon, upper right, in its own layer above the curtains, since the aurora's light adds to the moon's rather than
 # blocking it. The page lights the textures from moon_gen.py for today's phase and shows the result (.on), except near new
 # moon. The glare lies under the moon's face, so it doesn't wash out the maria, and it covers the dark part, as in the sky.
+# Both are warm, as a moon this low looks through the air.
 # .bn-moon-pin lets the page keep it in view on a narrow or wide banner (data-top: its top edge; data-right: the room to
 # its right), and the page hides the stars near it, wherever that puts it. It is drawn about seven times its true size for
 # this wide view, as a prominent part of the sky.
@@ -242,7 +243,7 @@ def clear(x, y):
 sky = layer('bn-sky', f'<rect width="{W}" height="{H}" fill="url(#bn-sky)"/><g fill="#E8EEFF">{"".join(s for x, y, s in stars if clear(x, y))}</g>{accents}{dipper}',
             '<linearGradient id="bn-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060D26"/><stop offset=".6" stop-color="#0F1B4B"/><stop offset=".86" stop-color="#1B2C6A"/><stop offset="1" stop-color="#26397E"/></linearGradient>'
             '<radialGradient id="bn-star-glow"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".9"/><stop offset=".25" stop-color="#DDE7FF" stop-opacity=".45"/><stop offset="1" stop-color="#C9D8FF" stop-opacity="0"/></radialGradient>')
-moon_layer = layer('bn-moonlayer', moon, '<radialGradient id="bn-moon-glow"><stop offset="0" stop-color="#E8EEFF" stop-opacity=".34"/><stop offset=".24" stop-color="#E8EEFF" stop-opacity=".34"/><stop offset=".3" stop-color="#E6ECFF" stop-opacity=".265"/><stop offset=".4" stop-color="#E2E9FF" stop-opacity=".166"/><stop offset=".5" stop-color="#DDE5FF" stop-opacity=".097"/><stop offset=".6" stop-color="#D8E1FF" stop-opacity=".05"/><stop offset=".7" stop-color="#D2DCFF" stop-opacity=".021"/><stop offset=".85" stop-color="#CCD8FF" stop-opacity=".003"/><stop offset="1" stop-color="#C9D6FF" stop-opacity="0"/></radialGradient>')
+moon_layer = layer('bn-moonlayer', moon, '<radialGradient id="bn-moon-glow"><stop offset="0" stop-color="#E8D4AD" stop-opacity=".34"/><stop offset=".24" stop-color="#E8D4AD" stop-opacity=".34"/><stop offset=".3" stop-color="#E6D2AD" stop-opacity=".265"/><stop offset=".4" stop-color="#E2D0AD" stop-opacity=".166"/><stop offset=".5" stop-color="#DDCCAD" stop-opacity=".097"/><stop offset=".6" stop-color="#D8C8AD" stop-opacity=".05"/><stop offset=".7" stop-color="#D2C4AD" stop-opacity=".021"/><stop offset=".85" stop-color="#CCC0AD" stop-opacity=".003"/><stop offset="1" stop-color="#C9BEAD" stop-opacity="0"/></radialGradient>')
 back_defs = ('<linearGradient id="bn-back" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#B7A4F1" stop-opacity=".6"/><stop offset=".45" stop-color="#9C88E8" stop-opacity=".25"/><stop offset="1" stop-color="#8873DD" stop-opacity="0"/></linearGradient>'
              + hfade('bn-hf-back', [(0, 0), (.15, .7), (.4, .35), (.6, .8), (.85, .45), (1, 0)])
              + f'<mask id="bn-m-back" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}"><rect width="{W}" height="{H}" fill="url(#bn-hf-back)"/></mask>'
