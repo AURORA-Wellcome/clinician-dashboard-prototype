@@ -101,6 +101,8 @@ img{display:block;max-width:100%;height:auto}
 .banner{-webkit-user-select:none;user-select:none;touch-action:manipulation}
 .bn-playing{cursor:crosshair}
 .bn-playing .bn-meteor{visibility:hidden}
+/* Out of view, the banner rests */
+.bn-offscreen,.bn-offscreen *,.bn-offscreen *::before,.bn-offscreen *::after{animation-play-state:paused!important}
 .bn-fall,.bn-shot,.bn-bloom,.bn-shard,.bn-pop{position:absolute;left:0;top:0;opacity:0}
 .bn-fall{--c:246 249 255;--z:2px;--len:90px;width:0;height:0}
 .bn-fall b{position:absolute;left:0;top:calc(var(--z) / -2);width:var(--len);height:var(--z);background:linear-gradient(90deg,rgb(var(--c)/.95),rgb(var(--c)/0));clip-path:polygon(0 0,100% 50%,0 100%)}
@@ -1322,8 +1324,11 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       quick.forEach((a) => a.updatePlaybackRate(3));
       setTimeout(() => quick.forEach((a) => a.updatePlaybackRate(1)), SURGE_MS * 0.8);
   };
+  // Out of view, the banner rests: its animations pause and no surge starts, until it is back
+  let inView = true;
+  if (window.IntersectionObserver) new IntersectionObserver(([e]) => { inView = e.isIntersecting; banner.classList.toggle('bn-offscreen', !inView); }).observe(banner);
   const surge = () => {
-    if (!document.hidden) surgeOnce();
+    if (!document.hidden && inView) surgeOnce();
     setTimeout(surge, (150 + Math.random() * 150) * 1000 * (1 - 0.45 * night));
   };
   setTimeout(surge, (55 + Math.random() * 25) * 1000);
