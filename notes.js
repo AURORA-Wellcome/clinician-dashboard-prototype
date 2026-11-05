@@ -19,6 +19,13 @@
   const VIEW_NAMES = { list: 'Patients list', patient: 'Patient page', handout: 'Patient handout', checkin: 'Check-in', site: 'Site PI page', settings: 'Site settings', account: 'Your settings', welcome: 'Welcome', landing: 'Landing page' };
   const KINDS = [['idea', 'Idea'], ['problem', 'Problem'], ['question', 'Question'], ['like', 'Like']];
   const ROLES = ['Clinician', 'Supervisor', 'Researcher', 'Lived experience', 'Technology team', 'Other'];
+  // A reviewer's site, optional, shared by the notes and the landing page's high scores: the trial sites and partner
+  // organizations named in the proposal, then Other
+  const SITES = [
+    ['Trial sites', ['Baylor', 'Mass General', 'Avon & Wiltshire', 'North London', 'Gregorio Marañón', 'La Sabana', 'UTEPSA', 'Universidad Nacional de Asunción', 'CITBM', 'Universitas Brawijaya']],
+    ['Partners', ['Deliberate AI', 'Behapp', 'One Mind', 'Stanford']]
+  ];
+  window.auroraSites = SITES;
   // Questions for the clinician working group (v3), in the panel's Questions tab. An answer is saved as a note of kind
   // 'answer', with the question (q), the choice and an optional comment, so the Firestore rules need no change. Saving
   // again updates it. Others' answers appear once you have given yours. "As now" marks the current design.
@@ -151,7 +158,9 @@
   const LOCAL_KEYS = ['aurora-notes:local', 'aurora-notes:unshared'];
   const readLocal = (key) => { try { return JSON.parse(lsGet(key) || '[]'); } catch (e) { return []; } };
   const localNotes = () => LOCAL_KEYS.flatMap(readLocal);
-  const me = () => ({ name: lsGet('aurora-notes-name') || '', role: lsGet('aurora-notes-role') || '' });
+  const me = () => ({ name: lsGet('aurora-notes-name') || '', role: lsGet('aurora-notes-role') || '', site: lsGet('aurora-notes-site') || '' });
+  // A name with the role and site, as notes show it
+  const whoIs = (n) => { const more = [n.role, n.site].filter(Boolean).join(', '); return n.name + (more ? ` (${more})` : ''); };
   function ago(ms) {
     if (!ms) return 'just now';
     const s = (Date.now() - ms) / 1000;
@@ -385,7 +394,14 @@
       // The landing page's shooting star game shares its high scores through this connection
       leaderboard: {
         top: () => fs.getDocs(fs.query(scores, fs.orderBy('points', 'desc'), fs.limit(10))).then((snap) => snap.docs.map((d) => d.data())),
-        add: (initials, points) => fs.addDoc(scores, { uid: user.uid, initials, points, at: fs.serverTimestamp() })
+        add: (initials, points, site) => {
+          const entry = { uid: user.uid, initials, points, at: fs.serverTimestamp() };
+          // If the rules don't take sites yet, the score still counts
+          return fs.addDoc(scores, site ? { ...entry, site } : entry).catch((e) => {
+            if (site && e.code === 'permission-denied') return fs.addDoc(scores, entry);
+            throw e;
+          });
+        }
       }
     };
   }
@@ -414,6 +430,7 @@
       try {
         store = await sharedStore(cfg, BOARD);
         window.auroraLeaderboard = store.leaderboard;
+        window.dispatchEvent(new Event('aurora-leaderboard'));
         let carried = 0;
         if (lsGet('aurora-notes-carry') === '1') { lsSet('aurora-notes-carry', null); carried = await carryOver(store); }
         status = { ok: true, text: 'Shared with everyone who has the review link.' + (carried ? ` Copied ${plural(carried, 'note')} from this browser.` : '') };
@@ -718,7 +735,7 @@
         h('div', { class: 'an-tally-head' }, `${plural(all.length, 'answer')} so far`),
         h('ul', { class: 'an-counts' }, q.options.map(([v, l]) => h('li', {}, h('span', {}, l), h('span', { class: 'an-count' }, String(all.filter((a) => a.choice === v).length))))),
         others.length ? h('ul', { class: 'an-others' }, others.sort(byTime).map((a) => h('li', {},
-          h('span', { class: 'an-who' }, a.name + (a.role ? ` (${a.role})` : '')), `: ${labelOf(q, a.choice)}`,
+          h('span', { class: 'an-who' }, whoIs(a)), `: ${labelOf(q, a.choice)}`,
           a.comment ? h('div', { class: 'an-text' }, a.comment) : null))) : null)
         : others.length ? h('p', { class: 'an-q-gate' }, `${plural(others.length, 'answer')} from others so far. They appear once you answer.`) : null);
   }
@@ -730,11 +747,11 @@
     const text = (comment ? `${labelOf(q, d.choice)}: ${comment}` : labelOf(q, d.choice)).slice(0, 4000);
     const c = contextNow();
     await act(async () => {
-      if (mine) await store.update(mine.id, { choice: d.choice, comment, text, name: who.name, role: who.role, ctx: c.ctx, commit: c.commit, built: c.built });
+      if (mine) await store.update(mine.id, { choice: d.choice, comment, text, name: who.name, role: who.role, site: who.site, ctx: c.ctx, commit: c.commit, built: c.built });
       else {
         await store.add({
           ...c, version: 'v3', view: q.view, pid: null, pname: '', pageKey: `v3:${q.view}`, anchor: q.part, anchorLabel: `Question: ${q.short}`, x: null, y: null,
-          kind: 'answer', q: q.id, choice: d.choice, comment, text, name: who.name, role: who.role, parent: null, plus: {}, resolved: false, resolvedBy: ''
+          kind: 'answer', q: q.id, choice: d.choice, comment, text, name: who.name, role: who.role, site: who.site, parent: null, plus: {}, resolved: false, resolvedBy: ''
         });
       }
       delete ui.draft[q.id];
@@ -771,7 +788,7 @@
       onclick: (e) => { if (!e.target.closest('button, textarea, input, select, label, a')) { if (shownHere) focusNote(n.id, true); else goTo(n); } }
     },
     h('div', { class: 'an-meta' }, h('span', { class: 'an-num', 'aria-hidden': 'true' }, String(m.num.get(n.id))),
-      h('span', { class: 'an-who' }, n.name + (n.role ? ` (${n.role})` : '')), h('span', { class: 'an-when' }, ago(n.createdAt))),
+      h('span', { class: 'an-who' }, whoIs(n)), h('span', { class: 'an-when' }, ago(n.createdAt))),
     h('div', { class: 'an-where' }, n.version === n.view ? where : `${where} (${n.version})`, pinned ? null : [' ', tool('Show', () => goTo(n), { class: 'an-tool an-inline' })]),
     n.kind ? h('div', { class: 'an-kind' }, kindName(n.kind)) : null,
     ui.edit === n.id ? editBox(n) : h('p', { class: 'an-text' }, n.text),
@@ -783,7 +800,7 @@
       mine ? tool('Edit', () => { ui.edit = n.id; render(true); focusIn(`[data-id="${n.id}"] .an-edit textarea`); }) : null,
       mine && !reps.length ? tool('Delete', () => { if (confirm('Delete this note?')) act(() => store.remove(n.id)); }) : null),
     reps.length ? h('ul', { class: 'an-replies' }, reps.map((r) => h('li', {},
-      h('div', { class: 'an-meta' }, h('span', { class: 'an-who' }, r.name + (r.role ? ` (${r.role})` : '')), h('span', { class: 'an-when' }, ago(r.createdAt))),
+      h('div', { class: 'an-meta' }, h('span', { class: 'an-who' }, whoIs(r)), h('span', { class: 'an-when' }, ago(r.createdAt))),
       h('p', { class: 'an-text' }, r.text),
       r.uid === m.uid ? h('div', { class: 'an-tools' }, tool('Delete', () => { if (confirm('Delete this reply?')) act(() => store.remove(r.id)); })) : null))) : null,
     ui.reply === n.id ? replyBox(n) : null);
@@ -792,13 +809,19 @@
   function nameFields() {
     const name = h('input', { class: 'an-input', autocomplete: 'name', 'aria-label': 'Your name', placeholder: 'Your name', maxlength: 80 });
     const role = h('select', { class: 'an-input', 'aria-label': 'Your role' }, h('option', { value: '' }, 'Role (optional)'), ROLES.map((r) => h('option', { value: r }, r)));
-    return { name, role, el: h('div', { class: 'an-c-row' }, name, role) };
+    const site = siteSelect();
+    return { name, role, site, el: h('div', { class: 'an-c-row' }, name, role, site) };
+  }
+  function siteSelect() {
+    return h('select', { class: 'an-input an-site', 'aria-label': 'Your site' }, h('option', { value: '' }, 'Site (optional)'),
+      SITES.map(([group, names]) => h('optgroup', { label: group }, names.map((s) => h('option', { value: s }, s)))), h('option', { value: 'Other' }, 'Other'));
   }
   function saveName(f) {
     const name = f.name.value.trim().slice(0, 80);
     if (!name) return false;
     lsSet('aurora-notes-name', name);
     lsSet('aurora-notes-role', f.role.value || null);
+    lsSet('aurora-notes-site', f.site.value || null);
     return true;
   }
   function replyBox(n) {
@@ -814,7 +837,7 @@
       act(() => store.add({
         version: n.version, view: n.view, pid: n.pid || null, pname: n.pname || '', pageKey: n.pageKey, ctx: n.ctx || {}, commit: BUILD.commit, built: BUILD.built,
         anchor: n.anchor, anchorLabel: n.anchorLabel, x: null, y: null, kind: '', text: t.slice(0, 4000),
-        name: who.name, role: who.role, parent: n.id, plus: {}, resolved: false, resolvedBy: ''
+        name: who.name, role: who.role, site: who.site, parent: n.id, plus: {}, resolved: false, resolvedBy: ''
       }));
     };
     ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) send(); if (e.key === 'Escape') { e.stopPropagation(); close(); } });
@@ -833,12 +856,14 @@
   function identity() {
     const who = me();
     if (who.name && !ui.me) {
-      return h('div', { class: 'an-me' }, h('span', {}, 'You: ', h('strong', {}, who.name), who.role ? ` (${who.role})` : ''),
+      const more = [who.role, who.site].filter(Boolean).join(', ');
+      return h('div', { class: 'an-me' }, h('span', {}, 'You: ', h('strong', {}, who.name), more ? ` (${more})` : ''),
         h('button', { type: 'button', class: 'an-tool', onclick: () => { ui.me = true; render(true); focusIn('.an-me-form input'); } }, 'Change'));
     }
     const f = nameFields();
     f.name.value = who.name;
     f.role.value = who.role;
+    f.site.value = who.site;
     const err = h('p', { class: 'an-err', role: 'alert' });
     const save = () => {
       if (!saveName(f)) { err.textContent = 'Type your name first.'; f.name.focus(); return; }
@@ -959,9 +984,12 @@
     const text = h('textarea', { class: 'an-input an-textarea', rows: 4, maxlength: 4000, 'aria-label': 'Note', placeholder: 'What do you notice, like or suggest?' });
     const err = h('p', { class: 'an-err', role: 'alert' });
     const save = h('button', { type: 'button', class: 'an-btn' }, 'Save note');
+    // Someone who gave a name before sites were asked for gets the chance here
+    const askSite = !f && !who.site ? siteSelect() : null;
     composer = h('div', { class: 'an-composer an-ui', role: 'dialog', 'aria-label': 'New note' },
       h('div', { class: 'an-c-title' }, 'New note'),
-      f ? f.el : h('p', { class: 'an-c-as' }, `As ${who.name}${who.role ? ` (${who.role})` : ''}`),
+      f ? f.el : h('p', { class: 'an-c-as' }, `As ${whoIs(who)}`),
+      askSite ? h('label', { class: 'an-field' }, h('span', {}, 'Site'), askSite) : null,
       h('label', { class: 'an-field' }, h('span', {}, 'About'), partIn),
       kinds, text,
       h('p', { class: 'an-c-hint' }, (status.ok ? 'Everyone with the review link can read notes.' : 'Only you can see notes saved in this browser.') + ' Please leave out patient information.'),
@@ -973,13 +1001,14 @@
       if (!body) { err.textContent = 'Write your note first.'; text.focus(); return; }
       const key = partIn.value, same = !!sec && key === sec.key;
       const part = key === 'page' ? { label: 'Whole page' } : parts.find((p) => p.key === key) || sec || { label: key };
+      if (askSite && askSite.value) lsSet('aurora-notes-site', askSite.value);
       const mine = me();
       save.disabled = true;
       try {
         const id = await store.add({
           ...contextNow(), anchor: key, anchorLabel: part.label, x: same ? sec.x : 0.03, y: same ? sec.y : 0.1,
           kind: (composer.querySelector('input[name="an-kind"]:checked') || {}).value || '', text: body.slice(0, 4000),
-          name: mine.name, role: mine.role, parent: null, plus: {}, resolved: false, resolvedBy: ''
+          name: mine.name, role: mine.role, site: mine.site, parent: null, plus: {}, resolved: false, resolvedBy: ''
         });
         closeComposer();
         ui.focus = id;
@@ -1010,11 +1039,11 @@
       return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const iso = (ms) => (ms ? new Date(ms).toISOString().replace('T', ' ').slice(0, 16) : '');
-    const head = ['id', 'created_utc', 'name', 'role', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'list_sort', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day', 'handout_language', 'handout_style', 'visit_dates', 'flagged_visits', 'caseload_empty', 'first_number', 'handout_chart', 'question', 'choice', 'greeting_line'];
+    const head = ['id', 'created_utc', 'name', 'role', 'site', 'kind', 'text', 'reply_to', 'plus_ones', 'resolved', 'resolved_by', 'version', 'page', 'patient', 'part', 'x', 'y', 'order', 'list_sort', 'style', 'text_size', 'icons', 'clock', 'drivers_open', 'look', 'commit', 'built_utc', 'checkin_day', 'handout_language', 'handout_style', 'visit_dates', 'flagged_visits', 'caseload_empty', 'first_number', 'handout_chart', 'question', 'choice', 'greeting_line'];
     // Notes, their replies, and the answers to the questions you may see
     const rows = [...m.visible, ...m.visible.flatMap((n) => m.replies(n.id)), ...m.answersShown].sort(byTime).map((n) => {
       const c = n.ctx || {};
-      return [n.id, iso(n.createdAt), n.name, n.role, n.kind, n.text, n.parent || '', Object.keys(n.plus || {}).length, n.resolved ? 'yes' : '', n.resolvedBy || '',
+      return [n.id, iso(n.createdAt), n.name, n.role, n.site || '', n.kind, n.text, n.parent || '', Object.keys(n.plus || {}).length, n.resolved ? 'yes' : '', n.resolvedBy || '',
         n.version, VIEW_NAMES[n.view] || n.view, n.pname || n.pid || '', n.anchorLabel, n.x == null ? '' : n.x.toFixed(3), n.y == null ? '' : n.y.toFixed(3),
         c.order, c.sort || '', c.style, c.text, c.icons, c.clock, c.drivers, c.look || 'current', (n.commit || '').slice(0, 7), n.built || '', c.day || '', c.lang || '', c.ho || '', c.dates === false ? 'not known' : 'known', c.flagged || '', c.empty ? 'yes' : '', c.lead || '', c.hom || '', n.q || '', n.choice || '', c.line || ''];
     });
@@ -1149,6 +1178,7 @@
 .an-input:focus{outline:2px solid #0072B2;outline-offset:0}
 .an-textarea{resize:vertical}
 .an-c-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.an-c-row .an-site{grid-column:1/-1}
 .an-composer{position:fixed;z-index:70;box-sizing:border-box;width:min(23rem,calc(100vw - 32px));padding:12px 14px;background:#FFF8D6;border:1px solid #E0CC7A;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.22);font:400 15px/21px var(--font,system-ui,sans-serif);color:#1F2A33}
 .an-c-title{margin-bottom:6px;font-weight:600}
 .an-c-as{margin:0 0 8px;color:#5B6B78}

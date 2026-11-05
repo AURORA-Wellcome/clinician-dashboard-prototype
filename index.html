@@ -186,6 +186,13 @@ img{display:block;max-width:100%;height:auto}
 .arcade tbody tr:nth-child(9) td{color:#C8A6FF}
 .arcade tbody tr:nth-child(10) td{color:#E6A4F2}
 .arcade tbody tr.empty td{opacity:.42}
+.arcade table:not(.no-sites) td:nth-child(2){width:1%;padding-right:.9em;white-space:nowrap}
+.arcade table:not(.no-sites) tr:not(.mine) td:nth-child(2){background:none}
+.arcade tbody td:nth-child(3){font-size:.625em;white-space:nowrap}
+.arcade .no-sites th:nth-child(3),.arcade .no-sites td:nth-child(3){display:none}
+.arcade p.arcade-sites{margin:14px 0 0;font-size:.625em;line-height:1.5;text-align:center;color:#8CF0D6;text-shadow:0 0 9px rgba(140,240,214,.6)}
+.arcade select{display:block;box-sizing:border-box;width:min(100%,15rem);margin:8px auto 8px;padding:6px 8px;border:1px solid rgba(159,178,240,.6);border-radius:3px;color:#E8EEFF;background:#141B47;font:400 .875rem/1.3 system-ui,-apple-system,sans-serif;text-transform:none}
+.arcade select:focus-visible{outline:2px solid #F6F9FF;outline-offset:2px}
 .arcade tbody tr.empty td:nth-child(2){background:none}
 .arcade tbody tr.mine td{color:#120B2E;text-shadow:none;background:#FFD66B}
 .arcade tbody tr.mine td:first-child{border-radius:3px 0 0 3px}
@@ -251,6 +258,14 @@ img{display:block;max-width:100%;height:auto}
 .bn-figure,.bn-label{opacity:0;transition:opacity .9s ease-in-out}
 .bn-dipper-on .bn-figure,.bn-dipper-on .bn-label{opacity:1;transition-duration:.5s}
 .bn-labels{position:absolute;inset:0;z-index:1;pointer-events:none}
+/* The top score's initials in the sky, for people with the review link */
+.bn-champ{position:absolute;inset:0;pointer-events:none}
+.bn-champ svg{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity 1.6s ease-in-out}
+.bn-champ.in .bn-champ-stars{opacity:1}
+.bn-champ-on .bn-champ-lines{opacity:1;transition-duration:.6s}
+.bn-champ-label{position:absolute;left:0;top:0;opacity:0;font-size:.8125rem;line-height:1;letter-spacing:.02em;color:#FFE9B8;text-shadow:0 0 6px #060D26,0 0 2px #060D26;white-space:nowrap;transition:opacity .9s ease-in-out}
+.bn-champ-on .bn-champ-label{opacity:1;transition-duration:.6s}
+.bn-playing .bn-champ-lines,.bn-finale .bn-champ-lines,.bn-playing .bn-champ-label,.bn-finale .bn-champ-label{opacity:0}
 /* While the pointer lights the moon, a canvas takes the place of its image, so it can change every frame */
 .bn-moon-live{position:absolute;display:none;pointer-events:none}
 .bn-moon-label{position:absolute;left:0;top:0;font-size:.8125rem;line-height:1.35;letter-spacing:.02em;text-align:center;white-space:pre-line;color:rgba(232,238,255,.94);text-shadow:0 0 6px #060D26,0 0 2px #060D26;opacity:0;transition:opacity .5s ease-in-out}
@@ -723,6 +738,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     ...[...banner.querySelectorAll('.bn-sky > g[fill="#E8EEFF"] > circle')].map((el) => ({ el, x: el.cx.baseVal.value, y: el.cy.baseVal.value })),
     ...[...banner.querySelectorAll('.bn-sky .acc')].map((el) => { const at = el.parentNode.transform.baseVal.getItem(0).matrix; return { el, x: at.e, y: at.f }; }),
   ];
+  let champArea = null, sceneNow = null;
   const pin = () => {
     const b = banner.getBoundingClientRect(), k = Math.max(b.width / 1600, b.height / 240);
     const side = Math.max(0, (1600 - b.width / k) / 2), top = Math.max(0, (240 - b.height / k) / 2);
@@ -731,7 +747,9 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     const moonIn = Math.max(0, side + 24 - Number(moonPin.dataset.right)), moonDown = Number(down(moonPin));
     moonPin.setAttribute('transform', `translate(${(-moonIn).toFixed(1)} ${moonDown})`);
     const clearance = moonFace.getAttribute('width') * 1.5; // from its center, so a moon's width of clear sky beyond its limb
-    skyStars.forEach(({ el, x, y }) => { el.style.visibility = Math.hypot(x - moonAt.e + moonIn, y - moonAt.f - moonDown) < clearance ? 'hidden' : ''; });
+    sceneNow = { k, side, top, moonX: moonAt.e - moonIn, clearance };
+    const inLetters = (x, y) => champArea && x >= champArea.l && x <= champArea.r && y >= champArea.t && y <= champArea.b;
+    skyStars.forEach(({ el, x, y }) => { el.style.visibility = Math.hypot(x - moonAt.e + moonIn, y - moonAt.f - moonDown) < clearance || inLetters(x, y) ? 'hidden' : ''; });
   };
   pin();
   window.addEventListener('resize', pin);
@@ -938,6 +956,8 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     banner.style.cursor = near || (moonOver && !game) ? 'pointer' : '';
     const over = !game && inDipper(at.x, at.y);
     if (over !== overDipper) { overDipper = over; showDipper(over ? 0 : 1200); }
+    const overC = !game && champBox && at.x >= champBox.l && at.x <= champBox.r && at.y >= champBox.t && at.y <= champBox.b;
+    if (overC !== overChamp) { overChamp = overC; showChamp(overC ? 0 : 1200); }
   };
   banner.addEventListener('pointermove', (e) => {
     if (e.pointerType === 'touch') return;
@@ -954,6 +974,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     if (!month) moonLabel.classList.remove('on');
     if (lightNow) startLight();
     if (overDipper) { overDipper = false; showDipper(1200); }
+    if (overChamp) { overChamp = false; showChamp(1200); }
   });
   window.addEventListener('resize', () => { stars = null; });
   // A tap: the stars nearest it sparkle, and a tap on or near the Big Dipper shows its lines and names. (A tap on the
@@ -1566,6 +1587,99 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     if (!game && !onCabin && !inDipper(x, y) && performance.now() - gameOver > 1200) startGame();
     if (game) launch(x, y);
   });
+  // The top score's initials, as a constellation in the sky, for people with the review link, since the public doesn't see
+  // reviewers' initials. Stars sit where a letter's strokes turn, a little off true so they look like stars, and its lines
+  // show for a few seconds when the page opens and while the pointer is near. Letters are drawn on a grid 6 high.
+  const GLYPHS = {
+    A: [[[0, 6], [2, 0], [4, 6]], [[1, 3], [3, 3]]], B: [[[0, 0], [3, 0.5], [3.4, 2.2], [0, 3], [3.8, 3.8], [3.6, 5.5], [0, 6], [0, 0]]],
+    C: [[[4, 1], [2, 0], [0, 2], [0, 4], [2, 6], [4, 5]]], D: [[[0, 0], [3, 0.8], [4, 3], [3, 5.2], [0, 6], [0, 0]]],
+    E: [[[4, 0], [0, 0], [0, 6], [4, 6]], [[0, 3], [3, 3]]], F: [[[4, 0], [0, 0], [0, 6]], [[0, 3], [3, 3]]],
+    G: [[[4, 1], [2, 0], [0, 2], [0, 4], [2, 6], [4, 5], [4, 3.2], [2.4, 3.2]]], H: [[[0, 0], [0, 6]], [[4, 0], [4, 6]], [[0, 3], [4, 3]]],
+    I: [[[1, 0], [1, 6]], [[0, 0], [2, 0]], [[0, 6], [2, 6]]], J: [[[4, 0], [4, 4.4], [2.8, 6], [1.2, 6], [0, 4.6]]],
+    K: [[[0, 0], [0, 6]], [[3.8, 0], [0, 3.4], [4, 6]]], L: [[[0, 0], [0, 6], [3.6, 6]]],
+    M: [[[0, 6], [0, 0], [2.5, 3.6], [5, 0], [5, 6]]], N: [[[0, 6], [0, 0], [4, 6], [4, 0]]],
+    O: [[[2, 0], [0, 1.6], [0, 4.4], [2, 6], [4, 4.4], [4, 1.6], [2, 0]]], P: [[[0, 6], [0, 0], [3, 0.2], [4, 1.6], [3, 3], [0, 3.2]]],
+    Q: [[[2, 0], [0, 1.6], [0, 4.4], [2, 6], [4, 4.4], [4, 1.6], [2, 0]], [[2.6, 4.6], [4.4, 6.4]]], R: [[[0, 6], [0, 0], [3, 0.2], [4, 1.6], [3, 3], [0, 3.2]], [[1.8, 3.1], [4, 6]]],
+    S: [[[4, 1], [2, 0], [0, 1.4], [2, 3], [4, 4.6], [2, 6], [0, 5]]], T: [[[0, 0], [4, 0]], [[2, 0], [2, 6]]],
+    U: [[[0, 0], [0, 4.4], [1.4, 6], [2.6, 6], [4, 4.4], [4, 0]]], V: [[[0, 0], [2, 6], [4, 0]]],
+    W: [[[0, 0], [1.4, 6], [2.8, 2.4], [4.2, 6], [5.6, 0]]], X: [[[0, 0], [2, 3], [4, 6]], [[4, 0], [2, 3], [0, 6]]],
+    Y: [[[0, 0], [2, 3], [4, 0]], [[2, 3], [2, 6]]], Z: [[[0, 0], [4, 0], [0, 6], [4, 6]]]
+  };
+  const svgEl = (tag, attrs) => {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+    return el;
+  };
+  const sceneLayer = (className) => svgEl('svg', { class: className, viewBox: '0 0 1600 240', preserveAspectRatio: 'xMidYMid slice', 'aria-hidden': 'true', focusable: 'false' });
+  let champ = null, champBox = null, overChamp = false, champTimer = 0;
+  const champLayer = Object.assign(document.createElement('div'), { className: 'bn-champ' });
+  const champStars = champLayer.appendChild(sceneLayer('bn-champ-stars')), champLines = champLayer.appendChild(sceneLayer('bn-champ-lines'));
+  const champLabel = score.parentNode.appendChild(Object.assign(document.createElement('span'), { className: 'bn-champ-label' }));
+  banner.querySelector('.bn-sky').after(champLayer);
+  const champGlow = svgEl('defs', {}), glow = champGlow.appendChild(svgEl('radialGradient', { id: 'bn-champ-glow' }));
+  glow.append(svgEl('stop', { offset: 0, 'stop-color': '#FFEFC7', 'stop-opacity': 0.55 }), svgEl('stop', { offset: 1, 'stop-color': '#FFEFC7', 'stop-opacity': 0 }));
+  const showChamp = (ms) => {
+    clearTimeout(champTimer);
+    banner.classList.add('bn-champ-on');
+    if (ms) champTimer = setTimeout(() => banner.classList.remove('bn-champ-on'), ms);
+  };
+  const drawChamp = () => {
+    const b = banner.getBoundingClientRect(), { k, side, top, moonX, clearance } = sceneNow;
+    const edge = (el) => side + (el.getBoundingClientRect().right - b.left) / k;
+    // In the clear sky between the Big Dipper and the moon, right of the middle, where the score line isn't
+    const left = Math.max(edge(banner.querySelector('.bn-dipper-stars')), edge(banner.querySelector('[data-star="North Star"]'))) + 14 / k;
+    const right = Math.min(1600 - side - 8 / k, moonX - clearance * 0.85);
+    const letters = champ.initials.split('').map((c) => GLYPHS[c]), gap = 1.6;
+    const widths = letters.map((g) => Math.max(...g.flat().map((p) => p[0])));
+    const grid = widths.reduce((sum, w) => sum + w, 0) + gap * (letters.length - 1);
+    const unit = Math.min(0.22 * b.height / k / 6, (right - left) / grid);
+    champStars.replaceChildren(champGlow);
+    champLines.replaceChildren();
+    if (unit * k * 6 < 20) { champBox = null; champArea = null; banner.classList.remove('bn-champ-on'); champLabel.textContent = ''; return; } // too small to read
+    const wide = grid * unit, cx = Math.max(left + wide / 2, Math.min(right - wide / 2, 800 + 0.6 * (right - 800))), x0 = cx - wide / 2, y0 = top + 0.08 * b.height / k;
+    // The same stars for everyone, and on every visit
+    let seed = champ.initials.split('').reduce((s, c) => s * 31 + c.charCodeAt(0), 7);
+    const rand = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    let along = 0;
+    letters.forEach((glyph, i) => {
+      const seen = new Map(), spot = ([gx, gy]) => {
+        const key = `${gx},${gy}`;
+        if (!seen.has(key)) {
+          seen.set(key, { x: x0 + (along + gx + (rand() - 0.5) * 0.3) * unit, y: y0 + (gy + (rand() - 0.5) * 0.3) * unit, r: (1.1 + 0.7 * rand()) / k });
+        }
+        return seen.get(key);
+      };
+      glyph.forEach((stroke) => {
+        const points = stroke.map(spot).map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+        champLines.appendChild(svgEl('polyline', { points, fill: 'none', stroke: '#FFE6B0', 'stroke-opacity': 0.62, 'stroke-width': (0.9 / k).toFixed(2), 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+      });
+      seen.forEach((s) => {
+        champStars.appendChild(svgEl('circle', { cx: s.x.toFixed(1), cy: s.y.toFixed(1), r: (s.r * 4).toFixed(2), fill: 'url(#bn-champ-glow)' }));
+        champStars.appendChild(svgEl('circle', { cx: s.x.toFixed(1), cy: s.y.toFixed(1), r: s.r.toFixed(2), fill: '#FFF6E0' }));
+      });
+      along += widths[i] + gap;
+    });
+    const margin = 10 / k, bottom = y0 + 6 * unit;
+    champArea = { l: x0 - margin, r: x0 + wide + margin, t: y0 - margin, b: bottom + margin };
+    champBox = { l: (x0 - side) * k - 24, r: (x0 + wide - side) * k + 24, t: (y0 - top) * k - 20, b: (bottom - top) * k + 24 };
+    champLabel.textContent = `${champ.initials} holds the sky · ${number(champ.points)} points · ${matchMedia('(hover: none)').matches ? 'Tap' : 'Click'} to challenge`;
+    const half = champLabel.offsetWidth / 2 + 6, px = Math.min(b.width - half, Math.max(half, (cx - side) * k));
+    champLabel.style.transform = `translate(${px.toFixed(1)}px, ${((bottom - top) * k + 9).toFixed(1)}px) translateX(-50%)`;
+  };
+  window.addEventListener('resize', () => { if (champ) { drawChamp(); pin(); stars = null; } });
+  window.addEventListener('aurora-champion', (e) => {
+    const { initials, points, again } = e.detail;
+    if (!/^[A-Z]{1,3}$/.test(initials)) return;
+    const changed = !champ || champ.initials !== initials || champ.points !== points;
+    if (changed) {
+      champ = { initials, points };
+      drawChamp();
+      pin();
+      stars = null;
+      setTimeout(() => champLayer.classList.add('in'), 40);
+    }
+    if ((changed || again) && champBox) showChamp(6000);
+  });
   // Now and then the aurora surges, as in a substorm: the main curtain brightens and greens over a pink fringe, and its
   // rays shimmer faster and ripple, for about 14 seconds. The first surge comes about a minute after the page opens,
   // then one every 2.5 to 5 minutes, more often around midnight. None while the tab is hidden.
@@ -1602,11 +1716,14 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   <div class="arcade-screen">
     <div class="arcade-sky" aria-hidden="true"><i class="arcade-moon" id="arcade-moon"></i><i class="arcade-streak"></i><i class="arcade-forest"></i><i class="arcade-cabin"></i></div>
     <h3 id="arcade-title"><i aria-hidden="true"></i><span>High scores</span><i aria-hidden="true"></i></h3>
-    <table><thead><tr><th scope="col">Rank</th><th scope="col">Name</th><th scope="col">Score</th></tr></thead><tbody id="arcade-rows"></tbody></table>
+    <table id="arcade-table" class="no-sites"><thead><tr><th scope="col">Rank</th><th scope="col">Name</th><th scope="col">Site</th><th scope="col">Score</th></tr></thead><tbody id="arcade-rows"></tbody></table>
+    <p class="arcade-sites" id="arcade-sites" hidden></p>
     <form id="arcade-form" hidden>
       <p class="arcade-made" id="arcade-made"></p>
       <label for="arcade-initials">Enter your initials</label>
       <input id="arcade-initials" type="text" maxlength="3" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="arcade-note">
+      <label for="arcade-site">Your site</label>
+      <select id="arcade-site" aria-describedby="arcade-note"><option value="">Optional</option></select>
       <p class="arcade-note" id="arcade-note">Shown to everyone with the review link</p>
       <p class="arcade-err" id="arcade-err" role="alert"></p>
       <button type="submit" id="arcade-save" disabled>Save</button><button type="button" class="quiet" id="arcade-skip">Skip</button>
@@ -1620,7 +1737,18 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
 // rules refuse, the game keeps its scores in this browser only.
 (() => {
   const $ = (id) => document.getElementById(id);
-  const dlg = $('arcade'), rows = $('arcade-rows'), form = $('arcade-form'), input = $('arcade-initials'), save = $('arcade-save'), err = $('arcade-err');
+  const dlg = $('arcade'), rows = $('arcade-rows'), form = $('arcade-form'), input = $('arcade-initials'), siteIn = $('arcade-site'), save = $('arcade-save'), err = $('arcade-err');
+  // Shorter names for the table, in the pixel font's letters (the full list of sites is in notes.js). "Other" isn't shown.
+  const SITE_KEY = 'aurora-notes-site', SHORT = { 'Mass General': 'MGH', 'Avon & Wiltshire': 'Avon', 'North London': 'N London', 'Gregorio Marañón': 'Gregorio', 'Universidad Nacional de Asunción': 'UNA', 'Universitas Brawijaya': 'Brawijaya', 'Deliberate AI': 'Deliberate', Other: '' };
+  const siteName = (entry) => { const s = (entry && entry.site) || ''; return s in SHORT ? SHORT[s] : s; };
+  // Which site has the most of the ten best, once one has at least two
+  const showSites = () => {
+    const tally = new Map();
+    top.forEach((e) => { const s = siteName(e); if (s) tally.set(s, (tally.get(s) || 0) + 1); });
+    const most = Math.max(0, ...tally.values()), leaders = [...tally].filter(([, n]) => n === most).map(([s]) => s), line = $('arcade-sites');
+    line.hidden = pending || most < 2 || leaders.length > 2;
+    line.textContent = leaders.length === 2 ? `${leaders[0]} and ${leaders[1]} tie with ${most}` : `${leaders[0]} holds ${most} of the top ${top.length}`;
+  };
   const INITIALS_KEY = 'aurora-banner-initials', RANKS = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
   let top = [], pending = null, saved = null;
   const render = () => {
@@ -1630,9 +1758,11 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       tr.style.setProperty('--i', i);
       if (!entry) tr.className = 'empty';
       else if (entry === pending || entry === saved) tr.className = 'mine';
-      [rank, entry ? entry.initials : '---', entry ? entry.points.toLocaleString('en-US') : '---'].forEach((text) => tr.appendChild(Object.assign(document.createElement('td'), { textContent: text })));
+      [rank, entry ? entry.initials : '---', siteName(entry), entry ? entry.points.toLocaleString('en-US') : '---'].forEach((text) => tr.appendChild(Object.assign(document.createElement('td'), { textContent: text })));
       return tr;
     }));
+    $('arcade-table').classList.toggle('no-sites', !list.some(siteName));
+    showSites();
   };
   const open = (entering) => {
     form.hidden = !entering;
@@ -1649,7 +1779,22 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     }
     (entering ? input : $('arcade-close')).focus();
   };
-  const load = async () => { top = await window.auroraLeaderboard.top(); };
+  // The top score also goes to the banner, which draws its initials in the sky
+  const announce = (again) => {
+    if (top[0]) window.dispatchEvent(new CustomEvent('aurora-champion', { detail: { initials: top[0].initials, points: top[0].points, again } }));
+  };
+  const load = async () => { top = await window.auroraLeaderboard.top(); announce(); };
+  window.addEventListener('aurora-leaderboard', () => { load().catch(() => {}); });
+  const fillSites = () => {
+    if (siteIn.options.length > 1 || !window.auroraSites) return;
+    window.auroraSites.forEach(([group, names]) => {
+      const set = Object.assign(document.createElement('optgroup'), { label: group });
+      names.forEach((name) => set.append(new Option(name, name)));
+      siteIn.append(set);
+    });
+    siteIn.append(new Option('Other', 'Other'));
+  };
+  siteIn.addEventListener('change', () => { if (pending) { pending.site = siteIn.value; render(); } });
   input.addEventListener('input', () => {
     if (!pending) return;
     input.value = input.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
@@ -1661,11 +1806,14 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!input.value || !pending || save.disabled) return;
-    const initials = input.value, { points } = pending;
+    const initials = input.value, { points } = pending, site = siteIn.value;
     save.disabled = true;
     try {
-      await window.auroraLeaderboard.add(initials, points);
-      try { localStorage.setItem(INITIALS_KEY, initials); } catch (x) { /* blocked */ }
+      await window.auroraLeaderboard.add(initials, points, site);
+      try {
+        localStorage.setItem(INITIALS_KEY, initials);
+        if (site) localStorage.setItem(SITE_KEY, site);
+      } catch (x) { /* blocked */ }
       await load();
       pending = null;
       saved = top.find((r) => r.initials === initials && r.points === points) || null;
@@ -1677,20 +1825,22 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   });
   $('arcade-skip').addEventListener('click', () => dlg.close());
   $('arcade-close').addEventListener('click', () => dlg.close());
-  dlg.addEventListener('close', () => { pending = null; saved = null; });
+  dlg.addEventListener('close', () => { pending = null; saved = null; announce(true); });
   window.auroraArcade = {
     // After a game: whether the shared scores can be reached. A score in the top ten opens them, to enter initials.
     gameEnded: async (points) => {
       if (!window.auroraLeaderboard) return false;
       try { await load(); } catch (e) { return false; }
       if (top.length < 10 || points > top[9].points) {
-        let last = '';
-        try { last = localStorage.getItem(INITIALS_KEY) || ''; } catch (e) { /* blocked */ }
+        let last = '', site = '';
+        try { last = localStorage.getItem(INITIALS_KEY) || ''; site = localStorage.getItem(SITE_KEY) || ''; } catch (e) { /* blocked */ }
+        fillSites();
         input.value = last;
+        siteIn.value = site;
         save.disabled = !last;
         err.textContent = '';
         $('arcade-made').textContent = !top.length || points > top[0].points ? 'New top score!' : 'You made the top 10!';
-        setTimeout(() => { pending = { initials: last.padEnd(3, '_'), points }; open(true); }, 800);
+        setTimeout(() => { pending = { initials: last.padEnd(3, '_'), points, site: siteIn.value }; open(true); }, 800);
       }
       return true;
     },
