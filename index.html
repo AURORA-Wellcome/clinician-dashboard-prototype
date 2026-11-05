@@ -682,6 +682,8 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     lightMoon(canvas.getContext('2d'), sun);
     moonFace.setAttribute('href', canvas.toDataURL());
     moon.classList.toggle('on', (1 + sun.z) / 2 >= 0.03);
+    // How much is lit, which sets how long the bear game's moon gravity lasts
+    moon.dataset.lit = ((1 + sun.z) / 2).toFixed(3);
   };
   // The phase, 0 new and .5 full, from the moon's and sun's motions (Meeus, Astronomical Algorithms, ch. 48), within about
   // half an hour of published times; an average lunar month can be most of a day off
@@ -957,7 +959,9 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     const near = (at.x - cabin.x) ** 2 + (at.y - cabin.y) ** 2 < cabin.r ** 2;
     if (near !== cozyOn) { cozyOn = near; cozy.classList.toggle('on', near); }
     pointMoon(at.x, at.y);
-    banner.style.cursor = near || (moonOver && !game) ? 'pointer' : '';
+    // The pointer shows what can be clicked: the cabin, the moon, and outside a game the Big Dipper and an unlocked animal's
+    // stars, which start the bear game. During a bear game, clicks belong to the game.
+    banner.style.cursor = !bearOn && (near || (moonOver && !game) || (!game && (inDipper(at.x, at.y) || (window.auroraBear && window.auroraBear.animalAt(at.x, at.y))))) ? 'pointer' : '';
     const over = !game && inDipper(at.x, at.y);
     if (over !== overDipper) { overDipper = over; showDipper(over ? 0 : 1200); }
     const overC = !game && champBox && at.x >= champBox.l && at.x <= champBox.r && at.y >= champBox.t && at.y <= champBox.b;
@@ -1568,6 +1572,9 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     const today = new Date(Date.now() + offset), peak = SHOWERS.find((s) => s.peaks.some(([m, d]) => today.getMonth() + 1 === m && today.getDate() === d));
     game = { start: now, next: now + 300, points: 0, missed: 0, landed: 0, caught: 0, bestCatch: 0, bestChain: 1, stars: [], w: b.width, h: b.height, best, wave: -1, left: 0, shower: null, double: false, radiant: null, peak, order: peak ? [peak, ...SHOWERS.filter((s) => s !== peak)] : SHOWERS, visitors: [], bag: [], nextVisitor: now + 9000 + Math.random() * 5000, satellites: 0, comets: 0, complaints: 0, cabinVisible: cabin.x > 0 && cabin.x < b.width, ground: b.height - 44 * Math.max(b.width / 1600, b.height / 240),
       moonX: moonBox.left + moonBox.width / 2 - b.left, moonY: moonBox.top + moonBox.height / 2 - b.top, moonClear: moonBox.width * 1.5 };
+    // The sound setting is shared with the bear game, which may have changed it
+    try { soundOn = localStorage.getItem(SOUND_KEY) === '1'; } catch (e) { /* blocked */ }
+    showSoundSetting();
     banner.classList.add('bn-playing', 'bn-burning');
     setFire(LIVES);
     wakeAudio();
@@ -1580,15 +1587,46 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     score.classList.add('on');
     requestAnimationFrame(gameFrame);
   };
-  // Outside a game, the cabin, the Big Dipper and the moon do what they always did; during one, every click sends a spark. The moment
+  // The bear game, in bear.js, starts from the Big Dipper or an unlocked animal's stars. Its code loads once, when someone
+  // first starts it, or when the page opens in a browser that has unlocked an animal, to draw that animal's stars.
+  let bearOn = false, bearLoad = null;
+  const loadBear = (then) => {
+    if (!bearLoad) {
+      bearLoad = new Promise((resolve, reject) => {
+        document.head.append(Object.assign(document.createElement('script'), { src: './bear.js', onload: resolve, onerror: reject }));
+      });
+      // If it can't load, the sky works as before, and a later click tries again
+      bearLoad.catch(() => { bearLoad = null; });
+    }
+    bearLoad.then(then, () => { bearOn = false; });
+  };
+  const startBear = (kind) => {
+    bearOn = true;
+    // The game's own pointer, at once, for someone playing with the keys who doesn't move the mouse
+    banner.style.cursor = '';
+    // On a meteor shower's peak night, as in the shooting star game
+    const today = new Date(Date.now() + offset), shower = SHOWERS.find((s) => s.peaks.some(([m, d]) => today.getMonth() + 1 === m && today.getDate() === d));
+    // For a moment after a run ends, a click doesn't start anything, so the last presses don't start another
+    loadBear(() => window.auroraBear.start(banner, () => { setTimeout(() => { bearOn = false; }, 800); }, { kind, surge: surgeOnce, peak: shower && shower.name }));
+  };
+  // Animals already unlocked in this browser show in the sky
+  try { if (localStorage.getItem('aurora-animals')) loadBear(() => window.auroraBear.showAnimals(banner, true)); } catch (e) { /* blocked */ }
+  // Outside a game, the cabin and the moon do what they always did, and the Big Dipper and an unlocked animal's stars start the
+  // bear game; during a shooting star game, every click sends a spark, and during a bear game, clicks belong to it. The moment
   // after a game ends, a click doesn't start another, so the last clicks don't hide the score.
   banner.addEventListener('click', (e) => {
     if (finale) { finale.skip(); return; }
+    if (bearOn) return;
     if (!stars) measure();
     const b = banner.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top;
     const onCabin = (x - cabin.x) ** 2 + (y - cabin.y) ** 2 < cabin.r ** 2;
     if (onCabin) stoke();
     if (!game && moonVisible() && Math.hypot(x - spot().x, y - spot().y) < spot().r * 1.25) { if (!month) playMonth(); return; }
+    if (!game) {
+      const animal = window.auroraBear && window.auroraBear.animalAt(x, y);
+      if (animal) { startBear(animal); return; }
+    }
+    if (!game && inDipper(x, y)) { startBear('bear'); return; }
     if (!game && !onCabin && !inDipper(x, y) && performance.now() - gameOver > 1200) startGame();
     if (game) launch(x, y);
   });
