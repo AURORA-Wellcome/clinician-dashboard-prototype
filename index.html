@@ -100,15 +100,21 @@ img{display:block;max-width:100%;height:auto}
    chimney and the bloom it makes; shards and points where a star bursts; and the score */
 .banner{-webkit-user-select:none;user-select:none;touch-action:manipulation}
 .bn-playing{cursor:crosshair}
-.bn-playing .bn-meteor{visibility:hidden}
+.bn-playing .bn-meteor,.bn-playing .bn-sat,.bn-playing .bn-plane:not(.bn-visitor){visibility:hidden}
 /* Out of view, the banner rests */
 .bn-offscreen,.bn-offscreen *,.bn-offscreen *::before,.bn-offscreen *::after{animation-play-state:paused!important}
-.bn-fall,.bn-shot,.bn-bloom,.bn-shard,.bn-pop{position:absolute;left:0;top:0;opacity:0}
+.bn-fall,.bn-comet,.bn-shot,.bn-bloom,.bn-chain,.bn-shard,.bn-pop,.bn-game-sat{position:absolute;left:0;top:0;opacity:0}
 .bn-fall{--c:246 249 255;--z:2px;--len:90px;width:0;height:0}
-.bn-fall b{position:absolute;left:0;top:calc(var(--z) / -2);width:var(--len);height:var(--z);background:linear-gradient(90deg,rgb(var(--c)/.95),rgb(var(--c)/0));clip-path:polygon(0 0,100% 50%,0 100%)}
-.bn-fall::before{content:"";position:absolute;left:calc(var(--z) * -2);top:calc(var(--z) * -2);width:calc(var(--z) * 4);height:calc(var(--z) * 4);border-radius:50%;background:radial-gradient(closest-side,rgb(255 255 255/.95),rgb(var(--c)/.7) 40%,rgb(var(--c)/0))}
+.bn-comet{--c:255 214 120;--z:6px;--len:190px;width:0;height:0}
+.bn-fall b,.bn-comet b{position:absolute;left:0;top:calc(var(--z) / -2);width:var(--len);height:var(--z);background:linear-gradient(90deg,rgb(var(--c)/.95),rgb(var(--c)/0));clip-path:polygon(0 0,100% 50%,0 100%)}
+.bn-fall::before,.bn-comet::before{content:"";position:absolute;left:calc(var(--z) * -2);top:calc(var(--z) * -2);width:calc(var(--z) * 4);height:calc(var(--z) * 4);border-radius:50%;background:radial-gradient(closest-side,rgb(255 255 255/.95),rgb(var(--c)/.7) 40%,rgb(var(--c)/0))}
 .bn-shot{height:2px;margin-top:-1px;border-radius:2px;transform-origin:0 50%;width:calc(var(--bn-h) * .14);background:linear-gradient(90deg,#FFE3B0,rgba(255,176,96,0));box-shadow:0 0 5px rgba(255,170,90,.75)}
 .bn-bloom{--r:calc(var(--bn-h) * .2);width:calc(var(--r) * 2);height:calc(var(--r) * 2);margin:calc(var(--r) * -1) 0 0 calc(var(--r) * -1);border-radius:50%;background:radial-gradient(closest-side,rgba(255,240,214,.8),rgba(255,206,140,.5) 42%,rgba(255,176,96,.2) 72%,rgba(255,176,96,0))}
+.bn-chain{--c:255 226 150;width:200px;height:200px;margin:-100px 0 0 -100px;border-radius:50%;background:radial-gradient(closest-side,rgb(255 255 255/.7),rgb(var(--c)/.55) 40%,rgb(var(--c)/.16) 72%,rgb(var(--c)/0))}
+.bn-game-sat{width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border-radius:50%;background:#EEF3FF;box-shadow:0 0 5px 2px rgba(214,226,255,.75)}
+.bn-plane.bn-visitor{inset:auto;left:0;top:0;width:0;height:0}
+.bn-plane.bn-visitor::before{content:"";position:absolute;width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border-radius:50%;background:#FFF3E0;box-shadow:0 0 5px 2px rgba(255,235,210,.5)}
+.bn-plane.bn-visitor i{width:4px;height:4px;margin:-2px 0 0 -2px;animation-duration:1.5s}
 .bn-shard{--c:246 249 255;width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border-radius:50%;background:rgb(var(--c));box-shadow:0 0 4px rgb(var(--c)/.8)}
 .bn-caught-stars,.bn-front{position:absolute;inset:0}
 /* The end of a game: lines between the caught stars, and credits rising from behind the trees */
@@ -130,6 +136,15 @@ img{display:block;max-width:100%;height:auto}
 .bn-ember{width:44px;height:26px;margin:-13px 0 0 -22px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,206,120,.9),rgba(255,146,70,.42) 52%,rgba(255,120,60,0))}
 .bn-caught{--c:246 249 255;position:absolute;left:0;top:0;width:20px;height:20px;margin:-10px 0 0 -10px;opacity:0;background:radial-gradient(circle,rgb(255 255 255/.95) 0 1px,rgb(var(--c)/.8) 2px,rgb(var(--c)/0) 6.5px),linear-gradient(90deg,rgb(var(--c)/0),rgb(var(--c)/.75),rgb(var(--c)/0)) center/100% 1px no-repeat,linear-gradient(0deg,rgb(var(--c)/0),rgb(var(--c)/.75),rgb(var(--c)/0)) center/1px 100% no-repeat}
 .bn-pop{--c:246 249 255;font-size:.8125rem;font-style:normal;font-weight:600;line-height:1;color:rgb(var(--c));text-shadow:0 0 6px #060D26,0 0 2px #060D26;white-space:nowrap}
+.bn-pop.big{font-size:1.125rem}
+.bn-wave{position:absolute;left:50%;top:26%;opacity:0;transform:translateX(-50%);font:400 16px/1.6 "AURORA Arcade",ui-monospace,Menlo,Consolas,monospace;text-align:center;text-transform:uppercase;white-space:nowrap;text-shadow:0 2px 0 #060D26,0 0 9px #060D26,0 0 3px #060D26;-webkit-font-smoothing:none}
+.bn-wave b{display:block;font-weight:400;color:#FFD66B}
+.bn-wave span{display:block;color:rgb(var(--c,232 238 255))}
+.bn-sound{position:absolute;right:0;bottom:0;display:none;padding:10px 12px 8px;font-size:.75rem;line-height:1;color:rgba(232,238,255,.85);text-shadow:0 0 4px #04071A;cursor:pointer;pointer-events:auto}
+.bn-sound:hover{text-decoration:underline;text-underline-offset:2px}
+.bn-playing .bn-sound,.bn-finale .bn-sound{display:block}
+@media (max-width:480px){.bn-wave{font-size:12px}}
+@media (max-width:340px){.bn-credits,.bn-wave{font-size:10px}}
 .bn-score{position:absolute;left:50%;top:10px;transform:translateX(-50%);font-size:.875rem;font-weight:600;line-height:1;letter-spacing:.02em;color:rgba(232,238,255,.95);text-shadow:0 0 6px #060D26,0 0 2px #060D26;white-space:nowrap;opacity:0;transition:opacity .9s ease-in-out}
 .bn-score.on{opacity:1;transition-duration:.3s}
 .bn-score.link{pointer-events:auto;cursor:pointer}
@@ -290,6 +305,13 @@ img{display:block;max-width:100%;height:auto}
 @keyframes bn-pulse{from{opacity:.55}to{opacity:1}}
 /* Accent stars: a few, each on its own beat (durations and delays are set on each star) */
 .banner .acc{transform-box:fill-box;transform-origin:center}
+/* The cabin's fire during a game follows the lives left */
+.banner.bn-burning .bn-win{opacity:var(--bn-fire,1);transition-duration:.6s}
+.banner.bn-burning .bn-win-glow{opacity:calc(.85 * var(--bn-fire,1));transition-duration:.6s}
+.banner.bn-burning .bn-spill{opacity:calc(.16 * var(--bn-fire,1));transition-duration:.6s}
+.banner.bn-burning .bn-hearth{animation:none;opacity:var(--bn-fire,1);transition:opacity .6s}
+.banner .bn-smoke{transition:opacity 1.2s}
+.banner.bn-burning .bn-smoke{opacity:var(--bn-fire,1);transition-duration:.6s}
 @keyframes bn-sparkle{from{opacity:.4;transform:scale(.7)}to{opacity:1;transform:scale(1.2)}}
 @keyframes bn-dance-g{from{transform:translateX(-5%)}to{transform:translateX(5%)}}
 @keyframes bn-glow-g{from{opacity:.2}to{opacity:.95}}
@@ -977,23 +999,50 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     }
   };
   // Clicking the sky starts a game of catching shooting stars, in the spirit of Missile Command. Each click sends a spark
-  // up from the chimney that blooms there, and a shooting star that touches a bloom bursts for points. As with real
-  // meteors, a star's color follows its speed, from slow and orange to fast and violet, and its size varies separately.
-  // Faster, smaller stars score more, and catching several in one bloom multiplies their points. A caught star stays where
-  // it was, twinkling, for the rest of the game. Stars come gradually faster and more often until five have landed, each in
-  // a flash behind the trees, and an ember stays glowing where it fell. A game also ends if the banner is scrolled away, the
-  // tab is hidden or the window is resized. Scores stay in the browser, to compare one game with the others.
-  const LIVES = 5, BLOOM_MS = 1200, BLOOM_GROWN = 0.27, BLOOM_ACTIVE = 0.66, SCORES_KEY = 'aurora-banner-scores';
+  // up from the chimney that blooms there, and a shooting star that touches a bloom bursts for points. A star's color
+  // follows its speed, from slow and orange to fast and violet, and its size varies separately.
+  // Faster, smaller stars score more. A burst throws off a smaller bloom that can catch stars nearby, and so on, with the
+  // points multiplied along the chain. A caught star stays where it was, twinkling, for the rest of the game. The stars come
+  // in waves named for real meteor showers, gradually faster and more often, until the lives are gone. Each landing is a
+  // flash behind the trees, leaves an ember and dims the cabin's fire, and a direct hit on the cabin costs two lives. A
+  // satellite, an airliner and a golden comet pass now and then. A game also ends if the banner is scrolled away, the tab is
+  // hidden or the window is resized. Scores stay in the browser, to compare one game with the others.
+  const LIVES = 5, BLOOM_MS = 1200, CHAIN_MS = 850, BLOOM_GROWN = 0.27, BLOOM_ACTIVE = 0.66, SCORES_KEY = 'aurora-banner-scores', SOUND_KEY = 'aurora-banner-sound';
+  // Real meteor showers, slowest first, at their entry speeds in km/s (Wikipedia's list of meteor showers, which cites the
+  // International Meteor Organization). large: how often their stars are large, a game choice, more for those known for
+  // fireballs. peaks: the dates of their peak night in the American Meteor Society's 2026-27 calendar, which can move by a
+  // day or so from year to year. On those dates the shower opens the game, for double points.
+  const SHOWERS = [
+    { name: 'Southern Taurids', kms: 27, large: 0.8, peaks: [[11, 4], [11, 5]] },
+    { name: 'Northern Taurids', kms: 29, large: 0.6, peaks: [[11, 11], [11, 12]] },
+    { name: 'Ursids', kms: 33, large: 0.3, peaks: [[12, 21], [12, 22]] },
+    { name: 'Geminids', kms: 35, large: 0.5, peaks: [[12, 13], [12, 14]] },
+    { name: 'Quadrantids', kms: 41, large: 0.7, peaks: [[1, 3], [1, 4]] },
+    { name: 'Lyrids', kms: 49, large: 0.5, peaks: [[4, 21], [4, 22]] },
+    { name: 'Perseids', kms: 59, large: 0.5, peaks: [[8, 12], [8, 13]] },
+    { name: 'Orionids', kms: 66, large: 0.4, peaks: [[10, 21], [10, 22]] },
+    { name: 'Eta Aquariids', kms: 66, large: 0.2, peaks: [[5, 5], [5, 6]] },
+    { name: 'Leonids', kms: 71, large: 0.4, peaks: [[11, 16], [11, 17]] }
+  ];
+  const showerSpeed = (s) => (s.kms - 27) / 44;
   const STAR_COLORS = [[0, 255, 178, 104], [0.35, 255, 232, 184], [0.6, 242, 246, 255], [0.8, 136, 240, 214], [1, 196, 164, 255]];
   const starColor = (speed) => {
     const i = Math.max(1, STAR_COLORS.findIndex((c) => c[0] >= speed)), lo = STAR_COLORS[i - 1], hi = STAR_COLORS[i], t = (speed - lo[0]) / (hi[0] - lo[0]);
     return [1, 2, 3].map((k) => Math.round(lo[k] + (hi[k] - lo[k]) * t)).join(' ');
   };
   const gamePiece = (className) => glints.appendChild(Object.assign(document.createElement('i'), { className }));
-  const falling = Array.from({ length: 16 }, () => { const el = gamePiece('bn-fall'); el.appendChild(document.createElement('b')); return { el, anim: null }; });
+  const falling = Array.from({ length: 24 }, () => { const el = gamePiece('bn-fall'); el.appendChild(document.createElement('b')); return { el, anim: null }; });
   const shots = Array.from({ length: 6 }, () => ({ el: gamePiece('bn-shot'), until: 0 }));
-  const blooms = Array.from({ length: 6 }, () => ({ el: gamePiece('bn-bloom'), until: 0, start: 0, x: 0, y: 0, r: 0, hits: 0 }));
-  const shards = Array.from({ length: 30 }, () => gamePiece('bn-shard')), pops = Array.from({ length: 8 }, () => gamePiece('bn-pop'));
+  const blooms = Array.from({ length: 6 }, () => ({ el: gamePiece('bn-bloom'), until: 0, start: 0, ms: BLOOM_MS, x: 0, y: 0, r: 0, gen: 0, family: null }));
+  const chains = Array.from({ length: 14 }, () => ({ el: gamePiece('bn-chain'), until: 0, start: 0, ms: CHAIN_MS, x: 0, y: 0, r: 0, gen: 0, family: null }));
+  const allBlooms = [...blooms, ...chains];
+  const visitorPiece = {
+    satellite: gamePiece('bn-game-sat'),
+    plane: glints.appendChild(Object.assign(document.createElement('div'), { className: 'bn-plane bn-visitor', innerHTML: '<i></i><i class="bn-strobe"></i>' })),
+    comet: gamePiece('bn-comet')
+  };
+  visitorPiece.comet.appendChild(document.createElement('b'));
+  const shards = Array.from({ length: 30 }, () => gamePiece('bn-shard')), pops = Array.from({ length: 12 }, () => gamePiece('bn-pop'));
   const caughtBox = glints.appendChild(Object.assign(document.createElement('div'), { className: 'bn-caught-stars' }));
   const caughtStars = Array.from({ length: 40 }, () => caughtBox.appendChild(Object.assign(document.createElement('i'), { className: 'bn-caught' })));
   const lines = Array.from({ length: 39 }, () => caughtBox.appendChild(Object.assign(document.createElement('i'), { className: 'bn-line' })));
@@ -1005,6 +1054,8 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const embers = Array.from({ length: LIVES }, () => caughtBox.appendChild(Object.assign(document.createElement('i'), { className: 'bn-ember' })));
   const score = banner.querySelector('.bn-labels').appendChild(Object.assign(document.createElement('span'), { className: 'bn-score' }));
   score.addEventListener('click', (e) => { e.stopPropagation(); window.auroraArcade.show(); });
+  const waveCard = score.parentNode.appendChild(Object.assign(document.createElement('div'), { className: 'bn-wave' }));
+  const soundToggle = score.parentNode.appendChild(Object.assign(document.createElement('span'), { className: 'bn-sound' }));
   let game = null, gameOver = -Infinity, scoreTimer = 0, shardNext = 0, popNext = 0, caughtNext = 0, caughtFade = null, flashNext = 0, debrisNext = 0, hazeNext = 0, finale = null;
   const number = (n) => n.toLocaleString('en-US');
   const ordinal = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'}`;
@@ -1027,6 +1078,92 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     if (caughtFade) { caughtFade.cancel(); caughtFade = null; }
     [...caughtStars, ...embers, ...lines].forEach((el) => el.getAnimations().forEach((a) => a.cancel()));
   };
+  // Sound, off unless a player turns it on, which the browser remembers: simple tones made here, so there are no files to load
+  let soundOn = false, audio = null, audioOut = null, noiseData = null;
+  try { soundOn = localStorage.getItem(SOUND_KEY) === '1'; } catch (e) { /* blocked */ }
+  const wakeAudio = () => {
+    if (!soundOn) return;
+    if (!audio) {
+      const Context = window.AudioContext || window.webkitAudioContext;
+      if (!Context) return;
+      audio = new Context();
+      audioOut = audio.createGain();
+      audioOut.gain.value = 0.7;
+      audioOut.connect(audio.createDynamicsCompressor()).connect(audio.destination);
+    }
+    if (audio.state === 'suspended') audio.resume();
+  };
+  const tone = (freq, ms, { to = freq, type = 'triangle', level = 0.16, delay = 0 } = {}) => {
+    if (!soundOn || !audio) return;
+    const start = audio.currentTime + delay / 1000, end = start + ms / 1000, osc = audio.createOscillator(), gain = audio.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, start);
+    osc.frequency.exponentialRampToValueAtTime(to, end);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(level, start + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, end);
+    osc.connect(gain).connect(audioOut);
+    osc.start(start);
+    osc.stop(end + 0.02);
+  };
+  const rumble = (ms, level) => {
+    if (!soundOn || !audio) return;
+    if (!noiseData) {
+      noiseData = audio.createBuffer(1, audio.sampleRate, audio.sampleRate);
+      const samples = noiseData.getChannelData(0);
+      for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
+    }
+    const start = audio.currentTime, end = start + ms / 1000, source = audio.createBufferSource(), low = audio.createBiquadFilter(), gain = audio.createGain();
+    source.buffer = noiseData;
+    low.type = 'lowpass';
+    low.frequency.setValueAtTime(420, start);
+    low.frequency.exponentialRampToValueAtTime(70, end);
+    gain.gain.setValueAtTime(level, start);
+    gain.gain.exponentialRampToValueAtTime(0.0001, end);
+    source.connect(low).connect(gain).connect(audioOut);
+    source.start(start);
+    source.stop(end + 0.02);
+  };
+  const note = (n) => 523.25 * 2 ** (n / 12);
+  const PENTATONIC = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
+  const sound = {
+    spark: () => tone(440, 80, { to: 880, type: 'square', level: 0.035 }),
+    caught: (times) => { const f = note(PENTATONIC[Math.min(times, PENTATONIC.length) - 1]); tone(f, 170); tone(f * 2, 110, { level: 0.05, delay: 25 }); },
+    landing: (size, direct) => { rumble(360 + 300 * size + (direct ? 300 : 0), 0.22 + 0.2 * size + (direct ? 0.12 : 0)); tone(direct ? 90 : 120, 320, { to: 40, type: 'sine', level: 0.26 }); },
+    wave: () => { tone(note(-5), 120, { level: 0.1 }); tone(note(2), 170, { level: 0.1, delay: 110 }); },
+    satellite: () => { tone(note(16), 80, { type: 'square', level: 0.04 }); tone(note(21), 120, { type: 'square', level: 0.04, delay: 90 }); },
+    plane: () => { tone(330, 230, { to: 247, type: 'sawtooth', level: 0.05 }); tone(262, 330, { to: 175, type: 'sawtooth', level: 0.05, delay: 240 }); },
+    comet: () => [0, 4, 7, 12, 16, 19, 24].forEach((n, i) => tone(note(n), 200, { level: 0.12, delay: i * 70 })),
+    over: () => [12, 7, 4, 0].forEach((n, i) => tone(note(n), 240, { level: 0.1, delay: i * 150 })),
+    best: () => [0, 4, 7, 12, 16].forEach((n, i) => tone(note(n), 260, { level: 0.12, delay: i * 110 }))
+  };
+  const showSoundSetting = () => { soundToggle.textContent = `Sound: ${soundOn ? 'on' : 'off'}`; };
+  showSoundSetting();
+  soundToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    soundOn = !soundOn;
+    try { localStorage.setItem(SOUND_KEY, soundOn ? '1' : '0'); } catch (x) { /* blocked */ }
+    wakeAudio();
+    showSoundSetting();
+    sound.caught(1);
+  });
+  // A short message that rises from a spot and fades, kept inside the banner
+  const floatText = (text, x, y, color, big) => {
+    const pop = pops[popNext++ % pops.length];
+    pop.textContent = text;
+    pop.classList.toggle('big', !!big);
+    pop.style.setProperty('--c', color);
+    const half = pop.offsetWidth / 2 + 6, px = Math.min(game.w - half, Math.max(half, x)), py = Math.max(pop.offsetHeight + 26, y);
+    const at = (rise, scale = 1) => `translate(${px.toFixed(1)}px, ${(py - rise).toFixed(1)}px) translate(-50%, -100%) scale(${scale})`;
+    pop.animate([
+      { opacity: 0, transform: at(4, 0.8) },
+      { opacity: 1, transform: at(9), offset: 0.15 },
+      { opacity: 1, transform: at(15), offset: 0.6 },
+      { opacity: 0, transform: at(24) }
+    ], { duration: Math.max(big ? 1400 : 1000, 60 * text.length), easing: 'ease-out' });
+  };
+  const setFire = (lives) => banner.style.setProperty('--bn-fire', (Math.max(0, lives) / LIVES).toFixed(2));
+  const resetFire = () => { banner.classList.remove('bn-burning'); banner.style.removeProperty('--bn-fire'); };
   const launch = (x, y) => {
     const now = performance.now(), shot = shots.find((s) => s.until <= now), bloom = blooms.find((s) => s.until <= now);
     if (!shot || !bloom) return;
@@ -1036,11 +1173,12 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     const toY = Math.min(y, b.height * 0.8), ms = Math.min(450, Math.max(160, Math.hypot(x - from.x, toY - from.y) / 2));
     const turn = `rotate(${Math.atan2(from.y - toY, from.x - x).toFixed(3)}rad)`;
     shot.until = now + ms;
+    sound.spark();
     shot.el.animate([
       { opacity: 1, transform: `translate(${from.x.toFixed(1)}px, ${from.y.toFixed(1)}px) ${turn}` },
       { opacity: 1, transform: `translate(${x.toFixed(1)}px, ${toY.toFixed(1)}px) ${turn}` }
     ], { duration: ms, easing: 'cubic-bezier(.3,.6,.5,1)' });
-    Object.assign(bloom, { until: now + ms + BLOOM_MS, start: now + ms, x, y: toY, r: b.height * 0.2, hits: 0 });
+    Object.assign(bloom, { until: now + ms + BLOOM_MS, start: now + ms, x, y: toY, r: b.height * 0.2, gen: 0, family: { hits: 0 } });
     const to = `translate(${x.toFixed(1)}px, ${toY.toFixed(1)}px)`;
     bloom.el.animate([
       { opacity: 0.95, transform: `${to} scale(.12)` },
@@ -1050,27 +1188,120 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     ], { duration: BLOOM_MS, delay: ms, easing: 'ease-out' });
   };
   // A larger star reaches a bloom a little sooner
-  const bloomAt = (x, y, reach, now) => blooms.find((g) => {
-    const t = (now - g.start) / BLOOM_MS;
+  const bloomAt = (x, y, reach, now) => allBlooms.find((g) => {
+    const t = (now - g.start) / g.ms;
     return t >= 0 && t < BLOOM_ACTIVE && Math.hypot(x - g.x, y - g.y) < g.r * Math.min(1, t / BLOOM_GROWN) + reach;
   });
-  const dropStar = (now, heat) => {
+  // A burst throws off a smaller bloom in the star's color, which can catch stars nearby. It belongs to the same chain, so
+  // the multiplier keeps climbing, and each step reaches a little less far.
+  const chainBloom = (parent, s, x, y, now) => {
+    const g = chains.find((c) => c.until <= now);
+    if (!g || parent.gen >= 4) return;
+    const r = game.h * (0.14 + 0.08 * s.size) * 0.88 ** parent.gen, k = r / 100, to = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+    Object.assign(g, { until: now + CHAIN_MS, start: now, x, y, r, gen: parent.gen + 1, family: parent.family });
+    g.el.style.setProperty('--c', s.color);
+    g.el.animate([
+      { opacity: 0.95, transform: `${to} scale(${(k * 0.15).toFixed(3)})` },
+      { opacity: 0.8, transform: `${to} scale(${k.toFixed(3)})`, offset: BLOOM_GROWN },
+      { opacity: 0.5, transform: `${to} scale(${(k * 1.03).toFixed(3)})`, offset: BLOOM_ACTIVE },
+      { opacity: 0, transform: `${to} scale(${(k * 1.08).toFixed(3)})` }
+    ], { duration: CHAIN_MS, easing: 'ease-out' });
+  };
+  // A new wave: its shower's name, and the point in the sky its stars fan out from, as in a real shower
+  const nextWave = (now) => {
+    const { order, peak, w } = game, span = Math.min(w, 1500), left = (w - span) / 2;
+    game.wave += 1;
+    const shower = order[Math.min(game.wave, order.length - 1)];
+    Object.assign(game, { shower, double: shower === peak, left: 7 + Math.min(game.wave, 8), next: now + 1000, radiant: { x: left + span * (Math.random() * 1.2 - 0.1), y: -span * (0.5 + 0.4 * Math.random()) } });
+    const part = (tag, text) => Object.assign(document.createElement(tag), { textContent: text });
+    waveCard.style.setProperty('--c', starColor(showerSpeed(shower)));
+    waveCard.replaceChildren(part('b', game.double ? 'Peak tonight' : `Wave ${game.wave + 1}`), part('span', `The ${shower.name}`), ...(game.double ? [part('b', 'Double points')] : []));
+    waveCard.getAnimations().forEach((a) => a.cancel());
+    waveCard.animate([{ opacity: 0 }, { opacity: 1, offset: 0.12 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], { duration: 2200 });
+    sound.wave();
+  };
+  const dropStar = (now, delay, heat, aim) => {
     const s = falling.find((f) => !f.anim);
     if (!s) return;
-    // Across the middle of a very wide banner, within reach, and down toward the forest. Fast stars grow more common as
-    // the game heats up.
-    const { w, h, ground } = game, span = Math.min(w, 1500), left = (w - span) / 2, speed = Math.random() ** (1.7 - heat), size = Math.random();
-    const x0 = left + span * (0.04 + 0.92 * Math.random()), y0 = -h * 0.06;
-    const x1 = Math.min(left + span * 0.98, Math.max(left + span * 0.02, x0 + (Math.random() * 2 - 1) * h * 1.1)), y1 = ground;
+    // Within reach across the middle of a very wide banner, down toward the forest along a line from the wave's radiant.
+    // Speed comes from the shower, with a little spread, and so does how often the stars are large.
+    const { w, h, ground, shower, radiant } = game, span = Math.min(w, 1500), left = (w - span) / 2;
+    const speed = clamp01(showerSpeed(shower) + (Math.random() - 0.5) * 0.12), size = Math.random() < shower.large ? 0.55 + 0.45 * Math.random() : 0.55 * Math.random();
+    const y0 = -h * 0.06, y1 = ground, x1 = Math.min(left + span * 0.98, Math.max(left + span * 0.02, aim)), x0 = radiant.x + (y0 - radiant.y) / (y1 - radiant.y) * (x1 - radiant.x);
     const turn = `rotate(${Math.atan2(y0 - y1, x0 - x1).toFixed(3)}rad)`, ms = (4200 - 2600 * speed) * (1 - 0.25 * heat), color = starColor(speed);
-    const points = 5 * Math.round((10 + 50 * speed + 30 * (1 - size) + 60 * speed * (1 - size)) / 5);
-    Object.assign(s, { x0, y0, x1, y1, start: now, ms, color, size, speed, points, reach: h * 0.05 * size });
+    const points = 5 * Math.round((10 + 50 * speed + 30 * (1 - size) + 60 * speed * (1 - size)) / 5) * (game.double ? 2 : 1);
+    Object.assign(s, { x0, y0, x1, y1, start: now + delay, ms, color, size, speed, points, reach: h * 0.05 * size });
     s.el.style.cssText = `--c:${color};--z:${((1.4 + 3.4 * size) * h / 216).toFixed(1)}px;--len:${(h * (0.22 + 0.5 * speed)).toFixed(0)}px`;
     s.anim = s.el.animate([
       { opacity: 0, transform: `translate(${x0.toFixed(1)}px, ${y0.toFixed(1)}px) ${turn}` },
       { opacity: 1, offset: 0.08 },
       { opacity: 1, transform: `translate(${x1.toFixed(1)}px, ${y1.toFixed(1)}px) ${turn}` }
+    ], { duration: ms, delay, easing: 'linear' });
+  };
+  // One star, or a flurry falling close together, which is what chains feed on. About one in six heads for the cabin.
+  const dropFlurry = (now, heat) => {
+    const { w, h } = game, span = Math.min(w, 1500), left = (w - span) / 2;
+    const aim = game.cabinVisible && Math.random() < 0.18 ? cabin.x + (Math.random() - 0.5) * h * 0.3 : left + span * (0.03 + 0.94 * Math.random());
+    const count = Math.min(game.left, Math.random() < 0.2 + 0.35 * heat ? 2 + Math.floor(Math.random() * 3) : 1);
+    for (let i = 0; i < count; i++) dropStar(now, i * 170, heat, aim + (i ? (Math.random() * 2 - 1) * h * 0.32 : 0));
+    game.left -= count;
+    return count;
+  };
+  // Visitors: a satellite worth a bonus, an airliner that costs points, and a rare golden comet that sets off an aurora
+  // clearing the sky of stars. They take turns, one every 13 to 22 s or so, the comet last.
+  const sendVisitor = (now) => {
+    if (!game.bag.length) game.bag = Math.random() < 0.5 ? ['comet', 'plane', 'satellite'] : ['comet', 'satellite', 'plane'];
+    const kind = game.bag.pop(), { w, h } = game, span = Math.min(w, 1500), left = (w - span) / 2, rightward = Math.random() < 0.5;
+    const near = left - 30, far = left + span + 30, x0 = rightward ? near : far, x1 = rightward ? far : near, pace = Math.max(0.6, Math.min(1, span / 1440));
+    const y0 = h * (kind === 'plane' ? 0.32 + Math.random() * 0.14 : kind === 'comet' ? 0.04 : 0.06 + Math.random() * 0.1);
+    const y1 = y0 + h * (kind === 'plane' ? (Math.random() - 0.5) * 0.08 : kind === 'comet' ? 0.38 : 0.1), ms = { satellite: 8000, plane: 13000, comet: 6500 }[kind] * pace;
+    const el = visitorPiece[kind], turn = kind === 'comet' ? ` rotate(${Math.atan2(y0 - y1, x0 - x1).toFixed(3)}rad)` : '';
+    if (kind === 'comet') el.style.cssText = `--z:${(6 * h / 216).toFixed(1)}px;--len:${(h * 0.95).toFixed(0)}px`;
+    const anim = el.animate([
+      { opacity: 0, transform: `translate(${x0.toFixed(1)}px, ${y0.toFixed(1)}px)${turn}` },
+      { opacity: 1, offset: 0.06 },
+      { opacity: 1, offset: 0.94 },
+      { opacity: 0, transform: `translate(${x1.toFixed(1)}px, ${y1.toFixed(1)}px)${turn}` }
     ], { duration: ms, easing: 'linear' });
+    game.visitors.push({ kind, el, anim, x0, y0, x1, y1, start: now, ms, reach: kind === 'comet' ? h * 0.07 : h * 0.03, hit: false });
+  };
+  // Returns whether the visitor keeps flying
+  const visitorHit = (v, x, y, now) => {
+    if (v.kind === 'plane') {
+      v.hit = true;
+      game.points = Math.max(0, game.points - 150);
+      game.complaints += 1;
+      floatText('−150 · Air traffic control has questions', x, y + game.h * 0.2, '255 150 130');
+      sound.plane();
+      return true;
+    }
+    v.anim.cancel();
+    if (v.kind === 'satellite') {
+      game.points += 500;
+      game.satellites += 1;
+      sparkle({ x, y, accent: true, base: 1, last: 0 }, now);
+      floatText('Satellite! +500', x, y, '214 226 255', true);
+      sound.satellite();
+      return false;
+    }
+    // The comet: every star in the sky bursts, for its points, and the aurora surges
+    game.points += 300;
+    game.comets += 1;
+    chainBloom({ gen: 0, family: { hits: 0 } }, { size: 1, color: '255 214 120' }, x, y, now);
+    floatText('Aurora storm! +300', x, y, '255 214 120', true);
+    sound.comet();
+    if (!document.hidden) surgeOnce();
+    for (const s of falling) {
+      if (!s.anim || now < s.start) continue;
+      const t = (now - s.start) / s.ms;
+      s.anim.cancel();
+      s.anim = null;
+      game.points += s.points;
+      game.caught += 1;
+      game.bestCatch = Math.max(game.bestCatch, s.points);
+      burst(s, s.x0 + (s.x1 - s.x0) * t, s.y0 + (s.y1 - s.y0) * t, 1, now);
+    }
+    return false;
   };
   // A burst: a sparkle, shards in the star's color, more for a larger star, and its points. Then the star stays where it was,
   // twinkling, unless that would crowd the moon.
@@ -1099,18 +1330,11 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
         { opacity: 0.45, transform: `${to} scale(.45) rotate(90deg)` }
       ], { duration: 900 + Math.random() * 1100, delay: 900, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' });
     }
-    const pop = pops[popNext++ % pops.length], px = Math.min(game.w - 34, Math.max(34, x)), py = Math.max(22, y);
-    pop.textContent = times > 1 ? `+${number(s.points * times)} ×${times}` : `+${s.points}`;
-    pop.style.setProperty('--c', s.color);
-    pop.animate([
-      { opacity: 0, transform: `translate(${px.toFixed(1)}px, ${(py - 4).toFixed(1)}px) translate(-50%, -100%) scale(.8)` },
-      { opacity: 1, transform: `translate(${px.toFixed(1)}px, ${(py - 9).toFixed(1)}px) translate(-50%, -100%) scale(1)`, offset: 0.15 },
-      { opacity: 1, transform: `translate(${px.toFixed(1)}px, ${(py - 15).toFixed(1)}px) translate(-50%, -100%) scale(1)`, offset: 0.6 },
-      { opacity: 0, transform: `translate(${px.toFixed(1)}px, ${(py - 24).toFixed(1)}px) translate(-50%, -100%) scale(1)` }
-    ], { duration: 1000, easing: 'ease-out' });
+    floatText(times > 1 ? `+${number(s.points * times)} ×${times}` : `+${number(s.points)}`, x, y, s.color, times >= 3);
   };
   // A landing, in the star's color: a larger star makes a bigger flash and more debris, and a faster one throws it higher.
-  // The treetops catch the light, and a landing near the cabin stirs its fire.
+  // The treetops catch the light, and each life lost dims the cabin's fire. A landing near the cabin stirs it, and a direct
+  // hit costs two lives.
   const landing = (s, now) => {
     const { h } = game, x = s.x1, y = s.y1, to = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`, reach = h * (0.28 + 0.42 * s.size) / 100;
     const flash = flashes[flashNext % flashes.length], ring = rings[flashNext % rings.length];
@@ -1145,25 +1369,21 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       ], { duration: 2000 + Math.random() * 900, delay: 120 * (3 - i), easing: 'cubic-bezier(.2,.6,.4,1)', fill: 'backwards' });
     }
     // An ember stays where it fell until the game's stars fade
-    const ember = embers[game.missed % embers.length], at = `translate(${x.toFixed(1)}px, ${(y + 2).toFixed(1)}px)`;
+    const ember = embers[game.landed++ % embers.length], at = `translate(${x.toFixed(1)}px, ${(y + 2).toFixed(1)}px)`;
     ember.getAnimations().forEach((a) => a.cancel());
     ember.animate([{ opacity: 0.45, transform: `${at} scale(.8)` }, { opacity: 1, transform: `${at} scale(${(0.9 + 0.5 * s.size).toFixed(2)})` }], { duration: 500 + Math.random() * 700, delay: 500, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out', fill: 'backwards' });
     lightTrees({ x, y: h * 0.5, accent: false, base: 0.5 + 0.35 * s.size }, now);
     if (Math.abs(x - cabin.x) < h * 0.4) stoke();
     // What it cost
-    const pop = pops[popNext++ % pops.length], px = Math.min(game.w - 34, Math.max(34, x)), py = y - h * 0.14;
-    pop.textContent = '−1 life';
-    pop.style.setProperty('--c', '255 196 130');
-    pop.animate([
-      { opacity: 0, transform: `translate(${px.toFixed(1)}px, ${py.toFixed(1)}px) translate(-50%, -100%) scale(.8)` },
-      { opacity: 1, transform: `translate(${px.toFixed(1)}px, ${(py - 6).toFixed(1)}px) translate(-50%, -100%) scale(1)`, offset: 0.15 },
-      { opacity: 1, transform: `translate(${px.toFixed(1)}px, ${(py - 12).toFixed(1)}px) translate(-50%, -100%) scale(1)`, offset: 0.6 },
-      { opacity: 0, transform: `translate(${px.toFixed(1)}px, ${(py - 20).toFixed(1)}px) translate(-50%, -100%) scale(1)` }
-    ], { duration: 1100, easing: 'ease-out' });
+    const direct = game.cabinVisible && Math.abs(x - cabin.x) < h * 0.16;
+    game.missed += direct ? 2 : 1;
+    setFire(LIVES - game.missed);
+    floatText(direct ? 'Direct hit! −2 lives' : '−1 life', x, y - h * 0.14, '255 196 130', direct);
+    sound.landing(s.size, direct);
     score.animate([{ color: '#FFB46A' }, { color: 'rgba(232,238,255,.95)' }], { duration: 800, easing: 'ease-out' });
   };
   const showScore = () => {
-    const left = LIVES - game.missed, beat = game.best && game.points > game.best;
+    const left = Math.max(0, LIVES - game.missed), beat = game.best && game.points > game.best;
     score.textContent = `${beat ? 'New best! ' : ''}${number(game.points)} points · ${left} ${left === 1 ? 'life' : 'lives'} left`;
   };
   // The end of a game worth celebrating. After the last landing, the caught stars join into a constellation, named for its
@@ -1191,11 +1411,11 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       timers.push(setTimeout(() => sparkle({ x: b.x, y: b.y, accent: true, base: 1, last: 0 }, performance.now()), delay + 120));
     });
     const names = CONSTELLATIONS.find(([least]) => played.caught >= least)[1], seconds = Math.round((performance.now() - played.start) / 1000);
-    const rows = [...(newBest ? ['New best!', ''] : []), 'Your constellation', names[Math.floor(Math.random() * names.length)], '', `${played.caught} stars caught`, `Best catch +${number(played.bestCatch)}`, ...(played.bestBloom > 1 ? [`Best bloom ×${played.bestBloom}`] : []), `Time ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Moon maps: NASA', 'Thanks for playing'];
+    const rows = [...(newBest ? ['New best!', ''] : []), 'Your constellation', names[Math.floor(Math.random() * names.length)], '', `${played.caught} stars caught`, `Best catch +${number(played.bestCatch)}`, ...(played.bestChain > 1 ? [`Best chain ×${played.bestChain}`] : []), `Reached the ${played.shower.name}`, ...(played.satellites ? [`Satellites caught: ${played.satellites}`] : []), ...(played.comets ? [`Comets caught: ${played.comets}`] : []), ...(played.complaints ? [`Air traffic complaints: ${played.complaints}`] : []), `Time ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Moon maps: NASA', 'Thanks for playing'];
     const heads = new Set(['New best!', 'Your constellation', 'Final score']);
     credits.replaceChildren(...rows.map((text) => (text ? Object.assign(document.createElement(heads.has(text) ? 'b' : 'span'), { textContent: text }) : document.createElement('i'))));
     const { h } = played, tall = credits.offsetHeight;
-    const rise = credits.animate([{ opacity: 1, transform: `translate(-50%, ${h.toFixed(1)}px)` }, { opacity: 1, transform: `translate(-50%, ${(-tall).toFixed(1)}px)` }], { duration: (h + tall) / (h * 0.33) * 1000, delay: 1500, easing: 'linear' });
+    const rise = credits.animate([{ opacity: 1, transform: `translate(-50%, ${h.toFixed(1)}px)` }, { opacity: 1, transform: `translate(-50%, ${(-tall).toFixed(1)}px)` }], { duration: (h + tall) / (h * 0.4) * 1000, delay: 1500, easing: 'linear' });
     timers.push(setTimeout(() => { if (!document.hidden) surgeOnce(); }, 900));
     const hint = score.parentNode.appendChild(Object.assign(document.createElement('span'), { className: 'bn-skip', textContent: matchMedia('(hover: none)').matches ? 'Tap to skip' : 'Click to skip' }));
     banner.classList.add('bn-finale');
@@ -1228,10 +1448,17 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       if (!s.anim) return;
       const fall = s.anim;
       s.anim = null;
+      if (performance.now() < s.start) { fall.cancel(); return; }
       fall.pause();
       s.el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500 }).onfinish = () => fall.cancel();
     });
+    game.visitors.forEach((v) => {
+      v.anim.pause();
+      v.el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500 }).onfinish = () => v.anim.cancel();
+    });
+    waveCard.getAnimations().forEach((a) => a.cancel());
     banner.classList.remove('bn-playing');
+    setTimeout(() => { if (!game && audio) audio.suspend(); }, 2000);
     const played = game, { points, w: width } = played;
     game = null;
     gameOver = performance.now();
@@ -1241,12 +1468,15 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       else if (points > past.best) score.textContent = `New best: ${number(points)} points!`;
       else score.textContent = `${number(points)} points · ${past.rank <= 100 ? `${ordinal(past.rank)} best of ${past.games} · ` : ''}Best ${number(past.best)}`;
     } else score.classList.remove('on');
-    if (!showResult) { clearCaught(); return; }
+    if (!showResult) { clearCaught(); resetFire(); return; }
+    if (past && past.best && points > past.best) sound.best(); else sound.over();
     // After any finale: the result line, the shared high scores with the review link, and the caught stars and embers
     // outlasting the score a little, then fading. A top ten score opens the high scores, and the line does too. (On a phone,
     // the line drops the comparison to make room.)
     const wrapUp = () => {
       const hideScore = () => score.classList.remove('on', 'link');
+      // The fire comes back, after staying out long enough to be seen, unless a new game has lit it
+      setTimeout(() => { if (!game) { resetFire(); stoke(); } }, Math.max(0, gameOver + 2500 - performance.now()));
       caughtFade = caughtBox.animate([{ opacity: 1 }, { opacity: 1, offset: 0.6 }, { opacity: 0 }], { duration: 9000 });
       caughtFade.onfinish = clearCaught;
       if (!past) return;
@@ -1266,31 +1496,55 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     if (!game) return;
     const now = performance.now(), b = banner.getBoundingClientRect();
     if (document.hidden || b.bottom < 0 || b.width !== game.w) { endGame(false); return; }
-    // The pace: from one star every 1.6 s toward one every 0.32 s, about half way there after 35 s
+    // The pace: from one star every 1.6 s toward one every 0.32 s, about half way there after 35 s, with a breath between waves
     const heat = 1 - Math.exp((game.start - now) / 50000);
-    if (now >= game.next) { dropStar(now, heat); game.next = now + 1600 - 1280 * heat; }
+    if (now >= game.next) {
+      if (!game.left) nextWave(now);
+      else {
+        const count = dropFlurry(now, heat);
+        game.next = now + (game.left ? (1600 - 1280 * heat) * (count + 1) / 2 : 1800);
+      }
+    }
+    if (now >= game.nextVisitor) { sendVisitor(now); game.nextVisitor = now + 13000 + Math.random() * 9000; }
     let changed = false;
     for (const s of falling) {
       if (!s.anim) continue;
-      const t = (now - s.start) / s.ms, x = s.x0 + (s.x1 - s.x0) * t, y = s.y0 + (s.y1 - s.y0) * t, g = t < 1 && bloomAt(x, y, s.reach, now);
+      const t = (now - s.start) / s.ms;
+      if (t < 0) continue;
+      const x = s.x0 + (s.x1 - s.x0) * t, y = s.y0 + (s.y1 - s.y0) * t, g = t < 1 && bloomAt(x, y, s.reach, now);
       if (t >= 1) {
         s.anim = null; changed = true;
         landing(s, now);
-        game.missed += 1;
       } else if (g) {
-        s.anim.cancel(); s.anim = null; g.hits += 1; game.points += s.points * g.hits; changed = true;
-        game.caught += 1; game.bestCatch = Math.max(game.bestCatch, s.points * g.hits); game.bestBloom = Math.max(game.bestBloom, g.hits);
-        burst(s, x, y, g.hits, now);
+        s.anim.cancel(); s.anim = null; changed = true;
+        g.family.hits += 1;
+        const times = g.family.hits;
+        game.points += s.points * times; game.caught += 1;
+        game.bestCatch = Math.max(game.bestCatch, s.points * times); game.bestChain = Math.max(game.bestChain, times);
+        burst(s, x, y, times, now);
+        chainBloom(g, s, x, y, now);
+        sound.caught(times);
       }
     }
+    game.visitors = game.visitors.filter((v) => {
+      const t = (now - v.start) / v.ms;
+      if (t >= 1) return false;
+      const x = v.x0 + (v.x1 - v.x0) * t, y = v.y0 + (v.y1 - v.y0) * t;
+      if (v.hit || !bloomAt(x, y, v.reach, now)) return true;
+      changed = true;
+      return visitorHit(v, x, y, now);
+    });
     if (changed) showScore();
     if (game.missed >= LIVES) endGame(true); else requestAnimationFrame(gameFrame);
   };
   const startGame = () => {
     const now = performance.now(), b = banner.getBoundingClientRect(), moonBox = moonFace.getBoundingClientRect(), best = readScores().scores[0] || 0;
-    game = { start: now, next: now + 400, points: 0, missed: 0, caught: 0, bestCatch: 0, bestBloom: 1, stars: [], w: b.width, h: b.height, best, ground: b.height - 44 * Math.max(b.width / 1600, b.height / 240),
+    const today = new Date(Date.now() + offset), peak = SHOWERS.find((s) => s.peaks.some(([m, d]) => today.getMonth() + 1 === m && today.getDate() === d));
+    game = { start: now, next: now + 300, points: 0, missed: 0, landed: 0, caught: 0, bestCatch: 0, bestChain: 1, stars: [], w: b.width, h: b.height, best, wave: -1, left: 0, shower: null, double: false, radiant: null, peak, order: peak ? [peak, ...SHOWERS.filter((s) => s !== peak)] : SHOWERS, visitors: [], bag: [], nextVisitor: now + 9000 + Math.random() * 5000, satellites: 0, comets: 0, complaints: 0, cabinVisible: cabin.x > 0 && cabin.x < b.width, ground: b.height - 44 * Math.max(b.width / 1600, b.height / 240),
       moonX: moonBox.left + moonBox.width / 2 - b.left, moonY: moonBox.top + moonBox.height / 2 - b.top, moonClear: moonBox.width * 1.5 };
-    banner.classList.add('bn-playing');
+    banner.classList.add('bn-playing', 'bn-burning');
+    setFire(LIVES);
+    wakeAudio();
     releaseMoon();
     clearTimeout(scoreTimer);
     score.classList.remove('link');
