@@ -119,7 +119,8 @@ The first mockup had a clinical, EHR-style look, with three views (caseload tria
   - **Save the cabin:** the window and hearth dim with each life lost, and the last one puts the fire out until the game is over. A star landing right on the cabin costs two lives.
   - **Visitors:** a satellite is worth 500 points, hitting an airliner costs 150 ("Air traffic control has questions"), and a golden comet surges the aurora and bursts every star in the sky.
   - **Sound:** retro tones, off by default, with a switch at the bottom right during a game. Catches rise in pitch along a chain, and a landing rumbles.
-- **The top score in the sky** (November 5): for people with the review link, the top score's initials appear as a constellation, with a short invitation to challenge it when the page opens and when the pointer comes near.
+- **A larger plane and satellite** (November 5): the airliner and the satellite are now small drawings rather than points of light, in the banner and in the shooting star game. The airliner looks smaller when farther away and turns to follow its path.
+- **The top score in the sky** (November 5): for people with the review link, the top score's initials appear as a constellation, with a short invitation to challenge it ("CJK lights the sky") when the page opens and when the pointer comes near.
 - **Sites** (November 5): reviewers can give their site, optionally, beside their name and role, from the trial sites and partner organizations. It shows on their notes, is a column in the notes export and can be shown beside initials in the high scores.
 
 ## All pages

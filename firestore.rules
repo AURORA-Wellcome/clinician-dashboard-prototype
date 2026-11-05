@@ -49,5 +49,22 @@ service cloud.firestore {
       allow read: if member();
       allow create: if member() && valid(request.resource.data);
     }
+    // The bear game's high scores, the same, with the animal played
+    match /boards/{board}/bearScores/{score} {
+      function member() {
+        return board == 'BOARD_ID' && request.auth != null;
+      }
+      function valid(d) {
+        return d.keys().hasOnly(['uid', 'initials', 'points', 'at', 'site', 'animal'])
+          && d.uid == request.auth.uid
+          && d.initials is string && d.initials.matches('^[A-Z]{1,3}$')
+          && d.points is int && d.points > 0 && d.points <= 10000000
+          && d.at == request.time
+          && d.animal in ['bear', 'fox', 'crab']
+          && (!('site' in d) || (d.site is string && d.site.size() <= 40));
+      }
+      allow read: if member();
+      allow create: if member() && valid(request.resource.data);
+    }
   }
 }

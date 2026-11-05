@@ -347,7 +347,8 @@ print(len(html), 'bytes')
 # brightest when nearest. The banner is treated as a panorama about 120 degrees wide and 18 tall, with the horizon at
 # 84% of its height (the ridges). Each crossing is sampled at even times, a steady ground speed, so the changes of
 # apparent speed come from the geometry alone. In the page's 600 s cycle the crossings take 135 and 150 s: slower than
-# the satellite throughout, though still 7 to 10 times an airliner's real speed on these paths.
+# the satellite throughout, though still 7 to 10 times an airliner's real speed on these paths. The plane looks smaller
+# in proportion to its distance, and it turns to follow its path.
 FOV_X, FOV_Y, HORIZON = 120, 18, 84
 
 def pct(v):
@@ -361,16 +362,23 @@ def plane_keyframes(name, start, end, nearest, peak, rightward=True, n=24):
     if not rightward:
         a0, a1 = a1, a0
     s0, s1 = (math.tan(math.radians(a - nearest)) for a in (a0, a1))  # along the track, in nearest distances
-    frames = []
-    for i in range(n + 1):
+    def spot(i):
         sd = s0 + (s1 - s0) * i / n
         r = math.hypot(1, sd)
-        x = 50 + (nearest + math.degrees(math.atan(sd))) / FOV_X * 100
-        y = HORIZON - math.degrees(math.atan(k / r)) / FOV_Y * 100
+        return (50 + (nearest + math.degrees(math.atan(sd))) / FOV_X * 100,
+                HORIZON - math.degrees(math.atan(k / r)) / FOV_Y * 100, r)
+    frames = []
+    for i in range(n + 1):
+        x, y, r = spot(i)
         o = 0.35 + 0.65 * r ** -1.5  # dimmer when farther away
+        # Its heading on the screen, from where it was and where it's going, in the banner's usual proportions. The
+        # leftward plane is the same drawing mirrored, so its turn is measured from pointing left.
+        (x0, y0, _), (x1, y1, _) = spot(max(0, i - 1)), spot(min(n, i + 1))
+        dx, dy = (x1 - x0) * W / 100, (y1 - y0) * H / 100
+        turn = math.degrees(math.atan2(dy, dx) if rightward else math.atan2(-dy, -dx))
         at = start + (end - start) * i / n
         sel = f'0%,{pct(at)}' if i == 0 else f'{pct(at)},100%' if i == n else pct(at)
-        frames.append(f'{sel}{{transform:translate({pct(x)},{pct(y)});opacity:{o:.2f}}}')
+        frames.append(f'{sel}{{transform:translate({pct(x)},{pct(y)}) rotate({turn:.1f}deg) scale({1 / r:.2f});opacity:{o:.2f}}}')
     return f'@keyframes {name}{{' + ''.join(frames) + '}'
 
 if len(sys.argv) > 2:
