@@ -154,6 +154,16 @@ img{display:block;max-width:100%;height:auto}
 .bn-boss i{position:absolute;inset:0;transform-origin:0 50%;background:var(--bar,linear-gradient(90deg,#FFE3B0,#FF9A5A))}
 /* (On a phone's short banner, just a slim bar close under the score line, so a boss has the sky; its card has named it) */
 @media (max-width:599px){.bn-boss{top:27px}.bn-boss em{display:none}.bn-boss b{width:90px;height:3px}}
+/* The firefly, a friend once the fireball is shattered: pixel art in two frames whose wings beat in turn, over the glow of its
+   lantern, which pulses as a firefly's does; and its zap, a thin line of the same light that flickers out */
+.bn-firefly{--s:calc(var(--bn-h)*.12);position:absolute;left:0;top:0;width:0;height:0;opacity:0}
+.bn-firefly::before{content:"";position:absolute;left:calc(var(--s)*-.8);top:calc(var(--s)*-.55);width:calc(var(--s)*1.6);height:calc(var(--s)*1.6);border-radius:50%;background:radial-gradient(closest-side,rgba(232,252,150,.8),rgba(201,245,106,.32) 45%,rgba(201,245,106,0));animation:bn-firefly-light 1.4s ease-in-out infinite alternate}
+.bn-firefly>b{position:absolute;left:calc(var(--s)*-.5);top:calc(var(--s)*-.5);width:var(--s);height:var(--s);background:center/contain no-repeat}
+.bn-firefly>b+b{opacity:0}
+.bn-firefly.bn-flying>b{animation-duration:.16s}
+.bn-firefly.bn-flying>b+b{animation-delay:-.08s}
+@keyframes bn-firefly-light{from{opacity:.35}to{opacity:1}}
+.bn-zap{position:absolute;left:0;top:0;width:100px;height:2px;margin-top:-1px;border-radius:1px;opacity:0;transform-origin:0 50%;background:linear-gradient(90deg,rgba(255,252,210,.95),rgba(201,245,106,.9));box-shadow:0 0 6px 1px rgba(201,245,106,.85)}
 /* Rare stars: a frost star, ice blue with a six-pointed glint that turns, and a lantern star, lamplight gold with a halo that
    breathes. Their glints animate only while one falls. A lantern's light flies down to the cabin. */
 .bn-rare::after{content:"";position:absolute;left:calc(var(--z)*-4);top:calc(var(--z)*-4);width:calc(var(--z)*8);height:calc(var(--z)*8)}
@@ -1148,7 +1158,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   visitorPiece.comet.appendChild(document.createElement('b'));
   // The alien, in the manner of Galaga's but drawn for this sky, in the aurora's aqua and violet. Each frame is given by its
   // left half and middle column, and mirrored: wings out, then wings in. It faces down, toward the cabin.
-  const ALIEN_COLORS = { g: '#86F2D2', G: '#3FC7A2', v: '#B79BFF', V: '#8C70F2', p: '#E6C2FF', w: '#FFFFFF', k: '#1A2050' };
+  const ALIEN_COLORS = { y: '#FFF6B8', Y: '#C9F56A', d: '#3A3456', b: '#CBD8F2', g: '#86F2D2', G: '#3FC7A2', v: '#B79BFF', V: '#8C70F2', p: '#E6C2FF', w: '#FFFFFF', k: '#1A2050' };
   const ALIEN_FRAMES = [
     ['....G..', '....G.g', '.p...gG', 'pVv.ggg', 'pVvvgGg', '.vvvggg', '..vgwwg', '...gwkg', '....ggg', '....g.g', '...g...'],
     ['....G..', '..p.G.g', '..Vv.gG', '..Vvggg', '..vvgGg', '...vggg', '...gwwg', '...gwkg', '....ggg', '....g.g', '...g...']
@@ -1176,6 +1186,14 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     ['.............ppp', '...........ppwpp', '..........ppkgkk', '.......vvvvvvvvv', '....VVvvvvvvvvvv', '..VVVVVVVVVVVVVV', '.GGwGGwGGwGGwGGw', '..GGGGGGGGGGGGGG', '....GGGGGGGGGGGG', '.......ggg...ggg'],
     ['.............ppp', '...........ppwpp', '..........ppkgkk', '.......vvvvvvvvv', '....VVvvvvvvvvvv', '..VVVVVVVVVVVVVV', '.GwGGwGGwGGwGGwG', '..GGGGGGGGGGGGGG', '....GGGGGGGGGGGG', '.......ggg...ggg']
   ];
+  // The firefly (below), drawn the same way: a dark body with pale wings, out in the first frame and back in the second, and a
+  // lantern glowing yellow-green. It faces up, the way it flies.
+  const FIREFLY_FRAMES = [
+    ['...d.', '....d', '.bbdd', 'bbbdd', 'bb.dY', '.b.YY', '...YY', '...yy', '....y'],
+    ['...d.', '....d', '..bdd', '.bbdd', '..bdY', '...YY', '...YY', '...yy', '....y']
+  ];
+  const fireflyPiece = glints.appendChild(Object.assign(document.createElement('div'), { className: 'bn-firefly', innerHTML: '<b></b><b></b>' })), zapLine = gamePiece('bn-zap');
+  fireflyPiece.querySelectorAll('b').forEach((frame, i) => { frame.style.backgroundImage = pixelArt(FIREFLY_FRAMES[i]); });
   const bossPiece = {
     fireball: glints.appendChild(Object.assign(document.createElement('div'), { className: 'bn-fireball', innerHTML: '<i></i><b></b>' })),
     mothership: glints.appendChild(Object.assign(document.createElement('div'), { className: 'bn-mothership', innerHTML: '<b></b><b></b><b class="bn-hit"></b>' }))
@@ -1350,6 +1368,9 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     mothership: () => { warble(2600, note(-17), note(-10), 0.06); [12, 7, 10, 5, 8, 3].forEach((n, i) => tone(note(n), 110, { type: 'square', level: 0.03, delay: 300 + i * 90 })); },
     clank: () => { tone(note(5), 80, { to: note(-2), type: 'square', level: 0.045 }); tone(note(17), 50, { type: 'square', level: 0.025, delay: 30 }); },
     beaten: () => { rumble(1400, 0.26); [0, 7, 12, 16, 19, 24, 28, 31].forEach((n, i) => tone(note(n), 180, { level: 0.1, delay: 150 + i * 65 })); },
+    // The firefly: a soft rising chime as it comes, and a quick bright zip for a zap
+    firefly: () => [7, 12, 19, 24].forEach((n, i) => tone(note(n + 12), 220, { type: 'sine', level: 0.05, delay: i * 90 })),
+    zap: () => tone(note(19), 70, { to: note(31), type: 'square', level: 0.025 }),
     victory: () => [0, 4, 7, 12, 7, 12, 16, 19, 24].forEach((n, i) => tone(note(n), i === 8 ? 900 : 170, { level: 0.1, delay: i * 120 })),
     over: () => [12, 7, 4, 0].forEach((n, i) => tone(note(n), 240, { level: 0.1, delay: i * 150 })),
     best: () => [0, 4, 7, 12, 16].forEach((n, i) => tone(note(n), 260, { level: 0.12, delay: i * 110 }))
@@ -2230,6 +2251,12 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       glow.style.setProperty('--c', '255 190 110');
       glow.animate([{ opacity: 1, transform: `${at} scale(${(reach * 0.2).toFixed(2)})` }, { opacity: 0, transform: `${at} scale(${reach.toFixed(2)})` }], { duration: 900, easing: 'cubic-bezier(.1,.8,.3,1)' });
       scatter(p.x, p.y, FIRE, 24, 40);
+      // The first time, a firefly comes out of the forest to help, in this game and every one after
+      if (!game.firefly) {
+        try { localStorage.setItem(FIREFLY_KEY, '1'); } catch (e) { /* blocked: it helps in this game only */ }
+        sendFirefly(now, true);
+        setTimeout(() => { if (game && game.firefly) floatText('A firefly joins you! It will help in every game', game.w / 2, game.h * 0.62, FIREFLY_COLOR, true); }, 1300);
+      }
       bossOver(now);
       return;
     }
@@ -2275,6 +2302,92 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     }, 1400);
     setTimeout(() => { if (game === played) endGame(true); }, 5400);
   };
+  // The firefly, a sidekick: shattering the fireball the first time brings it out of the forest to help, in that game and,
+  // as the browser remembers, in every game after, from the start. It drifts toward the star that will land soonest, no
+  // faster than FIREFLY_SPEED banner heights a second, slower than most stars fall, keeping between the score line and the
+  // treetops, and zaps one within FIREFLY_REACH of it, at most once every FIREFLY_EVERY ms. A zapped star scores its points,
+  // but it starts no chain and doesn't fill the aurora meter, and the firefly leaves bosses and visitors alone, so it helps
+  // without taking over.
+  const FIREFLY_KEY = 'aurora-firefly', FIREFLY_SPEED = 0.4, FIREFLY_REACH = 0.26, FIREFLY_EVERY = 3500, FIREFLY_COLOR = '214 250 130';
+  const fireflyFree = () => { try { return localStorage.getItem(FIREFLY_KEY) === '1'; } catch (e) { return false; } };
+  // In from the forest, below where it's needed, with a chime the first time
+  const sendFirefly = (now, first) => {
+    const { w, h } = game, from = game.cabinVisible ? cabin : { x: w / 2, y: h * 0.85 };
+    game.firefly = { el: fireflyPiece, x: from.x, y: from.y, vx: 0, vy: -h * FIREFLY_SPEED, turn: 0, last: now, next: now + 1500 };
+    fireflyPiece.classList.add('bn-flying');
+    fireflyPiece.style.opacity = 1;
+    if (first) sound.firefly();
+  };
+  const fireflyGone = () => {
+    fireflyPiece.classList.remove('bn-flying');
+    fireflyPiece.style.opacity = '';
+    fireflyPiece.style.transform = '';
+  };
+  // Each frame: it heads for the star that will land soonest among those it can still reach and no bloom is already covering,
+  // or, with none, takes a slow turn around the sky's middle; it flutters as it flies, faces the way it goes, and zaps the
+  // star in reach that's nearest the trees, when it can. Returns whether it scored.
+  const fireflyFrame = (now) => {
+    const f = game.firefly, { w, h } = game, span = Math.min(w, 1500), left = (w - span) / 2, dt = Math.min(0.05, Math.max(0, now - f.last) / 1000);
+    const speed = h * FIREFLY_SPEED, reach = h * FIREFLY_REACH;
+    f.last = now;
+    let goal = null, soonest = Infinity;
+    for (const s of falling) {
+      if (!s.anim || s.hold) continue;
+      const t = fallT(s), rate = s.anim.playbackRate || 1, ahead = (1 - t) * s.ms / rate;
+      if (t < 0 || t >= 1 || ahead >= soonest) continue;
+      const at = (secs) => { const u = Math.min(1, t + secs * 1000 * rate / s.ms); return { x: s.x0 + (s.x1 - s.x0) * u, y: s.y0 + (s.y1 - s.y0) * u }; };
+      const soon = at(0.3);
+      if (allBlooms.some((g) => { const gt = (now - g.start) / g.ms; return gt >= -0.4 && gt < BLOOM_ACTIVE && Math.hypot(soon.x - g.x, soon.y - g.y) < g.r; })) continue;
+      for (let secs = 0.2; secs < ahead; secs += 0.2) {
+        const p = at(secs);
+        if (Math.hypot(p.x - f.x, p.y - f.y) - reach * 0.8 <= speed * secs) { soonest = ahead; goal = p; break; }
+      }
+    }
+    const a = now / 4000;
+    const gx = Math.min(left + span - h * 0.1, Math.max(left + h * 0.1, goal ? goal.x : left + span * (0.5 + 0.35 * Math.sin(a))));
+    const gy = Math.min(h * 0.7, Math.max(h * 0.3, goal ? goal.y : h * (0.48 + 0.1 * Math.sin(2 * a))));
+    const dx = gx - f.x, dy = gy - f.y, d = Math.hypot(dx, dy) || 1, want = Math.min(speed, d * 2.5), k = Math.min(1, dt * 3);
+    f.vx += (dx / d * want - f.vx) * k;
+    f.vy += (dy / d * want - f.vy) * k;
+    f.x += f.vx * dt;
+    f.y += f.vy * dt;
+    if (Math.hypot(f.vx, f.vy) > h * 0.03) {
+      const aim = Math.atan2(f.vy, f.vx) + Math.PI / 2, turn = aim + Math.round((f.turn - aim) / (2 * Math.PI)) * 2 * Math.PI;
+      f.turn += (turn - f.turn) * Math.min(1, dt * 6);
+    }
+    const fx = f.x + Math.sin(now / 170) * h * 0.012, fy = f.y + Math.cos(now / 230) * h * 0.012;
+    f.el.style.transform = `translate(${fx.toFixed(1)}px, ${fy.toFixed(1)}px) rotate(${f.turn.toFixed(3)}rad)`;
+    if (now < f.next) return false;
+    let best = null;
+    for (const s of falling) {
+      if (!s.anim || s.hold || now < s.loose) continue;
+      const t = fallT(s);
+      if (t < 0 || t >= 1 || (best && t <= best.t)) continue;
+      const x = s.x0 + (s.x1 - s.x0) * t, y = s.y0 + (s.y1 - s.y0) * t;
+      if (Math.hypot(x - fx, y - fy) < reach) best = { s, t, x, y };
+    }
+    if (!best) return false;
+    zapStar(f, best.s, fx, fy, best.x, best.y, now);
+    return true;
+  };
+  // A zap: a thin line of the firefly's light to the star, which bursts for its points, and a rare star does what it does
+  const zapStar = (f, s, fx, fy, x, y, now) => {
+    const d = Math.hypot(x - fx, y - fy), at = `translate(${fx.toFixed(1)}px, ${fy.toFixed(1)}px) rotate(${Math.atan2(y - fy, x - fx).toFixed(3)}rad) scaleX(${(d / 100).toFixed(3)})`;
+    s.anim.cancel();
+    s.anim = null;
+    f.next = now + FIREFLY_EVERY;
+    game.zaps += 1;
+    game.points += s.points;
+    game.caught += 1;
+    game.bestCatch = Math.max(game.bestCatch, s.points);
+    zapLine.animate([{ opacity: 1, transform: at }, { opacity: 0.35, transform: at, offset: 0.35 }, { opacity: 1, transform: at, offset: 0.6 }, { opacity: 0, transform: at }], { duration: 240 });
+    sparkle({ x, y, accent: true, base: 1, last: 0 }, now);
+    scatter(x, y, [s.color, FIREFLY_COLOR], 4 + Math.round(4 * s.size), 14 * s.size);
+    keepStar(x, y, s.color, s.size);
+    floatText(`Zap! +${number(s.points)}`, x, y, FIREFLY_COLOR);
+    if (s.kind) rareCaught(s, x, y, now);
+    sound.zap();
+  };
   // The end of a game worth celebrating. After the last landing, the caught stars join into a constellation, named for its
   // size, the aurora surges, and credits with the game's numbers rise from behind the trees. A click skips to the end.
   const CONSTELLATIONS = [[28, ['The Moose', 'The Timber Wolf', 'The Northern Bear']], [18, ['The Great Owl', 'The Black Spruce', 'The Log Cabin']], [11, ['The Lynx', 'The Loon', 'The Raven']], [6, ['The Snow Hare', 'The Red Fox', 'The Chickadee']], [0, ['The Firefly', 'The Lantern', 'The Ember']]];
@@ -2300,7 +2413,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       timers.push(setTimeout(() => sparkle({ x: b.x, y: b.y, accent: true, base: 1, last: 0 }, performance.now()), delay + 120));
     });
     const names = CONSTELLATIONS.find(([least]) => played.caught >= least)[1], seconds = Math.round((performance.now() - played.start) / 1000);
-    const rows = [...(played.won ? ['Victory!', 'The night is saved', ''] : []), ...(newBest ? ['New best!', ''] : []), 'Your constellation', names[Math.floor(Math.random() * names.length)], '', `${played.caught} stars caught`, `Best catch +${number(played.bestCatch)}`, ...(played.bestChain > 1 ? [`Best chain ×${played.bestChain}`] : []), played.won ? `All ${LAST_WAVE + 1} waves` : `Reached wave ${played.wave + 1} of ${LAST_WAVE + 1}`, ...(played.fireball ? [played.fireball === 'shattered' ? 'Fireball shattered' : 'The fireball landed'] : []), ...(played.won ? ['Mothership driven off'] : []), ...(played.returned ? [`Stars returned: ${played.returned}`] : []), ...(played.satellites ? [`Satellites caught: ${played.satellites}`] : []), ...(played.comets ? [`Comets caught: ${played.comets}`] : []), ...(played.complaints ? [`Air traffic complaints: ${played.complaints}`] : []), ...(played.smooth ? [`Smooth flights: ${played.smooth}`] : []), ...(played.encounters ? [`Close encounters: ${played.encounters}`] : []), ...(played.rescued ? [`Stars rescued: ${played.rescued}`] : []), ...(played.abducted ? [`Stars abducted: ${played.abducted}`] : []), ...(played.closeCalls ? [`Close calls: ${played.closeCalls}`] : []), ...(played.frosts ? [`Frost stars: ${played.frosts}`] : []), ...(played.lanterns ? [`Lives relit: ${played.lanterns}`] : []), ...(played.storms ? [`Aurora storms called: ${played.storms}`] : []), `Time ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Moon maps: NASA', 'Thanks for playing'];
+    const rows = [...(played.won ? ['Victory!', 'The night is saved', ''] : []), ...(newBest ? ['New best!', ''] : []), 'Your constellation', names[Math.floor(Math.random() * names.length)], '', `${played.caught} stars caught`, `Best catch +${number(played.bestCatch)}`, ...(played.bestChain > 1 ? [`Best chain ×${played.bestChain}`] : []), played.won ? `All ${LAST_WAVE + 1} waves` : `Reached wave ${played.wave + 1} of ${LAST_WAVE + 1}`, ...(played.fireball ? [played.fireball === 'shattered' ? 'Fireball shattered' : 'The fireball landed'] : []), ...(played.won ? ['Mothership driven off'] : []), ...(played.returned ? [`Stars returned: ${played.returned}`] : []), ...(played.satellites ? [`Satellites caught: ${played.satellites}`] : []), ...(played.comets ? [`Comets caught: ${played.comets}`] : []), ...(played.complaints ? [`Air traffic complaints: ${played.complaints}`] : []), ...(played.smooth ? [`Smooth flights: ${played.smooth}`] : []), ...(played.encounters ? [`Close encounters: ${played.encounters}`] : []), ...(played.rescued ? [`Stars rescued: ${played.rescued}`] : []), ...(played.abducted ? [`Stars abducted: ${played.abducted}`] : []), ...(played.closeCalls ? [`Close calls: ${played.closeCalls}`] : []), ...(played.frosts ? [`Frost stars: ${played.frosts}`] : []), ...(played.lanterns ? [`Lives relit: ${played.lanterns}`] : []), ...(played.storms ? [`Aurora storms called: ${played.storms}`] : []), ...(played.zaps ? [`Firefly zaps: ${played.zaps}`] : []), `Time ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Moon maps: NASA', 'Thanks for playing'];
     const heads = new Set(['Victory!', 'New best!', 'Your constellation', 'Final score']);
     credits.replaceChildren(...rows.map((text) => (text ? Object.assign(document.createElement(heads.has(text) ? 'b' : 'span'), { textContent: text }) : document.createElement('i'))));
     const { h } = played, tall = credits.offsetHeight;
@@ -2355,6 +2468,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       v.el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500 }).onfinish = () => { v.anim.cancel(); if (alien) alienGone(v); };
     });
     if (game.boss) bossFades(game.boss);
+    if (game.firefly) fireflyPiece.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500 }).onfinish = fireflyGone;
     bossBar.classList.remove('on');
     waveCard.getAnimations().forEach((a) => a.cancel());
     banner.classList.remove('bn-playing');
@@ -2469,13 +2583,14 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       return visitorHit(v, x, y, now);
     });
     if (game.boss && bossFrame(now)) changed = true;
+    if (game.firefly && fireflyFrame(now)) changed = true;
     if (changed) showScore();
     if (game.missed >= LIVES) endGame(true); else requestAnimationFrame(gameFrame);
   };
   const startGame = () => {
     const now = performance.now(), b = banner.getBoundingClientRect(), moonBox = moonFace.getBoundingClientRect(), best = readScores().scores[0] || 0;
     const today = new Date(Date.now() + offset), peak = SHOWERS.find((s) => s.peaks.some(([m, d]) => today.getMonth() + 1 === m && today.getDate() === d));
-    game = { start: now, next: now + 300, points: 0, missed: 0, landed: 0, caught: 0, bestCatch: 0, bestChain: 1, stars: [], w: b.width, h: b.height, best, wave: -1, left: 0, shower: null, double: false, radiant: null, peak, order: peak ? [peak, ...SHOWERS.filter((s) => s !== peak)] : SHOWERS, visitors: [], bag: [], nextVisitor: now + 9000 + Math.random() * 5000, satellites: 0, comets: 0, complaints: 0, smooth: 0, encounters: 0, rescued: 0, abducted: 0, twin: false, closeCalls: 0, frosts: 0, lanterns: 0, storms: 0, meter: 0, frostUntil: 0, rare: { n: 0, frost: -1, lantern: -1 }, boss: null, fireball: '', won: false, lost: [], returned: 0, cabinVisible: cabin.x > 0 && cabin.x < b.width, ground: b.height - 44 * Math.max(b.width / 1600, b.height / 240),
+    game = { start: now, next: now + 300, points: 0, missed: 0, landed: 0, caught: 0, bestCatch: 0, bestChain: 1, stars: [], w: b.width, h: b.height, best, wave: -1, left: 0, shower: null, double: false, radiant: null, peak, order: peak ? [peak, ...SHOWERS.filter((s) => s !== peak)] : SHOWERS, visitors: [], bag: [], nextVisitor: now + 9000 + Math.random() * 5000, satellites: 0, comets: 0, complaints: 0, smooth: 0, encounters: 0, rescued: 0, abducted: 0, twin: false, closeCalls: 0, frosts: 0, lanterns: 0, storms: 0, meter: 0, frostUntil: 0, rare: { n: 0, frost: -1, lantern: -1 }, boss: null, fireball: '', won: false, lost: [], returned: 0, firefly: null, zaps: 0, cabinVisible: cabin.x > 0 && cabin.x < b.width, ground: b.height - 44 * Math.max(b.width / 1600, b.height / 240),
       moonX: moonBox.left + moonBox.width / 2 - b.left, moonY: moonBox.top + moonBox.height / 2 - b.top, moonClear: moonBox.width * 1.5 };
     // The sound setting is shared with the bear game, which may have changed it
     try { soundOn = localStorage.getItem(SOUND_KEY) === '1'; } catch (e) { /* blocked */ }
@@ -2492,6 +2607,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     score.textContent = `Catch the shooting stars${best ? `. Your best is ${number(best)}` : ''}`;
     score.classList.add('on');
     showMeter();
+    if (fireflyFree()) sendFirefly(now);
     requestAnimationFrame(gameFrame);
   };
   // During a game the space bar calls an aurora storm when the meter is full, and never scrolls the page away from the game
