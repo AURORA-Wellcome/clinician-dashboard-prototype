@@ -13,7 +13,7 @@
   // A quick second press of ← or → (two within DASH_TAP seconds) dashes that way, at DASH_SPEED times running speed for a moment:
   // on the ground, or once a jump in the air, where it holds its height. Jumping during a dash keeps its speed, for a long jump.
   // Then a short wait before the next. A quick sideways swipe does it on a touch screen.
-  const DASH_TAP = 0.25, DASH_SECONDS = 0.22, DASH_SPEED = 2.5, DASH_AGAIN = 0.45, DASH_LEAN = 0.14, DASH_TRAIL = 0.16;
+  const DASH_TAP = 0.25, DASH_SECONDS = 0.3, DASH_SPEED = 2.5, DASH_AGAIN = 0.45, DASH_LEAN = 0.14, DASH_TRAIL = 0.16;
   const GRAVITY = 1900, FALL_MORE = 1.45, RELEASE_MORE = 2.4, MAX_FALL = 980;
   const COYOTE = 0.09, BUFFER = 0.12, FLIP = 0.36, TUCK_UNTIL = 0.72;
   // Five lives, as in the shooting star game: three felt hard
