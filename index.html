@@ -129,6 +129,31 @@ img{display:block;max-width:100%;height:auto}
 .bn-flying .bn-beam b+b{animation-delay:-.07s}
 .bn-alien .bn-caught{top:calc(var(--s)*-.55)}
 @keyframes bn-flap{from{opacity:1}50%,to{opacity:0}}
+/* The bosses. The fireball: a big head, white hot in the middle, with a long flame tail that flickers inside a wider, fainter
+   glow, like a falling star's but larger; it shrinks as pieces are broken off. The mothership: pixel art in two frames whose
+   lights take turns, over a soft glow, with a white copy that flashes when a bloom hits it. And the boss's name and what's
+   left of it, under the score line. */
+.bn-fireball{--z:calc(var(--bn-h)*.06);--len:calc(var(--bn-h)*1.15);position:absolute;left:0;top:0;width:0;height:0;opacity:0}
+.bn-fireball b,.bn-fireball i{position:absolute;left:0;transform-origin:0 50%;clip-path:polygon(0 0,100% 50%,0 100%)}
+.bn-fireball b{top:calc(var(--z)*-.5);width:var(--len);height:var(--z);background:linear-gradient(90deg,rgb(255 246 222/.95),rgb(255 196 110/.85) 16%,rgb(255 134 72/.4) 55%,rgb(255 110 60/0));animation:bn-flicker .12s steps(2,end) infinite alternate}
+.bn-fireball i{top:calc(var(--z)*-1.3);width:calc(var(--len)*.62);height:calc(var(--z)*2.6);background:linear-gradient(90deg,rgb(255 170 90/.42),rgb(255 120 60/0));animation:bn-flicker .17s steps(2,end) infinite alternate-reverse}
+.bn-fireball::after{content:"";position:absolute;left:calc(var(--z)*-2.2);top:calc(var(--z)*-2.2);width:calc(var(--z)*4.4);height:calc(var(--z)*4.4);border-radius:50%;background:radial-gradient(closest-side,#FFFFFF,rgb(255 238 190/.95) 26%,rgb(255 176 96/.62) 54%,rgb(255 120 60/0))}
+.bn-fireball.hot::after{background:radial-gradient(closest-side,#FFFFFF,rgb(255 220 160/.95) 22%,rgb(255 120 70/.7) 54%,rgb(255 90 50/0))}
+@keyframes bn-flicker{from{transform:scale(1,1)}to{transform:scale(.88,1.16)}}
+.bn-mothership{--s:calc(var(--bn-h)*.5);position:absolute;left:0;top:0;width:0;height:0;opacity:0}
+.bn-mothership::before{content:"";position:absolute;left:calc(var(--s)*-.78);top:calc(var(--s)*-.5);width:calc(var(--s)*1.56);height:calc(var(--s)*1);border-radius:50%;background:radial-gradient(closest-side,rgba(134,242,210,.3),rgba(183,155,255,.13) 60%,rgba(183,155,255,0))}
+.bn-mothership>b{position:absolute;left:calc(var(--s)*-.5);top:calc(var(--s)*-.16);width:var(--s);height:calc(var(--s)*.323);background:center/contain no-repeat}
+.bn-mothership>b+b{opacity:0}
+.bn-mothership>b.bn-hit{opacity:0;animation:none}
+.bn-mothership.bn-flying>b{animation-duration:.6s}
+.bn-mothership.bn-flying>b+b{animation-delay:-.3s}
+.bn-boss{position:absolute;left:50%;top:32px;display:none;align-items:center;gap:8px;transform:translateX(-50%);font-size:.8125rem;line-height:1;color:rgba(232,238,255,.9);text-shadow:0 0 4px #04071A;white-space:nowrap}
+.bn-boss.on{display:flex}
+.bn-boss em{font-style:normal}
+.bn-boss b{position:relative;display:block;width:120px;height:4px;border-radius:2px;background:rgba(232,238,255,.16);overflow:hidden}
+.bn-boss i{position:absolute;inset:0;transform-origin:0 50%;background:var(--bar,linear-gradient(90deg,#FFE3B0,#FF9A5A))}
+/* (On a phone's short banner, just a slim bar close under the score line, so a boss has the sky; its card has named it) */
+@media (max-width:599px){.bn-boss{top:27px}.bn-boss em{display:none}.bn-boss b{width:90px;height:3px}}
 /* Rare stars: a frost star, ice blue with a six-pointed glint that turns, and a lantern star, lamplight gold with a halo that
    breathes. Their glints animate only while one falls. A lantern's light flies down to the cabin. */
 .bn-rare::after{content:"";position:absolute;left:calc(var(--z)*-4);top:calc(var(--z)*-4);width:calc(var(--z)*8);height:calc(var(--z)*8)}
@@ -1129,10 +1154,11 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     ['....G..', '..p.G.g', '..Vv.gG', '..Vvggg', '..vvgGg', '...vggg', '...gwwg', '...gwkg', '....ggg', '....g.g', '...g...']
   ];
   const svgUrl = (svg) => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' ${svg}</svg>`)}")`;
-  const pixelArt = (halves) => {
+  // (With a color given, every pixel is drawn in it, for a flash)
+  const pixelArt = (halves, only) => {
     const rows = halves.map((half) => half + [...half.slice(0, -1)].reverse().join(''));
     let rects = '';
-    rows.forEach((row, y) => row.replace(/(.)\1*/g, (run, c, x) => { if (ALIEN_COLORS[c]) rects += `<rect x='${x}' y='${y}' width='${run.length}' height='1' fill='${ALIEN_COLORS[c]}'/>`; return run; }));
+    rows.forEach((row, y) => row.replace(/(.)\1*/g, (run, c, x) => { if (ALIEN_COLORS[c]) rects += `<rect x='${x}' y='${y}' width='${run.length}' height='1' fill='${only || ALIEN_COLORS[c]}'/>`; return run; }));
     return svgUrl(`viewBox='0 0 ${rows[0].length} ${rows.length}' shape-rendering='crispEdges'>${rects}`);
   };
   // The beam: pale bands across a cone, the second frame's half a band lower, stretched to its length
@@ -1144,6 +1170,17 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   };
   visitorPiece.alien.querySelectorAll(':scope > b').forEach((frame, i) => { frame.style.backgroundImage = pixelArt(ALIEN_FRAMES[i]); });
   visitorPiece.alien.querySelectorAll('.bn-beam b').forEach((frame, i) => { frame.style.backgroundImage = beamArt(i * 2); });
+  // The bosses (below): the fireball, and the alien's mothership, drawn the same way as the alien and in its colors, a saucer
+  // with a domed cabin and two lit windows, a violet hull and a band of lights that run around it, in two frames
+  const MOTHERSHIP_FRAMES = [
+    ['.............ppp', '...........ppwpp', '..........ppkgkk', '.......vvvvvvvvv', '....VVvvvvvvvvvv', '..VVVVVVVVVVVVVV', '.GGwGGwGGwGGwGGw', '..GGGGGGGGGGGGGG', '....GGGGGGGGGGGG', '.......ggg...ggg'],
+    ['.............ppp', '...........ppwpp', '..........ppkgkk', '.......vvvvvvvvv', '....VVvvvvvvvvvv', '..VVVVVVVVVVVVVV', '.GwGGwGGwGGwGGwG', '..GGGGGGGGGGGGGG', '....GGGGGGGGGGGG', '.......ggg...ggg']
+  ];
+  const bossPiece = {
+    fireball: glints.appendChild(Object.assign(document.createElement('div'), { className: 'bn-fireball', innerHTML: '<i></i><b></b>' })),
+    mothership: glints.appendChild(Object.assign(document.createElement('div'), { className: 'bn-mothership', innerHTML: '<b></b><b></b><b class="bn-hit"></b>' }))
+  };
+  bossPiece.mothership.querySelectorAll('b').forEach((frame, i) => { frame.style.backgroundImage = pixelArt(MOTHERSHIP_FRAMES[Math.min(i, 1)], i === 2 ? '#FFFFFF' : ''); });
   const shards = Array.from({ length: 30 }, () => gamePiece('bn-shard')), pops = Array.from({ length: 12 }, () => gamePiece('bn-pop'));
   const caughtBox = glints.appendChild(Object.assign(document.createElement('div'), { className: 'bn-caught-stars' }));
   const caughtStars = Array.from({ length: 40 }, () => caughtBox.appendChild(Object.assign(document.createElement('i'), { className: 'bn-caught' })));
@@ -1160,6 +1197,8 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const soundToggle = score.parentNode.appendChild(Object.assign(document.createElement('span'), { className: 'bn-sound' }));
   // The aurora meter (below), the frost over the sky while a frost star holds, and a lantern star's light
   const meter = score.parentNode.appendChild(Object.assign(document.createElement('span'), { className: 'bn-meter', innerHTML: '<em>Aurora</em><b><i></i></b>' }));
+  // A boss's name and what's left of it, under the score line
+  const bossBar = score.parentNode.appendChild(Object.assign(document.createElement('span'), { className: 'bn-boss', innerHTML: '<em></em><b><i></i></b>' }));
   const frost = frontPiece('bn-frost'), lanternLight = gamePiece('bn-lantern-light'), cabinCall = frontPiece('bn-cabin-call'), flare = frontPiece('bn-flare'), shock = frontPiece('bn-shock');
   const stormSparks = Array.from({ length: 40 }, () => frontPiece('bn-debris'));
   let game = null, gameOver = -Infinity, scoreTimer = 0, shardNext = 0, popNext = 0, caughtNext = 0, caughtFade = null, flashNext = 0, debrisNext = 0, hazeNext = 0, finale = null;
@@ -1304,6 +1343,14 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       for (let i = 0; i < 9; i++) tone(note(30 + Math.floor(Math.random() * 8)), 30, { type: 'square', level: 0.018, delay: 40 + Math.random() * 700 });
       [0, 4, 7, 12, 16, 19, 24].forEach((n, i) => tone(note(n), 200, { level: 0.11, delay: 250 + i * 70 }));
     },
+    // The bosses: the fireball's roar as it comes and a crack for each piece broken off, the mothership's low call as it
+    // arrives and a clank when it's hit, a great burst when one is beaten, and a fanfare for winning
+    fireball: () => { rumble(2400, 0.22); tone(180, 2000, { to: 60, type: 'sawtooth', level: 0.03 }); },
+    crack: () => { rumble(260, 0.18); tone(note(-3), 90, { to: note(-15), type: 'square', level: 0.045 }); },
+    mothership: () => { warble(2600, note(-17), note(-10), 0.06); [12, 7, 10, 5, 8, 3].forEach((n, i) => tone(note(n), 110, { type: 'square', level: 0.03, delay: 300 + i * 90 })); },
+    clank: () => { tone(note(5), 80, { to: note(-2), type: 'square', level: 0.045 }); tone(note(17), 50, { type: 'square', level: 0.025, delay: 30 }); },
+    beaten: () => { rumble(1400, 0.26); [0, 7, 12, 16, 19, 24, 28, 31].forEach((n, i) => tone(note(n), 180, { level: 0.1, delay: 150 + i * 65 })); },
+    victory: () => [0, 4, 7, 12, 7, 12, 16, 19, 24].forEach((n, i) => tone(note(n), i === 8 ? 900 : 170, { level: 0.1, delay: i * 120 })),
     over: () => [12, 7, 4, 0].forEach((n, i) => tone(note(n), 240, { level: 0.1, delay: i * 150 })),
     best: () => [0, 4, 7, 12, 16].forEach((n, i) => tone(note(n), 260, { level: 0.12, delay: i * 110 }))
   };
@@ -1488,23 +1535,45 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       { opacity: 0, transform: `${to} scale(${(k * 1.08).toFixed(3)})` }
     ], { duration: CHAIN_MS, easing: 'ease-out' });
   };
-  // A new wave: its shower's name, and the point in the sky its stars fan out from, as in a real shower
+  // A title card in the pixel font: gold lines, and the others in the color given
+  const showCard = (lines, color, ms = 2200) => {
+    waveCard.style.setProperty('--c', color);
+    waveCard.replaceChildren(...lines.map(([tag, text]) => Object.assign(document.createElement(tag), { textContent: text })));
+    waveCard.getAnimations().forEach((a) => a.cancel());
+    waveCard.animate([{ opacity: 0 }, { opacity: 1, offset: 0.12 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], { duration: ms });
+  };
+  // A new wave: its shower's name, and the point in the sky its stars fan out from, as in a real shower. Waves 10 and 20 bring
+  // a boss instead (below), which arrives as its card fades.
   const nextWave = (now) => {
     const { order, peak, w } = game, span = Math.min(w, 1500), left = (w - span) / 2;
     game.wave += 1;
     if (skyMusic) skyMusic.tempo = waveTempo();
-    const shower = order[Math.min(game.wave, order.length - 1)];
-    Object.assign(game, { shower, double: shower === peak, left: 7 + Math.min(game.wave, 8), next: now + 1000, radiant: { x: left + span * (Math.random() * 1.2 - 0.1), y: -span * (0.5 + 0.4 * Math.random()) } });
+    const shower = order[Math.min(game.wave, order.length - 1)], boss = BOSS_WAVES[game.wave], title = `Wave ${game.wave + 1} of ${LAST_WAVE + 1}`;
+    Object.assign(game, { shower, double: !boss && shower === peak, left: boss ? 0 : 7 + Math.min(game.wave, 8), next: now + 1000, radiant: { x: left + span * (Math.random() * 1.2 - 0.1), y: -span * (0.5 + 0.4 * Math.random()) } });
     // Rare stars: at most one frost star a wave from the third, and one lantern star from the second, each at a random place
     // in the wave. A lantern star comes only once a life has been lost.
     const at = () => Math.floor(Math.random() * game.left);
-    game.rare = { n: 0, frost: game.wave >= 2 && Math.random() < 0.55 ? at() : -1, lantern: game.wave >= 1 && Math.random() < 0.6 ? at() : -1 };
-    const part = (tag, text) => Object.assign(document.createElement(tag), { textContent: text });
-    waveCard.style.setProperty('--c', starColor(showerSpeed(shower)));
-    waveCard.replaceChildren(part('b', game.double ? 'Peak tonight' : `Wave ${game.wave + 1}`), part('span', `The ${shower.name}`), ...(game.double ? [part('b', 'Double points')] : []));
-    waveCard.getAnimations().forEach((a) => a.cancel());
-    waveCard.animate([{ opacity: 0 }, { opacity: 1, offset: 0.12 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], { duration: 2200 });
+    game.rare = { n: 0, frost: !boss && game.wave >= 2 && Math.random() < 0.55 ? at() : -1, lantern: !boss && game.wave >= 1 && Math.random() < 0.6 ? at() : -1 };
+    if (boss) {
+      showCard([['b', title], ['span', BOSSES[boss].title], ['b', BOSSES[boss].says]], BOSSES[boss].color, 2600);
+      (boss === 'fireball' ? sendFireball : sendMothership)(now + 1800);
+    } else showCard([['b', game.double ? 'Peak tonight' : title], ['span', `The ${shower.name}`], ...(game.double ? [['b', 'Double points']] : [])], starColor(showerSpeed(shower)));
     sound.wave();
+  };
+  // Points for catching a star: more for a faster or smaller one, from 10 to 150
+  const starPoints = (speed, size) => 5 * Math.round((10 + 50 * speed + 30 * (1 - size) + 60 * speed * (1 - size)) / 5);
+  // Sends star s falling from (x0, y0) to (x1, y1), its tail behind it, after delay ms
+  const fall = (s, props) => {
+    const { x0, y0, x1, y1, delay, ms, color, size, speed, kind } = Object.assign(s, props), { h } = game;
+    const turn = `rotate(${Math.atan2(y0 - y1, x0 - x1).toFixed(3)}rad)`;
+    s.el.className = kind ? `bn-fall bn-rare bn-${kind}-star` : 'bn-fall';
+    s.el.style.cssText = `--c:${color};--z:${((1.4 + 3.4 * size) * h / 216).toFixed(1)}px;--len:${(h * (0.22 + 0.5 * speed)).toFixed(0)}px`;
+    s.anim = s.el.animate([
+      { opacity: 0, transform: `translate(${x0.toFixed(1)}px, ${y0.toFixed(1)}px) ${turn}` },
+      { opacity: 1, offset: 0.08 },
+      { opacity: 1, transform: `translate(${x1.toFixed(1)}px, ${y1.toFixed(1)}px) ${turn}` }
+    ], { duration: ms, delay, easing: 'linear' });
+    if (game.frostUntil) s.anim.playbackRate = FROST_RATE;
   };
   const dropStar = (now, delay, heat, aim) => {
     const s = falling.find((f) => !f.anim && !f.hold);
@@ -1516,17 +1585,17 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     const kind = n === rare.frost ? 'frost' : n === rare.lantern && game.missed > 0 ? 'lantern' : '';
     const speed = clamp01(showerSpeed(shower) + (Math.random() - 0.5) * 0.12) * (kind ? 0.6 : 1), size = kind ? 0.85 : Math.random() < shower.large ? 0.55 + 0.45 * Math.random() : 0.55 * Math.random();
     const y0 = -h * 0.06, y1 = ground, x1 = Math.min(left + span * 0.98, Math.max(left + span * 0.02, aim)), x0 = radiant.x + (y0 - radiant.y) / (y1 - radiant.y) * (x1 - radiant.x);
-    const turn = `rotate(${Math.atan2(y0 - y1, x0 - x1).toFixed(3)}rad)`, ms = (4200 - 2600 * speed) * (1 - 0.25 * heat), color = { frost: '178 228 255', lantern: '255 208 130' }[kind] || starColor(speed);
-    const points = 5 * Math.round((10 + 50 * speed + 30 * (1 - size) + 60 * speed * (1 - size)) / 5) * (game.double ? 2 : 1);
-    Object.assign(s, { x0, y0, x1, y1, delay, ms, color, size, speed, points, kind, reach: h * 0.05 * size });
-    s.el.className = kind ? `bn-fall bn-rare bn-${kind}-star` : 'bn-fall';
-    s.el.style.cssText = `--c:${color};--z:${((1.4 + 3.4 * size) * h / 216).toFixed(1)}px;--len:${(h * (0.22 + 0.5 * speed)).toFixed(0)}px`;
-    s.anim = s.el.animate([
-      { opacity: 0, transform: `translate(${x0.toFixed(1)}px, ${y0.toFixed(1)}px) ${turn}` },
-      { opacity: 1, offset: 0.08 },
-      { opacity: 1, transform: `translate(${x1.toFixed(1)}px, ${y1.toFixed(1)}px) ${turn}` }
-    ], { duration: ms, delay, easing: 'linear' });
-    if (game.frostUntil) s.anim.playbackRate = FROST_RATE;
+    const ms = (4200 - 2600 * speed) * (1 - 0.25 * heat), color = { frost: '178 228 255', lantern: '255 208 130' }[kind] || starColor(speed);
+    fall(s, { x0, y0, x1, y1, delay, ms, color, size, speed, points: starPoints(speed, size) * (game.double ? 2 : 1), kind, reach: h * 0.05 * size, loose: 0 });
+  };
+  // A star thrown by a boss, from where it is down to the forest at aim: a burning piece of the fireball, or one of the
+  // mothership's
+  const bossStar = (x0, y0, aim, ms, color, size, speed) => {
+    const s = falling.find((f) => !f.anim && !f.hold);
+    if (!s) return;
+    const { w, h, ground } = game, span = Math.min(w, 1500), left = (w - span) / 2, x1 = Math.min(left + span * 0.98, Math.max(left + span * 0.02, aim));
+    // (It breaks away first, so the bloom that broke it off doesn't catch it at once)
+    fall(s, { x0, y0, x1, y1: ground, delay: 0, ms, color, size, speed, points: starPoints(speed, size), kind: '', reach: h * 0.05 * size, loose: performance.now() + 350 });
   };
   // How far along its fall a star is, from its own animation, which a frost star slows
   const fallT = (s) => ((s.anim.currentTime || 0) - s.delay) / s.ms;
@@ -1751,6 +1820,12 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   // they are at once, so none can land, and each bursts as a wave of light spreading from where the storm began reaches it.
   const STORM_WAVE = 9; // the wave's speed, in banner heights a second
   const burstAll = (now, from) => {
+    // A boss in the sky is hit three times as the wave passes it
+    const b = game.boss;
+    if (b) {
+      const p = bossAt(b, now);
+      setTimeout(() => { if (game && game.boss === b) hurtBoss(b, STORM_HITS, performance.now()); }, Math.min(700, Math.hypot(p.x - from.x, p.y - from.y) / (game.h * STORM_WAVE) * 1000));
+    }
     for (const s of falling) {
       const t = s.anim ? fallT(s) : -1, x = s.x0 + (s.x1 - s.x0) * t, y = s.y0 + (s.y1 - s.y0) * t;
       if (t < 0) continue;
@@ -1813,26 +1888,29 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       ], { duration: 450 + Math.random() * 250, easing: 'cubic-bezier(.15,.7,.35,1)' });
     }
   };
-  // A burst: a sparkle, shards in the star's color, more for a larger star, and its points. Then the star stays where it was,
-  // twinkling, unless that would crowd the moon.
+  // A caught star stays where it was, twinkling, unless that would crowd the moon. One the mothership gives back flies there
+  // from it first.
+  const keepStar = (x, y, color, size, from) => {
+    if (Math.hypot(x - game.moonX, y - game.moonY) <= game.moonClear) return;
+    const star = caughtStars[caughtNext++ % caughtStars.length], to = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`, ms = from ? 1500 : 900;
+    star.getAnimations().forEach((a) => a.cancel());
+    star.style.setProperty('--c', color);
+    game.stars.push({ x, y, el: star, color });
+    star.animate([
+      { opacity: 0, transform: `${from ? `translate(${from.x.toFixed(1)}px, ${from.y.toFixed(1)}px)` : to} scale(.2) rotate(0deg)` },
+      { opacity: 1, transform: `${to} scale(${(1.5 + 0.5 * size).toFixed(2)}) rotate(45deg)`, offset: 0.4 },
+      { opacity: 0.9, transform: `${to} scale(.7) rotate(90deg)` }
+    ], { duration: ms, easing: 'ease-out' });
+    star.animate([
+      { opacity: 0.9, transform: `${to} scale(.7) rotate(90deg)` },
+      { opacity: 0.45, transform: `${to} scale(.45) rotate(90deg)` }
+    ], { duration: 900 + Math.random() * 1100, delay: ms, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' });
+  };
+  // A burst: a sparkle, shards in the star's color, more for a larger star, and its points, and then the star stays
   const burst = (s, x, y, times, now, close) => {
     sparkle({ x, y, accent: true, base: 1, last: 0 }, now);
     scatter(x, y, [s.color], 4 + Math.round(4 * s.size), 14 * s.size);
-    if (Math.hypot(x - game.moonX, y - game.moonY) > game.moonClear) {
-      const star = caughtStars[caughtNext++ % caughtStars.length], to = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
-      star.getAnimations().forEach((a) => a.cancel());
-      star.style.setProperty('--c', s.color);
-      game.stars.push({ x, y, el: star, color: s.color });
-      star.animate([
-        { opacity: 0, transform: `${to} scale(.2) rotate(0deg)` },
-        { opacity: 1, transform: `${to} scale(${(1.5 + 0.5 * s.size).toFixed(2)}) rotate(45deg)`, offset: 0.4 },
-        { opacity: 0.9, transform: `${to} scale(.7) rotate(90deg)` }
-      ], { duration: 900, easing: 'ease-out' });
-      star.animate([
-        { opacity: 0.9, transform: `${to} scale(.7) rotate(90deg)` },
-        { opacity: 0.45, transform: `${to} scale(.45) rotate(90deg)` }
-      ], { duration: 900 + Math.random() * 1100, delay: 900, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' });
-    }
+    keepStar(x, y, s.color, s.size);
     floatText(`${close ? 'Close call! ' : ''}+${number(s.points * times * (close ? 2 : 1))}${times > 1 ? ` ×${times}` : ''}`, x, y, s.color, close || times >= 3);
   };
   // Rare stars. A frost star slows the falling stars to about a third for 5 s and holds new ones back, while the player's
@@ -1971,18 +2049,231 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     ember.animate([{ opacity: 0.45, transform: `${at} scale(.8)` }, { opacity: 1, transform: `${at} scale(${(0.9 + 0.5 * s.size).toFixed(2)})` }], { duration: 500 + Math.random() * 700, delay: 500, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out', fill: 'backwards' });
     lightTrees({ x, y: h * 0.5, accent: false, base: 0.5 + 0.35 * s.size }, now);
     if (Math.abs(x - cabin.x) < h * 0.4) stoke();
-    // What it cost
-    const direct = game.cabinVisible && Math.abs(x - cabin.x) < h * 0.16, twin = game.twin;
-    game.missed += direct ? 2 : 1;
+    // What it cost: a life, or two for a direct hit on the cabin or the fireball landing (heavy)
+    const direct = !s.heavy && game.cabinVisible && Math.abs(x - cabin.x) < h * 0.16, twin = game.twin;
+    game.missed += direct || s.heavy ? 2 : 1;
     game.twin = false;
     setFire(LIVES - game.missed);
-    floatText(`${direct ? 'Direct hit! −2 lives' : '−1 life'}${twin ? ', twin sparks lost' : ''}`, x, y - h * 0.14, '255 196 130', direct);
-    sound.landing(s.size, direct);
+    floatText(`${s.heavy ? 'The fireball landed! −2 lives' : direct ? 'Direct hit! −2 lives' : '−1 life'}${twin ? ', twin sparks lost' : ''}`, x, y - h * 0.14, '255 196 130', direct || s.heavy);
+    sound.landing(s.size, direct || s.heavy);
     score.animate([{ color: '#FFB46A' }, { color: 'rgba(232,238,255,.95)' }], { duration: 800, easing: 'ease-out' });
   };
   const showScore = () => {
     const left = Math.max(0, LIVES - game.missed), beat = game.best && game.points > game.best;
     score.textContent = `${beat ? 'New best! ' : ''}${number(game.points)} points, ${left} ${left === 1 ? 'life' : 'lives'} left${game.twin ? ', twin sparks' : ''}`;
+  };
+  // Bosses. Wave 10 brings a fireball, a bolide too big to catch in one go. It comes in slowly from one side, high, and arcs
+  // across the sky and down to the forest short of the other side, in about 19 s, shedding burning pieces that fall as stars.
+  // Each bloom that touches it breaks off another and slows it a little; 16 hits shatter it, but if it lands, it costs two
+  // lives. Wave 20, the last, brings the alien's mothership, which sweeps back and forth across the sky dropping volleys of
+  // stars, more of them and faster as it weakens, and from a third of the way sends the alien out. 36 hits drive it off,
+  // which wins the game, and the stars the alien took come back. A bloom can hit a boss once, and an aurora storm or a
+  // comet hits it three times as its ring passes. Beating one gives back a life, and every star in the sky bursts, as for a
+  // comet. No visitors come while a boss is in the sky.
+  const LAST_WAVE = 19, BOSS_WAVES = { 9: 'fireball', [LAST_WAVE]: 'mothership' }, STORM_HITS = 3, FIREBALL_MS = 19000;
+  const WIN_POINTS = 10000, LIFE_POINTS = 2000;
+  const BOSSES = {
+    fireball: { title: 'A fireball!', says: 'Break it up before it lands', name: 'Fireball', hp: 16, hit: 100, worth: 2500, color: '255 170 90', bar: 'linear-gradient(90deg,#FFE3B0,#FF9A5A)' },
+    mothership: { title: 'The mothership', says: 'The last wave', name: 'Mothership', hp: 36, hit: 100, worth: 5000, color: '134 242 210', bar: 'linear-gradient(90deg,#9FF5DC,#A9C1FF,#D2B3FF)' }
+  };
+  const FIRE = ['255 226 160', '255 178 104', '255 140 80'], SHIP = ['134 242 210', '183 155 255', '230 194 255'];
+  const showBoss = () => {
+    const b = game && game.boss;
+    bossBar.classList.toggle('on', !!b);
+    if (!b) return;
+    bossBar.style.setProperty('--bar', BOSSES[b.kind].bar);
+    bossBar.querySelector('em').textContent = BOSSES[b.kind].name;
+    bossBar.querySelector('i').style.transform = `scaleX(${(b.hp / b.max).toFixed(3)})`;
+  };
+  // The fireball's path, a curve through three points: in from one side, high, and across the sky in an arc, down to the
+  // forest short of the other side. Its tail points back along the path.
+  const fireballAt = ({ pts: [p0, p1, p2] }, u) => {
+    const k = 1 - u;
+    return { x: k * k * p0.x + 2 * k * u * p1.x + u * u * p2.x, y: k * k * p0.y + 2 * k * u * p1.y + u * u * p2.y, dx: k * (p1.x - p0.x) + u * (p2.x - p1.x), dy: k * (p1.y - p0.y) + u * (p2.y - p1.y) };
+  };
+  const sendFireball = (at) => {
+    const { w, h, ground } = game, span = Math.min(w, 1500), left = (w - span) / 2, dir = Math.random() < 0.5 ? 1 : -1, el = bossPiece.fireball;
+    const near = dir > 0 ? left : left + span, far = dir > 0 ? left + span : left;
+    const b = { kind: 'fireball', el, hp: BOSSES.fireball.hp, max: BOSSES.fireball.hp, dir, delay: at - performance.now(), ms: FIREBALL_MS, nextShed: at + 1800, pts: [{ x: near - dir * h * 0.15, y: h * 0.06 }, { x: near + dir * span * 0.75, y: h * 0.12 }, { x: near + dir * span * 0.8, y: ground }] };
+    el.style.removeProperty('--z');
+    el.classList.remove('hot');
+    b.anim = el.animate(Array.from({ length: 49 }, (_, i) => {
+      const p = fireballAt(b, i / 48);
+      return { opacity: 1, transform: `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) rotate(${Math.atan2(-p.dy, -p.dx).toFixed(3)}rad)` };
+    }), { duration: FIREBALL_MS, delay: b.delay, easing: 'linear' });
+    game.boss = b;
+    setTimeout(() => { if (game && game.boss === b) sound.fireball(); }, b.delay);
+    showBoss();
+  };
+  // The mothership comes down from above into the upper sky and sweeps back and forth across it in a figure of eight, banking
+  // as it turns, faster as it weakens
+  const sendMothership = (at) => {
+    const { w, h } = game, span = Math.min(w, 1500), left = (w - span) / 2, el = bossPiece.mothership, cx = left + span / 2;
+    const b = { kind: 'mothership', el, hp: BOSSES.mothership.hp, max: BOSSES.mothership.hp, start: at, last: at, theta: 0, cx, x: cx, y: -h * 0.4, turn: 0, amp: Math.max(h * 0.3, Math.min(span / 2 - h * 0.45, h * 2.2)), nextVolley: at + 3400, nextAlien: 0, phase: 0 };
+    el.style.transform = `translate(${cx.toFixed(1)}px, ${(-h * 0.4).toFixed(1)}px)`;
+    el.style.opacity = 1;
+    el.classList.add('bn-flying');
+    game.boss = b;
+    setTimeout(() => { if (game && game.boss === b) sound.mothership(); }, at - performance.now());
+    showBoss();
+  };
+  const bossAt = (b, now) => (b.kind === 'fireball' ? fireballAt(b, clamp01(((b.anim.currentTime || 0) - b.delay) / b.ms)) : { x: b.x, y: b.y });
+  // Blooms touching a boss, each counted once. Only the player's own do, not those thrown off by bursts, or one catch near a
+  // boss would set off a run of hits. The fireball is round, and the mothership wide, so a bloom reaches it within an ellipse.
+  const bossHits = (b, { x, y }, now) => {
+    const { h } = game, [rx, ry] = b.kind === 'fireball' ? [h * 0.07, h * 0.07] : [h * 0.24, h * 0.09];
+    let hits = 0;
+    for (const g of blooms) {
+      const t = (now - g.start) / g.ms, r = g.r * Math.min(1, t / BLOOM_GROWN);
+      if (t < 0 || t >= BLOOM_ACTIVE || g.bossHit === g.start || Math.hypot((x - g.x) / (r + rx), (y - g.y) / (r + ry)) >= 1) continue;
+      g.bossHit = g.start;
+      hits += 1;
+    }
+    return hits;
+  };
+  // Burning pieces of the fireball, falling ahead of it
+  const shed = (b, p, count) => {
+    const { h } = game;
+    for (let i = 0; i < count; i++) bossStar(p.x, p.y, p.x + b.dir * h * (0.1 + 0.6 * Math.random()), 2600 + 1200 * Math.random(), FIRE[Math.floor(Math.random() * FIRE.length)], 0.3 + 0.3 * Math.random(), 0.3);
+  };
+  // A volley of the mothership's stars, fanning out below it, now and then aimed at the cabin
+  const volley = (b, count) => {
+    const { h } = game, aim = game.cabinVisible && Math.random() < 0.3 ? cabin.x : b.x + (Math.random() - 0.5) * h * 1.2;
+    for (let i = 0; i < count; i++) {
+      const k = count > 1 ? i / (count - 1) - 0.5 : 0;
+      bossStar(b.x + k * h * 0.3, b.y + h * 0.06, aim + k * h * 0.9, (2900 - 300 * b.phase) * (0.9 + 0.2 * Math.random()), SHIP[i % SHIP.length], 0.35 + 0.25 * Math.random(), 0.45);
+    }
+  };
+  // A boss hit: points, and the fireball breaks pieces off, slows, shrinks and burns hotter, while the mothership flashes
+  const hurtBoss = (b, count, now) => {
+    const { h } = game, p = bossAt(b, now), boss = BOSSES[b.kind], hits = Math.min(count, b.hp);
+    b.hp -= hits;
+    game.points += hits * boss.hit;
+    sparkle({ x: p.x, y: p.y, accent: true, base: 1, last: 0 }, now);
+    if (b.kind === 'fireball') {
+      scatter(p.x, p.y, FIRE, 10, 18);
+      shed(b, p, Math.min(2, hits));
+      b.anim.playbackRate *= 0.96 ** hits;
+      b.el.style.setProperty('--z', `${(h * 0.06 * (0.55 + 0.45 * b.hp / b.max)).toFixed(1)}px`);
+      if (b.hp <= b.max / 2) b.el.classList.add('hot');
+      sound.crack();
+    } else {
+      scatter(p.x, p.y, SHIP, 12, 22);
+      b.el.querySelector('.bn-hit').animate([{ opacity: 0.85 }, { opacity: 0 }], { duration: 220, easing: 'ease-out' });
+      sound.clank();
+    }
+    floatText(`+${number(hits * boss.hit)}`, p.x, p.y + h * (b.kind === 'fireball' ? 0.14 : 0.17), boss.color);
+    showBoss();
+    if (!b.hp) bossBeaten(b, p, now);
+  };
+  // Each frame while a boss is in the sky: it moves, attacks and can be hit. Returns whether the score changed.
+  const bossFrame = (now) => {
+    const b = game.boss, { h } = game;
+    if (b.kind === 'fireball') {
+      const u = ((b.anim.currentTime || 0) - b.delay) / b.ms;
+      if (u < 0) return false;
+      const p = fireballAt(b, Math.min(1, u));
+      if (u >= 1) { fireballLands(b, p, now); return true; }
+      if (now >= b.nextShed) { b.nextShed = now + (b.hp > b.max / 2 ? 2000 : 1300); shed(b, p, 1); }
+      const hits = bossHits(b, p, now);
+      if (hits) hurtBoss(b, hits, now);
+      return hits > 0;
+    }
+    // The mothership comes in over 2.4 s, then sweeps across every 10 s, every 8 s from a third of the way and every 6.5 s
+    // from two thirds, dropping a volley of 3 stars every 2.9 s, then 4 every 2.4 s and 5 every 2 s
+    const dt = Math.min(0.05, Math.max(0, now - b.last) / 1000), into = clamp01((now - b.start) / 2400);
+    b.last = now;
+    if (now < b.start) return false;
+    b.phase = b.hp > b.max * 2 / 3 ? 0 : b.hp > b.max / 3 ? 1 : 2;
+    b.theta += dt * 2 * Math.PI / [10, 8, 6.5][b.phase] * into;
+    const x = b.cx + b.amp * Math.sin(b.theta), y = -h * 0.4 + (h * 0.8 + h * 0.05 * Math.sin(2 * b.theta)) * (1 - (1 - into) ** 3);
+    if (dt) b.turn = Math.max(-0.2, Math.min(0.2, (x - b.x) / dt / (h * 8)));
+    Object.assign(b, { x, y });
+    b.el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${b.turn.toFixed(3)}rad)`;
+    if (into >= 1 && now >= b.nextVolley) { volley(b, 3 + b.phase); b.nextVolley = now + [2900, 2400, 2000][b.phase]; }
+    if (b.phase && now >= b.nextAlien && !game.visitors.some((v) => v.kind === 'alien')) { sendAlien(now); b.nextAlien = now + 12000; }
+    const hits = bossHits(b, b, now);
+    if (hits) hurtBoss(b, hits, now);
+    return hits > 0;
+  };
+  // After a boss, a breather before the next wave, and visitors come again a little later
+  const bossOver = (now) => {
+    game.boss = null;
+    game.next = now + 3200;
+    game.nextVisitor = Math.max(game.nextVisitor, now + 9000);
+    showBoss();
+  };
+  // The fireball lands: a great flash in the forest, for two lives
+  const fireballLands = (b, p, now) => {
+    b.anim.cancel();
+    game.fireball = 'landed';
+    landing({ x1: p.x, y1: game.ground, size: 1.7, speed: 0.6, color: BOSSES.fireball.color, heavy: true }, now);
+    bossOver(now);
+  };
+  // A boss beaten: points, a life back, a burst of light, and every star in the sky bursts. The fireball flares and its
+  // pieces fly out; the mothership wobbles, throwing sparks, and spins away up out of the sky, as the alien does, the stars
+  // the alien took come back, and the game is won.
+  const bossBeaten = (b, p, now) => {
+    const { h } = game, boss = BOSSES[b.kind], back = game.missed > 0;
+    game.boss = null;
+    game.points += boss.worth;
+    if (back) { game.missed -= 1; setFire(LIVES - game.missed); stoke(); }
+    floatText(`${b.kind === 'fireball' ? 'Fireball shattered!' : 'Mothership driven off!'} +${number(boss.worth)}${back ? ' and a life back' : ''}`, p.x, p.y + h * 0.18, boss.color, true);
+    sound.beaten();
+    if (!document.hidden) surgeOnce();
+    shockAt(p);
+    burstAll(now, p);
+    if (b.kind === 'fireball') {
+      game.fireball = 'shattered';
+      b.anim.cancel();
+      const glow = flashes[flashNext++ % flashes.length], at = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px)`, reach = h * 0.9 / 100;
+      glow.style.setProperty('--c', '255 190 110');
+      glow.animate([{ opacity: 1, transform: `${at} scale(${(reach * 0.2).toFixed(2)})` }, { opacity: 0, transform: `${at} scale(${reach.toFixed(2)})` }], { duration: 900, easing: 'cubic-bezier(.1,.8,.3,1)' });
+      scatter(p.x, p.y, FIRE, 24, 40);
+      bossOver(now);
+      return;
+    }
+    const at = (dx, dy, turn, scale) => `translate(${(p.x + dx * h).toFixed(1)}px, ${(p.y + dy * h).toFixed(1)}px) rotate(${turn}deg) scale(${scale})`;
+    for (let i = 1; i <= 5; i++) setTimeout(() => { if (game) scatter(p.x + (Math.random() - 0.5) * h * 0.4, p.y + (Math.random() - 0.5) * h * 0.1, SHIP, 8, 20); }, i * 160);
+    b.el.animate([
+      { opacity: 1, transform: at(0, 0, 0, 1) },
+      { opacity: 1, transform: at(-0.03, 0, -9, 1), offset: 0.1 },
+      { opacity: 1, transform: at(0.03, 0, 9, 1), offset: 0.2 },
+      { opacity: 1, transform: at(-0.02, 0, -6, 1), offset: 0.3 },
+      { opacity: 1, transform: at(0, -0.05, 0, 1.05), offset: 0.42 },
+      { opacity: 0, transform: at(0, -1.1, 720, 0.25) }
+    ], { duration: 2600, easing: 'ease-in' }).onfinish = () => bossGone(b);
+    game.returned = game.lost.length;
+    game.lost.forEach((st, i) => setTimeout(() => { if (game) keepStar(st.x, st.y, st.color, 0.5, p); }, 700 + i * 150));
+    showBoss();
+    win();
+  };
+  // Put away when it has gone, or faded where it was as a game ends
+  const bossGone = (b) => {
+    if (b.anim) b.anim.cancel();
+    b.el.classList.remove('bn-flying');
+    b.el.style.opacity = '';
+    b.el.style.transform = '';
+  };
+  const bossFades = (b) => {
+    // (A fireball that hasn't come in yet has nothing to fade)
+    if (b.anim && (b.anim.currentTime || 0) < b.delay) { bossGone(b); return; }
+    if (b.anim) b.anim.pause();
+    b.el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500 }).onfinish = () => bossGone(b);
+  };
+  // Winning: the mothership driven off in the last wave. It is worth 10,000 and 2,000 for each life left; a card says so, and
+  // a moment later the game ends as any other, with its constellation and credits.
+  const win = () => {
+    const bonus = WIN_POINTS + LIFE_POINTS * (LIVES - game.missed), played = game;
+    Object.assign(game, { won: true, next: Infinity, nextVisitor: Infinity });
+    game.points += bonus;
+    showScore();
+    setTimeout(() => {
+      if (game !== played) return;
+      showCard([['b', 'Victory!'], ['span', 'The night is saved'], ['b', `+${number(bonus)}`]], '255 226 150', 3400);
+      sound.victory();
+    }, 1400);
+    setTimeout(() => { if (game === played) endGame(true); }, 5400);
   };
   // The end of a game worth celebrating. After the last landing, the caught stars join into a constellation, named for its
   // size, the aurora surges, and credits with the game's numbers rise from behind the trees. A click skips to the end.
@@ -2009,8 +2300,8 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       timers.push(setTimeout(() => sparkle({ x: b.x, y: b.y, accent: true, base: 1, last: 0 }, performance.now()), delay + 120));
     });
     const names = CONSTELLATIONS.find(([least]) => played.caught >= least)[1], seconds = Math.round((performance.now() - played.start) / 1000);
-    const rows = [...(newBest ? ['New best!', ''] : []), 'Your constellation', names[Math.floor(Math.random() * names.length)], '', `${played.caught} stars caught`, `Best catch +${number(played.bestCatch)}`, ...(played.bestChain > 1 ? [`Best chain ×${played.bestChain}`] : []), `Reached the ${played.shower.name}`, ...(played.satellites ? [`Satellites caught: ${played.satellites}`] : []), ...(played.comets ? [`Comets caught: ${played.comets}`] : []), ...(played.complaints ? [`Air traffic complaints: ${played.complaints}`] : []), ...(played.smooth ? [`Smooth flights: ${played.smooth}`] : []), ...(played.encounters ? [`Close encounters: ${played.encounters}`] : []), ...(played.rescued ? [`Stars rescued: ${played.rescued}`] : []), ...(played.abducted ? [`Stars abducted: ${played.abducted}`] : []), ...(played.closeCalls ? [`Close calls: ${played.closeCalls}`] : []), ...(played.frosts ? [`Frost stars: ${played.frosts}`] : []), ...(played.lanterns ? [`Lives relit: ${played.lanterns}`] : []), ...(played.storms ? [`Aurora storms called: ${played.storms}`] : []), `Time ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Moon maps: NASA', 'Thanks for playing'];
-    const heads = new Set(['New best!', 'Your constellation', 'Final score']);
+    const rows = [...(played.won ? ['Victory!', 'The night is saved', ''] : []), ...(newBest ? ['New best!', ''] : []), 'Your constellation', names[Math.floor(Math.random() * names.length)], '', `${played.caught} stars caught`, `Best catch +${number(played.bestCatch)}`, ...(played.bestChain > 1 ? [`Best chain ×${played.bestChain}`] : []), played.won ? `All ${LAST_WAVE + 1} waves` : `Reached wave ${played.wave + 1} of ${LAST_WAVE + 1}`, ...(played.fireball ? [played.fireball === 'shattered' ? 'Fireball shattered' : 'The fireball landed'] : []), ...(played.won ? ['Mothership driven off'] : []), ...(played.returned ? [`Stars returned: ${played.returned}`] : []), ...(played.satellites ? [`Satellites caught: ${played.satellites}`] : []), ...(played.comets ? [`Comets caught: ${played.comets}`] : []), ...(played.complaints ? [`Air traffic complaints: ${played.complaints}`] : []), ...(played.smooth ? [`Smooth flights: ${played.smooth}`] : []), ...(played.encounters ? [`Close encounters: ${played.encounters}`] : []), ...(played.rescued ? [`Stars rescued: ${played.rescued}`] : []), ...(played.abducted ? [`Stars abducted: ${played.abducted}`] : []), ...(played.closeCalls ? [`Close calls: ${played.closeCalls}`] : []), ...(played.frosts ? [`Frost stars: ${played.frosts}`] : []), ...(played.lanterns ? [`Lives relit: ${played.lanterns}`] : []), ...(played.storms ? [`Aurora storms called: ${played.storms}`] : []), `Time ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Moon maps: NASA', 'Thanks for playing'];
+    const heads = new Set(['Victory!', 'New best!', 'Your constellation', 'Final score']);
     credits.replaceChildren(...rows.map((text) => (text ? Object.assign(document.createElement(heads.has(text) ? 'b' : 'span'), { textContent: text }) : document.createElement('i'))));
     const { h } = played, tall = credits.offsetHeight;
     const rise = credits.animate([{ opacity: 1, transform: `translate(-50%, ${h.toFixed(1)}px)` }, { opacity: 1, transform: `translate(-50%, ${(-tall).toFixed(1)}px)` }], { duration: (h + tall) / (h * 0.4) * 1000, delay: 1500, easing: 'linear' });
@@ -2063,20 +2354,23 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       v.anim.pause();
       v.el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500 }).onfinish = () => { v.anim.cancel(); if (alien) alienGone(v); };
     });
+    if (game.boss) bossFades(game.boss);
+    bossBar.classList.remove('on');
     waveCard.getAnimations().forEach((a) => a.cancel());
     banner.classList.remove('bn-playing');
     setTimeout(() => { if (!game && audio) audio.suspend(); }, 2000);
-    const played = game, { points, w: width } = played;
+    const played = game, { points, w: width } = played, won = played.won ? 'You won! ' : '';
     game = null;
     gameOver = performance.now();
     const past = points ? saveScore(points) : null;
     if (showResult && past) {
-      if (!past.best) score.textContent = `${number(points)} points.`;
-      else if (points > past.best) score.textContent = `New best: ${number(points)} points!`;
-      else score.textContent = `${number(points)} points${past.rank <= 100 ? `, your ${ordinal(past.rank)} best of ${past.games} games` : ''}. Your best is ${number(past.best)}.`;
+      if (!past.best) score.textContent = `${won}${number(points)} points.`;
+      else if (points > past.best) score.textContent = `${won}New best: ${number(points)} points!`;
+      else score.textContent = `${won}${number(points)} points${past.rank <= 100 ? `, your ${ordinal(past.rank)} best of ${past.games} games` : ''}. Your best is ${number(past.best)}.`;
     } else score.classList.remove('on');
     if (!showResult) { clearCaught(); resetFire(); return; }
-    if (past && past.best && points > past.best) sound.best(); else sound.over();
+    // (A win has had its fanfare)
+    if (!played.won) { if (past && past.best && points > past.best) sound.best(); else sound.over(); }
     // After any finale: the result line, the shared high scores with the review link, and the caught stars and embers
     // outlasting the score a little, then fading. Any score opens the high scores, a top ten one to enter initials, and the
     // line links to them too. (On a phone, the line drops the comparison to make room.)
@@ -2106,20 +2400,20 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     // The pace: from one star every 1.6 s toward one every 0.32 s, about half way there after 35 s, with a breath between waves
     const heat = 1 - Math.exp((game.start - now) / 50000);
     if (now >= game.next) {
-      if (!game.left) nextWave(now);
-      else {
+      // (A wave with a boss ends when the boss does)
+      if (!game.left) { if (!game.boss) nextWave(now); } else {
         const count = dropFlurry(now, heat);
         game.next = now + (game.left ? (1600 - 1280 * heat) * (count + 1) / 2 : 1800);
       }
     }
-    if (now >= game.nextVisitor) { sendVisitor(now); game.nextVisitor = now + 13000 + Math.random() * 9000; }
+    if (now >= game.nextVisitor && !game.boss) { sendVisitor(now); game.nextVisitor = now + 13000 + Math.random() * 9000; }
     let changed = false;
     if (game.frostUntil && now >= game.frostUntil) thaw();
     for (const s of falling) {
       if (!s.anim) continue;
       const t = fallT(s);
       if (t < 0) continue;
-      const x = s.x0 + (s.x1 - s.x0) * t, y = s.y0 + (s.y1 - s.y0) * t, g = t < 1 && bloomAt(x, y, s.reach, now);
+      const x = s.x0 + (s.x1 - s.x0) * t, y = s.y0 + (s.y1 - s.y0) * t, g = t < 1 && now >= s.loose && bloomAt(x, y, s.reach, now);
       if (t >= 1) {
         s.anim = null; changed = true;
         if (s.kind) rareLost(s, now); else landing(s, now);
@@ -2156,6 +2450,8 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
             v.prey.el.getAnimations().forEach((a) => a.cancel());
             game.stars = game.stars.filter((st) => st !== v.prey);
             game.abducted += 1;
+            // (Kept aboard the mothership, which gives them back if it's driven off)
+            game.lost.push(v.prey);
             floatText('Star abducted!', v.prey.x, v.prey.y, '183 155 255');
             sound.abducted();
           }
@@ -2172,13 +2468,14 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       changed = true;
       return visitorHit(v, x, y, now);
     });
+    if (game.boss && bossFrame(now)) changed = true;
     if (changed) showScore();
     if (game.missed >= LIVES) endGame(true); else requestAnimationFrame(gameFrame);
   };
   const startGame = () => {
     const now = performance.now(), b = banner.getBoundingClientRect(), moonBox = moonFace.getBoundingClientRect(), best = readScores().scores[0] || 0;
     const today = new Date(Date.now() + offset), peak = SHOWERS.find((s) => s.peaks.some(([m, d]) => today.getMonth() + 1 === m && today.getDate() === d));
-    game = { start: now, next: now + 300, points: 0, missed: 0, landed: 0, caught: 0, bestCatch: 0, bestChain: 1, stars: [], w: b.width, h: b.height, best, wave: -1, left: 0, shower: null, double: false, radiant: null, peak, order: peak ? [peak, ...SHOWERS.filter((s) => s !== peak)] : SHOWERS, visitors: [], bag: [], nextVisitor: now + 9000 + Math.random() * 5000, satellites: 0, comets: 0, complaints: 0, smooth: 0, encounters: 0, rescued: 0, abducted: 0, twin: false, closeCalls: 0, frosts: 0, lanterns: 0, storms: 0, meter: 0, frostUntil: 0, rare: { n: 0, frost: -1, lantern: -1 }, cabinVisible: cabin.x > 0 && cabin.x < b.width, ground: b.height - 44 * Math.max(b.width / 1600, b.height / 240),
+    game = { start: now, next: now + 300, points: 0, missed: 0, landed: 0, caught: 0, bestCatch: 0, bestChain: 1, stars: [], w: b.width, h: b.height, best, wave: -1, left: 0, shower: null, double: false, radiant: null, peak, order: peak ? [peak, ...SHOWERS.filter((s) => s !== peak)] : SHOWERS, visitors: [], bag: [], nextVisitor: now + 9000 + Math.random() * 5000, satellites: 0, comets: 0, complaints: 0, smooth: 0, encounters: 0, rescued: 0, abducted: 0, twin: false, closeCalls: 0, frosts: 0, lanterns: 0, storms: 0, meter: 0, frostUntil: 0, rare: { n: 0, frost: -1, lantern: -1 }, boss: null, fireball: '', won: false, lost: [], returned: 0, cabinVisible: cabin.x > 0 && cabin.x < b.width, ground: b.height - 44 * Math.max(b.width / 1600, b.height / 240),
       moonX: moonBox.left + moonBox.width / 2 - b.left, moonY: moonBox.top + moonBox.height / 2 - b.top, moonClear: moonBox.width * 1.5 };
     // The sound setting is shared with the bear game, which may have changed it
     try { soundOn = localStorage.getItem(SOUND_KEY) === '1'; } catch (e) { /* blocked */ }
