@@ -114,6 +114,21 @@ img{display:block;max-width:100%;height:auto}
 .bn-game-sat{margin:calc(var(--bn-h)*-.051) 0 0 calc(var(--bn-h)*-.0835)}
 .bn-plane.bn-visitor{inset:auto;left:0;top:0;width:0;height:0}
 .bn-plane.bn-visitor i{animation-duration:1.5s}
+/* The alien: pixel art in two frames, wings out and wings in, which flap in turn while it flies, over a soft glow; below it,
+   its tractor beam, in two frames that shimmer in turn; and on its back, a star it has taken */
+.bn-alien{--s:calc(var(--bn-h)*.19);position:absolute;left:0;top:0;width:0;height:0;opacity:0}
+.bn-alien::before{content:"";position:absolute;left:calc(var(--s)*-.8);top:calc(var(--s)*-.8);width:calc(var(--s)*1.6);height:calc(var(--s)*1.6);border-radius:50%;background:radial-gradient(closest-side,rgba(134,242,210,.3),rgba(183,155,255,.12) 60%,rgba(183,155,255,0))}
+.bn-alien>b{position:absolute;left:calc(var(--s)*-.5);top:calc(var(--s)*-.423);width:var(--s);height:calc(var(--s)*.846);background:center/contain no-repeat}
+.bn-alien>b+b{opacity:0}
+.bn-beam{position:absolute;left:calc(var(--s)*-.8);top:calc(var(--s)*.3);width:calc(var(--s)*1.6);height:var(--len,80px);transform:scaleY(0);transform-origin:50% 0}
+.bn-beam b{position:absolute;inset:0;background:center/100% 100% no-repeat}
+.bn-beam b+b{opacity:0}
+.bn-flying>b,.bn-flying .bn-beam b{animation:bn-flap .36s steps(1,end) infinite}
+.bn-flying>b+b{animation-delay:-.18s}
+.bn-flying .bn-beam b{animation-duration:.14s}
+.bn-flying .bn-beam b+b{animation-delay:-.07s}
+.bn-alien .bn-caught{top:calc(var(--s)*-.55)}
+@keyframes bn-flap{from{opacity:1}50%,to{opacity:0}}
 .bn-shard{--c:246 249 255;width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border-radius:50%;background:rgb(var(--c));box-shadow:0 0 4px rgb(var(--c)/.8)}
 .bn-caught-stars,.bn-front{position:absolute;inset:0}
 /* The end of a game: lines between the caught stars, and credits rising from behind the trees */
@@ -301,8 +316,8 @@ img{display:block;max-width:100%;height:auto}
   .bn-m1{will-change:transform,opacity;animation:bn-meteor-1 30s linear infinite}
   .bn-m2{will-change:transform,opacity;animation:bn-meteor-2 30s linear infinite}
   .bn-m3{will-change:transform,opacity;animation:bn-meteor-3 30s linear infinite}
-  .bn-plane-a{animation:bn-plane-a 600s linear infinite}
-  .bn-plane-b{animation:bn-plane-b 600s linear infinite}
+  .bn-plane-a{animation:bn-plane-a 400s linear infinite}
+  .bn-plane-b{animation:bn-plane-b 400s linear infinite}
   .bn-plane i{will-change:opacity;animation:bn-beacon 2.4s linear infinite}
   .bn-plane .bn-strobe{animation:bn-strobe 2.4s linear -1.2s infinite}
   .bn-sat{will-change:transform,opacity;animation:bn-sat 170s linear infinite}
@@ -346,8 +361,8 @@ img{display:block;max-width:100%;height:auto}
 @keyframes bn-meteor-1{0%,10%{opacity:0;transform:translate(0,0)}11.7%{opacity:1}15.3%{opacity:.9}18.7%,100%{opacity:0;transform:translate(-380px,177px)}}
 @keyframes bn-meteor-3{0%,45%{opacity:0;transform:translate(0,0)}46.7%{opacity:.85}50%{opacity:.75}53.3%,100%{opacity:0;transform:translate(340px,158px)}}
 @keyframes bn-meteor-2{0%,75%{opacity:0;transform:translate(0,0)}76.7%{opacity:.85}80%{opacity:.75}83%,100%{opacity:0;transform:translate(-300px,140px)}}
-/* The plane: one 600 s cycle with two crossings, left to right from about 6 s (135 s) and back, lower, from about
-   306 s (150 s). A straight, level flight in this wide view traces an arc: it rises from one side, is highest, fastest
+/* The plane: one 400 s cycle with two crossings, left to right from about 4 s (90 s) and back, lower, from about
+   204 s (100 s). A straight, level flight in this wide view traces an arc: it rises from one side, is highest, fastest
    and brightest where it passes nearest, then sinks toward the horizon. The keyframes are computed by
    design/landing/banner_gen.py. The beacon flashes every 2.4 s, with a faint steady red between; the strobe flashes
    white halfway between, more briefly, and shows nothing between. Both are slower than on a real airliner, for calm. */
@@ -1065,16 +1080,41 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   };
   const gamePiece = (className) => glints.appendChild(Object.assign(document.createElement('i'), { className }));
   const falling = Array.from({ length: 24 }, () => { const el = gamePiece('bn-fall'); el.appendChild(document.createElement('b')); return { el, anim: null }; });
-  const shots = Array.from({ length: 6 }, () => ({ el: gamePiece('bn-shot'), until: 0 }));
-  const blooms = Array.from({ length: 6 }, () => ({ el: gamePiece('bn-bloom'), until: 0, start: 0, ms: BLOOM_MS, x: 0, y: 0, r: 0, gen: 0, family: null }));
+  // Six sparks can be in the air at once, or twelve with twin sparks (below)
+  const shots = Array.from({ length: 12 }, () => ({ el: gamePiece('bn-shot'), until: 0 }));
+  const blooms = Array.from({ length: 12 }, () => ({ el: gamePiece('bn-bloom'), until: 0, start: 0, ms: BLOOM_MS, x: 0, y: 0, r: 0, gen: 0, family: null }));
   const chains = Array.from({ length: 14 }, () => ({ el: gamePiece('bn-chain'), until: 0, start: 0, ms: CHAIN_MS, x: 0, y: 0, r: 0, gen: 0, family: null }));
   const allBlooms = [...blooms, ...chains];
   const visitorPiece = {
     satellite: gamePiece('bn-game-sat'),
     plane: glints.appendChild(Object.assign(document.createElement('div'), { className: 'bn-plane bn-visitor', innerHTML: '<i></i><i class="bn-strobe"></i>' })),
-    comet: gamePiece('bn-comet')
+    comet: gamePiece('bn-comet'),
+    alien: glints.appendChild(Object.assign(document.createElement('div'), { className: 'bn-alien', innerHTML: '<i class="bn-beam"><b></b><b></b></i><b></b><b></b><i class="bn-caught"></i>' }))
   };
   visitorPiece.comet.appendChild(document.createElement('b'));
+  // The alien, in the manner of Galaga's but drawn for this sky, in the aurora's aqua and violet. Each frame is given by its
+  // left half and middle column, and mirrored: wings out, then wings in. It faces down, toward the cabin.
+  const ALIEN_COLORS = { g: '#86F2D2', G: '#3FC7A2', v: '#B79BFF', V: '#8C70F2', p: '#E6C2FF', w: '#FFFFFF', k: '#1A2050' };
+  const ALIEN_FRAMES = [
+    ['....G..', '....G.g', '.p...gG', 'pVv.ggg', 'pVvvgGg', '.vvvggg', '..vgwwg', '...gwkg', '....ggg', '....g.g', '...g...'],
+    ['....G..', '..p.G.g', '..Vv.gG', '..Vvggg', '..vvgGg', '...vggg', '...gwwg', '...gwkg', '....ggg', '....g.g', '...g...']
+  ];
+  const svgUrl = (svg) => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' ${svg}</svg>`)}")`;
+  const pixelArt = (halves) => {
+    const rows = halves.map((half) => half + [...half.slice(0, -1)].reverse().join(''));
+    let rects = '';
+    rows.forEach((row, y) => row.replace(/(.)\1*/g, (run, c, x) => { if (ALIEN_COLORS[c]) rects += `<rect x='${x}' y='${y}' width='${run.length}' height='1' fill='${ALIEN_COLORS[c]}'/>`; return run; }));
+    return svgUrl(`viewBox='0 0 ${rows[0].length} ${rows.length}' shape-rendering='crispEdges'>${rects}`);
+  };
+  // The beam: pale bands across a cone, the second frame's half a band lower, stretched to its length
+  const beamArt = (shift) => {
+    const side = (y) => 13 - 13 * y / 40, band = (y0, y1, fill, alpha) => `<path d='M${side(y0).toFixed(2)} ${y0}H${(40 - side(y0)).toFixed(2)}L${(40 - side(y1)).toFixed(2)} ${y1}H${side(y1).toFixed(2)}z' fill='${fill}' fill-opacity='${alpha}'/>`;
+    let bands = band(0, 40, '#9FDCFF', 0.18);
+    for (let y = shift; y < 40; y += 4) bands += band(y, Math.min(40, y + 2.2), (y - shift) % 8 ? '#FFFFFF' : '#9FDCFF', 0.55);
+    return svgUrl(`viewBox='0 0 40 40' preserveAspectRatio='none'>${bands}`);
+  };
+  visitorPiece.alien.querySelectorAll(':scope > b').forEach((frame, i) => { frame.style.backgroundImage = pixelArt(ALIEN_FRAMES[i]); });
+  visitorPiece.alien.querySelectorAll('.bn-beam b').forEach((frame, i) => { frame.style.backgroundImage = beamArt(i * 2); });
   const shards = Array.from({ length: 30 }, () => gamePiece('bn-shard')), pops = Array.from({ length: 12 }, () => gamePiece('bn-pop'));
   const caughtBox = glints.appendChild(Object.assign(document.createElement('div'), { className: 'bn-caught-stars' }));
   const caughtStars = Array.from({ length: 40 }, () => caughtBox.appendChild(Object.assign(document.createElement('i'), { className: 'bn-caught' })));
@@ -1164,6 +1204,24 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     source.start(start);
     source.stop(end + 0.02);
   };
+  // A tone that rises with a quick vibrato, for the alien's tractor beam
+  const warble = (ms, from, to, level) => {
+    if (!soundOn || !audio) return;
+    const start = audio.currentTime, end = start + ms / 1000, osc = audio.createOscillator(), lfo = audio.createOscillator(), depth = audio.createGain(), gain = audio.createGain();
+    gain.gain.value = 0;
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(from, start);
+    osc.frequency.linearRampToValueAtTime(to, end);
+    lfo.frequency.value = 9;
+    depth.gain.value = from * 0.05;
+    lfo.connect(depth).connect(osc.frequency);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(level, start + 0.12);
+    gain.gain.setValueAtTime(level, end - 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.0001, end);
+    osc.connect(gain).connect(audioOut);
+    [osc, lfo].forEach((o) => { o.start(start); o.stop(end + 0.02); });
+  };
   const note = (n) => 523.25 * 2 ** (n / 12);
   const PENTATONIC = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
   const sound = {
@@ -1175,6 +1233,14 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     plane: () => { tone(330, 230, { to: 247, type: 'sawtooth', level: 0.05 }); tone(262, 330, { to: 175, type: 'sawtooth', level: 0.05, delay: 240 }); },
     smooth: () => { tone(note(7), 160, { type: 'sine', level: 0.07 }); tone(note(12), 260, { type: 'sine', level: 0.07, delay: 150 }); },
     comet: () => [0, 4, 7, 12, 16, 19, 24].forEach((n, i) => tone(note(n), 200, { level: 0.12, delay: i * 70 })),
+    // The alien: a diving trill as it comes, a warbling beam, a falling turn as it takes a star, a quick run up for a close
+    // encounter, a fanfare for a rescue and a long fall as it leaves with a star
+    alien: () => [19, 24, 17, 22, 15, 20, 12].forEach((n, i) => tone(note(n), 70, { type: 'square', level: 0.03, delay: i * 60 })),
+    beam: () => warble(2100, note(0), note(7), 0.05),
+    aboard: () => [7, 3, 0].forEach((n, i) => tone(note(n), 150, { level: 0.08, delay: i * 120 })),
+    encounter: () => [0, 4, 7, 12, 16, 19].forEach((n, i) => tone(note(n), 90, { type: 'square', level: 0.04, delay: i * 50 })),
+    rescue: () => [0, 4, 7, 12, 7, 12, 16, 24].forEach((n, i) => tone(note(n), i === 7 ? 420 : 130, { level: 0.1, delay: i * 95 })),
+    abducted: () => { tone(note(3), 260, { to: note(-2), level: 0.08 }); tone(note(-2), 420, { to: note(-9), level: 0.08, delay: 280 }); },
     over: () => [12, 7, 4, 0].forEach((n, i) => tone(note(n), 240, { level: 0.1, delay: i * 150 })),
     best: () => [0, 4, 7, 12, 16].forEach((n, i) => tone(note(n), 260, { level: 0.12, delay: i * 110 }))
   };
@@ -1305,21 +1371,20 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   };
   const setFire = (lives) => banner.style.setProperty('--bn-fire', (Math.max(0, lives) / LIVES).toFixed(2));
   const resetFire = () => { banner.classList.remove('bn-burning'); banner.style.removeProperty('--bn-fire'); };
-  const launch = (x, y) => {
+  const fire = (x, y, family) => {
     const now = performance.now(), shot = shots.find((s) => s.until <= now), bloom = blooms.find((s) => s.until <= now);
-    if (!shot || !bloom) return;
+    if (!shot || !bloom || blooms.filter((g) => g.until > now).length >= (game.twin ? 12 : 6)) return false;
     // From the chimney, or from the forest when a narrow banner crops the cabin; blooms stay above the trees
     const b = banner.getBoundingClientRect(), p = puffBox.getBoundingClientRect(), px = p.left - b.left;
     const from = px >= 0 && px <= b.width ? { x: px, y: p.top - b.top } : { x: b.width / 2, y: b.height * 0.85 };
     const toY = Math.min(y, b.height * 0.8), ms = Math.min(450, Math.max(160, Math.hypot(x - from.x, toY - from.y) / 2));
     const turn = `rotate(${Math.atan2(from.y - toY, from.x - x).toFixed(3)}rad)`;
     shot.until = now + ms;
-    sound.spark();
     shot.el.animate([
       { opacity: 1, transform: `translate(${from.x.toFixed(1)}px, ${from.y.toFixed(1)}px) ${turn}` },
       { opacity: 1, transform: `translate(${x.toFixed(1)}px, ${toY.toFixed(1)}px) ${turn}` }
     ], { duration: ms, easing: 'cubic-bezier(.3,.6,.5,1)' });
-    Object.assign(bloom, { until: now + ms + BLOOM_MS, start: now + ms, x, y: toY, r: b.height * 0.2, gen: 0, family: { hits: 0 } });
+    Object.assign(bloom, { until: now + ms + BLOOM_MS, start: now + ms, x, y: toY, r: b.height * 0.2, gen: 0, family });
     const to = `translate(${x.toFixed(1)}px, ${toY.toFixed(1)}px)`;
     bloom.el.animate([
       { opacity: 0.95, transform: `${to} scale(.12)` },
@@ -1327,6 +1392,13 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       { opacity: 0.55, transform: `${to} scale(1.03)`, offset: BLOOM_ACTIVE },
       { opacity: 0, transform: `${to} scale(1.08)` }
     ], { duration: BLOOM_MS, delay: ms, easing: 'ease-out' });
+    return true;
+  };
+  // A click sends a spark, or with twin sparks, for rescuing a star from the alien, two side by side that share one chain, as
+  // Galaga's dual fighter fires two shots
+  const launch = (x, y) => {
+    const family = { hits: 0 }, fired = (game.twin ? [x - game.h * 0.1, x + game.h * 0.1] : [x]).filter((at) => fire(at, y, family));
+    if (fired.length) sound.spark();
   };
   // A larger star reaches a bloom a little sooner
   const bloomAt = (x, y, reach, now) => allBlooms.find((g) => {
@@ -1389,11 +1461,121 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     game.left -= count;
     return count;
   };
-  // Visitors: a satellite worth a bonus, an airliner that costs points, and a rare golden comet that sets off an aurora
-  // clearing the sky of stars. They take turns, one every 13 to 22 s or so, the comet last.
+  // The alien's flight: legs along smooth paths (Catmull-Rom curves through points) and a hover, sampled every 40 ms for its
+  // keyframes and for where it is. It turns smoothly toward where it's going, and faces down while it hovers.
+  const ALIEN_STEP = 40;
+  const smoothPath = (pts) => {
+    const out = [];
+    pts.slice(0, -1).forEach((p1, i) => {
+      const p0 = pts[Math.max(0, i - 1)], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+      for (let k = 0; k < 16; k++) {
+        const u = k / 16;
+        out.push([0, 1].map((c) => 0.5 * (2 * p1[c] + (p2[c] - p0[c]) * u + (2 * p0[c] - 5 * p1[c] + 4 * p2[c] - p3[c]) * u * u + (3 * p1[c] - p0[c] - 3 * p2[c] + p3[c]) * u ** 3)));
+      }
+    });
+    out.push(pts[pts.length - 1]);
+    let d = 0;
+    return out.map(([x, y], i) => ({ x, y, d: (d += i ? Math.hypot(x - out[i - 1][0], y - out[i - 1][1]) : 0) }));
+  };
+  const pointAlong = (path, d) => {
+    let i = 1;
+    while (i < path.length - 1 && path[i].d < d) i++;
+    const a = path[i - 1], b = path[i], f = b.d > a.d ? clamp01((d - a.d) / (b.d - a.d)) : 0;
+    return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
+  };
+  // Gliding in at a steady speed and slowing to a stop over the last fifth of the time, or setting off from a stop the same way
+  const GLIDE = 0.8, glideIn = (u) => (u < GLIDE ? u : u - (u - GLIDE) ** 2 / (2 * (1 - GLIDE))) * 2 / (1 + GLIDE), setOff = (u) => 1 - glideIn(1 - u);
+  const fly = (legs) => {
+    const track = [], last = legs[legs.length - 1];
+    legs.forEach((leg) => {
+      const len = leg.path ? leg.path[leg.path.length - 1].d : 0;
+      for (let t = 0; t < leg.ms; t += ALIEN_STEP) track.push(leg.path ? pointAlong(leg.path, len * leg.ease(t / leg.ms)) : { x: leg.x, y: leg.y, hold: true });
+    });
+    track.push(last.path ? pointAlong(last.path, Infinity) : { x: last.x, y: last.y, hold: true });
+    let heading = 0;
+    track.forEach((p, i) => {
+      const a = track[Math.max(0, i - 1)], b = track[Math.min(track.length - 1, i + 1)];
+      let aim = p.hold || Math.hypot(b.x - a.x, b.y - a.y) < 0.01 ? 0 : Math.atan2(b.y - a.y, b.x - a.x) - Math.PI / 2;
+      aim += Math.round((heading - aim) / (2 * Math.PI)) * 2 * Math.PI;
+      heading = i ? heading + (aim - heading) * (1 - Math.exp(-ALIEN_STEP / 110)) : aim;
+      p.turn = heading * 180 / Math.PI;
+    });
+    return track;
+  };
+  const trackAt = (v, now) => {
+    const f = Math.min(v.track.length - 1, Math.max(0, (now - v.start) / ALIEN_STEP)), i = Math.min(v.track.length - 2, Math.floor(f)), a = v.track[i], b = v.track[i + 1], k = f - i;
+    return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k, turn: a.turn + (b.turn - a.turn) * k };
+  };
+  // The alien comes in from the top in a swoop with a loop, as Galaga's do. With a caught star in reach, it then glides to
+  // hover over it, lowers its tractor beam, lifts the star aboard and swoops off with it; otherwise it swoops across and out.
+  // It picks among the stars caught lately, whose places in the sky new catches won't take while it flies.
+  const sendAlien = (now) => {
+    const { w, h } = game, span = Math.min(w, 1500), left = (w - span) / 2, el = visitorPiece.alien, speed = h * 0.95 / 1000, r = h * 0.15;
+    const fits = (x) => x > left + h * 0.25 && x < left + span - h * 0.25, sides = (x) => [1, -1].filter((d) => fits(x - d * h * 0.9) && fits(x - d * h * 0.4));
+    const choices = game.stars.slice(-28).filter((st) => st.y > h * 0.36 && st.y < h * 0.84 && sides(st.x).length), prey = choices[Math.floor(Math.random() * choices.length)];
+    const dirs = prey ? sides(prey.x) : [1, -1], dir = dirs[Math.floor(Math.random() * dirs.length)];
+    const cx = prey ? prey.x - dir * h * 0.55 : (dir > 0 ? left + h * 0.6 : left + span - h * 0.6) + dir * Math.random() * Math.max(0, span - h * 2.4), cy = h * 0.4;
+    // Down from above the banner into a loop, around once and a quarter
+    const entry = [[cx - dir * h * 0.35, -h * 0.25], ...[1, 0.75, 0.5, 0.25, 0, -0.25, -0.5, -0.75, -1, -1.25, -1.5].map((a) => [cx + dir * r * Math.cos(a * Math.PI), cy + r * Math.sin(a * Math.PI)])];
+    const legs = [], move = (pts, ease) => {
+      const path = smoothPath(pts), len = path[path.length - 1].d;
+      legs.push({ path, ease, ms: Math.round((ease === glideIn || ease === setOff ? 2 / (1 + GLIDE) : 1) * len / speed / ALIEN_STEP) * ALIEN_STEP });
+    };
+    const v = { kind: 'alien', el, start: now, reach: h * 0.085, hit: false, prey, parts: [] };
+    if (prey) {
+      // Low enough to stay clear of the score line
+      const hx = prey.x, hy = Math.max(h * 0.2, prey.y - h * 0.24), s = h * 0.19;
+      move([...entry, [cx + dir * h * 0.3, cy + r * 0.9], [hx, hy]], glideIn);
+      legs.push({ x: hx, y: hy, ms: 2600 });
+      move([[hx, hy], [hx + dir * h * 0.3, hy + h * 0.2], [hx + dir * h * 0.75, hy + h * 0.22], [hx + dir * h * 1.1, hy - h * 0.05], [hx + dir * h * 1.25, -h * 0.3]], setOff);
+      // The beam opens in steps, holds and closes; the star rises up it, turning, and is aboard as it closes
+      const over = now + legs[0].ms, cargo = el.querySelector('.bn-caught'), at = (x, y, rest) => `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) ${rest}`;
+      Object.assign(v, { beamAt: over + 250, liftAt: over + 700, gotAt: over + 2100 });
+      el.style.setProperty('--len', `${(prey.y - hy - s * 0.3 + h * 0.06).toFixed(1)}px`);
+      cargo.style.setProperty('--c', prey.color);
+      v.parts.push(
+        el.querySelector('.bn-beam').animate([
+          { transform: 'scaleY(0)', easing: 'steps(5, end)' }, { transform: 'scaleY(1)', offset: 0.2 },
+          { transform: 'scaleY(1)', offset: 0.84, easing: 'steps(3, end)' }, { transform: 'scaleY(0)' }
+        ], { duration: 2200, delay: v.beamAt - now }),
+        cargo.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay: v.gotAt - now - 100, fill: 'forwards' })
+      );
+      v.lift = prey.el.animate([
+        { opacity: 0.9, transform: at(prey.x, prey.y, 'scale(.7) rotate(90deg)') },
+        { opacity: 1, transform: at(hx, hy + s * 0.35, 'scale(.55) rotate(540deg)'), offset: 0.9 },
+        { opacity: 0, transform: at(hx, hy, 'scale(.3) rotate(600deg)') }
+      ], { duration: v.gotAt - v.liftAt, delay: v.liftAt - now, easing: 'ease-in', fill: 'forwards' });
+    } else move([...entry, [cx + dir * h * 0.5, h * 0.62], [cx + dir * h, h * 0.5], [cx + dir * h * 1.4, h * 0.2], [cx + dir * h * 1.6, -h * 0.3]], (u) => u);
+    v.track = fly(legs);
+    v.ms = (v.track.length - 1) * ALIEN_STEP;
+    el.classList.add('bn-flying');
+    v.anim = el.animate(v.track.map((p) => ({ opacity: 1, transform: `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) rotate(${p.turn.toFixed(1)}deg)` })), { duration: v.ms, easing: 'linear' });
+    game.visitors.push(v);
+    sound.alien();
+  };
+  // A star the alien was lifting, or had aboard, floats back down to its place from wherever it is
+  const releaseStar = (v, now, ship) => {
+    const { prey } = v, m = new DOMMatrix(getComputedStyle(prey.el).transform), from = now >= v.gotAt ? ship : { x: m.e, y: m.f };
+    v.lift.cancel();
+    if (now < v.liftAt) return;
+    prey.el.animate([
+      { opacity: 1, transform: `translate(${from.x.toFixed(1)}px, ${from.y.toFixed(1)}px) scale(.55) rotate(0deg)` },
+      { opacity: 0.9, transform: `translate(${prey.x.toFixed(1)}px, ${prey.y.toFixed(1)}px) scale(.7) rotate(450deg)` }
+    ], { duration: 900, easing: 'cubic-bezier(.3,.7,.4,1)' });
+  };
+  // When the alien has gone, its beam, the star on its back and its flapping are reset for the next
+  const alienGone = (v) => {
+    v.parts.forEach((a) => a.cancel());
+    v.el.classList.remove('bn-flying');
+  };
+  // Visitors: a satellite worth a bonus, an airliner that costs a life, an alien worth more, which may try to take a star, and
+  // a rare golden comet that sets off an aurora clearing the sky of stars. They take turns, one every 13 to 22 s or so, a
+  // satellite and an airliner in either order, then the alien, then the comet.
   const sendVisitor = (now) => {
-    if (!game.bag.length) game.bag = Math.random() < 0.5 ? ['comet', 'plane', 'satellite'] : ['comet', 'satellite', 'plane'];
-    const kind = game.bag.pop(), { w, h } = game, span = Math.min(w, 1500), left = (w - span) / 2, rightward = Math.random() < 0.5;
+    if (!game.bag.length) game.bag = Math.random() < 0.5 ? ['comet', 'alien', 'plane', 'satellite'] : ['comet', 'alien', 'satellite', 'plane'];
+    const kind = game.bag.pop();
+    if (kind === 'alien') { sendAlien(now); return; }
+    const { w, h } = game, span = Math.min(w, 1500), left = (w - span) / 2, rightward = Math.random() < 0.5;
     const near = left - 30, far = left + span + 30, x0 = rightward ? near : far, x1 = rightward ? far : near, pace = Math.max(0.6, Math.min(1, span / 1440));
     const y0 = h * (kind === 'plane' ? 0.32 + Math.random() * 0.14 : kind === 'comet' ? 0.04 : 0.06 + Math.random() * 0.1);
     const y1 = y0 + h * (kind === 'plane' ? (Math.random() - 0.5) * 0.08 : kind === 'comet' ? 0.38 : 0.1), ms = { satellite: 8000, plane: 13000, comet: 6500 }[kind] * pace;
@@ -1416,6 +1598,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       v.hit = true;
       game.complaints += 1;
       game.missed += 1;
+      game.twin = false;
       setFire(LIVES - game.missed);
       floatText('−1 life, and air traffic control has questions', x, y + game.h * 0.2, '255 150 130');
       sound.plane();
@@ -1433,6 +1616,37 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       // It leaves the game when the dip ends, rather than at the end of its old path
       v.start = now;
       v.ms = 2200;
+      return true;
+    }
+    if (v.kind === 'alien') {
+      // A close encounter: it spins away up out of the sky. Hit with a star aboard, it lets the star go, which brings twin sparks,
+      // as rescuing a captured fighter in Galaga brings two; hit while its beam is down, it drops the star, without them.
+      const { h } = game, ship = trackAt(v, now), aboard = v.prey && now >= v.gotAt, at = (dy, turn, scale) => `translate(${ship.x.toFixed(1)}px, ${(ship.y + dy * h).toFixed(1)}px) rotate(${(ship.turn + turn).toFixed(1)}deg) scale(${scale})`;
+      v.hit = true;
+      game.points += 1000;
+      game.encounters += 1;
+      v.parts.forEach((a) => a.cancel());
+      if (v.prey) releaseStar(v, now, ship);
+      v.anim.cancel();
+      v.anim = v.el.animate([
+        { opacity: 1, transform: at(0, 0, 1) },
+        { opacity: 1, transform: at(-0.05, 180, 1.15), offset: 0.25 },
+        { opacity: 0, transform: at(-0.8, 720, 0.25) }
+      ], { duration: 900, easing: 'ease-in' });
+      v.start = now;
+      v.ms = 900;
+      sparkle({ x: ship.x, y: ship.y, accent: true, base: 1, last: 0 }, now);
+      scatter(ship.x, ship.y, ['134 242 210', '183 155 255', '230 194 255'], 12, 10);
+      if (aboard) {
+        game.twin = true;
+        game.rescued += 1;
+        floatText('Star rescued! +1,000', ship.x, ship.y, '134 242 210', true);
+        floatText('Twin sparks!', ship.x, ship.y + h * 0.17, '255 226 150', true);
+        sound.rescue();
+      } else {
+        floatText('Close encounter! +1,000', ship.x, ship.y, '134 242 210', true);
+        sound.encounter();
+      }
       return true;
     }
     v.anim.cancel();
@@ -1463,23 +1677,27 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     }
     return false;
   };
-  // A burst: a sparkle, shards in the star's color, more for a larger star, and its points. Then the star stays where it was,
-  // twinkling, unless that would crowd the moon.
-  const burst = (s, x, y, times, now) => {
-    sparkle({ x, y, accent: true, base: 1, last: 0 }, now);
-    for (let i = 4 + Math.round(4 * s.size); i > 0; i--) {
-      const el = shards[shardNext++ % shards.length], a = Math.random() * 2 * Math.PI, d = 10 + Math.random() * 16 + 14 * s.size;
-      el.style.setProperty('--c', s.color);
+  // Shards flying out from a point, in turn in the colors given, farther by far
+  const scatter = (x, y, colors, count, far) => {
+    for (let i = 0; i < count; i++) {
+      const el = shards[shardNext++ % shards.length], a = Math.random() * 2 * Math.PI, d = 10 + Math.random() * 16 + far;
+      el.style.setProperty('--c', colors[i % colors.length]);
       el.animate([
         { opacity: 1, transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)` },
         { opacity: 0, transform: `translate(${(x + Math.cos(a) * d).toFixed(1)}px, ${(y + Math.sin(a) * d).toFixed(1)}px) scale(.4)` }
       ], { duration: 450 + Math.random() * 250, easing: 'cubic-bezier(.15,.7,.35,1)' });
     }
+  };
+  // A burst: a sparkle, shards in the star's color, more for a larger star, and its points. Then the star stays where it was,
+  // twinkling, unless that would crowd the moon.
+  const burst = (s, x, y, times, now) => {
+    sparkle({ x, y, accent: true, base: 1, last: 0 }, now);
+    scatter(x, y, [s.color], 4 + Math.round(4 * s.size), 14 * s.size);
     if (Math.hypot(x - game.moonX, y - game.moonY) > game.moonClear) {
       const star = caughtStars[caughtNext++ % caughtStars.length], to = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
       star.getAnimations().forEach((a) => a.cancel());
       star.style.setProperty('--c', s.color);
-      game.stars.push({ x, y });
+      game.stars.push({ x, y, el: star, color: s.color });
       star.animate([
         { opacity: 0, transform: `${to} scale(.2) rotate(0deg)` },
         { opacity: 1, transform: `${to} scale(${(1.5 + 0.5 * s.size).toFixed(2)}) rotate(45deg)`, offset: 0.4 },
@@ -1535,16 +1753,17 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     lightTrees({ x, y: h * 0.5, accent: false, base: 0.5 + 0.35 * s.size }, now);
     if (Math.abs(x - cabin.x) < h * 0.4) stoke();
     // What it cost
-    const direct = game.cabinVisible && Math.abs(x - cabin.x) < h * 0.16;
+    const direct = game.cabinVisible && Math.abs(x - cabin.x) < h * 0.16, twin = game.twin;
     game.missed += direct ? 2 : 1;
+    game.twin = false;
     setFire(LIVES - game.missed);
-    floatText(direct ? 'Direct hit! −2 lives' : '−1 life', x, y - h * 0.14, '255 196 130', direct);
+    floatText(`${direct ? 'Direct hit! −2 lives' : '−1 life'}${twin ? ', twin sparks lost' : ''}`, x, y - h * 0.14, '255 196 130', direct);
     sound.landing(s.size, direct);
     score.animate([{ color: '#FFB46A' }, { color: 'rgba(232,238,255,.95)' }], { duration: 800, easing: 'ease-out' });
   };
   const showScore = () => {
     const left = Math.max(0, LIVES - game.missed), beat = game.best && game.points > game.best;
-    score.textContent = `${beat ? 'New best! ' : ''}${number(game.points)} points, ${left} ${left === 1 ? 'life' : 'lives'} left`;
+    score.textContent = `${beat ? 'New best! ' : ''}${number(game.points)} points, ${left} ${left === 1 ? 'life' : 'lives'} left${game.twin ? ', twin sparks' : ''}`;
   };
   // The end of a game worth celebrating. After the last landing, the caught stars join into a constellation, named for its
   // size, the aurora surges, and credits with the game's numbers rise from behind the trees. A click skips to the end.
@@ -1571,7 +1790,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       timers.push(setTimeout(() => sparkle({ x: b.x, y: b.y, accent: true, base: 1, last: 0 }, performance.now()), delay + 120));
     });
     const names = CONSTELLATIONS.find(([least]) => played.caught >= least)[1], seconds = Math.round((performance.now() - played.start) / 1000);
-    const rows = [...(newBest ? ['New best!', ''] : []), 'Your constellation', names[Math.floor(Math.random() * names.length)], '', `${played.caught} stars caught`, `Best catch +${number(played.bestCatch)}`, ...(played.bestChain > 1 ? [`Best chain ×${played.bestChain}`] : []), `Reached the ${played.shower.name}`, ...(played.satellites ? [`Satellites caught: ${played.satellites}`] : []), ...(played.comets ? [`Comets caught: ${played.comets}`] : []), ...(played.complaints ? [`Air traffic complaints: ${played.complaints}`] : []), ...(played.smooth ? [`Smooth flights: ${played.smooth}`] : []), `Time ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Moon maps: NASA', 'Thanks for playing'];
+    const rows = [...(newBest ? ['New best!', ''] : []), 'Your constellation', names[Math.floor(Math.random() * names.length)], '', `${played.caught} stars caught`, `Best catch +${number(played.bestCatch)}`, ...(played.bestChain > 1 ? [`Best chain ×${played.bestChain}`] : []), `Reached the ${played.shower.name}`, ...(played.satellites ? [`Satellites caught: ${played.satellites}`] : []), ...(played.comets ? [`Comets caught: ${played.comets}`] : []), ...(played.complaints ? [`Air traffic complaints: ${played.complaints}`] : []), ...(played.smooth ? [`Smooth flights: ${played.smooth}`] : []), ...(played.encounters ? [`Close encounters: ${played.encounters}`] : []), ...(played.rescued ? [`Stars rescued: ${played.rescued}`] : []), ...(played.abducted ? [`Stars abducted: ${played.abducted}`] : []), `Time ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Moon maps: NASA', 'Thanks for playing'];
     const heads = new Set(['New best!', 'Your constellation', 'Final score']);
     credits.replaceChildren(...rows.map((text) => (text ? Object.assign(document.createElement(heads.has(text) ? 'b' : 'span'), { textContent: text }) : document.createElement('i'))));
     const { h } = played, tall = credits.offsetHeight;
@@ -1614,8 +1833,11 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       s.el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500 }).onfinish = () => fall.cancel();
     });
     game.visitors.forEach((v) => {
+      const now = performance.now(), alien = v.kind === 'alien';
+      // An alien lets go of a star it was taking, so the constellation at the end is whole
+      if (alien && v.prey && !v.hit) releaseStar(v, now, trackAt(v, now));
       v.anim.pause();
-      v.el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500 }).onfinish = () => v.anim.cancel();
+      v.el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500 }).onfinish = () => { v.anim.cancel(); if (alien) alienGone(v); };
     });
     waveCard.getAnimations().forEach((a) => a.cancel());
     banner.classList.remove('bn-playing');
@@ -1698,9 +1920,24 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
           sound.smooth();
           changed = true;
         }
+        if (v.kind === 'alien') {
+          // An alien that got away with a star: it's gone from the sky, and from the constellation at the end
+          if (!v.hit && v.prey && now >= v.gotAt) {
+            v.prey.el.getAnimations().forEach((a) => a.cancel());
+            game.stars = game.stars.filter((st) => st !== v.prey);
+            game.abducted += 1;
+            floatText('Star abducted!', v.prey.x, v.prey.y, '183 155 255');
+            sound.abducted();
+          }
+          alienGone(v);
+        }
         return false;
       }
-      const x = v.x0 + (v.x1 - v.x0) * t, y = v.y0 + (v.y1 - v.y0) * t;
+      if (v.kind === 'alien' && !v.hit && v.prey) {
+        if (!v.beaming && now >= v.beamAt) { v.beaming = true; sound.beam(); }
+        if (!v.aboard && now >= v.gotAt) { v.aboard = true; sound.aboard(); }
+      }
+      const { x, y } = v.track ? trackAt(v, now) : { x: v.x0 + (v.x1 - v.x0) * t, y: v.y0 + (v.y1 - v.y0) * t };
       if (v.hit || !bloomAt(x, y, v.reach, now)) return true;
       changed = true;
       return visitorHit(v, x, y, now);
@@ -1711,7 +1948,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const startGame = () => {
     const now = performance.now(), b = banner.getBoundingClientRect(), moonBox = moonFace.getBoundingClientRect(), best = readScores().scores[0] || 0;
     const today = new Date(Date.now() + offset), peak = SHOWERS.find((s) => s.peaks.some(([m, d]) => today.getMonth() + 1 === m && today.getDate() === d));
-    game = { start: now, next: now + 300, points: 0, missed: 0, landed: 0, caught: 0, bestCatch: 0, bestChain: 1, stars: [], w: b.width, h: b.height, best, wave: -1, left: 0, shower: null, double: false, radiant: null, peak, order: peak ? [peak, ...SHOWERS.filter((s) => s !== peak)] : SHOWERS, visitors: [], bag: [], nextVisitor: now + 9000 + Math.random() * 5000, satellites: 0, comets: 0, complaints: 0, smooth: 0, cabinVisible: cabin.x > 0 && cabin.x < b.width, ground: b.height - 44 * Math.max(b.width / 1600, b.height / 240),
+    game = { start: now, next: now + 300, points: 0, missed: 0, landed: 0, caught: 0, bestCatch: 0, bestChain: 1, stars: [], w: b.width, h: b.height, best, wave: -1, left: 0, shower: null, double: false, radiant: null, peak, order: peak ? [peak, ...SHOWERS.filter((s) => s !== peak)] : SHOWERS, visitors: [], bag: [], nextVisitor: now + 9000 + Math.random() * 5000, satellites: 0, comets: 0, complaints: 0, smooth: 0, encounters: 0, rescued: 0, abducted: 0, twin: false, cabinVisible: cabin.x > 0 && cabin.x < b.width, ground: b.height - 44 * Math.max(b.width / 1600, b.height / 240),
       moonX: moonBox.left + moonBox.width / 2 - b.left, moonY: moonBox.top + moonBox.height / 2 - b.top, moonClear: moonBox.width * 1.5 };
     // The sound setting is shared with the bear game, which may have changed it
     try { soundOn = localStorage.getItem(SOUND_KEY) === '1'; } catch (e) { /* blocked */ }

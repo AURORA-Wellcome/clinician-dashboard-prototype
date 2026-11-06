@@ -346,9 +346,9 @@ print(len(html), 'bytes')
 # rises from low on one side, is highest where it passes nearest, then sinks toward the horizon, looking fastest and
 # brightest when nearest. The banner is treated as a panorama about 120 degrees wide and 18 tall, with the horizon at
 # 84% of its height (the ridges). Each crossing is sampled at even times, a steady ground speed, so the changes of
-# apparent speed come from the geometry alone. In the page's 600 s cycle the crossings take 135 and 150 s: slower than
-# the satellite throughout, though still 7 to 10 times an airliner's real speed on these paths. The plane looks smaller
-# in proportion to its distance, and it turns to follow its path.
+# apparent speed come from the geometry alone. In the page's 400 s cycle the crossings take 90 and 100 s: about as fast
+# as the satellite where the plane passes nearest, and slower for its size, though 10 to 15 times an airliner's real
+# speed on these paths. The plane looks smaller in proportion to its distance, and it turns to follow its path.
 FOV_X, FOV_Y, HORIZON = 120, 18, 84
 
 def pct(v):
