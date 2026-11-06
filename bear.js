@@ -246,7 +246,7 @@
     osc.stop(at + dur + 0.02);
   };
   // Drums: a kick, and noise with its lows cut away for the rest: [where the cut is, how long, how loud]
-  const DRUMS = { snare: [1800, 0.09, 0.05], clap: [1200, 0.12, 0.045], hat: [7000, 0.03, 0.014], open: [6500, 0.07, 0.016], rim: [2600, 0.025, 0.035], shaker: [6000, 0.045, 0.011] };
+  const DRUMS = { snare: [1800, 0.09, 0.05], clap: [1200, 0.12, 0.045], hat: [7000, 0.03, 0.014], open: [6500, 0.07, 0.016], rim: [2600, 0.025, 0.035], shaker: [6000, 0.045, 0.011], jingle: [8000, 0.06, 0.02] };
   const musicDrum = (at, kind, kickLevel = 0.08) => {
     const gain = audio.createGain();
     gain.gain.value = 0;
@@ -315,6 +315,31 @@
       if (chord) chord.forEach((n) => musicTone(midiHz(n), at, 0.28, 'square', 0.012 * v, { cutoff: 3000 }));
     } }
   };
+  // While the animal is invincible, from the bouncing star, its tune turns to bells: the melody an octave up on a glockenspiel,
+  // a twinkling run up and down through each bar's root, fifth and octave over two octaves, sleigh bells shaken on the
+  // offbeats, and the bass and drums as they were, 20% faster. Each animal's tune does this, so it stays the same piece, made
+  // special.
+  const STAR_TEMPO = 1.2, STAR_RUN = [24, 31, 36, 43, 48, 43, 36, 31];
+  // A struck bar: its note, ringing longest, and two higher partials, out of tune with it as a bar's are, which die away fast
+  const BELL_PARTIALS = [[1, 1, 1], [2.76, 0.35, 0.32], [5.4, 0.1, 0.14]];
+  const bell = (n, at, ring, level) => BELL_PARTIALS.forEach(([ratio, share, lasts]) => {
+    const osc = audio.createOscillator(), gain = audio.createGain(), end = at + ring * lasts;
+    gain.gain.value = 0;
+    osc.type = 'sine';
+    osc.frequency.value = midiHz(n) * ratio;
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(level * share, at + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, end);
+    osc.connect(gain).connect(music.out);
+    osc.start(at);
+    osc.stop(end + 0.02);
+  });
+  const starBells = ({ root, e, lead }, at, eighth) => {
+    if (lead) bell(lead[0] + 12, at, Math.max(0.5, lead[1] * eighth * 1.6), 0.05);
+    bell(root + STAR_RUN[e], at, 0.4, 0.02);
+    // (A shake: two quick hits of high noise)
+    if (e % 2) { musicDrum(at, 'jingle'); musicDrum(at + 0.035, 'jingle'); }
+  };
   // Notes are scheduled a little ahead, so a busy frame doesn't make them late
   const startMusic = (kind) => {
     if (music || !soundIsOn || !audio) return;
@@ -323,13 +348,17 @@
     out.gain.setValueAtTime(0, audio.currentTime);
     out.gain.linearRampToValueAtTime(MUSIC_LEVEL, audio.currentTime + 2.5);
     out.connect(audioOut);
-    music = { out, step: 0, at: audio.currentTime + 0.1, tempo: 1, timer: 0 };
+    music = { out, step: 0, at: audio.currentTime + 0.1, tempo: 1, timer: 0, star: false };
     const plan = () => {
       if (!music || music.out !== out) return;
       if (music.at < audio.currentTime) music.at = audio.currentTime + 0.05;
       while (music.at < audio.currentTime + 0.3) {
-        const step = 60 / song.bpm / (song.per || 2) / music.tempo;
-        song.play(song.steps[music.step], music.at, step);
+        const step = 60 / song.bpm / (song.per || 2) / music.tempo, s = song.steps[music.step];
+        // (An animal's tune, by eighth note with a root, can turn to bells; the finale's can't, and needn't)
+        if (music.star && s.root !== undefined) {
+          song.play({ ...s, lead: null }, music.at, step);
+          starBells(s, music.at, step);
+        } else song.play(s, music.at, step);
         music.at += step;
         music.step = (music.step + 1) % song.steps.length;
       }
@@ -1770,10 +1799,12 @@
           shower(v.x, v.y, 18, 'rgb(214,226,255)');
         } else if (v.x < -80 || v.x > W + 80) visitors.splice(i, 1);
       }
-      // The music picks up a little as the plane being ridden speeds up, up to 30% faster at the sound barrier
+      // The music picks up a little as the plane being ridden speeds up, up to 30% faster at the sound barrier, and turns to
+      // bells while the animal is invincible, 20% faster again (at most 45% faster in all)
       if (music) {
         const p = ridePlane && !ridePlane.boomed && visitors.includes(ridePlane) ? ridePlane : null;
-        music.tempo = p ? 1 + 0.15 * Math.max(0, (p.turning ? p.turnSpeed : Math.abs(p.vx)) / PLANE_SPEED - 1) : 1;
+        music.star = me.power > 0 && phase === 'play';
+        music.tempo = Math.min(1.45, (p ? 1 + 0.15 * Math.max(0, (p.turning ? p.turnSpeed : Math.abs(p.vx)) / PLANE_SPEED - 1) : 1) * (music.star ? STAR_TEMPO : 1));
       }
       for (let i = pops.length - 1; i >= 0; i--) { pops[i].age += dt; if (pops[i].age > pops[i].life) pops.splice(i, 1); }
       for (let i = sparks.length - 1; i >= 0; i--) {
