@@ -14,9 +14,18 @@ import sys
 from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPTS = ['bear.js', 'notes.js', 'support.js']
-# A quoted reference to one of them, from any page: an optional ./ or ../ path, the name, and any old stamp
-REF = re.compile(r"""(?<=['"])((?:\.{1,2}/)*)(""" + '|'.join(re.escape(s) for s in SCRIPTS) + r""")(\?v=[0-9a-f]*)?(?=['"])""")
+
+
+def scripts(staged):
+    """The site's scripts, every .js file at its root, so a new one is stamped too: on disk, or as staged"""
+    if staged:
+        return sorted(p for p in git('ls-files', '-z', '--', '*.js').decode().split('\0') if p and '/' not in p)
+    return sorted(p.name for p in ROOT.glob('*.js'))
+
+
+def reference(names):
+    """A quoted reference to one of them, from any page: an optional ./ or ../ path, the name, and any old stamp"""
+    return re.compile(r"""(?<=['"])((?:\.{1,2}/)*)(""" + '|'.join(re.escape(n) for n in names) + r""")(\?v=[0-9a-f]*)?(?=['"])""")
 
 
 def git(*args):
@@ -43,14 +52,14 @@ def stamped(page, text, versions):
         prefix, name = m.group(1), m.group(2)
         return f'{prefix}{name}?v={versions[name]}' if leads_to_root(page, prefix) else m.group(0)
 
-    return REF.sub(fix, text)
+    return reference(versions).sub(fix, text) if versions else text
 
 
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else ''
     staged = mode == '--staged'
     pages = [p for p in git('ls-files', '-z', '*.html').decode().split('\0') if p]
-    versions = {s: hashlib.sha256(contents(s, staged)).hexdigest()[:10] for s in SCRIPTS}
+    versions = {s: hashlib.sha256(contents(s, staged)).hexdigest()[:10] for s in scripts(staged)}
     stale = []
     for page in pages:
         # (Bytes in and out, so line endings and everything else stay exactly as they were)
