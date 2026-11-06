@@ -1,0 +1,4 @@
+#!/bin/sh
+# Refuses a commit whose staged pages don't carry the staged scripts' stamps, so no build pairs a page with a script it
+# doesn't name (tools/stamp.py). Turned on per clone with: git config core.hooksPath tools/hooks
+exec python3 "$(git rev-parse --show-toplevel)/tools/stamp.py" --staged

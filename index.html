@@ -2622,7 +2622,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const loadBear = (then) => {
     if (!bearLoad) {
       bearLoad = new Promise((resolve, reject) => {
-        document.head.append(Object.assign(document.createElement('script'), { src: './bear.js', onload: resolve, onerror: reject }));
+        document.head.append(Object.assign(document.createElement('script'), { src: './bear.js?v=f6157f8ec1', onload: resolve, onerror: reject }));
       });
       // If it can't load, the sky works as before, and a later click tries again
       bearLoad.catch(() => { bearLoad = null; });
@@ -3056,6 +3056,6 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   render();
 })();
 </script>
-<script src="./notes.js" data-version="landing" data-page="landing"></script>
+<script src="./notes.js?v=5eaf0e5c5f" data-version="landing" data-page="landing"></script>
 </body>
 </html>
