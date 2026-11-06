@@ -139,9 +139,10 @@ img{display:block;max-width:100%;height:auto}
 .bn-wave{position:absolute;left:50%;top:26%;opacity:0;transform:translateX(-50%);font:400 16px/1.6 "AURORA Arcade",ui-monospace,Menlo,Consolas,monospace;text-align:center;text-transform:uppercase;white-space:nowrap;text-shadow:0 2px 0 #060D26,0 0 9px #060D26,0 0 3px #060D26;-webkit-font-smoothing:none}
 .bn-wave b{display:block;font-weight:400;color:#FFD66B}
 .bn-wave span{display:block;color:rgb(var(--c,232 238 255))}
-.bn-sound{position:absolute;right:0;bottom:0;display:none;padding:10px 12px 8px;font-size:.75rem;line-height:1;color:rgba(232,238,255,.85);text-shadow:0 0 4px #04071A;cursor:pointer;pointer-events:auto}
+.bn-sound{position:absolute;right:0;bottom:0;display:none;align-items:center;gap:5px;padding:8px 12px;font-size:.8125rem;line-height:1;color:rgba(232,238,255,.9);text-shadow:0 0 4px #04071A;cursor:pointer;pointer-events:auto}
+.bn-sound svg{flex:none;filter:drop-shadow(0 0 2px #04071A)}
 .bn-sound:hover{text-decoration:underline;text-underline-offset:2px}
-.bn-playing .bn-sound,.bn-finale .bn-sound{display:block}
+.bn-playing .bn-sound,.bn-finale .bn-sound{display:flex}
 @media (max-width:480px){.bn-wave{font-size:12px}}
 @media (max-width:340px){.bn-credits,.bn-wave{font-size:10px}}
 .bn-score{position:absolute;left:50%;top:10px;transform:translateX(-50%);font-size:.875rem;font-weight:600;line-height:1;letter-spacing:.02em;color:rgba(232,238,255,.95);text-shadow:0 0 6px #060D26,0 0 2px #060D26;white-space:nowrap;opacity:0;transition:opacity .9s ease-in-out}
@@ -199,6 +200,8 @@ img{display:block;max-width:100%;height:auto}
 .arcade form,.arcade-done{margin-top:20px;text-align:center}
 .arcade p{margin:0 0 8px}
 .arcade-made{color:#8CF0D6;text-shadow:0 0 12px rgba(140,240,214,.75)}
+.arcade p.arcade-yours{margin:0 0 6px;font-size:.75em;line-height:1.9;color:#8CF0D6;text-shadow:0 0 12px rgba(140,240,214,.75)}
+.arcade-yours span{display:block;font-size:.8333em;color:#C9B8FF;text-shadow:0 0 10px rgba(201,184,255,.6)}
 .arcade p.arcade-game{margin:-12px 0 18px;font-size:.75em;text-align:center;color:#C9B8FF;text-shadow:0 0 10px rgba(201,184,255,.6)}
 .arcade label{display:block;font-size:.75em;color:#E8EEFF}
 .arcade input{display:block;box-sizing:content-box;width:4.2em;margin:8px auto 10px;padding:4px 0 8px .4em;border:0;border-radius:0;color:#FFE27A;background:linear-gradient(90deg,#FFC44D 0 1em,transparent 1em) .4em 100%/1.4em 4px repeat-x;font:inherit;font-size:1.5em;line-height:1.2;letter-spacing:.4em;text-transform:uppercase;text-shadow:0 0 12px rgba(255,214,120,.75);caret-color:#FFE27A;outline:none}
@@ -1125,6 +1128,9 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const tone = (freq, ms, { to = freq, type = 'triangle', level = 0.16, delay = 0 } = {}) => {
     if (!soundOn || !audio) return;
     const start = audio.currentTime + delay / 1000, end = start + ms / 1000, osc = audio.createOscillator(), gain = audio.createGain();
+    // A gain starts at full strength, so it's silenced at once: a source can start a fraction of a sample early, and its first
+    // sample would come through at full strength, a click
+    gain.gain.value = 0;
     osc.type = type;
     osc.frequency.setValueAtTime(freq, start);
     osc.frequency.exponentialRampToValueAtTime(to, end);
@@ -1135,15 +1141,19 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     osc.start(start);
     osc.stop(end + 0.02);
   };
-  const rumble = (ms, level) => {
-    if (!soundOn || !audio) return;
+  const noise = () => {
     if (!noiseData) {
       noiseData = audio.createBuffer(1, audio.sampleRate, audio.sampleRate);
       const samples = noiseData.getChannelData(0);
       for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
     }
+    return noiseData;
+  };
+  const rumble = (ms, level) => {
+    if (!soundOn || !audio) return;
     const start = audio.currentTime, end = start + ms / 1000, source = audio.createBufferSource(), low = audio.createBiquadFilter(), gain = audio.createGain();
-    source.buffer = noiseData;
+    gain.gain.value = 0;
+    source.buffer = noise();
     low.type = 'lowpass';
     low.frequency.setValueAtTime(420, start);
     low.frequency.exponentialRampToValueAtTime(70, end);
@@ -1162,11 +1172,111 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     wave: () => { tone(note(-5), 120, { level: 0.1 }); tone(note(2), 170, { level: 0.1, delay: 110 }); },
     satellite: () => { tone(note(16), 80, { type: 'square', level: 0.04 }); tone(note(21), 120, { type: 'square', level: 0.04, delay: 90 }); },
     plane: () => { tone(330, 230, { to: 247, type: 'sawtooth', level: 0.05 }); tone(262, 330, { to: 175, type: 'sawtooth', level: 0.05, delay: 240 }); },
+    smooth: () => { tone(note(7), 160, { type: 'sine', level: 0.07 }); tone(note(12), 260, { type: 'sine', level: 0.07, delay: 150 }); },
     comet: () => [0, 4, 7, 12, 16, 19, 24].forEach((n, i) => tone(note(n), 200, { level: 0.12, delay: i * 70 })),
     over: () => [12, 7, 4, 0].forEach((n, i) => tone(note(n), 240, { level: 0.1, delay: i * 150 })),
     best: () => [0, 4, 7, 12, 16].forEach((n, i) => tone(note(n), 260, { level: 0.12, delay: i * 110 }))
   };
-  const showSoundSetting = () => { soundToggle.textContent = `Sound: ${soundOn ? 'on' : 'off'}`; };
+  // Music during a game, with sound on: a tune written for it rather than taken from another, made here like the other sounds,
+  // as the bear game's is. Arcade music for a sky under fire: 16 bars in D minor at 132 beats a minute, so about 29 s before it
+  // repeats, with a driving triangle bass, a quiet square-wave arpeggio through each chord, a soft triangle melody over it and
+  // drums. Each wave plays it a little faster, up to 18%. SKY_LEVEL keeps it under the effects.
+  const SKY_BPM = 132, SKY_LEVEL = 0.5, SKY_BASS = [0, 0, 12, 0, 0, 12, 7, 12], SKY_ARP = [0, 1, 2, 3, 2, 1, 0, 2];
+  // Each bar: its chord's root, a MIDI note for the bass, whether the chord is major, and the melody as [note, eighths]
+  const SKY_TUNE = [
+    [50, 0, [[69, 4], [74, 4]]], [46, 1, [[77, 6], [74, 2]]], [48, 1, [[76, 4], [79, 4]]], [45, 0, [[76, 8]]],
+    [50, 0, [[81, 4], [77, 2], [74, 2]]], [46, 1, [[74, 4], [77, 4]]], [43, 0, [[79, 2], [77, 2], [74, 4]]], [45, 1, [[73, 4], [76, 4]]],
+    [50, 0, [[74, 2], [77, 2], [81, 4]]], [41, 1, [[84, 4], [81, 4]]], [48, 1, [[79, 6], [76, 2]]], [43, 0, [[74, 4], [79, 4]]],
+    [46, 1, [[77, 4], [74, 2], [77, 2]]], [48, 1, [[79, 4], [81, 2], [79, 2]]], [45, 1, [[76, 4], [73, 4]]], [45, 1, [[69, 8]]]
+  ];
+  // The tune by eighth note: the bar's chord, where in the bar, and any melody note starting there
+  const SKY_STEPS = SKY_TUNE.flatMap(([root, major, line]) => {
+    const leads = Array(8).fill(null);
+    let at = 0;
+    line.forEach(([n, len]) => { leads[at] = [n, len]; at += len; });
+    return leads.map((lead, e) => ({ root, major, e, lead }));
+  });
+  let skyMusic = null;
+  const midiHz = (n) => 440 * 2 ** ((n - 69) / 12);
+  const skyTone = (freq, at, dur, type, level) => {
+    const osc = audio.createOscillator(), gain = audio.createGain();
+    gain.gain.value = 0;
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, at);
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(level, at + 0.008);
+    gain.gain.exponentialRampToValueAtTime(level * 0.5, at + dur * 0.8);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    osc.connect(gain).connect(skyMusic.out);
+    osc.start(at);
+    osc.stop(at + dur + 0.02);
+  };
+  const skyDrum = (at, kind) => {
+    const gain = audio.createGain();
+    gain.gain.value = 0;
+    gain.connect(skyMusic.out);
+    if (kind === 'kick') {
+      const osc = audio.createOscillator();
+      osc.frequency.setValueAtTime(140, at);
+      osc.frequency.exponentialRampToValueAtTime(45, at + 0.09);
+      gain.gain.setValueAtTime(0.07, at);
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.1);
+      osc.connect(gain);
+      osc.start(at);
+      osc.stop(at + 0.12);
+      return;
+    }
+    const source = audio.createBufferSource(), high = audio.createBiquadFilter(), len = kind === 'snare' ? 0.09 : 0.03;
+    source.buffer = noise();
+    high.type = 'highpass';
+    high.frequency.value = kind === 'snare' ? 1800 : 7000;
+    gain.gain.setValueAtTime(kind === 'snare' ? 0.04 : 0.012, at);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + len);
+    source.connect(high).connect(gain);
+    source.start(at, Math.random() * 0.5);
+    source.stop(at + len + 0.02);
+  };
+  const skyStep = ({ root, major, e, lead }, at, eighth) => {
+    skyTone(midiHz(root + SKY_BASS[e]), at, eighth * 0.8, 'triangle', 0.06);
+    skyTone(midiHz(root + 12 + (major ? [0, 4, 7, 12] : [0, 3, 7, 12])[SKY_ARP[e]]), at, eighth * 0.5, 'square', 0.012);
+    if (lead) skyTone(midiHz(lead[0]), at, lead[1] * eighth * 0.92, 'triangle', 0.045);
+    if (e === 0 || e === 4) skyDrum(at, 'kick');
+    else if (e === 2 || e === 6) skyDrum(at, 'snare');
+    if (e % 2) skyDrum(at, 'hat');
+  };
+  // Notes are scheduled a little ahead, so a busy frame doesn't make them late. It fades in, which also keeps its first notes
+  // from coming through louder while the compressor settles, and fades out as a game ends.
+  const startSkyMusic = () => {
+    if (skyMusic || !soundOn || !audio || !game) return;
+    const out = audio.createGain();
+    out.gain.setValueAtTime(0, audio.currentTime);
+    out.gain.linearRampToValueAtTime(SKY_LEVEL, audio.currentTime + 2.5);
+    out.connect(audioOut);
+    skyMusic = { out, step: 0, at: audio.currentTime + 0.1, tempo: Math.min(1.18, 1 + 0.03 * Math.max(0, game.wave)), timer: 0 };
+    const plan = () => {
+      if (!skyMusic || skyMusic.out !== out) return;
+      if (skyMusic.at < audio.currentTime) skyMusic.at = audio.currentTime + 0.05;
+      while (skyMusic.at < audio.currentTime + 0.3) {
+        const eighth = 30 / SKY_BPM / skyMusic.tempo;
+        skyStep(SKY_STEPS[skyMusic.step], skyMusic.at, eighth);
+        skyMusic.at += eighth;
+        skyMusic.step = (skyMusic.step + 1) % SKY_STEPS.length;
+      }
+    };
+    skyMusic.timer = setInterval(plan, 80);
+    plan();
+  };
+  const stopSkyMusic = (fade) => {
+    if (!skyMusic) return;
+    clearInterval(skyMusic.timer);
+    const { out } = skyMusic;
+    skyMusic = null;
+    out.gain.setTargetAtTime(0.0001, audio.currentTime, Math.max(0.01, fade / 4));
+    setTimeout(() => out.disconnect(), fade * 1000 + 600);
+  };
+  // A speaker beside the words, with sound waves when on and crossed out when off (bear.js draws the same)
+  const speaker = (on) => `<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M7.3 3.3L4 6H1.3v4H4l3.3 2.7z" fill="currentColor"/><path d="${on ? 'M10.4 5.6a3.3 3.3 0 0 1 0 4.8M12.7 3.3a6.7 6.7 0 0 1 0 9.4' : 'M15 6l-4 4M11 6l4 4'}" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+  const showSoundSetting = () => { soundToggle.innerHTML = `${speaker(soundOn)}Sound: ${soundOn ? 'on' : 'off'}`; };
   showSoundSetting();
   soundToggle.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -1175,6 +1285,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     wakeAudio();
     showSoundSetting();
     sound.caught(1);
+    if (soundOn) startSkyMusic(); else stopSkyMusic(0.2);
   });
   // A short message that rises from a spot and fades, kept inside the banner
   const floatText = (text, x, y, color, big) => {
@@ -1240,6 +1351,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const nextWave = (now) => {
     const { order, peak, w } = game, span = Math.min(w, 1500), left = (w - span) / 2;
     game.wave += 1;
+    if (skyMusic) skyMusic.tempo = Math.min(1.18, 1 + 0.03 * game.wave);
     const shower = order[Math.min(game.wave, order.length - 1)];
     Object.assign(game, { shower, double: shower === peak, left: 7 + Math.min(game.wave, 8), next: now + 1000, radiant: { x: left + span * (Math.random() * 1.2 - 0.1), y: -span * (0.5 + 0.4 * Math.random()) } });
     const part = (tag, text) => Object.assign(document.createElement(tag), { textContent: text });
@@ -1301,8 +1413,21 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       v.hit = true;
       game.points = Math.max(0, game.points - 150);
       game.complaints += 1;
-      floatText('−150 · Air traffic control has questions', x, y + game.h * 0.2, '255 150 130');
+      floatText('−150 and air traffic control has questions', x, y + game.h * 0.2, '255 150 130');
       sound.plane();
+      // A near miss: it ducks, banks hard and climbs out of the sky early. It doesn't crash: a passenger jet brought down by
+      // something fired from the ground would recall real ones.
+      const dir = Math.sign(v.x1 - v.x0) || 1, h = game.h, at = (dx, dy, turn) => `translate(${(x + dir * dx * h).toFixed(1)}px, ${(y + dy * h).toFixed(1)}px) rotate(${(dir * turn).toFixed(1)}deg)`;
+      v.anim.cancel();
+      v.anim = v.el.animate([
+        { transform: at(0, 0, 0), opacity: 1, easing: 'ease-out' },
+        { transform: at(0.12, 0.05, 9), offset: 0.14, easing: 'ease-in-out' },
+        { transform: at(0.4, -0.04, -16), offset: 0.42, easing: 'ease-in' },
+        { transform: at(1.3, -0.42, -20), opacity: 0 }
+      ], { duration: 2200 });
+      // It leaves the game when the dip ends, rather than at the end of its old path
+      v.start = now;
+      v.ms = 2200;
       return true;
     }
     v.anim.cancel();
@@ -1414,7 +1539,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   };
   const showScore = () => {
     const left = Math.max(0, LIVES - game.missed), beat = game.best && game.points > game.best;
-    score.textContent = `${beat ? 'New best! ' : ''}${number(game.points)} points · ${left} ${left === 1 ? 'life' : 'lives'} left`;
+    score.textContent = `${beat ? 'New best! ' : ''}${number(game.points)} points, ${left} ${left === 1 ? 'life' : 'lives'} left`;
   };
   // The end of a game worth celebrating. After the last landing, the caught stars join into a constellation, named for its
   // size, the aurora surges, and credits with the game's numbers rise from behind the trees. A click skips to the end.
@@ -1441,7 +1566,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       timers.push(setTimeout(() => sparkle({ x: b.x, y: b.y, accent: true, base: 1, last: 0 }, performance.now()), delay + 120));
     });
     const names = CONSTELLATIONS.find(([least]) => played.caught >= least)[1], seconds = Math.round((performance.now() - played.start) / 1000);
-    const rows = [...(newBest ? ['New best!', ''] : []), 'Your constellation', names[Math.floor(Math.random() * names.length)], '', `${played.caught} stars caught`, `Best catch +${number(played.bestCatch)}`, ...(played.bestChain > 1 ? [`Best chain ×${played.bestChain}`] : []), `Reached the ${played.shower.name}`, ...(played.satellites ? [`Satellites caught: ${played.satellites}`] : []), ...(played.comets ? [`Comets caught: ${played.comets}`] : []), ...(played.complaints ? [`Air traffic complaints: ${played.complaints}`] : []), `Time ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Moon maps: NASA', 'Thanks for playing'];
+    const rows = [...(newBest ? ['New best!', ''] : []), 'Your constellation', names[Math.floor(Math.random() * names.length)], '', `${played.caught} stars caught`, `Best catch +${number(played.bestCatch)}`, ...(played.bestChain > 1 ? [`Best chain ×${played.bestChain}`] : []), `Reached the ${played.shower.name}`, ...(played.satellites ? [`Satellites caught: ${played.satellites}`] : []), ...(played.comets ? [`Comets caught: ${played.comets}`] : []), ...(played.complaints ? [`Air traffic complaints: ${played.complaints}`] : []), ...(played.smooth ? [`Smooth flights: ${played.smooth}`] : []), `Time ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Moon maps: NASA', 'Thanks for playing'];
     const heads = new Set(['New best!', 'Your constellation', 'Final score']);
     credits.replaceChildren(...rows.map((text) => (text ? Object.assign(document.createElement(heads.has(text) ? 'b' : 'span'), { textContent: text }) : document.createElement('i'))));
     const { h } = played, tall = credits.offsetHeight;
@@ -1473,6 +1598,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     finale = { skip: finish };
   };
   const endGame = (showResult) => {
+    stopSkyMusic(1.2);
     // The stars still falling fade where they are
     falling.forEach((s) => {
       if (!s.anim) return;
@@ -1494,15 +1620,15 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     gameOver = performance.now();
     const past = points ? saveScore(points) : null;
     if (showResult && past) {
-      if (!past.best) score.textContent = `${number(points)} points`;
+      if (!past.best) score.textContent = `${number(points)} points.`;
       else if (points > past.best) score.textContent = `New best: ${number(points)} points!`;
-      else score.textContent = `${number(points)} points · ${past.rank <= 100 ? `${ordinal(past.rank)} best of ${past.games} · ` : ''}Best ${number(past.best)}`;
+      else score.textContent = `${number(points)} points${past.rank <= 100 ? `, your ${ordinal(past.rank)} best of ${past.games} games` : ''}. Your best is ${number(past.best)}.`;
     } else score.classList.remove('on');
     if (!showResult) { clearCaught(); resetFire(); return; }
     if (past && past.best && points > past.best) sound.best(); else sound.over();
     // After any finale: the result line, the shared high scores with the review link, and the caught stars and embers
-    // outlasting the score a little, then fading. A top ten score opens the high scores, and the line does too. (On a phone,
-    // the line drops the comparison to make room.)
+    // outlasting the score a little, then fading. Any score opens the high scores, a top ten one to enter initials, and the
+    // line links to them too. (On a phone, the line drops the comparison to make room.)
     const wrapUp = () => {
       const hideScore = () => score.classList.remove('on', 'link');
       // The fire comes back, after staying out long enough to be seen, unless a new game has lit it
@@ -1514,7 +1640,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       window.auroraArcade.gameEnded(points).then((shared) => {
         if (!shared || game) return;
         if (width < 520) score.textContent = `${number(points)} points`;
-        score.append(' · ', Object.assign(document.createElement('span'), { textContent: 'High scores' }));
+        score.append(' ', Object.assign(document.createElement('span'), { textContent: 'High scores' }));
         score.classList.add('link');
         clearTimeout(scoreTimer);
         scoreTimer = setTimeout(hideScore, 12000);
@@ -1558,7 +1684,17 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     }
     game.visitors = game.visitors.filter((v) => {
       const t = (now - v.start) / v.ms;
-      if (t >= 1) return false;
+      if (t >= 1) {
+        // An airliner that gets across untouched is worth a little, as a reason to hold fire while it's overhead
+        if (v.kind === 'plane' && !v.hit) {
+          game.points += 100;
+          game.smooth += 1;
+          floatText('Smooth flight! +100', v.x0 + (v.x1 - v.x0) * 0.92, v.y1 + game.h * 0.16, '214 226 255');
+          sound.smooth();
+          changed = true;
+        }
+        return false;
+      }
       const x = v.x0 + (v.x1 - v.x0) * t, y = v.y0 + (v.y1 - v.y0) * t;
       if (v.hit || !bloomAt(x, y, v.reach, now)) return true;
       changed = true;
@@ -1570,7 +1706,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const startGame = () => {
     const now = performance.now(), b = banner.getBoundingClientRect(), moonBox = moonFace.getBoundingClientRect(), best = readScores().scores[0] || 0;
     const today = new Date(Date.now() + offset), peak = SHOWERS.find((s) => s.peaks.some(([m, d]) => today.getMonth() + 1 === m && today.getDate() === d));
-    game = { start: now, next: now + 300, points: 0, missed: 0, landed: 0, caught: 0, bestCatch: 0, bestChain: 1, stars: [], w: b.width, h: b.height, best, wave: -1, left: 0, shower: null, double: false, radiant: null, peak, order: peak ? [peak, ...SHOWERS.filter((s) => s !== peak)] : SHOWERS, visitors: [], bag: [], nextVisitor: now + 9000 + Math.random() * 5000, satellites: 0, comets: 0, complaints: 0, cabinVisible: cabin.x > 0 && cabin.x < b.width, ground: b.height - 44 * Math.max(b.width / 1600, b.height / 240),
+    game = { start: now, next: now + 300, points: 0, missed: 0, landed: 0, caught: 0, bestCatch: 0, bestChain: 1, stars: [], w: b.width, h: b.height, best, wave: -1, left: 0, shower: null, double: false, radiant: null, peak, order: peak ? [peak, ...SHOWERS.filter((s) => s !== peak)] : SHOWERS, visitors: [], bag: [], nextVisitor: now + 9000 + Math.random() * 5000, satellites: 0, comets: 0, complaints: 0, smooth: 0, cabinVisible: cabin.x > 0 && cabin.x < b.width, ground: b.height - 44 * Math.max(b.width / 1600, b.height / 240),
       moonX: moonBox.left + moonBox.width / 2 - b.left, moonY: moonBox.top + moonBox.height / 2 - b.top, moonClear: moonBox.width * 1.5 };
     // The sound setting is shared with the bear game, which may have changed it
     try { soundOn = localStorage.getItem(SOUND_KEY) === '1'; } catch (e) { /* blocked */ }
@@ -1578,12 +1714,13 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     banner.classList.add('bn-playing', 'bn-burning');
     setFire(LIVES);
     wakeAudio();
+    startSkyMusic();
     releaseMoon();
     clearTimeout(scoreTimer);
     score.classList.remove('link');
     clearCaught();
     if (document.fonts) document.fonts.load('16px "AURORA Arcade"');
-    score.textContent = `Catch the shooting stars${best ? ` · Best ${number(best)}` : ''}`;
+    score.textContent = `Catch the shooting stars${best ? `. Your best is ${number(best)}` : ''}`;
     score.classList.add('on');
     requestAnimationFrame(gameFrame);
   };
@@ -1629,6 +1766,14 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     if (!game && inDipper(x, y)) { startBear('bear'); return; }
     if (!game && !onCabin && !inDipper(x, y) && performance.now() - gameOver > 1200) startGame();
     if (game) launch(x, y);
+  });
+  // Play again, from the high score table: the same game, and in the bear game the same animal
+  window.addEventListener('aurora-play-again', (e) => {
+    if (game || finale || bearOn) return;
+    const { which, animal } = e.detail || {};
+    if (which === 'bear') { startBear(animal || 'bear'); return; }
+    if (!stars) measure();
+    startGame();
   });
   // The top score's initials, as a constellation in the sky, for people with the review link, since the public doesn't see
   // reviewers' initials. Stars sit where a letter's strokes turn, a little off true so they look like stars, and its lines
@@ -1705,7 +1850,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     const margin = 10 / k, bottom = y0 + 6 * unit;
     champArea = { l: x0 - margin, r: x0 + wide + margin, t: y0 - margin, b: bottom + margin };
     champBox = { l: (x0 - side) * k - 24, r: (x0 + wide - side) * k + 24, t: (y0 - top) * k - 20, b: (bottom - top) * k + 24 };
-    champLabel.textContent = `${champ.initials} lights the sky · ${number(champ.points)} points · ${matchMedia('(hover: none)').matches ? 'Tap' : 'Click'} to challenge`;
+    champLabel.textContent = `${champ.initials} lights the sky with ${number(champ.points)} points. ${matchMedia('(hover: none)').matches ? 'Tap' : 'Click'} to challenge`;
     const half = champLabel.offsetWidth / 2 + 6, px = Math.min(b.width - half, Math.max(half, (cx - side) * k));
     champLabel.style.transform = `translate(${px.toFixed(1)}px, ${((bottom - top) * k + 9).toFixed(1)}px) translateX(-50%)`;
   };
@@ -1772,7 +1917,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       <p class="arcade-err" id="arcade-err" role="alert"></p>
       <button type="submit" id="arcade-save" disabled>Save</button><button type="button" class="quiet" id="arcade-skip">Skip</button>
     </form>
-    <div class="arcade-done" id="arcade-done"><button type="button" id="arcade-close">Close</button></div>
+    <div class="arcade-done" id="arcade-done"><p class="arcade-yours" id="arcade-yours" hidden></p><button type="button" id="arcade-again">Play again</button><button type="button" class="quiet" id="arcade-close">Close</button></div>
   </div>
 </dialog>
 <script>
@@ -1782,6 +1927,9 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
 (() => {
   const $ = (id) => document.getElementById(id);
   const dlg = $('arcade'), rows = $('arcade-rows'), form = $('arcade-form'), input = $('arcade-initials'), siteIn = $('arcade-site'), save = $('arcade-save'), err = $('arcade-err');
+  const again = $('arcade-again'), yours = $('arcade-yours');
+  // The game last played, and the animal, for Play again
+  let played = { which: 'stars', animal: null };
   // Shorter names for the table, in the pixel font's letters (the full list of sites is in notes.js). "Other" isn't shown.
   const SITE_KEY = 'aurora-notes-site', SHORT = { 'Mass General': 'MGH', 'Avon & Wiltshire': 'Avon', 'North London': 'N London', 'Gregorio Marañón': 'Gregorio', 'Universidad Nacional de Asunción': 'UNA', 'Universitas Brawijaya': 'Brawijaya', 'Deliberate AI': 'Deliberate', Other: '' };
   const siteName = (entry) => { const s = (entry && entry.site) || ''; return s in SHORT ? SHORT[s] : s; };
@@ -1803,7 +1951,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const thirdColumn = (entry) => {
     if (game !== 'bear' || !entry) return siteName(entry);
     const site = siteName(entry);
-    return `${entry.animal || 'bear'}${site ? ` · ${site}` : ''}`;
+    return `${entry.animal || 'bear'}${site ? `, ${site}` : ''}`;
   };
   const render = () => {
     const list = pending ? [...top, pending].sort((p, q) => q.points - p.points).slice(0, 10) : top.slice(0, 10);
@@ -1818,12 +1966,16 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     $('arcade-table').classList.toggle('no-sites', game !== 'bear' && !list.some(siteName));
     showSites();
   };
-  const open = (entering) => {
+  // mine: a score outside the top ten, shown with the score to beat. end: the table opened as a game ended, so Play again
+  // has the focus, the call to play once more.
+  const open = (entering, { mine, end } = {}) => {
     $('arcade-game').textContent = GAMES[game].game;
     $('arcade-game').hidden = !GAMES[game].game;
     $('arcade-table').querySelector('th:nth-child(3)').textContent = GAMES[game].third;
     form.hidden = !entering;
     $('arcade-done').hidden = entering;
+    yours.hidden = !mine;
+    if (mine) yours.replaceChildren(`Your score: ${mine.points.toLocaleString('en-US')}`, Object.assign(document.createElement('span'), { textContent: `Beat ${mine.beat.toLocaleString('en-US')} for the top 10` }));
     if (dlg.open) rows.classList.remove('arcade-rows-reveal'); // saving doesn't bring the rows in again
     render();
     if (!dlg.open) {
@@ -1834,7 +1986,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       $('arcade-moon').style.backgroundImage = moon.classList.contains('on') ? `url("${face.getAttribute('href')}")` : '';
       dlg.showModal();
     }
-    (entering ? input : $('arcade-close')).focus();
+    (entering ? input : end ? again : $('arcade-close')).focus();
   };
   // The top score also goes to the banner, which draws its initials in the sky
   const announce = (again) => {
@@ -1874,7 +2026,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       await load();
       pending = null;
       saved = top.find((r) => r.initials === initials && r.points === points) || null;
-      open(false);
+      open(false, { end: true });
     } catch (x) {
       err.textContent = 'Not saved. Try again.';
       save.disabled = false;
@@ -1882,16 +2034,34 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   });
   $('arcade-skip').addEventListener('click', () => dlg.close());
   $('arcade-close').addEventListener('click', () => dlg.close());
-  dlg.addEventListener('close', () => { pending = null; saved = null; announce(true); game = 'stars'; });
+  // Play again starts the game the table is for, as the same animal in the bear game; the banner's script starts it
+  again.addEventListener('click', () => {
+    const detail = { ...played };
+    dlg.close();
+    window.dispatchEvent(new CustomEvent('aurora-play-again', { detail }));
+  });
+  dlg.addEventListener('close', () => { pending = null; saved = null; yours.hidden = true; announce(true); game = 'stars'; });
+  // Whether a game is on in the banner, so the table doesn't open over it
+  const playing = () => { const b = document.querySelector('.banner'); return !!b && (b.classList.contains('bn-playing') || b.classList.contains('bn-bear-on')); };
   window.auroraArcade = {
-    // After a game: whether the shared scores can be reached. A score in the top ten opens them, to enter initials.
+    // After a game: whether the shared scores can be reached. A score in the top ten opens them, to enter initials. Any other
+    // score opens them too, with the score to beat, as a reason to play again.
     // options: { game: 'bear', animal } for the bear game; the shooting star game's otherwise.
     gameEnded: async (points, options = {}) => {
       if (dlg.open) return !!window.auroraLeaderboard;
       game = GAMES[options.game] ? options.game : 'stars';
       if (!GAMES[game].list()) return false;
       try { await load(); } catch (e) { return false; }
-      if (top.length < 10 || points > top[9].points) {
+      played = { which: game, animal: options.animal || null };
+      if (top.length >= 10 && points <= top[9].points) {
+        const which = game, beat = top[9].points;
+        // A moment later, so the result line is seen first, and not if another game has started
+        setTimeout(() => {
+          if (dlg.open || playing()) return;
+          game = which;
+          open(false, { mine: { points, beat }, end: true });
+        }, 1200);
+      } else {
         let last = '', site = '';
         try { last = localStorage.getItem(INITIALS_KEY) || ''; site = localStorage.getItem(SITE_KEY) || ''; } catch (e) { /* blocked */ }
         fillSites();
@@ -1909,6 +2079,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       game = GAMES[which] ? which : 'stars';
       if (!GAMES[game].list()) return;
       try { await load(); } catch (e) { return; }
+      if (played.which !== game) played = { which: game, animal: null };
       open(false);
     }
   };

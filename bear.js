@@ -1,7 +1,9 @@
 // A second banner game, as a rough playable version for judging how it feels: the Great Bear comes down from the sky to run,
-// double jump and roll across the landscape, catching stars and eating berries and honey while dodging bees. Five stings end
-// a run, and a good enough run unlocks the fox. The camera doesn't move, because a moving foreground can bring on motion sickness
-// (DESIGN.md), so the banner is the level. Loaded only when someone starts it, or has already unlocked an animal.
+// double jump and roll across the landscape, catching stars and eating berries and honey while dodging bees. Its seven stars
+// come down dim, and catching falling stars relights them, one stage at a time; with all seven relit before dawn it goes home
+// to the sky, which unlocks the fox. Five stings, or dawn, end a run sooner. The camera doesn't move, because a moving
+// foreground can bring on motion sickness (DESIGN.md), so the banner is the level. Loaded only when someone starts it, or has
+// already unlocked an animal.
 (() => {
   const STEP = 1 / 120, TAU = Math.PI * 2;
   // How it feels. All distances are in units of the banner's height / 216, so it plays the same at any size.
@@ -12,10 +14,40 @@
   const COYOTE = 0.09, BUFFER = 0.12, FLIP = 0.36, TUCK_UNTIL = 0.72;
   // Five lives, as in the shooting star game: three felt hard
   const LIVES = 5, HURT_SECONDS = 1.5;
+  // A run is one night, in seven stages, one for each of the animal's seven stars, which come down from the sky dim. Each star
+  // caught in a stage flies up to a big star taking shape in a clear part of the sky and becomes one of its seven points
+  // (POINTS). With all seven, the big star flies to its place in the constellation and relights it, and the stage gives back a
+  // life and is worth 250 points for each star relit so far. Relighting all seven before dawn brings the animal home. Each
+  // stage brings one new thing, so the extras come one at a time. star: seconds between falling stars. slow: how far they
+  // lean toward slow stars, as the exponent on a random number, so 1 is even. bee: seconds between bees, 0 for none.
+  const POINTS = 7;
+  const STAGES = [
+    { name: 'Dubhe', star: 1.1, slow: 2, bee: 0, says: 'Catch 7 falling stars' },
+    { name: 'Merak', star: 1.05, slow: 1.8, bee: 0, says: 'Roll under the log' },
+    { name: 'Phecda', star: 1, slow: 1.6, bee: 5, says: 'The bees are awake' },
+    { name: 'Megrez', star: 0.95, slow: 1.45, bee: 4.3, says: 'Honey brings angry bees' },
+    { name: 'Alioth', star: 0.9, slow: 1.3, bee: 3.8, says: 'Ride the airliner' },
+    { name: 'Mizar', star: 0.85, slow: 1.15, bee: 3.3, says: 'Bump the moon' },
+    { name: 'Alkaid', star: 0.75, slow: 1, bee: 2.6, says: 'The last star' }
+  ];
+  // The stages that bring bees, honey and the bouncing star, the airliner and the satellite, moon gravity, and bees that swoop
+  const BEES_FROM = STAGES.findIndex((s) => s.bee), HONEY_FROM = 3, VISITORS_FROM = 4, MOON_FROM = 5, SWOOP_FROM = 6, SWOOP_SHARE = 0.35;
+  // The night runs from 9 PM to 6 AM in NIGHT_SECONDS of play, not counting the breathers between stages. Dawn's glow brightens
+  // over its last 40%, a warning comes at 5 AM, and each minute of night left on getting home is worth 10 points. In tests, bots
+  // that went for every star got home in 72 to 91 s, and bots that missed a third of the bees and ignored nearly half the stars
+  // in 94 to 141 s, and with seven stars a stage, in 70 to 88 s and 100 to 112 s; people won't place themselves as well.
+  const NIGHT_SECONDS = 150, NIGHT_STARTS = 21, NIGHT_HOURS = 9, DAWN_GLOW = 0.4, NIGHT_MINUTE_POINTS = 10;
+  const RELIGHT_POINTS = 250, BREATHER = 2.5, HOME_SECONDS = 2.2, SLEEP_SECONDS = 2.8;
+  // Alcor, Mizar's faint companion and a traditional test of eyesight, is a bonus for whoever spots it in Mizar's stage. ALCOR_TURN:
+  // the angle from the line to Alkaid to the line to Alcor, from both stars' positions in the sky.
+  const ALCOR_STAGE = STAGES.findIndex((s) => s.name === 'Mizar'), ALCOR_POINTS = 500, ALCOR_GAP = 9, ALCOR_TURN = 75.6 * Math.PI / 180;
   const BERRY_POINTS = 25, HONEY_POINTS = 150, PLANE_POINTS = 100, SATELLITE_POINTS = 500;
   const CHASE_SPEED = 245, CHASE_SECONDS = 5, PLANE_SPEED = 115, PLANE_UP = 108;
-  // Riding the airliner earns air miles: points for as long as the ride lasts
+  // Riding the airliner earns air miles, by the distance flown: 5 points every 0.25 s at its usual speed
   const MILE_SECONDS = 0.25, MILE_POINTS = 5;
+  // The longer the ride, the faster it flies, turning at the banner's edges while it has a rider, until at three times its
+  // speed (in about 11 s) it breaks the sound barrier. Its engines shed slow stars to catch on the way.
+  const PLANE_ACCEL = 20, PLANE_TOP = 3 * PLANE_SPEED, BOOM_POINTS = 500, EXHAUST_EVERY = 0.9, EXHAUST_LIMIT = 10;
   // Now and then a star bounces along the hills. Catching it makes the animal invincible for a while, able to run into bees,
   // worth more for each one in a row, and a little quicker.
   const POWER_SECONDS = 8, POWER_LIFE = 11, POWER_SPEED = 1.15, POWER_COLORS = ['#9FF5DC', '#A9C1FF', '#D2B3FF', '#FFB6E6', '#FFE9B8'];
@@ -42,6 +74,9 @@
   const tone = (freq, ms, { to = freq, type = 'triangle', level = 0.16, delay = 0 } = {}) => {
     if (!soundIsOn || !audio) return;
     const start = audio.currentTime + delay / 1000, end = start + ms / 1000, osc = audio.createOscillator(), gain = audio.createGain();
+    // A gain starts at full strength, so it's silenced at once: a source can start a fraction of a sample early, and its first
+    // sample would come through at full strength, a click
+    gain.gain.value = 0;
     osc.type = type;
     osc.frequency.setValueAtTime(freq, start);
     osc.frequency.exponentialRampToValueAtTime(to, end);
@@ -52,15 +87,19 @@
     osc.start(start);
     osc.stop(end + 0.02);
   };
-  const noise = (ms, level, from = 420, to = 70) => {
-    if (!soundIsOn || !audio) return;
+  const noiseBuffer = () => {
     if (!noiseData) {
       noiseData = audio.createBuffer(1, audio.sampleRate, audio.sampleRate);
       const samples = noiseData.getChannelData(0);
       for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
     }
+    return noiseData;
+  };
+  const noise = (ms, level, from = 420, to = 70) => {
+    if (!soundIsOn || !audio) return;
     const start = audio.currentTime, end = start + ms / 1000, source = audio.createBufferSource(), low = audio.createBiquadFilter(), gain = audio.createGain();
-    source.buffer = noiseData;
+    gain.gain.value = 0;
+    source.buffer = noiseBuffer();
     low.type = 'lowpass';
     low.frequency.setValueAtTime(from, start);
     low.frequency.exponentialRampToValueAtTime(to, end);
@@ -91,7 +130,205 @@
     fires: () => [0, 7, 12, 16, 19].forEach((n, i) => tone(note(n + 2), 300, { type: 'sine', level: 0.07, delay: i * 50 })),
     unlock: () => [0, 4, 7, 12, 7, 12, 16].forEach((n, i) => tone(note(n), 200, { level: 0.1, delay: i * 120 })),
     over: () => [12, 7, 4, 0].forEach((n, i) => tone(note(n), 240, { level: 0.1, delay: i * 150 })),
-    best: () => [0, 4, 7, 12, 16].forEach((n, i) => tone(note(n), 260, { level: 0.12, delay: i * 110 }))
+    best: () => [0, 4, 7, 12, 16].forEach((n, i) => tone(note(n), 260, { level: 0.12, delay: i * 110 })),
+    boom: () => { noise(650, 0.3, 900, 40); tone(140, 520, { to: 38, type: 'square', level: 0.05 }); },
+    // A star relit, higher for each stage; its light reaching the sky; dawn coming; home; asleep; and Alcor spotted
+    relight: (n) => [0, 4, 7, 12].forEach((s, i) => tone(note(s + n), 220, { level: 0.09, delay: i * 70 })),
+    point: (k) => tone(note(12 + PENTATONIC[k]), 90, { type: 'sine', level: 0.04 }),
+    lit: () => tone(note(24), 420, { to: note(26), type: 'sine', level: 0.06 }),
+    dawn: () => [0, 1].forEach((i) => tone(note(-5), 300, { type: 'sine', level: 0.09, delay: i * 380 })),
+    home: () => [0, 4, 7, 12, 16, 19, 24, 28].forEach((n, i) => tone(note(n), 320, { level: 0.1, delay: i * 110 })),
+    sleep: () => [7, 4, 0, -5].forEach((n, i) => tone(note(n), 420, { type: 'sine', level: 0.08, delay: i * 240 })),
+    alcor: () => [19, 24, 28, 31].forEach((n, i) => tone(note(n), 150, { type: 'sine', level: 0.06, delay: i * 70 }))
+  };
+  // Music during a run, with sound on, made here like the other sounds: a tune for each animal, written for the game rather
+  // than taken from another. The bear's is in the style of classic platform games, a square-wave lead over a triangle bass and
+  // soft drums, 16 bars in A minor at 144 beats a minute, so about 27 s before it repeats. The fox's is bright, silly dance-pop
+  // in the spirit of "What Does the Fox Say?" but not its tune: 16 bars in G major at 128 beats a minute, about 30 s, with a
+  // kick on every beat, a filtered saw bass on the offbeats, a bouncy lead and yips, quick rising squeaks, for the fox's calls.
+  // Both play a little faster while the airliner being ridden speeds up.
+  // MUSIC_LEVEL keeps it under the sound effects, which the compressor on the output brings up along with it
+  const MUSIC_BASS = [0, 12, 0, 12, 0, 12, 7, 12], MUSIC_LEVEL = 0.6;
+  // Each bar: its chord's root, a MIDI note for the bass, and the melody as [note, eighths], null for a rest
+  const TUNE = [
+    [45, [[76, 2], [81, 2], [79, 1], [76, 1], [74, 1], [76, 1]]], [41, [[77, 2], [76, 1], [74, 1], [72, 2], [69, 2]]],
+    [36, [[67, 2], [72, 2], [76, 1], [74, 1], [72, 1], [76, 1]]], [43, [[74, 3], [null, 1], [71, 2], [67, 2]]],
+    [45, [[76, 2], [81, 2], [79, 1], [76, 1], [74, 1], [76, 1]]], [41, [[77, 2], [81, 2], [79, 1], [77, 1], [76, 1], [77, 1]]],
+    [43, [[79, 2], [77, 1], [76, 1], [74, 2], [71, 1], [74, 1]]], [40, [[76, 3], [null, 1], [80, 2], [83, 2]]],
+    [41, [[84, 2], [81, 1], [77, 1], [84, 2], [81, 2]]], [43, [[83, 2], [79, 1], [74, 1], [83, 2], [79, 2]]],
+    [40, [[83, 2], [79, 1], [76, 1], [79, 2], [83, 2]]], [45, [[84, 2], [83, 1], [81, 1], [76, 4]]],
+    [38, [[77, 2], [76, 1], [74, 1], [81, 2], [77, 2]]], [43, [[79, 2], [77, 1], [74, 1], [71, 2], [74, 2]]],
+    [36, [[76, 2], [79, 2], [84, 2], [83, 1], [81, 1]]], [40, [[80, 4], [76, 2], [71, 2]]]
+  ];
+  // The fox's, in the same form, with 'yip' after a note that's a yip. Eight bars of G, D, Em and C, then eight of Em, C, G
+  // and D, where the yips come in.
+  const FOX_TUNE = [
+    [43, [[null, 1], [71, 1], [74, 1], [null, 1], [79, 1], [null, 1], [74, 1], [71, 1]]], [38, [[69, 1], [null, 1], [78, 1], [null, 1], [81, 2], [78, 1], [74, 1]]],
+    [40, [[79, 1], [null, 1], [76, 1], [null, 1], [71, 2], [76, 1], [79, 1]]], [36, [[76, 2], [74, 1], [72, 1], [74, 3], [null, 1]]],
+    [43, [[null, 1], [71, 1], [74, 1], [null, 1], [79, 1], [81, 1], [83, 2]]], [38, [[81, 1], [78, 1], [74, 1], [78, 1], [81, 2], [null, 2]]],
+    [40, [[79, 1], [76, 1], [71, 1], [76, 1], [79, 1], [83, 1], [81, 1], [79, 1]]], [36, [[76, 2], [79, 2], [74, 4]]],
+    [40, [[76, 1, 'yip'], [76, 1, 'yip'], [null, 1], [79, 1, 'yip'], [null, 1], [83, 1], [81, 1], [79, 1]]], [36, [[72, 1, 'yip'], [72, 1, 'yip'], [null, 1], [76, 1, 'yip'], [null, 1], [79, 1], [76, 1], [72, 1]]],
+    [43, [[71, 1, 'yip'], [71, 1, 'yip'], [null, 1], [74, 1, 'yip'], [null, 1], [79, 1], [78, 1], [79, 1]]], [38, [[81, 2], [78, 1], [74, 1], [69, 2], [null, 1], [74, 1, 'yip']]],
+    [40, [[76, 1, 'yip'], [79, 1, 'yip'], [83, 1, 'yip'], [null, 1], [83, 1], [81, 1], [79, 1], [76, 1]]], [36, [[72, 1, 'yip'], [76, 1, 'yip'], [79, 1, 'yip'], [null, 1], [79, 1], [76, 1], [74, 1], [72, 1]]],
+    [43, [[71, 1], [74, 1], [79, 1], [74, 1], [83, 2], [81, 1], [79, 1]]], [38, [[78, 2], [81, 2], [86, 1, 'yip'], [null, 1], [86, 1, 'yip'], [null, 1]]]
+  ];
+  // The crab's, in the same form: calypso, in F major at 112 beats a minute, about 34 s, its lead like a steel drum
+  const CRAB_TUNE = [
+    [41, [[72, 1], [null, 1], [69, 1], [72, 1], [null, 1], [77, 2], [null, 1]]], [48, [[76, 1], [74, 1], [72, 1], [null, 1], [67, 2], [72, 1], [null, 1]]],
+    [46, [[74, 1], [null, 1], [70, 1], [74, 1], [null, 1], [77, 2], [74, 1]]], [48, [[72, 3], [null, 1], [67, 1], [69, 1], [70, 1], [72, 1]]],
+    [41, [[77, 1], [null, 1], [76, 1], [77, 1], [null, 1], [81, 2], [77, 1]]], [50, [[74, 2], [69, 1], [74, 1], [null, 1], [77, 2], [74, 1]]],
+    [43, [[70, 1], [74, 1], [79, 1], [null, 1], [77, 1], [74, 1], [70, 2]]], [48, [[72, 4], [null, 2], [67, 1], [69, 1]]],
+    [41, [[72, 1], [69, 1], [65, 1], [69, 1], [72, 2], [77, 1], [null, 1]]], [46, [[74, 1], [null, 1], [77, 1], [74, 1], [70, 2], [null, 2]]],
+    [41, [[69, 1], [72, 1], [77, 1], [null, 1], [81, 1], [79, 1], [77, 2]]], [48, [[76, 2], [72, 1], [null, 1], [67, 2], [null, 2]]],
+    [50, [[74, 1], [null, 1], [77, 1], [81, 1], [null, 1], [79, 1], [77, 1], [74, 1]]], [46, [[74, 2], [70, 1], [null, 1], [77, 2], [74, 1], [70, 1]]],
+    [48, [[72, 1], [76, 1], [79, 1], [null, 1], [84, 2], [79, 1], [76, 1]]], [41, [[77, 4], [null, 1], [72, 1], [69, 1], [65, 1]]]
+  ];
+  // For the grand finale, Vivaldi's Spring: the opening of the first concerto of The Four Seasons (1725), long in the public
+  // domain, played here like the other tunes. Its tune, by sixteenth note from the upbeat, [note, sixteenths]; then the same
+  // again, softer, as an echo, over a bass driving in eighths and a harpsichord's chords on the beat, at 100 beats a minute.
+  const SPRING_PHRASE = [[76, 2], [80, 2], [80, 2], [80, 2], [78, 1], [76, 1], [83, 6], [83, 1], [81, 1], [80, 2], [80, 2], [80, 2], [78, 1], [76, 1], [83, 6], [83, 1], [81, 1],
+    [80, 2], [81, 2], [83, 2], [81, 2], [80, 2], [78, 2], [76, 2]];
+  const SPRING_STEPS = (() => {
+    const steps = Array.from({ length: 96 }, () => ({}));
+    [0, 48].forEach((from) => {
+      let at = from;
+      SPRING_PHRASE.forEach(([n, len]) => { steps[at].tune = [n, len]; at += len; });
+      // E, then under the turn at the end A's C sharp and the dominant's B, and E again
+      for (let p = 0; p < 48; p += 2) steps[from + p].bass = p === 40 ? 49 : p === 42 || p === 44 ? 47 : 52;
+      for (let p = 2; p < 48; p += 4) steps[from + p].chord = p === 42 ? [63, 66, 71] : [64, 68, 71];
+      for (let p = 0; p < 48; p++) steps[from + p].soft = from > 0;
+    });
+    return steps;
+  })();
+  // A tune by eighth note: the bar's root, where in the bar, and any melody note starting there
+  const stepsOf = (tune) => tune.flatMap(([root, line]) => {
+    const leads = Array(8).fill(null);
+    let at = 0;
+    line.forEach(([n, len, yip]) => { if (n) leads[at] = [n, len, yip]; at += len; });
+    return leads.map((lead, e) => ({ root, e, lead }));
+  });
+  let music = null;
+  const midiHz = (n) => 440 * 2 ** ((n - 69) / 12);
+  // A note. to: a pitch it slides to as it starts, for a yip. cutoff: a low-pass filter, to round off a saw.
+  const musicTone = (freq, at, dur, type, level, { to, cutoff } = {}) => {
+    const osc = audio.createOscillator(), gain = audio.createGain();
+    gain.gain.value = 0;
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, at);
+    if (to) osc.frequency.exponentialRampToValueAtTime(to, at + Math.min(0.07, dur * 0.6));
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(level, at + 0.008);
+    gain.gain.exponentialRampToValueAtTime(level * 0.5, at + dur * 0.8);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    if (cutoff) {
+      const low = audio.createBiquadFilter();
+      low.type = 'lowpass';
+      low.frequency.value = cutoff;
+      osc.connect(low).connect(gain);
+    } else osc.connect(gain);
+    gain.connect(music.out);
+    osc.start(at);
+    osc.stop(at + dur + 0.02);
+  };
+  // Drums: a kick, and noise with its lows cut away for the rest: [where the cut is, how long, how loud]
+  const DRUMS = { snare: [1800, 0.09, 0.05], clap: [1200, 0.12, 0.045], hat: [7000, 0.03, 0.014], open: [6500, 0.07, 0.016], rim: [2600, 0.025, 0.035], shaker: [6000, 0.045, 0.011] };
+  const musicDrum = (at, kind, kickLevel = 0.08) => {
+    const gain = audio.createGain();
+    gain.gain.value = 0;
+    gain.connect(music.out);
+    if (kind === 'kick') {
+      const osc = audio.createOscillator();
+      osc.frequency.setValueAtTime(140, at);
+      osc.frequency.exponentialRampToValueAtTime(45, at + 0.09);
+      gain.gain.setValueAtTime(kickLevel, at);
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.1);
+      osc.connect(gain);
+      osc.start(at);
+      osc.stop(at + 0.12);
+      return;
+    }
+    const [cut, len, level] = DRUMS[kind], source = audio.createBufferSource(), high = audio.createBiquadFilter();
+    source.buffer = noiseBuffer();
+    high.type = 'highpass';
+    high.frequency.value = cut;
+    gain.gain.setValueAtTime(level, at);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + len);
+    source.connect(high).connect(gain);
+    source.start(at, Math.random() * 0.5);
+    source.stop(at + len + 0.02);
+  };
+  const SONGS = {
+    bear: { bpm: 144, steps: stepsOf(TUNE), play: ({ root, e, lead }, at, eighth) => {
+      musicTone(midiHz(root + MUSIC_BASS[e]), at, eighth * 0.8, 'triangle', 0.07);
+      if (lead) musicTone(midiHz(lead[0]), at, lead[1] * eighth * 0.9, 'square', 0.02);
+      if (e === 0 || e === 4) musicDrum(at, 'kick');
+      else if (e === 2 || e === 6) musicDrum(at, 'snare');
+      if (e % 2) musicDrum(at, 'hat');
+    } },
+    // Four on the floor: a kick on every beat, a clap on the second and fourth, and an open hat between. The bass pumps on the
+    // offbeats, up an octave on the last; the lead is short and bouncy; and a yip slides up from a fourth below its note to a
+    // step above it.
+    fox: { bpm: 128, steps: stepsOf(FOX_TUNE), play: ({ root, e, lead }, at, eighth) => {
+      if (e % 2) musicTone(midiHz(root + (e === 7 ? 12 : 0)), at, eighth * 0.75, 'sawtooth', 0.05, { cutoff: 700 });
+      if (lead) {
+        const [n, len, yip] = lead;
+        if (yip) musicTone(midiHz(n - 5), at, Math.min(0.13, eighth * 0.6), 'square', 0.024, { to: midiHz(n + 2) });
+        else musicTone(midiHz(n), at, len * eighth * (len > 1 ? 0.85 : 0.55), 'square', 0.02);
+      }
+      if (e % 2 === 0) musicDrum(at, 'kick');
+      if (e === 2 || e === 6) musicDrum(at, 'clap');
+      if (e % 2) musicDrum(at, 'open');
+    } },
+    // The bass on a 3-3-2 rhythm, root, root and fifth; a lead like a steel drum, a sine with a fainter octave over it, quick to
+    // fade; a soft kick on the beat, a rim on the offbeats of the 3-3-2, and a shaker on every eighth
+    crab: { bpm: 112, steps: stepsOf(CRAB_TUNE), play: ({ root, e, lead }, at, eighth) => {
+      if (e === 0 || e === 3 || e === 6) musicTone(midiHz(root + (e === 6 ? 7 : 0)), at, eighth * 1.4, 'triangle', 0.055);
+      if (lead) {
+        const [n, len] = lead, dur = Math.min(len, 2) * eighth * 0.95;
+        musicTone(midiHz(n), at, dur, 'sine', 0.042);
+        musicTone(midiHz(n + 12), at, dur * 0.5, 'sine', 0.015);
+      }
+      if (e === 0 || e === 4) musicDrum(at, 'kick', 0.05);
+      if (e === 3 || e === 6) musicDrum(at, 'rim');
+      musicDrum(at, 'shaker');
+    } },
+    // Strings, a saw softened by a low-pass filter, for the tune and the bass, and a harpsichord's quick square-wave chords
+    spring: { bpm: 100, per: 4, steps: SPRING_STEPS, play: ({ tune, bass, chord, soft }, at, sixteenth) => {
+      const v = soft ? 0.45 : 1;
+      if (tune) musicTone(midiHz(tune[0]), at, tune[1] * sixteenth * 0.92, 'sawtooth', 0.035 * v, { cutoff: 2600 });
+      if (bass) musicTone(midiHz(bass), at, sixteenth * 1.6, 'sawtooth', 0.052 * v, { cutoff: 700 });
+      if (chord) chord.forEach((n) => musicTone(midiHz(n), at, 0.28, 'square', 0.012 * v, { cutoff: 3000 }));
+    } }
+  };
+  // Notes are scheduled a little ahead, so a busy frame doesn't make them late
+  const startMusic = (kind) => {
+    if (music || !soundIsOn || !audio) return;
+    const song = SONGS[kind] || SONGS.bear, out = audio.createGain();
+    // It fades in, which is gentler, and keeps its first notes from coming through louder while the compressor settles
+    out.gain.setValueAtTime(0, audio.currentTime);
+    out.gain.linearRampToValueAtTime(MUSIC_LEVEL, audio.currentTime + 2.5);
+    out.connect(audioOut);
+    music = { out, step: 0, at: audio.currentTime + 0.1, tempo: 1, timer: 0 };
+    const plan = () => {
+      if (!music || music.out !== out) return;
+      if (music.at < audio.currentTime) music.at = audio.currentTime + 0.05;
+      while (music.at < audio.currentTime + 0.3) {
+        const step = 60 / song.bpm / (song.per || 2) / music.tempo;
+        song.play(song.steps[music.step], music.at, step);
+        music.at += step;
+        music.step = (music.step + 1) % song.steps.length;
+      }
+    };
+    music.timer = setInterval(plan, 80);
+    plan();
+  };
+  const stopMusic = (fade) => {
+    if (!music) return;
+    clearInterval(music.timer);
+    const { out } = music;
+    music = null;
+    out.gain.setTargetAtTime(0.0001, audio.currentTime, Math.max(0.01, fade / 4));
+    setTimeout(() => out.disconnect(), fade * 1000 + 600);
   };
   // The real moon's gravity is about a sixth of Earth's; a third keeps the jumps inside a banner this short
   const MOON_POINTS = 200, MOON_PULL = 1 / 3, MOON_LAUNCH = 0.68, MOON_REST = 18;
@@ -103,6 +340,19 @@
   // The Big Dipper on the bear's back, as in the sky: the bowl on its hip and the handle along its spine
   const BACK_STARS = { Alkaid: [24, -41], Mizar: [12, -48], Alioth: [-2, -44], Megrez: [-20, -49], Phecda: [-16, -33], Merak: [-31, -28], Dubhe: [-34, -44] };
   const BACK_LINES = ['Alkaid', 'Mizar', 'Alioth', 'Megrez', 'Phecda', 'Merak', 'Dubhe', 'Megrez'];
+  // The animals' own constellations, for the sky and the stars they come down from, scaled to a height of 1, from the top left.
+  // A fox's face, from the front: ear, inner ear, inner ear, ear, cheek, nose, cheek.
+  const FOX_SKY = [[0, 0], [0.3, 0.34], [0.7, 0.34], [1, 0], [0.93, 0.56], [0.5, 1], [0.07, 0.56]];
+  // Cancer as in the sky, never mirrored, from its stars' right ascension and declination, north up, in the order the crab's
+  // stages relight them: Acubens (alpha), Tarf (beta), Asellus Borealis (gamma), Asellus Australis (delta), Tegmine (zeta),
+  // Iota Cancri, and Praesepe, the Beehive Cluster, between the two Aselli, the donkeys at its manger
+  const CRAB_SKY = [[0, 0.864], [0.507, 1], [0.183, 0.373], [0.167, 0.542], [0.559, 0.568], [0.143, 0], [0.219, 0.464]];
+  const CRAB_NAMES = ['Acubens', 'Tarf', 'Asellus Borealis', 'Asellus Australis', 'Tegmine', 'Iota Cancri', 'Praesepe'];
+  // How each is drawn in the sky: its lines, by star, its colors, its brighter stars, and a star that's a cluster
+  const SKY_ANIMALS = {
+    fox: { spots: FOX_SKY, lines: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 0]], line: '#FFCF9A', star: '#FFF1DC', glow: '#FFD9A0', bright: [0, 3, 5] },
+    crab: { spots: CRAB_SKY, lines: [[5, 2], [2, 3], [3, 1], [3, 0]], line: '#A8F5E6', star: '#EAFFFA', glow: '#B4FFEC', bright: [1, 3, 5], cluster: 6 }
+  };
   // What makes each animal different. top: how tall it is, for the banner's ceiling. reach: what it can touch, more than its
   // body so catching feels generous, with food on a bridge out of reach from the ground. sting: what a bee can hit, less than
   // its body so a near miss stays a miss. low: while curled up, tuck: during a flip, when it is a smaller target.
@@ -112,7 +362,10 @@
       jump: 80, double: 52, stride: 76, stand: { hw: 30, h: 56 }, low: { hw: 15, h: 30 }, top: 66, edge: 64, dust: 34,
       reach: { hw: 46, top: 74, food: 60 }, lowReach: { r: 26, y: 15 }, sting: { hw: 32, top: 58 }, lowSting: { r: 17, y: 15 }, tuckSting: { r: 30, y: 45 },
       turnAt: [-4, -45.5], shadow: 'rgba(150,185,255,.95)', glow: [[0, 'rgba(140,175,255,.5)'], [0.45, 'rgba(120,130,255,.14)'], [1, 'rgba(120,130,255,0)']], bestKey: 'aurora-bear-best',
-      back: Object.values(BACK_STARS)
+      back: Object.values(BACK_STARS),
+      title: 'The Great Bear', who: 'The Great Bear', short: 'bear', names: STAGES.map((st) => st.name), unlocks: 'fox', tint: 'rgba(235,242,255,.55)', card: '169 193 255',
+      again: 'the Big Dipper', homeHint: 'Bring the Great Bear home to unlock a new animal',
+      keys: '← and → to run, ↑ or Space to jump (twice for a double jump), ↓ to roll, Esc to quit', taps: 'Tap to jump, tap again to double jump, and swipe down to roll'
     },
     // Quicker and lighter, a smaller target that also catches less. Its stars run along its spine.
     fox: {
@@ -120,14 +373,40 @@
       jump: 104, double: 44, stride: 62, stand: { hw: 22, h: 40 }, low: { hw: 20, h: 24 }, top: 62, edge: 48, dust: 26,
       reach: { hw: 30, top: 48, food: 36 }, lowReach: { r: 20, y: 10 }, sting: { hw: 20, top: 38 }, lowSting: { r: 12, y: 10 }, tuckSting: { r: 20, y: 30 },
       turnAt: [-1, -30], shadow: 'rgba(255,170,90,.95)', glow: [[0, 'rgba(255,180,110,.5)'], [0.45, 'rgba(255,130,80,.14)'], [1, 'rgba(255,120,80,0)']], bestKey: 'aurora-fox-best',
-      back: [[-24, -30], [-16, -33], [-8, -31], [-1, -29], [6, -31], [13, -31], [20, -27]], pounce: 78, foxFires: true
+      back: [[-24, -30], [-16, -33], [-8, -31], [-1, -29], [6, -31], [13, -31], [20, -27]], pounce: 78, foxFires: true,
+      title: 'The Little Fox', who: 'The fox', short: 'fox', names: null, unlocks: 'crab', tint: 'rgba(255,226,190,.55)', card: '255 214 160',
+      again: "the fox's stars", homeHint: 'Bring the fox home to unlock a new animal', says: { 1: 'Slide under the log' },
+      keys: '← and → to run, ↑ or Space to jump (twice for a double jump), ↓ to pounce in the air or slide on the ground, Esc to quit',
+      taps: 'Tap to jump, tap again to double jump, and swipe down to pounce or slide'
+    },
+    // Low and wide. It scuttles sideways, so it never turns around; it's short enough to walk under the log, jumps short, and
+    // catches wide with its claws. Down pulls it into its shell, where it can't move but stings bounce off. Cancer's stars lie
+    // across its shell.
+    crab: {
+      run: 240, accel: 2000, friction: 2600, airAccel: 1400, roll: 0, boost: 0, rollAccel: 0, rollFriction: 3200, tired: 0,
+      jump: 50, double: 34, stride: 34, stand: { hw: 28, h: 28 }, low: { hw: 26, h: 18 }, top: 40, edge: 56, dust: 22,
+      reach: { hw: 58, top: 50, food: 34 }, lowReach: { r: 22, y: 9 }, sting: { hw: 24, top: 26 }, lowSting: { r: 0, y: 9 }, tuckSting: { r: 20, y: 18 },
+      turnAt: [0, -16], shadow: 'rgba(130,240,220,.95)', glow: [[0, 'rgba(120,235,215,.5)'], [0.45, 'rgba(90,200,220,.14)'], [1, 'rgba(90,200,220,0)']], bestKey: 'aurora-crab-best',
+      back: CRAB_SKY.map(([fx, fy]) => [(fy - 0.5) * 30, -15 + (fx - 0.28) * 16]), sideways: true, shell: true,
+      title: 'The Crab', who: 'The crab', short: 'crab', names: CRAB_NAMES, unlocks: null, tint: 'rgba(190,255,236,.55)', card: '159 245 220',
+      again: "the crab's stars", says: { 1: 'Walk under the log', 6: 'The Beehive Cluster' },
+      keys: '← and → to scuttle, ↑ or Space to jump (twice for a double jump), ↓ to pull into its shell, Esc to quit',
+      taps: 'Tap to jump, tap again to double jump, and swipe down to pull into its shell'
     }
   };
-  // A good enough run as the bear brings the fox: its stars appear in the sky, and clicking them starts the game as the fox
-  const UNLOCK_STARS = 20, ANIMALS_KEY = 'aurora-animals', FOX_FIRES_EVERY = 10, FOX_FIRES_POINTS = 250, SWAT_POINTS = 25;
+  // Bringing the Great Bear home brings the fox, and bringing the fox home the crab: its stars appear in the sky, and clicking
+  // them starts the game as that animal
+  const ANIMALS_KEY = 'aurora-animals', FOX_FIRES_EVERY = 10, FOX_FIRES_POINTS = 250, SWAT_POINTS = 25;
   const FOX_BODY = new Path2D('M-26-19C-32-26-29-36-18-36C-8-37 2-33 12-35C19-37 24-32 24-25C24-20 14-17 2-16C-8-15-20-14-26-19Z');
-  // A fox's face, from the front, as a constellation: ear, inner ear, inner ear, ear, cheek, nose, cheek
-  const FOX_SKY = [[0, 0], [0.3, 0.34], [0.7, 0.34], [1, 0], [0.93, 0.56], [0.5, 1], [0.07, 0.56]];
+  // The animals brought home in this browser. The first time all three are, the grand finale plays.
+  const HOMES_KEY = 'aurora-homes';
+  const bringHome = (kind) => {
+    let list = [];
+    try { list = (localStorage.getItem(HOMES_KEY) || '').split(',').filter(Boolean); } catch (e) { return false; }
+    if (list.includes(kind)) return false;
+    try { localStorage.setItem(HOMES_KEY, [...list, kind].join(',')); } catch (e) { return false; }
+    return Object.keys(ANIMALS).every((other) => other === kind || list.includes(other));
+  };
   const unlockedAnimals = () => { try { return (localStorage.getItem(ANIMALS_KEY) || '').split(',').filter(Boolean); } catch (e) { return []; } };
   const unlockAnimal = (name) => {
     const list = unlockedAnimals();
@@ -135,22 +414,27 @@
   };
   const STYLE = `
 .bn-bear-layer{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+.bn-fireworks{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.bn-bear-dawn{position:absolute;inset:0;pointer-events:none;opacity:0;background:linear-gradient(0deg,rgb(160 172 240/.75),rgb(160 172 240/0) 62%)}
 .bn-bear-on{cursor:default;touch-action:none}
 .bn-bear-on .bn-labels{z-index:2}
 .bn-bear-on .bn-figure,.bn-bear-on .bn-label-dipper,.bn-bear-on .bn-label-north,.bn-bear-on .bn-meteor,.bn-bear-on .bn-plane,.bn-bear-on .bn-sat{visibility:hidden}
 .bn-animal-sky{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .bn-animal-sky .lines{opacity:.45;transition:opacity .5s}
-.bn-animal-on .bn-animal-sky .lines{opacity:1}
-.bn-as-fox .bn-animal-sky{visibility:hidden}
+.bn-animal-sky g.on .lines{opacity:1}
+.bn-as-fox .bn-animal-sky .fox,.bn-as-crab .bn-animal-sky .crab{visibility:hidden}
 .bn-animal-label{position:absolute;left:0;top:0;opacity:0;font-size:.8125rem;line-height:1;letter-spacing:.02em;color:#FFDDB0;text-shadow:0 0 6px #060D26,0 0 2px #060D26;white-space:nowrap;transition:opacity .6s}
-.bn-animal-on .bn-animal-label{opacity:1}
+.bn-animal-label.crab{color:#C4FFF0}
+.bn-animal-label.on{opacity:1}
 .bn-bear-on .bn-animal-label{opacity:0}
 .bn-bear-hint,.bn-bear-quit{position:absolute;font-size:.75rem;line-height:1;color:rgba(232,238,255,.9);text-shadow:0 0 4px #04071A,0 0 2px #04071A;white-space:nowrap}
 .bn-bear-hint{left:50%;top:30px;transform:translateX(-50%);transition:opacity .8s}
+.bn-wave.bn-bear-wave{top:max(26%,46px)}
 .bn-bear-score{position:absolute;left:50%;top:10px;transform:translateX(-50%);font-size:.8125rem;font-weight:600;line-height:1;color:rgba(232,238,255,.95);text-shadow:0 0 4px #04071A,0 0 2px #04071A;white-space:nowrap}
 .bn-bear-quit{right:0;top:0;padding:10px 12px 8px;cursor:pointer;pointer-events:auto}
 .bn-bear-score.link{pointer-events:auto;cursor:pointer}
-.bn-bear-sound{position:absolute;right:0;bottom:0;padding:10px 12px 8px;font-size:.75rem;line-height:1;color:rgba(232,238,255,.85);text-shadow:0 0 4px #04071A;cursor:pointer;pointer-events:auto}
+.bn-bear-sound{position:absolute;right:0;bottom:0;display:flex;align-items:center;gap:5px;padding:8px 12px;font-size:.8125rem;line-height:1;color:rgba(232,238,255,.9);text-shadow:0 0 4px #04071A;cursor:pointer;pointer-events:auto}
+.bn-bear-sound svg{flex:none;filter:drop-shadow(0 0 2px #04071A)}
 .bn-bear-sound:hover{text-decoration:underline;text-underline-offset:2px}
 .bn-bear-score.link span{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
 .bn-bear-quit:hover{text-decoration:underline;text-underline-offset:2px}`;
@@ -200,7 +484,8 @@
   const addStyle = () => {
     if (!document.getElementById('bn-bear-style')) document.head.append(Object.assign(document.createElement('style'), { id: 'bn-bear-style', textContent: STYLE }));
   };
-  // An unlocked animal's constellation, left of the Big Dipper, where even a phone has room
+  // The unlocked animals' constellations, side by side left of the Big Dipper, where even a phone has room: the crab's, then the
+  // fox's, each in a group of its own, with a label under it
   let skyBoxes = [], skyWatching = false, skyTimer = 0;
   const svgEl = (tag, attrs) => {
     const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -210,32 +495,47 @@
   const drawSky = (banner) => {
     addStyle();
     let sky = banner.querySelector('.bn-animal-sky');
-    const b = banner.getBoundingClientRect(), left = banner.querySelector('.bn-dipper-stars').getBoundingClientRect().left - b.left, size = Math.min(b.height * 0.24, left - 16);
+    const b = banner.getBoundingClientRect(), left = banner.querySelector('.bn-dipper-stars').getBoundingClientRect().left - b.left;
+    const kinds = ['crab', 'fox'].filter((kind) => unlockedAnimals().includes(kind)), labels = banner.querySelector('.bn-labels');
+    const aspect = (kind) => Math.max(...SKY_ANIMALS[kind].spots.map(([fx]) => fx)), widths = kinds.reduce((sum, kind) => sum + aspect(kind), 0);
+    // As tall as a quarter of the banner, or less where they'd crowd, with a gap of 16 px around each
+    const size = Math.min(b.height * 0.24, (left - 16 * (kinds.length + 1)) / (widths || 1)), gap = (left - widths * size) / (kinds.length + 1);
     skyBoxes = [];
-    if (!unlockedAnimals().includes('fox') || size < 20) { if (sky) sky.remove(); return; }
+    labels.querySelectorAll('.bn-animal-label').forEach((el) => { if (!kinds.includes(el.dataset.kind)) el.remove(); });
+    if (!kinds.length || size < 20) { if (sky) sky.remove(); labels.querySelectorAll('.bn-animal-label').forEach((el) => el.remove()); return; }
     if (!sky) {
       sky = svgEl('svg', { class: 'bn-animal-sky', 'aria-hidden': 'true', focusable: 'false' });
       banner.querySelector('.bn-sky').after(sky);
     }
-    const x0 = left / 2 - size / 2, y0 = b.height * 0.1, spots = FOX_SKY.map(([fx, fy]) => [x0 + fx * size, y0 + fy * size]);
-    const defs = svgEl('defs', {}), soft = defs.appendChild(svgEl('radialGradient', { id: 'bn-animal-glow' }));
-    soft.append(svgEl('stop', { offset: 0, 'stop-color': '#FFD9A0', 'stop-opacity': 0.6 }), svgEl('stop', { offset: 1, 'stop-color': '#FFD9A0', 'stop-opacity': 0 }));
-    const lines = svgEl('polyline', { class: 'lines', points: [...spots, spots[0]].map((p) => p.map((v) => v.toFixed(1)).join(',')).join(' '), fill: 'none', stroke: '#FFCF9A', 'stroke-opacity': 0.75, 'stroke-width': 0.9, 'stroke-linejoin': 'round' });
-    sky.replaceChildren(defs, lines);
-    spots.forEach(([x, y], i) => {
-      sky.append(svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 5.5, fill: 'url(#bn-animal-glow)' }));
-      sky.append(svgEl('circle', { 'data-sky-star': i, cx: x.toFixed(1), cy: y.toFixed(1), r: i === 5 || i === 0 || i === 3 ? 1.7 : 1.3, fill: '#FFF1DC' }));
+    sky.replaceChildren();
+    let x0 = gap;
+    kinds.forEach((kind) => {
+      const look = SKY_ANIMALS[kind], y0 = b.height * 0.1, wide = aspect(kind) * size, spots = look.spots.map(([fx, fy]) => [x0 + fx * size, y0 + fy * size]);
+      const group = sky.appendChild(svgEl('g', { class: kind, 'data-kind': kind })), defs = group.appendChild(svgEl('defs', {}));
+      const soft = defs.appendChild(svgEl('radialGradient', { id: `bn-animal-glow-${kind}` }));
+      soft.append(svgEl('stop', { offset: 0, 'stop-color': look.glow, 'stop-opacity': 0.6 }), svgEl('stop', { offset: 1, 'stop-color': look.glow, 'stop-opacity': 0 }));
+      const lines = group.appendChild(svgEl('g', { class: 'lines', stroke: look.line, 'stroke-opacity': 0.75, 'stroke-width': 0.9, 'stroke-linecap': 'round' }));
+      look.lines.forEach(([a, c]) => lines.append(svgEl('line', { x1: spots[a][0].toFixed(1), y1: spots[a][1].toFixed(1), x2: spots[c][0].toFixed(1), y2: spots[c][1].toFixed(1) })));
+      spots.forEach(([x, y], i) => {
+        group.append(svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 5.5, fill: `url(#bn-animal-glow-${kind})` }));
+        // A cluster is a few faint stars together, around the one the game uses
+        if (look.cluster === i) [[-2.2, -1.1], [1.9, -1.6], [2.4, 1.2], [-1.4, 2], [0.3, -2.6]].forEach(([dx, dy]) => group.append(svgEl('circle', { cx: (x + dx).toFixed(1), cy: (y + dy).toFixed(1), r: 0.6, fill: look.star })));
+        group.append(svgEl('circle', { 'data-sky-star': i, cx: x.toFixed(1), cy: y.toFixed(1), r: look.bright.includes(i) ? 1.7 : look.cluster === i ? 0.8 : 1.3, fill: look.star }));
+      });
+      skyBoxes.push({ kind, l: x0 - 14, r: x0 + wide + 14, t: y0 - 12, b: y0 + size + 12 });
+      const label = labels.querySelector(`.bn-animal-label[data-kind="${kind}"]`) || labels.appendChild(Object.assign(document.createElement('span'), { className: `bn-animal-label ${kind}` }));
+      label.dataset.kind = kind;
+      label.textContent = `${matchMedia('(hover: none)').matches ? 'Tap' : 'Click'} to play as ${kind === 'fox' ? 'the Little Fox' : 'the Crab'}`;
+      label.style.transform = `translate(${Math.max(8, x0 - 8).toFixed(1)}px, ${(y0 + size + 10).toFixed(1)}px)`;
+      x0 += wide + gap;
     });
-    skyBoxes.push({ kind: 'fox', l: x0 - 14, r: x0 + size + 14, t: y0 - 12, b: y0 + size + 12 });
-    const labels = banner.querySelector('.bn-labels');
-    const label = labels.querySelector('.bn-animal-label') || labels.appendChild(Object.assign(document.createElement('span'), { className: 'bn-animal-label' }));
-    label.textContent = `The Little Fox · ${matchMedia('(hover: none)').matches ? 'Tap' : 'Click'} to play`;
-    label.style.transform = `translate(${Math.max(8, x0 - 8).toFixed(1)}px, ${(y0 + size + 10).toFixed(1)}px)`;
   };
-  const showSkyLabel = (banner, ms) => {
+  // An animal's label and lines, or every animal's; for a while, or until shown otherwise
+  const showSkyLabel = (banner, ms, kind) => {
     clearTimeout(skyTimer);
-    banner.classList.add('bn-animal-on');
-    if (ms) skyTimer = setTimeout(() => banner.classList.remove('bn-animal-on'), ms);
+    const parts = [...banner.querySelectorAll('.bn-animal-label, .bn-animal-sky g[data-kind]')];
+    parts.forEach((el) => el.classList.toggle('on', !!kind && el.dataset.kind === kind));
+    if (ms) skyTimer = setTimeout(() => parts.forEach((el) => el.classList.remove('on')), ms);
   };
   const animalAt = (x, y) => { const hit = skyBoxes.find((s) => x >= s.l && x <= s.r && y >= s.t && y <= s.b); return hit ? hit.kind : null; };
   const showAnimals = (banner, announce) => {
@@ -244,14 +544,15 @@
     if (!skyWatching) {
       skyWatching = true;
       window.addEventListener('resize', () => drawSky(banner));
-      let over = false;
+      let over = null;
       banner.addEventListener('pointermove', (e) => {
         if (e.pointerType === 'touch') return;
-        const b = banner.getBoundingClientRect(), now = !current && !!animalAt(e.clientX - b.left, e.clientY - b.top);
-        if (now !== over) { over = now; showSkyLabel(banner, now ? 0 : 1000); }
+        const b = banner.getBoundingClientRect(), now = current ? null : animalAt(e.clientX - b.left, e.clientY - b.top);
+        if (now !== over) { const was = over; over = now; showSkyLabel(banner, now ? 0 : 1000, now || was); }
       });
     }
-    if (announce && skyBoxes.length) showSkyLabel(banner, 6000);
+    // When the page opens, the label of the animal unlocked last, so two labels don't overlap
+    if (announce && skyBoxes.length) showSkyLabel(banner, 6000, unlockedAnimals().filter((kind) => SKY_ANIMALS[kind]).pop());
   };
   const start = (banner, onEnd, options = {}) => {
     if (current) return;
@@ -259,7 +560,7 @@
     const jumpV = Math.sqrt(2 * GRAVITY * A.jump), doubleV = Math.sqrt(2 * GRAVITY * A.double);
     if (lingering) lingering();
     addStyle();
-    if (kind === 'fox') drawSky(banner);
+    if (SKY_ANIMALS[kind]) drawSky(banner);
     const box = banner.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1), u = box.height / 216, W = box.width / u;
     // The hills stay anchored to the banner's bottom edge and its middle, however it is cropped
     const k = Math.max(box.width / 1600, box.height / 240), side = (1600 - box.width / k) / 2;
@@ -280,18 +581,19 @@
       for (let i = -w / 2; i <= w / 2; i += 5) high = Math.min(high, floorAt(x + i));
       return { x, y: high - 33 - 18, w, h: 18 };
     };
-    const logs = [logAt(W * 0.36, 110)];
-    const levelLayer = addLayer(), layer = addLayer(), foreLayer = canvas(box.width * dpr, box.height * dpr), ctx = layer.getContext('2d');
+    // The log: none in the first stage, and from Merak's on, somewhere new each stage (moveLog), first where it always was
+    const logW = 110, firstLog = logAt(W * 0.36, logW), logs = [];
+    const levelLayer = addLayer(), logLayer = addLayer(), layer = addLayer(), foreLayer = canvas(box.width * dpr, box.height * dpr), ctx = layer.getContext('2d');
     // In front of the bear, for depth: a low near hill and clumps of spruce, darker than the forest behind, standing still. They
-    // leave the log and the cabin in view.
-    const clumps = [];
+    // leave the log's first place and the cabin in view.
+    const clumps = [], cabinX = (1150 - side) * k / u;
     {
       const c = foreLayer.getContext('2d');
       c.scale(scale, scale);
       let seed = 41;
       const rand = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
       const bottom = box.height / u, hillAt = (x) => Math.min(bottom + 2, floorAt(x) + 8 + 9 * Math.sin(x / 170 + 1.1) + 5 * Math.sin(x / 61 + 0.4));
-      const cabinX = (1150 - side) * k / u, keepClear = [[cabinX, 75], ...logs.map((l) => [l.x, l.w / 2 + 40])];
+      const keepClear = [[cabinX, 75], [firstLog.x, firstLog.w / 2 + 40]];
       const spruce = (x, base, h) => {
         const tiers = Math.max(5, Math.min(13, Math.round(h / 4.5))), step = h * 0.86 / tiers, half0 = h * (0.2 + rand() * 0.06), lefts = [], rights = [];
         for (let i = 0; i < tiers; i++) {
@@ -325,9 +627,27 @@
         }
       }
     }
-    {
-      const c = levelLayer.getContext('2d');
-      c.scale(scale, scale);
+    // Where the log can go: clear of the clumps in front, so it stays in view, of the cabin and of the banner's edges, and when
+    // there's room, out from under the low bridges, which it would crowd. Places at least 150 apart, the first one first. The
+    // clumps leave room for three on a wide banner and one or two on a phone.
+    const logSpots = (() => {
+      const low = ledges.filter((l) => floorAt(l.x) - l.y < 80);
+      const clear = (x, roomy) => x - logW / 2 > 100 && x + logW / 2 < W - 100 && Math.abs(x - cabinX) > 75 + logW / 2
+        && clumps.every((c) => Math.abs(x - c.x) > c.wide + 24 + logW / 2) && (!roomy || low.every((l) => Math.abs(x - l.x) > l.w / 2 + logW / 2 + 10));
+      const find = (roomy) => {
+        const spots = [firstLog.x];
+        for (let x = 0; x <= W; x += 10) if (clear(x, roomy) && spots.every((s) => Math.abs(x - s) >= 150)) spots.push(x);
+        return spots;
+      };
+      const roomy = find(true);
+      return roomy.length >= 3 ? roomy : find(false);
+    })();
+    // The log has a layer of its own, so it can fade out where it was and in where it goes
+    const paintLogs = () => {
+      const c = logLayer.getContext('2d');
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.clearRect(0, 0, logLayer.width, logLayer.height);
+      c.setTransform(scale, 0, 0, scale, 0, 0);
       logs.forEach((l) => {
         const left = l.x - l.w / 2, right = l.x + l.w / 2;
         c.fillStyle = '#060A1E';
@@ -352,6 +672,10 @@
         c.lineTo(right - 8, l.y + 0.8);
         c.stroke();
       });
+    };
+    {
+      const c = levelLayer.getContext('2d');
+      c.scale(scale, scale);
       const dot = softDot(64, [[0, 'rgba(255,255,255,1)'], [0.25, 'rgba(255,240,205,.55)'], [1, 'rgba(255,235,190,0)']]);
       ledges.forEach((l, n) => {
         const count = Math.max(4, Math.round(l.w / 28)), left = l.x - l.w / 2;
@@ -532,20 +856,53 @@
     const POWERS = ['#FFD84D', '#FFB6E6', '#9FF5DC', '#D2B3FF'].map(powerSprite);
 
     // The seven stars leave the sky, and go back at the end
-    const skyEls = kind === 'fox' ? [...banner.querySelectorAll('.bn-animal-sky [data-sky-star]')] : Object.keys(BACK_STARS).map((name) => banner.querySelector(`[data-star="${name}"]`));
+    const skyEls = SKY_ANIMALS[kind] ? [...banner.querySelectorAll(`.bn-animal-sky .${kind} [data-sky-star]`)] : Object.keys(BACK_STARS).map((name) => banner.querySelector(`[data-star="${name}"]`));
     const skyStars = skyEls.map((el, i) => {
       const r = el.getBoundingClientRect();
       return { el, to: A.back[i], x: (r.left + r.width / 2 - box.left) / u, y: (r.top + r.height / 2 - box.top) / u };
     });
     const under = skyStars.length ? skyStars.reduce((sum, s) => sum + s.x, 0) / skyStars.length : W * 0.25;
-    const me = { x: clamp(under, A.edge, W - A.edge), y: floorAt(clamp(under, A.edge, W - A.edge)), tilt: 0, tuck: 0, tail: -0.55, dive: 0, pouncing: false, power: 0, powerChain: 0, on: null, onFloor: true, hurt: 0, flash: 0, moonTime: 0, energy: 1, tired: false, peace: false, vx: 0, vy: 0, face: 1, ground: true, rolling: false, curl: 0, jumps: 0, coyote: COYOTE, buffer: 0, flip: 1, squash: 0, gait: 0, rollUntil: 0, alpha: 0, time: 0, autoDir: 1 };
+    // The stages relight them in order: the Dipper's from Dubhe, around the bowl and out along the handle, the fox's around its
+    // face, and Cancer's by their Greek letters, ending with Praesepe. A relit star shines on the animal's back at once, and in
+    // the sky when its big star gets there. skyLines: the lines between them, as pairs of stars.
+    const order = kind === 'bear' ? STAGES.map((st) => Object.keys(BACK_STARS).indexOf(st.name)) : [0, 1, 2, 3, 4, 5, 6];
+    const dipperLine = BACK_LINES.map((name) => Object.keys(BACK_STARS).indexOf(name));
+    const skyLines = kind === 'bear' ? dipperLine.slice(1).map((c, n) => [dipperLine[n], c]) : SKY_ANIMALS[kind].lines;
+    const skyGlow = kind === 'bear' ? starGlow : softDot(64, [[0, 'rgba(255,255,255,1)'], [0.25, A.tint], [1, A.tint.replace(/[\d.]+\)$/, '0)')]]);
+    const stageName = (n) => (A.names ? A.names[n] : `Star ${n + 1}`);
+    // The big star being made, in a clear part of the sky between the middle and the moon (forge); stars on their way to it
+    // (pieces); each stage's points so far, in the colors of the stars that made them (built); finished big stars on their way
+    // to the constellation (beams); and the places in the sky they've reached (skyLit). forged: big stars finished so far, so
+    // the one being made is for that stage.
+    const lit = Array(7).fill(false), beams = [], pieces = [], built = STAGES.map(() => []), skyLit = Array(7).fill(false);
+    const forge = { x: W * 0.74, y: 56, R: 18, r: 7.5 };
+    let stage = 0, got = 0, forged = 0, forgeAge = 1, between = 0, night = 0, warned = false, ending = '', home = null, shownMinute = -1;
+    const inSky = (i) => skyLit[i];
+    // A point of the big star, k from the top and around clockwise, at a fraction f of the way out from the middle
+    const pointAt = (k, f) => { const a = -Math.PI / 2 + k * TAU / POINTS; return [forge.x + Math.cos(a) * forge.R * f, forge.y + Math.sin(a) * forge.R * f]; };
+    const pieceAt = (p) => {
+      const t = smooth(clamp(p.age / p.life, 0, 1)), [tx, ty] = pointAt(p.k, 0.62);
+      return [lerp(p.from.x, tx, t), lerp(p.from.y, ty, t) - Math.sin(t * Math.PI) * 36];
+    };
+    // A finished big star flashes where it was made, then flies across to its place, shrinking to a star's size as it goes
+    const beamAt = (b) => {
+      const t = smooth(clamp((b.age - b.hold) / (b.life - b.hold), 0, 1)), to = skyStars[b.i];
+      return [lerp(b.from.x, to.x, t), lerp(b.from.y, to.y, t) - Math.sin(t * Math.PI) * 30, t];
+    };
+    // Alcor sits on the same side of Mizar as in the sky, though farther out, or it couldn't be told apart
+    const alcor = kind === 'bear' && skyStars.length === 7 ? (() => {
+      const [mizar, alkaid] = ['Mizar', 'Alkaid'].map((name) => skyStars[Object.keys(BACK_STARS).indexOf(name)]);
+      const dx = alkaid.x - mizar.x, dy = alkaid.y - mizar.y, d = Math.hypot(dx, dy) || 1, c = Math.cos(ALCOR_TURN), s = Math.sin(ALCOR_TURN);
+      return { x: mizar.x + (dx * c - dy * s) / d * ALCOR_GAP, y: mizar.y + (dx * s + dy * c) / d * ALCOR_GAP, got: false };
+    })() : null;
+    const me = { x: clamp(under, A.edge, W - A.edge), y: floorAt(clamp(under, A.edge, W - A.edge)), tilt: 0, tuck: 0, tail: -0.55, dive: 0, pouncing: false, power: 0, powerChain: 0, on: null, onFloor: true, hurt: 0, flash: 0, moonTime: 0, energy: 1, tired: false, snore: 0, snip: 0, vx: 0, vy: 0, face: 1, ground: true, rolling: false, curl: 0, jumps: 0, coyote: COYOTE, buffer: 0, flip: 1, squash: 0, gait: 0, rollUntil: 0, alpha: 0, time: 0, autoDir: 1 };
     const keys = { left: false, right: false, down: false, jump: false };
     const sparks = [], fallers = [], pops = [], bees = [], pots = [], visitors = [], rings = [], powers = [];
     let nextPower = 22 + Math.random() * 10;
-    let foxKnown = unlockedAnimals().includes('fox'), unlockedNow = false;
+    let unlockedNow = '', finale = false;
     let combo = 0, comboLeft = 0, bestCombo = 0, newBest = false;
-    const counts = { berries: 0, honey: 0, bees: 0, satellites: 0, rides: 0, moons: 0, fires: 0, miles: 0 };
-    let rideMiles = 0, rideClock = 0;
+    const counts = { berries: 0, honey: 0, bees: 0, satellites: 0, rides: 0, moons: 0, fires: 0, miles: 0, booms: 0, alcor: 0, left: 0 };
+    let rideMiles = 0, rideClock = 0, rideAir = 0, ridePlane = null;
     // On a meteor shower's peak night, as in the shooting star game, stars are worth double
     const peak = options.peak || null;
     const uiFont = getComputedStyle(banner).fontFamily;
@@ -558,22 +915,23 @@
     const moonGroup = banner.querySelector('.bn-moon'), moonDisc = banner.querySelector('.bn-moon-face'), moonArt = banner.querySelector('.bn-moonlayer');
     const moon = moonGroup && moonDisc && moonGroup.classList.contains('on') ? (() => {
       const r = moonDisc.getBoundingClientRect();
-      return { x: (r.left + r.width / 2 - box.left) / u, y: (r.top + r.height / 2 - box.top) / u, r: r.width / 2 / u, lit: Number(moonGroup.dataset.lit) || 0.5, rest: 0, flash: 0, total: 0, used: false, told: false };
+      return { x: (r.left + r.width / 2 - box.left) / u, y: (r.top + r.height / 2 - box.top) / u, r: r.width / 2 / u, lit: Number(moonGroup.dataset.lit) || 0.5, rest: 0, flash: 0, total: 0 };
     })() : null;
     // Keeps a wide banner busy and a narrow one from crowding
     const density = Math.sqrt(clamp(W / 1440, 0.4, 1.7));
     let floorSum = 0;
     for (let x = 0; x <= W; x += 20) floorSum += floorAt(x);
     const planeY = floorSum / (Math.floor(W / 20) + 1) - PLANE_UP;
-    // Where berries grow: along the ground, on the bridges, on top of the log and under it, where only a ball can reach
-    const berries = [];
-    for (let x = 70; x < W - 40; x += 175) if (!logs.some((l) => Math.abs(x - l.x) < l.w / 2 + 30)) berries.push({ x, y: floorAt(x) - 10 });
+    // Where berries grow: along the ground, on the bridges, on top of the log and under it, where only a ball can reach. The
+    // two by the log go where it goes, and grow only while it's there.
+    const berries = [], logBerries = [{ x: firstLog.x, y: firstLog.y - 10, log: true }, { x: firstLog.x, y: floorAt(firstLog.x) - 9, under: true, log: true }];
+    for (let x = 70; x < W - 40; x += 175) if (Math.abs(x - firstLog.x) >= firstLog.w / 2 + 30) berries.push({ x, y: floorAt(x) - 10 });
     ledges.forEach((l) => [-0.28, 0.28].forEach((f) => berries.push({ x: l.x + l.w * f, y: l.y - 10 })));
-    logs.forEach((l) => berries.push({ x: l.x, y: l.y - 10 }, { x: l.x, y: floorAt(l.x) - 9, under: true }));
+    berries.push(...logBerries);
     const berryLimit = Math.max(2, Math.round(W / 360));
     let nextBerry = 6;
     const growBerry = () => {
-      const free = berries.filter((b) => !b.on && Math.abs(b.x - me.x) > 120);
+      const free = berries.filter((b) => !b.on && Math.abs(b.x - me.x) > 120 && (!b.log || logs.length));
       if (!free.length || berries.filter((b) => b.on).length >= berryLimit) return false;
       const b = free[Math.floor(Math.random() * free.length)];
       b.on = true;
@@ -581,9 +939,38 @@
       return true;
     };
     berries.forEach((b) => { b.on = false; b.grow = 1; });
-    // The hidden one under the log starts out there, as a reward for finding it
-    berries.filter((b) => b.under).forEach((b) => { b.on = true; b.grow = 1; });
     while (growBerry());
+    // A new place for the log, at the start of each stage from Merak's: it fades out where it was, and in somewhere new once it
+    // has, chosen then, away from the animal and any honey pot. The berry under it is there again, as a reward for finding it.
+    // With nowhere else free, as on a banner with room for it in only one place, it stays where it is.
+    const moveLog = () => {
+      const old = logs[0], near = logW / 2 + A.stand.hw + 12;
+      const free = (x, gap) => Math.abs(x - me.x) > gap && !pots.some((p) => Math.abs(p.x - x) < logW / 2 + 20);
+      if (old && !logSpots.some((x) => Math.abs(x - old.x) > 100 && free(x, near))) return;
+      const appear = () => {
+        if (!running || ending || logs.length) return;
+        const others = logSpots.filter((x) => !old || Math.abs(x - old.x) > 100), wide = others.filter((x) => free(x, 160));
+        const ok = wide.length ? wide : others.filter((x) => free(x, near));
+        // The first time, where it always was if that's free; then anywhere else that's free; failing that, back where it was;
+        // and with the animal in the way of all of them, in a moment
+        const x = !old && ok.includes(logSpots[0]) ? logSpots[0] : ok.length ? ok[Math.floor(Math.random() * ok.length)] : old && free(old.x, near) ? old.x : undefined;
+        if (x === undefined) { setTimeout(appear, 400); return; }
+        logLayer.style.opacity = '';
+        const l = logAt(x, logW);
+        logs.push(l);
+        paintLogs();
+        Object.assign(logBerries[0], { x, y: l.y - 10 });
+        Object.assign(logBerries[1], { x, y: floorAt(x) - 9, on: true, grow: 0 });
+        shower(x, l.y + 9, 16, 'rgb(255,233,184)');
+        logLayer.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 450 });
+      };
+      if (!old) { appear(); return; }
+      logs.length = 0;
+      logBerries.forEach((b) => { b.on = false; });
+      shower(old.x, old.y + 9, 14, 'rgb(190,200,255)');
+      logLayer.style.opacity = '0';
+      logLayer.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300 }).onfinish = appear;
+    };
     let phase = 'in', phaseTime = 0, running = true, acc = 0, last = performance.now(), swipeRoll = false;
 
     const spark = (x, y, vx, vy, life, size, color) => {
@@ -596,17 +983,39 @@
         spark(x, y, Math.cos(a) * v, Math.sin(a) * v, life * (0.6 + 0.4 * Math.random()), 0.9 + Math.random() * 1.1, SPARKS[i % SPARKS.length]);
       }
     };
-    // Faster, smaller stars are worth more, as in the star game. They fall more slowly than there, since the bear has to get under them.
+    // Faster, smaller stars are worth more, as in the star game. They fall more slowly than there, since the bear has to get under
+    // them, and each stage brings more of the fast ones.
     const dropStar = () => {
       if (fallers.length >= 14) return;
-      const speed = Math.random() ** 1.4, large = Math.random(), x1 = 30 + Math.random() * (W - 60), x0 = x1 + (Math.random() - 0.5) * 170;
+      const speed = Math.random() ** STAGES[Math.min(stage, STAGES.length - 1)].slow, large = Math.random(), x1 = 30 + Math.random() * (W - 60), x0 = x1 + (Math.random() - 0.5) * 170;
       const value = 5 * Math.round((10 + 50 * speed + 30 * (1 - large) + 60 * speed * (1 - large)) / 5);
       fallers.push({ x0, x1, y0: -14, y1: floorAt(x1), t: 0, ms: 4.4 - 2.2 * speed, r: 3 + 5 * large, head: 1.7 + 2.6 * large, tail: 34 + 80 * speed, points: value, color: starColor(speed) });
     };
+    // Stars shed by a ridden airliner's engines, drifting down behind it: slow, so orange, and worth a little. They start below
+    // the deck, out of reach of a rider, so catching them means jumping off. A sonic boom throws out a fan of them (spread),
+    // however many are already falling.
+    const shedStar = (v, spread) => {
+      if (spread === undefined && fallers.filter((f) => f.exhaust).length >= EXHAUST_LIMIT) return;
+      const dir = v.face || 1, x0 = v.x - dir * 30, x1 = clamp(x0 - dir * (20 + Math.random() * 60) + (spread || 0), 20, W - 20);
+      fallers.push({ x0, x1, y0: v.y + 16, y1: floorAt(x1), t: 0, ms: 3.2 + Math.random() * 1.2, r: 4, head: 2.4, tail: 42, points: 35, color: starColor(0.1), exhaust: true });
+    };
     const number = (n) => n.toLocaleString('en-US');
+    // The night's time, from 9 PM to 6 AM, and the minutes of it gone
+    const nightMinutes = () => Math.floor(Math.min(1, night / NIGHT_SECONDS) * NIGHT_HOURS * 60);
+    // A stretch of night, as "3 h", "45 min" or "1 h 47 min"
+    const hoursMinutes = (m) => [Math.floor(m / 60) && `${Math.floor(m / 60)} h`, m % 60 && `${m % 60} min`].filter(Boolean).join(' ');
+    const clock = () => {
+      const at = (NIGHT_STARTS * 60 + nightMinutes()) % 1440, h = Math.floor(at / 60);
+      return `${(h + 11) % 12 + 1}:${String(at % 60).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+    };
+    // The stage's star and how many of its stars are caught, then the points, the lives and the time; shorter on a narrow banner.
+    // Once the run is over, the line gives its result instead.
     const showScore = () => {
-      const goal = kind === 'bear' && !foxKnown;
-      score.textContent = `${number(points)} points · ${caught}${goal ? ` of ${UNLOCK_STARS}` : ''} ${caught === 1 && !goal ? 'star' : 'stars'} · ${lives} ${lives === 1 ? 'life' : 'lives'} left`;
+      if (ending) return;
+      const S = STAGES[Math.min(stage, STAGES.length - 1)], name = stageName(Math.min(stage, STAGES.length - 1)), life = lives === 1 ? 'life' : 'lives';
+      score.textContent = box.width < 600
+        ? `${name} ${got}/${POINTS}, ${number(points)} points, ${lives} ${life}, ${clock()}`
+        : `${name}: ${got} of ${POINTS} stars, ${number(points)} points, ${lives} ${life}, ${clock()}`;
     };
     const pop = (x, y, text, color, life) => pops.push({ x, y, age: 0, text, color, life: life || Math.max(0.9, 0.055 * text.length) });
     const shower = (x, y, count, color) => { for (let n = 0; n < count; n++) { const a = Math.random() * TAU, v = 50 + Math.random() * 130; spark(x, y, Math.cos(a) * v, Math.sin(a) * v, 0.55, 0.9 + Math.random(), color); } };
@@ -630,7 +1039,7 @@
       bestCombo = Math.max(bestCombo, combo);
       const m = tier(), worth = base * m;
       points += worth;
-      pop(x, y, `${before ? `${before} ` : ''}+${number(worth)}${m > 1 ? ` ×${m}` : ''}${after ? ` · ${after}` : ''}`, color, life);
+      pop(x, y, `${before ? `${before} ` : ''}+${number(worth)}${m > 1 ? ` ×${m}` : ''}${after ? ` ${after}` : ''}`, color, life);
       if (m > was) {
         pop(me.x, me.y - A.top - 40, `Combo ×${m}!`, COMBO_COLORS[m], 1.6);
         sfx.tier(m);
@@ -654,7 +1063,7 @@
       award(f.points * (peak ? 2 : 1), x, y - 8, `rgb(${f.color})`);
       sfx.catch(Math.max(1, combo));
       shower(x, y, 12, `rgb(${f.color})`);
-      if (kind !== 'fox' && caught % 10 === 0) pop(me.x, me.y - A.top - 56, `${caught} stars!`, 'rgb(232,238,255)', 1.4);
+      me.snip = 0.25;
       // Revontulet, Finnish for the northern lights, means fox fires: the sparks from a running fox's tail
       if (A.foxFires && caught % FOX_FIRES_EVERY === 0) {
         points += FOX_FIRES_POINTS;
@@ -664,17 +1073,47 @@
         shower(me.x - me.face * 50, me.y - 34, 22, 'rgb(255,190,110)');
         if (options.surge) options.surge();
       }
-      if (kind === 'bear' && !foxKnown && caught >= UNLOCK_STARS) {
-        foxKnown = true;
-        unlockedNow = true;
-        unlockAnimal('fox');
-        drawSky(banner);
-        showSkyLabel(banner, 6000);
-        pop(me.x, me.y - A.top - 14, 'You unlocked the fox!', 'rgb(255,214,160)', 3.5);
-        sfx.unlock();
-        shower(me.x, me.y - 40, 26, 'rgb(255,190,110)');
-      }
+      countStar(x, y, f.color);
       showScore();
+    };
+    // Each caught star counts toward the stage, and flies up to the big star to make one of its points. The seventh relights
+    // the stage's star: on the animal's back at once, and in the sky when the big star gets there.
+    const countStar = (x, y, color) => {
+      if (ending || stage >= STAGES.length) return;
+      got += 1;
+      pieces.push({ s: stage, k: got - 1, color, from: { x, y }, age: 0, life: 0.55 });
+      if (got >= POINTS) relight();
+    };
+    const relight = () => {
+      const n = stage, i = order[n], [bx, by] = A.back[i];
+      lit[i] = true;
+      const bonus = RELIGHT_POINTS * (n + 1), gain = lives < LIVES;
+      points += bonus;
+      shower(me.x + bx * (A.sideways ? 1 : me.face), me.y + by, 18, 'rgb(255,240,200)');
+      got = 0;
+      stage += 1;
+      // The last one brings the animal home, which says so itself
+      if (stage >= STAGES.length) { leave('home', bonus); return; }
+      if (gain) lives += 1;
+      pop(me.x, me.y - A.top - 34, `${stageName(n)} relit! +${number(bonus)}${gain ? ' and a life back' : ''}`, 'rgb(255,232,170)', 2.4);
+      between = BREATHER;
+      moveLog();
+      // What the next stage brings comes soon after its card
+      if (stage === BEES_FROM) nextBee = 1.5;
+      if (stage === HONEY_FROM) { nextPot = 2; nextPower = 10; }
+      if (stage === VISITORS_FROM) { nextVisitor = 1; planeTurn = false; }
+      // The next card comes as the big star nears its place
+      showStage(1400);
+    };
+    // Bringing the Great Bear home unlocks the fox, and the fox the crab, whose stars appear in the sky as the animal goes home
+    const unlockNext = (y) => {
+      unlockedNow = A.unlocks;
+      unlockAnimal(A.unlocks);
+      drawSky(banner);
+      showSkyLabel(banner, 6000, A.unlocks);
+      pop(me.x, y, `You unlocked the ${ANIMALS[A.unlocks].short}!`, A.unlocks === 'crab' ? 'rgb(196,255,240)' : 'rgb(255,214,160)', 3.5);
+      setTimeout(() => sfx.unlock(), 1300);
+      shower(me.x, me.y - 40, 26, 'rgb(255,190,110)');
     };
     // The fox's dive, which is safe from bees, bats away any it meets, and on landing catches what is close by
     const startPounce = () => {
@@ -702,11 +1141,12 @@
         if (Math.hypot(b.x - me.x, b.y - (me.y - 20)) < A.pounce) { bees.splice(i, 1); swat(b); }
       }
     };
-    // Bees cross at different heights, some to jump and some to roll under, and later ones swoop at where the bear was
+    // Bees cross at different heights, some to jump and some to roll under, faster each stage, and in the last stage some swoop
+    // at where the bear was
     const sendBee = (kind) => {
       if (bees.length >= 12 && !kind) return;
-      const hard = 1 - Math.exp(-playTime / 70);
-      if (kind === 'swoop' || (!kind && playTime > 18 && Math.random() < 0.2 + 0.25 * hard)) {
+      const hard = clamp((stage - BEES_FROM) / (STAGES.length - 1 - BEES_FROM), 0, 1);
+      if (kind === 'swoop' || (!kind && stage >= SWOOP_FROM && Math.random() < SWOOP_SHARE)) {
         const x0 = Math.random() * W, x2 = clamp(me.x + (Math.random() < 0.5 ? -1 : 1) * (200 + Math.random() * 300), 0, W), tx = me.x, ty = me.y - 30;
         bees.push({ kind: 'swoop', x: x0, y: -16, age: 0, dir: 1, x0, x2, cx: 2 * tx - (x0 + x2) / 2, cy: 2 * ty + 16, dur: 2.8 + Math.random() * 1.2 });
       } else {
@@ -730,8 +1170,49 @@
     const sendVisitor = (kind) => {
       const dir = Math.random() < 0.5 ? 1 : -1, plane = kind ? kind === 'plane' : (planeTurn = !planeTurn);
       visitors.push(plane
-        ? { kind: 'plane', x: dir > 0 ? -60 : W + 60, y: planeY, vx: dir * PLANE_SPEED, vy: 0, w: 74 }
+        ? { kind: 'plane', x: dir > 0 ? -60 : W + 60, y: planeY, vx: dir * PLANE_SPEED, vy: 0, w: 74, face: dir }
         : { kind: 'satellite', x: dir > 0 ? -20 : W + 20, y: 12 + Math.random() * 14, vx: dir * (155 + Math.random() * 50), vy: Math.random() * 5 });
+    };
+    // At three times its speed, the airliner breaks the sound barrier: the animal is thrown clear, the aurora surges, the engines
+    // throw out a fan of stars, and the plane is gone. Nothing shakes, because a moving foreground can bring on motion sickness.
+    const sonicBoom = (v) => {
+      v.boomed = true;
+      v.vx = v.face * PLANE_TOP * 1.5;
+      counts.booms += 1;
+      if (me.on === v) { me.on = null; me.ground = false; me.vy = -jumpV * 1.1; me.jumps = 1; }
+      award(BOOM_POINTS, me.x, me.y - A.top - 20, 'rgb(232,238,255)', { before: 'Sonic boom!', life: 2.4 });
+      rings.push({ x: v.x, y: v.y, age: 0, life: 0.8, r: 190, color: '#E8EEFF' });
+      shower(v.x, v.y, 26, 'rgb(232,238,255)');
+      for (let i = 0; i < 8; i++) shedStar(v, (i - 3.5) * 45);
+      sfx.boom();
+      if (options.surge) options.surge();
+    };
+    // A ridden airliner speeds up, sheds stars and leaves a contrail, and near an edge it turns around, until it breaks the sound
+    // barrier. Once its rider has gone, it keeps its speed and flies off.
+    const flyPlane = (v, dt) => {
+      v.rider = Math.max(0, (v.rider || 0) - dt);
+      if (v.boomed) return;
+      const ridden = me.on === v && phase === 'play';
+      if (v.turning) {
+        // It keeps speeding up through a turn, so the sound barrier comes as soon on a narrow banner, with more turns
+        if (ridden) v.turnSpeed = Math.min(PLANE_TOP, v.turnSpeed + PLANE_ACCEL * dt);
+        v.vx = approach(v.vx, v.turning * v.turnSpeed, v.turnSpeed / 0.35 * dt);
+        if (v.vx === v.turning * v.turnSpeed) v.turning = 0;
+      } else if (v.rider > 0) {
+        // Far enough out that, slowing into the turn, it stays in view
+        const margin = 50 + Math.abs(v.vx) * 0.2;
+        if ((v.vx > 0 && v.x > W - margin) || (v.vx < 0 && v.x < margin)) { v.turning = -Math.sign(v.vx); v.turnSpeed = Math.abs(v.vx); }
+      }
+      if (v.vx) v.face = Math.sign(v.vx);
+      if (!ridden) return;
+      const speed = Math.abs(v.vx);
+      if (!v.turning) v.vx = v.face * Math.min(PLANE_TOP, speed + PLANE_ACCEL * dt);
+      v.shed = (v.shed || 0) + dt * speed / PLANE_SPEED;
+      if (v.shed >= EXHAUST_EVERY) { v.shed -= EXHAUST_EVERY; shedStar(v); }
+      // A contrail in the aurora's colors, thicker the faster it flies
+      if (Math.random() < 0.35 * speed / PLANE_TOP) spark(v.x - v.face * 48, v.y + 1 + (Math.random() - 0.5) * 6, -v.face * (20 + Math.random() * 30), (Math.random() - 0.5) * 16, 0.6, 0.8 + Math.random() * 0.6, SPARKS[Math.floor(Math.random() * SPARKS.length)]);
+      if (!v.told && speed >= 2 * PLANE_SPEED) { v.told = true; pop(clamp(v.x, 70, W - 70), v.y - 74, 'Faster! Hold on…', 'rgb(255,214,170)', 1.6); }
+      if (!v.turning && Math.abs(v.vx) >= PLANE_TOP) sonicBoom(v);
     };
     const dropPower = () => {
       const x = 30 + Math.random() * (W - 60), towardBear = Math.sign(me.x - x) || 1;
@@ -746,6 +1227,16 @@
       b.kind = 'down';
       b.vx = (Math.sign(b.x - me.x) || 1) * 130;
       b.vy = -240;
+    };
+    // A bee that flies into the crab's shell bounces off it
+    const bounce = (b) => {
+      counts.bees += 1;
+      award(SWAT_POINTS, b.x, b.y - 12, 'rgb(196,255,240)');
+      sfx.bonk(1);
+      shower(b.x, b.y, 8, 'rgb(196,255,240)');
+      b.kind = 'down';
+      b.vx = (Math.sign(b.x - me.x) || 1) * 160;
+      b.vy = -260;
     };
     const sting = (b) => {
       lives -= 1;
@@ -762,7 +1253,7 @@
       shower(me.x, me.y - 35, 14, 'rgb(255,170,120)');
       pop(me.x, me.y - A.top - 10, '−1 life', 'rgb(255,196,130)');
       showScore();
-      if (lives <= 0) leave();
+      if (lives <= 0) leave('stung');
     };
     const size = () => (me.rolling ? A.low : A.stand);
     const overlaps = (l, x, y, s) => x + s.hw > l.x - l.w / 2 && x - s.hw < l.x + l.w / 2 && y > l.y && y - s.h < l.y + l.h;
@@ -783,17 +1274,18 @@
       me.squash *= Math.exp(-dt * 11);
       me.curl = clamp(me.curl + (me.rolling ? dt : -dt) / 0.09, 0, 1);
       const steering = phase === 'play';
-      const dir = !steering ? 0 : touchOnly ? me.autoDir : (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+      // On a touch screen it runs by itself, except on the plane, where it rides; a tap jumps off
+      const dir = !steering ? 0 : touchOnly ? (me.on ? 0 : me.autoDir) : (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
       if (dir) me.face = dir;
-      // Curling up and getting up, which needs room overhead
-      const wantsBall = steering && (keys.down || swipeRoll);
-      if (A.pounce && wantsBall && !me.ground && !me.rolling) {
+      // Curling up and getting up, which needs room overhead; and asleep at dawn, curled up
+      const wantsBall = (steering && (keys.down || swipeRoll)) || phase === 'sleep';
+      if (A.pounce && wantsBall && steering && !me.ground && !me.rolling) {
         if (!me.pouncing && me.y < floorAt(me.x) - 20) startPounce();
       } else if (wantsBall && !me.rolling) {
         me.rolling = true;
         me.rollUntil = me.time + 0.3;
         me.flip = 1;
-        if (me.ground && !me.tired) {
+        if (me.ground && !me.tired && steering && !A.shell) {
           me.vx += me.face * A.boost;
           me.energy = Math.max(0, me.energy - ROLL_START_COST);
           burst(me.x, me.y - 3, 7, 70, 0.4);
@@ -814,7 +1306,7 @@
         if (me.tired && me.energy >= ROLL_READY_AGAIN) me.tired = false;
       }
       const top = (me.rolling ? (me.tired ? A.tired : A.roll) : A.run) * (1 + 0.8 * slope * dir) * (me.power > 0 ? POWER_SPEED : 1), accel = !me.ground ? A.airAccel : me.rolling ? A.rollAccel : A.accel;
-      if (me.rolling && me.ground && !me.tired) me.vx += slope * 1100 * dt;
+      if (me.rolling && me.ground && !me.tired && !A.shell) me.vx += slope * 1100 * dt;
       const grip = !me.ground ? AIR_DRAG : me.rolling ? (me.tired ? 1100 : A.rollFriction) : A.friction;
       if (!dir) me.vx = approach(me.vx, 0, grip * dt);
       else if (Math.sign(me.vx) === dir && Math.abs(me.vx) > top) me.vx = approach(me.vx, dir * top, grip * dt);
@@ -823,6 +1315,9 @@
       if (steering && me.buffer > 0) {
         const launch = me.moonTime > 0 ? MOON_LAUNCH : 1;
         if (me.coyote > 0) {
+          // On a touch screen, which can't steer, a jump from the plane goes off its back at a run. The plane flies near the top
+          // of the banner, so the jump itself is short, and without the run the bear would land on it again.
+          if (touchOnly && me.on) { me.autoDir = -(me.on.face || 1); me.vx = me.autoDir * A.run; }
           jump(jumpV * launch);
           sfx.jump();
           me.coyote = 0;
@@ -833,7 +1328,8 @@
           jump(doubleV * launch);
           sfx.double();
           me.jumps = 2;
-          if (!me.rolling) me.flip = 0;
+          // (A crab doesn't turn somersaults)
+          if (!me.rolling && !A.sideways) me.flip = 0;
           burst(me.x, me.y - 6, 16, 150, 0.55);
         }
       }
@@ -869,17 +1365,20 @@
       me.onFloor = false;
       me.on = null;
       if (me.vy >= 0) {
-        for (const l of [...ledges, ...logs, ...visitors.filter((v) => v.kind === 'plane')]) {
+        // (The airliner carries the animal only during play, since it fades at the end)
+        for (const l of [...ledges, ...logs, ...(phase === 'play' ? visitors.filter((v) => v.kind === 'plane' && !v.boomed) : [])]) {
           if (was <= l.y + 0.01 && me.y >= l.y && me.x + s.hw > l.x - l.w / 2 && me.x - s.hw < l.x + l.w / 2) {
             me.y = l.y;
             me.vy = 0;
             me.ground = true;
             if (l.kind === 'plane') {
               me.on = l;
+              // While it has a rider, even one hopping on it, it turns at the edges
+              l.rider = 1.2;
               if (!l.boarded && phase === 'play') {
                 l.boarded = true;
                 counts.rides += 1;
-                award(PLANE_POINTS, me.x, me.y + 40, 'rgb(255,214,170)', { after: 'Air traffic control has questions' });
+                award(PLANE_POINTS, me.x, me.y + 40, 'rgb(255,214,170)', { after: 'and air traffic control has questions' });
                 sfx.plane();
               }
             }
@@ -894,9 +1393,12 @@
           if (was - s.h >= under - 0.01 && me.y - s.h < under && me.x + s.hw > l.x - l.w / 2 && me.x - s.hw < l.x + l.w / 2) { me.y = under + s.h; me.vy = 0; }
         }
       }
-      // Air miles while riding, totted up when the ride ends
+      // Air miles while riding, by the distance flown, so faster as the plane speeds up, totted up when the ride ends. A hop on
+      // the plane doesn't end it.
       if (me.on && phase === 'play') {
-        rideClock += dt;
+        ridePlane = me.on;
+        rideAir = 0;
+        rideClock += dt * Math.abs(me.on.vx) / PLANE_SPEED;
         while (rideClock >= MILE_SECONDS) {
           rideClock -= MILE_SECONDS;
           rideMiles += MILE_POINTS;
@@ -905,10 +1407,14 @@
           showScore();
         }
       } else if (rideMiles) {
-        counts.miles += rideMiles;
-        pop(me.x, me.y - A.top - 14, `+${number(rideMiles)} air miles`, 'rgb(255,214,170)', 1.8);
-        rideMiles = 0;
-        rideClock = 0;
+        rideAir += dt;
+        if (me.ground || rideAir > 0.8 || phase !== 'play' || !visitors.includes(ridePlane)) {
+          counts.miles += rideMiles;
+          pop(me.x, me.y - A.top - 14, `+${number(rideMiles)} air miles`, 'rgb(255,214,170)', 1.8);
+          rideMiles = 0;
+          rideClock = 0;
+          ridePlane = null;
+        }
       }
       if (me.ground) {
         me.jumps = 0;
@@ -924,23 +1430,47 @@
       me.gait = lerp(me.gait, me.ground ? clamp(Math.abs(me.vx) / 90, 0, 1) : 0, 1 - Math.exp(-dt * 16));
       if (me.ground) me.stride = ((me.stride || 0) + Math.abs(me.vx) * dt / A.stride) % 1;
       // A trail: stars from a ball, a little dust at full speed
-      if (me.ground && Math.random() < (me.rolling ? (me.tired ? 0.03 : 0.32) : Math.abs(me.vx) >= A.run * 0.95 ? 0.08 : 0)) {
+      if (me.ground && Math.random() < (me.rolling ? (me.tired || A.shell ? 0.03 * !A.shell : 0.32) : Math.abs(me.vx) >= A.run * 0.95 ? 0.08 : 0)) {
         spark(me.x - me.face * (me.rolling ? 10 : A.dust), me.y - Math.random() * 6, -me.vx * 0.12 + (Math.random() - 0.5) * 30, -18 - Math.random() * 34, 0.55, 0.8 + Math.random(), SPARKS[Math.floor(Math.random() * SPARKS.length)]);
       }
       if (phase === 'play') {
         playTime += dt;
-        nextStar -= dt;
-        if (nextStar <= 0) { dropStar(); nextStar = lerp(1.25, 0.55, 1 - Math.exp(-playTime / 45)) * (0.75 + Math.random() * 0.5) / density; }
-        if (!me.peace) {
-          nextBee -= dt;
-          if (nextBee <= 0) { sendBee(); nextBee = lerp(6, 2, 1 - Math.exp(-playTime / 70)) * (0.75 + Math.random() * 0.5) / density; }
-          nextPot -= dt;
-          if (nextPot <= 0) { dropPot(); nextPot = 15 + Math.random() * 9; }
-          nextVisitor -= dt;
-          if (nextVisitor <= 0) { sendVisitor(); nextVisitor = 14 + Math.random() * 8; }
-          nextPower -= dt;
-          if (nextPower <= 0) { dropPower(); nextPower = 35 + Math.random() * 20; }
+        // Between stages, a breather: nothing new comes, and the night waits
+        if (between > 0) between -= dt;
+        else {
+          night += dt;
+          const S = STAGES[stage];
+          nextStar -= dt;
+          if (nextStar <= 0) { dropStar(); nextStar = S.star * (0.75 + Math.random() * 0.5) / density; }
+          if (S.bee) {
+            nextBee -= dt;
+            if (nextBee <= 0) { sendBee(); nextBee = S.bee * (0.75 + Math.random() * 0.5) / density; }
+          }
+          if (stage >= HONEY_FROM) {
+            nextPot -= dt;
+            if (nextPot <= 0) { dropPot(); nextPot = 15 + Math.random() * 9; }
+            nextPower -= dt;
+            if (nextPower <= 0) { dropPower(); nextPower = 35 + Math.random() * 20; }
+          }
+          if (stage >= VISITORS_FROM) {
+            nextVisitor -= dt;
+            if (nextVisitor <= 0) { sendVisitor(); nextVisitor = 14 + Math.random() * 8; }
+          }
+          // The clock, a warning an hour before dawn, and dawn
+          if (nightMinutes() !== shownMinute) { shownMinute = nightMinutes(); showScore(); }
+          if (!warned && night >= NIGHT_SECONDS * (NIGHT_HOURS - 1) / NIGHT_HOURS) {
+            warned = true;
+            pop(me.x, me.y - A.top - 50, 'Dawn is coming!', 'rgb(200,212,255)', 2.6);
+            sfx.dawn();
+          }
+          if (night >= NIGHT_SECONDS) leave('dawn');
         }
+      }
+      // Rising home, and asleep
+      if (phase === 'home' && Math.random() < 0.5) spark(me.x + (Math.random() - 0.5) * 60, me.y - Math.random() * 50, (Math.random() - 0.5) * 30, -40 - Math.random() * 60, 0.8, 0.8 + Math.random() * 0.8, SPARKS[Math.floor(Math.random() * SPARKS.length)]);
+      if (phase === 'sleep' && me.ground) {
+        me.snore -= dt;
+        if (me.snore <= 0) { me.snore = 0.7; pop(me.x + me.face * 16, me.y - 30, 'z', 'rgb(200,212,255)', 1.4); }
       }
       // The bouncing star
       me.power = Math.max(0, me.power - dt);
@@ -967,6 +1497,7 @@
         } else if (s.age >= POWER_LIFE) powers.splice(i, 1);
       }
       me.hurt = Math.max(0, me.hurt - dt);
+      me.snip = Math.max(0, me.snip - dt);
       if (comboLeft > 0 && phase === 'play') { comboLeft -= dt; if (comboLeft <= 0) comboEnds(false); }
       me.flash = Math.max(0, me.flash - dt);
       me.moonTime = Math.max(0, me.moonTime - dt);
@@ -979,11 +1510,57 @@
         }
       }
       for (let i = rings.length - 1; i >= 0; i--) { rings[i].age += dt; if (rings[i].age >= rings[i].life) rings.splice(i, 1); }
+      // Caught stars on their way up to the big star, each making a point of it as it arrives
+      forgeAge += dt;
+      for (let i = pieces.length - 1; i >= 0; i--) {
+        const p = pieces[i], [x, y] = pieceAt(p);
+        p.age += dt;
+        if (Math.random() < 0.4) spark(x, y, (Math.random() - 0.5) * 30, (Math.random() - 0.5) * 30, 0.4, 0.7 + Math.random() * 0.6, `rgb(${p.color})`);
+        if (p.age < p.life) continue;
+        pieces.splice(i, 1);
+        built[p.s][p.k] = p.color;
+        shower(x, y, 6, `rgb(${p.color})`);
+        sfx.point(p.k);
+      }
+      // With all seven points made, the big star sets off for its place in the constellation, and the next one begins
+      while (forged < STAGES.length && built[forged].filter(Boolean).length === POINTS && !pieces.some((p) => p.s === forged)) {
+        const to = order[forged];
+        if (skyStars[to]) beams.push({ i: to, from: { x: forge.x, y: forge.y }, colors: built[forged].slice(), age: 0, hold: 0.3, life: 1.5 });
+        else skyLit[to] = true;
+        rings.push({ x: forge.x, y: forge.y, age: 0, life: 0.5, r: 44, color: '#FFE9B8' });
+        sfx.relight(forged);
+        forged += 1;
+        forgeAge = 0;
+      }
+      // A finished big star on its way to its place in the sky
+      for (let i = beams.length - 1; i >= 0; i--) {
+        const b = beams[i], [x, y] = beamAt(b), to = skyStars[b.i];
+        b.age += dt;
+        if (Math.random() < 0.6) spark(x, y, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40, 0.5, 0.8 + Math.random() * 0.8, SPARKS[Math.floor(Math.random() * SPARKS.length)]);
+        if (b.age >= b.life) {
+          beams.splice(i, 1);
+          skyLit[b.i] = true;
+          rings.push({ x: to.x, y: to.y, age: 0, life: 0.7, r: 34, color: '#FFE9B8' });
+          shower(to.x, to.y, 16, 'rgb(255,240,200)');
+          sfx.lit();
+        }
+      }
+      // Alcor, for whoever spots it
+      if (alcor && !alcor.got && stage === ALCOR_STAGE && phase === 'play' && touching(alcor.x, alcor.y, 5)) {
+        alcor.got = true;
+        counts.alcor += 1;
+        caught += 1;
+        award(ALCOR_POINTS, alcor.x, alcor.y + 46, 'rgb(232,238,255)', { before: 'Alcor!', after: 'for the eyesight test', life: 3 });
+        sfx.alcor();
+        shower(alcor.x, alcor.y, 16, 'rgb(232,238,255)');
+        countStar(alcor.x, alcor.y, '232 238 255');
+        showScore();
+      }
       if (moon) {
         moon.rest = Math.max(0, moon.rest - dt);
         moon.flash = Math.max(0, moon.flash - dt);
-        if (phase === 'play' && !moon.rest && touching(moon.x, moon.y, moon.r * 0.7, 66)) {
-          moon.used = true;
+        // From Mizar's stage on
+        if (phase === 'play' && stage >= MOON_FROM && !moon.rest && touching(moon.x, moon.y, moon.r * 0.7, 66)) {
           moon.total = me.moonTime = 5 + 7 * moon.lit;
           moon.rest = moon.total + MOON_REST;
           moon.flash = 0.7;
@@ -994,11 +1571,6 @@
           if (me.vy < 0) me.vy = 50;
           // It takes the bump and settles back
           if (moonArt) moonArt.animate([0, -8, 3, -1, 0].map((y) => ({ transform: `translateY(${(y * u).toFixed(1)}px)` })), { duration: 650, easing: 'ease-out' });
-        }
-        // In case no one has thought of it
-        if (phase === 'play' && !moon.used && !moon.told && playTime > 14) {
-          moon.told = true;
-          pop(moon.x, moon.y + moon.r + 26, 'Try bumping the moon', 'rgb(255,232,170)', 3.5);
         }
       }
       if (me.moonTime > 0 && !me.ground && Math.random() < 0.14) spark(me.x + (Math.random() - 0.5) * 70, me.y - Math.random() * 56, (Math.random() - 0.5) * 14, 16 + Math.random() * 18, 0.9, 0.7 + Math.random() * 0.6, 'rgb(255,232,170)');
@@ -1035,7 +1607,7 @@
         if (phase === 'play' && touching(p.x, p.y, 7, 66)) {
           pots.splice(i, 1);
           counts.honey += 1;
-          award(HONEY_POINTS, p.x, p.y - 16, 'rgb(255,214,120)', { after: 'Angry bees!' });
+          award(HONEY_POINTS, p.x, p.y - 16, 'rgb(255,214,120)', { after: 'and angry bees!' });
           sfx.honey();
           shower(p.x, p.y, 16, 'rgb(255,214,120)');
           sendAngry(p.x, p.y);
@@ -1082,7 +1654,8 @@
         else if (phase === 'play' && me.pouncing && touching(b.x, b.y, 8)) {
           bees.splice(i, 1);
           swat(b);
-        } else if (phase === 'play' && me.hurt <= 0 && stingable(b.x, b.y)) {
+        } else if (phase === 'play' && A.shell && me.rolling && Math.hypot(b.x - me.x, b.y - (me.y - 10)) < A.low.hw + 8) bounce(b);
+        else if (phase === 'play' && me.hurt <= 0 && stingable(b.x, b.y)) {
           bees.splice(i, 1);
           sting(b);
         }
@@ -1090,6 +1663,7 @@
       // An airliner to ride, and a satellite, high up, worth a lot
       for (let i = visitors.length - 1; i >= 0; i--) {
         const v = visitors[i];
+        if (v.kind === 'plane') flyPlane(v, dt);
         v.x += v.vx * dt;
         v.y += v.vy * dt;
         if (v.kind === 'satellite' && phase === 'play' && touching(v.x, v.y, 7)) {
@@ -1099,6 +1673,11 @@
           sfx.satellite();
           shower(v.x, v.y, 18, 'rgb(214,226,255)');
         } else if (v.x < -80 || v.x > W + 80) visitors.splice(i, 1);
+      }
+      // The music picks up a little as the plane being ridden speeds up, up to 30% faster at the sound barrier
+      if (music) {
+        const p = ridePlane && !ridePlane.boomed && visitors.includes(ridePlane) ? ridePlane : null;
+        music.tempo = p ? 1 + 0.15 * Math.max(0, (p.turning ? p.turnSpeed : Math.abs(p.vx)) / PLANE_SPEED - 1) : 1;
       }
       for (let i = pops.length - 1; i >= 0; i--) { pops[i].age += dt; if (pops[i].age > pops[i].life) pops.splice(i, 1); }
       for (let i = sparks.length - 1; i >= 0; i--) {
@@ -1112,6 +1691,14 @@
       }
     };
 
+    // One of the animal's stars, on its back: dim until relit, with the stage's own star brightening as its stars are caught
+    const backStar = (x, y, i, size, twinkle) => {
+      const glow = lit[i] ? 1 : !ending && stage < STAGES.length && i === order[stage] ? 0.15 + 0.85 * got / POINTS : 0;
+      const r = size * (0.6 + 0.4 * glow) + Math.sin(me.time * 3 + i * 1.7) * twinkle * glow, was = o.globalAlpha;
+      o.globalAlpha = was * (0.32 + 0.68 * glow);
+      o.drawImage(starGlow, x - r, y - r, r * 2, r * 2);
+      o.globalAlpha = was;
+    };
     const paintBear = () => {
       const air = me.ground ? 0 : 1, phaseNow = me.stride || 0, g = me.gait;
       const wave = Math.sin(phaseNow * TAU), breath = Math.sin(me.time * 2.4) * (1 - g) * (1 - air);
@@ -1243,10 +1830,7 @@
       o.beginPath();
       BACK_LINES.forEach((name, i) => { const [x, y] = BACK_STARS[name]; if (i) o.lineTo(fold(x), y); else o.moveTo(fold(x), y); });
       o.stroke();
-      Object.values(BACK_STARS).forEach(([x, y], i) => {
-        const r = 4.2 + Math.sin(me.time * 3 + i * 1.7) * 0.7;
-        o.drawImage(starGlow, fold(x) - r, y - r, r * 2, r * 2);
-      });
+      Object.values(BACK_STARS).forEach(([x, y], i) => backStar(fold(x), y, i, 4.2, 0.7));
       o.restore();
     };
     const paintBall = () => {
@@ -1280,8 +1864,8 @@
       o.arc(r * 0.72, -r * 0.72, 3.4, 0, TAU);
       o.fill();
       for (let i = 0; i < 7; i++) {
-        const a = i * 2.4, d = r * (0.25 + 0.09 * i), g = 3.8;
-        o.drawImage(starGlow, Math.cos(a) * d - g, Math.sin(a) * d - g, g * 2, g * 2);
+        const a = i * 2.4, d = r * (0.25 + 0.09 * i);
+        backStar(Math.cos(a) * d, Math.sin(a) * d, order[i], 3.8, 0);
       }
       o.restore();
     };
@@ -1462,15 +2046,187 @@
       o.beginPath();
       A.back.forEach(([x, y], i) => (i ? o.lineTo(fold(x), y) : o.moveTo(fold(x), y)));
       o.stroke();
-      A.back.forEach(([x, y], i) => {
-        const r = 3.3 + Math.sin(me.time * 3 + i * 1.7) * 0.5;
-        o.drawImage(starGlow, fold(x) - r, y - r, r * 2, r * 2);
-      });
+      A.back.forEach(([x, y], i) => backStar(fold(x), y, i, 3.3, 0.5));
       o.restore();
+    };
+    // The crab, from the front, low and wide: four legs a side, stepping in turn as it scuttles; two big claws, whose pincers
+    // snap shut on a catch; a shell with Cancer's stars across it; and eyes on stalks, looking the way it's going. Pulling into
+    // its shell, its legs, claws and eyes fold in and the shell settles to the ground.
+    const paintCrab = () => {
+      const air = me.ground ? 0 : 1, g = me.gait, step = me.stride || 0, shut = smooth(me.curl), open = 1 - shut;
+      const bob = (-Math.abs(Math.sin(step * TAU * 2)) * 1.6 * g + Math.sin(me.time * 2.6) * 0.5 * (1 - g)) * open;
+      const shellY = -15 + bob + shut * 7, look = clamp(me.vx / 200, -1, 1), snip = me.snip > 0 ? Math.sin(me.snip / 0.25 * Math.PI) : 0;
+      o.lineCap = 'round';
+      o.lineJoin = 'round';
+      // Legs, each a hip, a knee and a foot
+      o.strokeStyle = '#2E8C8A';
+      o.lineWidth = 2.2;
+      for (const side of [-1, 1]) {
+        for (let n = 0; n < 4; n++) {
+          const p = (step * 2 + n * 0.27 + (side > 0 ? 0.5 : 0)) % 1, lift = air ? 2.5 : Math.max(0, Math.sin(p * TAU)) * 4 * g;
+          o.beginPath();
+          o.moveTo(side * (9 + n * 4), shellY + 6);
+          o.lineTo(side * (17 + n * 6) * (0.45 + 0.55 * open), shellY - 3 - n * 0.6 + shut * 4);
+          o.lineTo(side * (20 + n * 6.5) * (0.35 + 0.65 * open), -lift * open - shut * 4);
+          o.stroke();
+        }
+      }
+      // Claws: an arm out and up from each side to a pincer, a palm with a fat lower jaw and a thinner finger, held a little apart
+      // as it goes and snapping shut on a catch
+      for (const side of [-1, 1]) {
+        const hand = [side * 31 * (0.3 + 0.7 * open), shellY - 13 * open - 2], spread = (0.3 + 0.1 * Math.sin(me.time * 5)) * (1 - snip) * open, z = 0.5 + 0.5 * open;
+        o.strokeStyle = '#3FA6A0';
+        o.lineWidth = 3.4;
+        o.beginPath();
+        o.moveTo(side * 14, shellY + 1);
+        o.lineTo(side * 26 * (0.4 + 0.6 * open), shellY - 2);
+        o.lineTo(...hand);
+        o.stroke();
+        o.save();
+        o.translate(...hand);
+        o.scale(side * z, z);
+        o.rotate(-0.55);
+        o.fillStyle = '#7FE6D2';
+        o.beginPath();
+        o.ellipse(0, 0, 5, 4.2, 0, 0, TAU);
+        o.fill();
+        [[spread, 1.2, 6, 2.6], [-spread, -1.4, 5.4, 1.9]].forEach(([turn, y, rx, ry], n) => {
+          o.save();
+          o.translate(3, -n);
+          o.rotate(turn);
+          o.beginPath();
+          o.ellipse(5, y, rx, ry, 0, 0, TAU);
+          o.fill();
+          o.restore();
+        });
+        o.restore();
+      }
+      // The shell, darker below, and Cancer's lines and stars across it
+      const fill = o.createLinearGradient(0, shellY - 11, 0, shellY + 10);
+      fill.addColorStop(0, '#B4FFEC');
+      fill.addColorStop(0.5, '#4FC4BC');
+      fill.addColorStop(1, '#2A6F86');
+      o.fillStyle = fill;
+      o.beginPath();
+      o.ellipse(0, shellY, 24, 11 - shut, 0, 0, TAU);
+      o.fill();
+      o.strokeStyle = 'rgba(232,255,250,.5)';
+      o.lineWidth = 0.6;
+      o.beginPath();
+      SKY_ANIMALS.crab.lines.forEach(([m, n]) => { o.moveTo(A.back[m][0], A.back[m][1] + bob + shut * 7); o.lineTo(A.back[n][0], A.back[n][1] + bob + shut * 7); });
+      o.stroke();
+      A.back.forEach(([x, y], i) => backStar(x, y + bob + shut * 7, i, 3.2, 0.5));
+      // Eyes on stalks, which go in with the rest
+      if (open > 0.05) {
+        for (const side of [-1, 1]) {
+          const tip = [side * 7 + look * 1.5, shellY - 8 - 9 * open];
+          o.strokeStyle = '#3FA6A0';
+          o.lineWidth = 1.8;
+          o.beginPath();
+          o.moveTo(side * 6, shellY - 8);
+          o.lineTo(...tip);
+          o.stroke();
+          o.fillStyle = '#F2FFFC';
+          o.beginPath();
+          o.arc(tip[0], tip[1], 2.8 * open, 0, TAU);
+          o.fill();
+          o.fillStyle = '#123C44';
+          o.beginPath();
+          o.arc(tip[0] + look * 1.1, tip[1] + 0.3, 1.5 * open, 0, TAU);
+          o.fill();
+        }
+      }
+    };
+    // A big star: seven points around a middle, each in the color of the star that made it and the rest outlined faintly, with
+    // a glow that grows as it fills. A finished one (done) glows brightest, with a white middle.
+    const bigStar = (cx, cy, size, colors, alpha, done) => {
+      const R = forge.R * size, r = forge.r * size, made = colors.filter(Boolean).length / POINTS, g = R * (done ? 3.2 : 1.4 + 1.2 * made);
+      ctx.globalAlpha = alpha * (done ? 1 : 0.2 + 0.6 * made);
+      ctx.drawImage(skyGlow, cx - g, cy - g, g * 2, g * 2);
+      ctx.lineWidth = 0.7;
+      ctx.lineJoin = 'round';
+      for (let k = 0; k < POINTS; k++) {
+        const a = -Math.PI / 2 + k * TAU / POINTS, half = Math.PI / POINTS;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(a - half) * r, cy + Math.sin(a - half) * r);
+        ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R);
+        ctx.lineTo(cx + Math.cos(a + half) * r, cy + Math.sin(a + half) * r);
+        ctx.closePath();
+        if (colors[k]) {
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = `rgb(${colors[k]})`;
+          ctx.fill();
+        } else {
+          ctx.globalAlpha = alpha * 0.4;
+          ctx.strokeStyle = '#E8EEFF';
+          ctx.stroke();
+        }
+      }
+      if (done) {
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(skyGlow, cx - r * 1.6, cy - r * 1.6, r * 3.2, r * 3.2);
+      }
     };
     const draw = () => {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, layer.width, layer.height);
+      // The animal's seven stars in their places in the sky: a faint ring where one is still dim, pulsing where the big star
+      // being made will go, and a bright star once its big star has got there
+      const skyAlpha = phase === 'in' ? smooth(clamp(phaseTime, 0, 1)) : phase === 'out' ? 1 - smooth(clamp(phaseTime / 0.9, 0, 1)) : 1;
+      if (skyStars.length && skyAlpha > 0) {
+        ctx.setTransform(scale, 0, 0, scale, 0, 0);
+        ctx.strokeStyle = SKY_ANIMALS[kind] ? SKY_ANIMALS[kind].line : '#E8EEFF';
+        ctx.lineWidth = 0.8;
+        for (const [m, n] of skyLines) {
+          const a = skyStars[m], b = skyStars[n];
+          ctx.globalAlpha = skyAlpha * (inSky(m) && inSky(n) ? 0.55 : 0.16);
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+        skyStars.forEach((s, i) => {
+          if (inSky(i)) {
+            const r = 6.5 + Math.sin(me.time * 2.6 + i * 1.3) * 0.8;
+            ctx.globalAlpha = skyAlpha;
+            ctx.drawImage(skyGlow, s.x - r, s.y - r, r * 2, r * 2);
+            return;
+          }
+          const next = forged < STAGES.length && i === order[forged], pulse = next ? 0.5 + 0.5 * Math.sin(me.time * 4) : 0;
+          ctx.globalAlpha = skyAlpha * (next ? 0.3 + 0.35 * pulse : 0.2);
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, 4.6 + pulse, 0, TAU);
+          ctx.stroke();
+          ctx.globalAlpha = skyAlpha * 0.35;
+          ctx.drawImage(skyGlow, s.x - 1.6, s.y - 1.6, 3.2, 3.2);
+        });
+        // Alcor, faint, beside Mizar
+        if (alcor && !alcor.got && stage === ALCOR_STAGE && phase === 'play') {
+          ctx.globalAlpha = 0.4 + 0.15 * Math.sin(me.time * 5.3);
+          ctx.drawImage(skyGlow, alcor.x - 2.4, alcor.y - 2.4, 4.8, 4.8);
+        }
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+      }
+      // The big star being made, fading in after the last one leaves; the stars flying up to it; and finished ones on their way
+      if (skyAlpha > 0) {
+        ctx.setTransform(scale, 0, 0, scale, 0, 0);
+        if (forged < STAGES.length) bigStar(forge.x, forge.y, 1, built[forged], skyAlpha * smooth(clamp(forgeAge / 0.5, 0, 1)), false);
+        for (const p of pieces) {
+          const [x, y] = pieceAt(p);
+          ctx.globalAlpha = skyAlpha;
+          ctx.drawImage(starGlow, x - 5, y - 5, 10, 10);
+          ctx.fillStyle = `rgb(${p.color})`;
+          ctx.beginPath();
+          ctx.arc(x, y, 1.6, 0, TAU);
+          ctx.fill();
+        }
+        for (const b of beams) {
+          const [x, y, t] = beamAt(b);
+          bigStar(x, y, lerp(1, 0.3, t), b.colors, skyAlpha, true);
+        }
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+      }
       const px = me.x * scale, py = me.y * scale, under = floorAt(me.x), height = clamp((under - me.y) / 150, 0, 1);
       // The bear's light on the forest and on the ground below it
       // It grows with each star caught and fades with each sting
@@ -1486,12 +2242,13 @@
       ctx.globalAlpha = me.alpha * 0.6 * (1 - height);
       ctx.drawImage(glow, (me.x - 80) * scale, (under - 9) * scale, 160 * scale, 18 * scale);
       ctx.globalCompositeOperation = 'source-over';
-      // The plane and the satellite pass behind the bear
-      const outFade = phase === 'out' ? clamp(1 - phaseTime / 0.5, 0, 1) : 1;
+      // The plane and the satellite pass behind the bear. At the end, they fade, with the stars, bees and food, and on the way
+      // home or to sleep, they fade first.
+      const outFade = phase === 'out' ? clamp(1 - phaseTime / 0.5, 0, 1) : 1, leftover = phase === 'home' || phase === 'sleep' ? clamp(1 - phaseTime / 0.8, 0, 1) : ending === 'home' || ending === 'dawn' ? 0 : outFade;
       for (const v of visitors) {
-        ctx.globalAlpha = outFade;
+        ctx.globalAlpha = leftover;
         if (v.kind === 'plane') {
-          const dir = Math.sign(v.vx);
+          const dir = v.face;
           stamp(planeSprite, v.x, v.y + 5, dir);
           ctx.setTransform(scale, 0, 0, scale, 0, 0);
           if (Math.sin(me.time * 8) > 0.2) ctx.drawImage(starGlow, v.x - dir * 41 - 6, v.y - 19, 12, 12);
@@ -1517,7 +2274,7 @@
         }
       }
       // The moon's ring: a slow pulse when it is ready, then the time left
-      if (moon && phase === 'play') {
+      if (moon && phase === 'play' && stage >= MOON_FROM) {
         ctx.setTransform(scale, 0, 0, scale, 0, 0);
         ctx.lineCap = 'round';
         ctx.strokeStyle = '#FFE8AA';
@@ -1548,8 +2305,10 @@
         o.setTransform(1, 0, 0, 1, 0, 0);
         o.clearRect(0, 0, off.width, off.height);
         const sx = 1 + me.squash * 0.75, sy = 1 - me.squash;
-        o.setTransform(scale * me.face * sx, 0, 0, scale * sy, 90 * scale, 110 * scale);
-        o.rotate(me.face * me.tilt);
+        // (A crab faces the front, so it isn't mirrored when it changes direction)
+        const facing = A.sideways ? 1 : me.face;
+        o.setTransform(scale * facing * sx, 0, 0, scale * sy, 90 * scale, 110 * scale);
+        o.rotate(facing * me.tilt);
         if (me.flip < 1) {
           const turn = smooth(me.flip) * TAU;
           o.translate(...A.turnAt);
@@ -1564,7 +2323,8 @@
             o.translate(0, 30);
           }
           paintFox();
-        } else {
+        } else if (kind === 'crab') paintCrab();
+        else {
           // Curling up: the bear shrinks into the ball, which grows out of it
           const curling = me.curl < 0.5 ? 1 - me.curl * 0.7 : 0.65 + (me.curl - 0.5) * 0.7;
           o.scale(curling, curling);
@@ -1599,9 +2359,11 @@
           o.globalAlpha = 1;
           o.globalCompositeOperation = 'source-over';
         }
+        // On the way home it glows brightest of all
+        const homeward = phase === 'home' || (phase === 'out' && ending === 'home');
         ctx.globalAlpha = me.alpha * flicker * (0.7 + 0.3 * health);
-        ctx.shadowColor = charged ? chargedColor : moonlit ? 'rgba(255,226,150,.95)' : A.shadow;
-        ctx.shadowBlur = (charged ? 26 : 6 + 14 * health) * scale;
+        ctx.shadowColor = homeward ? 'rgba(255,244,214,.95)' : charged ? chargedColor : moonlit ? 'rgba(255,226,150,.95)' : A.shadow;
+        ctx.shadowBlur = (homeward ? 34 : charged ? 26 : 6 + 14 * health) * scale;
         ctx.drawImage(off, px - 90 * scale, py - 110 * scale);
         ctx.shadowBlur = 0;
         // Rolling energy, while it is in use or coming back
@@ -1622,7 +2384,7 @@
         const tx = x - dx / d * f.tail, ty = y - dy / d * f.tail, tail = ctx.createLinearGradient(x, y, tx, ty);
         tail.addColorStop(0, `rgba(${f.color.replaceAll(' ', ',')},.9)`);
         tail.addColorStop(1, `rgba(${f.color.replaceAll(' ', ',')},0)`);
-        ctx.globalAlpha = fade * Math.min(1, f.t * 9);
+        ctx.globalAlpha = leftover * Math.min(1, f.t * 9);
         ctx.strokeStyle = tail;
         ctx.lineWidth = f.head * 0.9;
         ctx.lineCap = 'round';
@@ -1644,12 +2406,12 @@
         stamp(berrySprite, b.x, b.y);
       }
       for (const p of pots) {
-        ctx.globalAlpha = fade * Math.min(1, p.age * 3) * (p.life - p.age < 3 && Math.floor(p.age * 6) % 2 ? 0.45 : 1);
+        ctx.globalAlpha = leftover * Math.min(1, p.age * 3) * (p.life - p.age < 3 && Math.floor(p.age * 6) % 2 ? 0.45 : 1);
         stamp(potSprite, p.x, p.y);
       }
       const wing = Math.floor(me.time * 34) % 2;
       for (const b of bees) {
-        ctx.globalAlpha = fade * Math.min(1, b.age * 4);
+        ctx.globalAlpha = leftover * Math.min(1, b.age * 4);
         const look = BEES[b.kind === 'chase' && b.age < CHASE_SECONDS ? 1 : 0][wing];
         if (b.kind === 'down') {
           // Knocked out, upside down
@@ -1659,7 +2421,7 @@
       }
       for (const s of powers) {
         const look = POWERS[Math.floor(me.time * 7) % POWERS.length], turn = s.age * 2.6 * Math.sign(s.vx), c = Math.cos(turn) * scale, n = Math.sin(turn) * scale;
-        ctx.globalAlpha = fade * (POWER_LIFE - s.age < 3 && Math.floor(s.age * 7) % 2 ? 0.4 : 1);
+        ctx.globalAlpha = leftover * (POWER_LIFE - s.age < 3 && Math.floor(s.age * 7) % 2 ? 0.4 : 1);
         ctx.setTransform(c, n, -n, c, s.x * scale, s.y * scale);
         ctx.drawImage(look.c, -look.w / 2, -look.h / 2, look.w, look.h);
       }
@@ -1690,7 +2452,7 @@
       for (const ring of rings) {
         const f = ring.age / ring.life;
         ctx.globalAlpha = (1 - f) * 0.9;
-        ctx.strokeStyle = '#FFD9A0';
+        ctx.strokeStyle = ring.color || '#FFD9A0';
         ctx.lineWidth = 3 * (1 - f) + 0.5;
         ctx.beginPath();
         ctx.arc(ring.x, ring.y, ring.r * (0.3 + 0.7 * f), 0, TAU);
@@ -1704,32 +2466,54 @@
         ctx.fill();
       }
       ctx.globalCompositeOperation = 'source-over';
-      // The stars on their way down from the sky, or back
-      if (phase !== 'play') {
+      // The stars on their way down from the sky, dimming, or back, the relit ones bright
+      if (phase === 'in' || phase === 'out') {
         const t = smooth(clamp(phaseTime / 1, 0, 1)), there = phase === 'in' ? t : 1 - t;
-        ctx.globalAlpha = 1;
         skyStars.forEach((star, i) => {
-          const [bx, by] = star.to, x = lerp(star.x, me.x + bx * me.face, there), y = lerp(star.y, me.y + by, there) - Math.sin(there * Math.PI) * (20 + i * 5), r = 7;
+          const [bx, by] = star.to, x = lerp(star.x, me.x + bx * (A.sideways ? 1 : me.face), there), y = lerp(star.y, me.y + by, there) - Math.sin(there * Math.PI) * (20 + i * 5), r = 7;
+          ctx.globalAlpha = lit[i] ? 1 : lerp(1, 0.35, there);
           ctx.drawImage(starGlow, x - r, y - r, r * 2, r * 2);
         });
+        ctx.globalAlpha = 1;
       }
     };
 
     // Starting and stopping
     skyStars.forEach((s) => { s.el.style.visibility = 'hidden'; });
     banner.classList.add('bn-bear-on');
-    banner.classList.toggle('bn-as-fox', kind === 'fox');
-    banner.classList.remove('bn-animal-on');
+    banner.classList.remove('bn-as-fox', 'bn-as-crab');
+    if (kind !== 'bear') banner.classList.add(`bn-as-${kind}`);
+    showSkyLabel(banner, 0, null);
     const labels = banner.querySelector('.bn-labels');
-    const hint = labels.appendChild(Object.assign(document.createElement('span'), { className: 'bn-bear-hint', textContent: kind === 'fox'
-      ? (touchOnly ? 'Tap to jump, again to double jump · Swipe down to pounce or slide' : '← → run · ↑ or Space jump, twice for a double jump · ↓ pounces in the air, slides on the ground · Esc quits')
-      : (touchOnly ? 'Tap to jump, again to double jump · Swipe down to roll' : '← → run · ↑ or Space jump, twice for a double jump · ↓ roll · Esc quits') }));
+    const hint = labels.appendChild(Object.assign(document.createElement('span'), { className: 'bn-bear-hint', textContent: touchOnly ? A.taps : A.keys }));
     const quit = labels.appendChild(Object.assign(document.createElement('span'), { className: 'bn-bear-quit', textContent: 'Quit' }));
-    const score = labels.appendChild(Object.assign(document.createElement('span'), { className: 'bn-bear-score', textContent: 'Catch stars, eat berries and honey, dodge the bees' }));
+    const score = labels.appendChild(Object.assign(document.createElement('span'), { className: 'bn-bear-score' }));
+    showScore();
+    // Dawn: a glow like the banner's own before sunrise, behind the aurora and the forest, brightening over the end of the night
+    const dawn = Object.assign(document.createElement('div'), { className: 'bn-bear-dawn' }), twilight = banner.querySelector('.bn-twilight');
+    if (twilight) twilight.after(dawn); else banner.prepend(dawn);
+    let dawnShown = 0;
+    // A stage's card, as the shooting star game announces its showers: the goal at first, then which star is next, and what the
+    // stage brings. A new card replaces any still showing.
+    let cards = [];
+    const card = (lines, color, delay, ms = 2800) => {
+      cards.forEach((el) => el.remove());
+      const el = labels.appendChild(Object.assign(document.createElement('div'), { className: 'bn-wave bn-bear-wave' }));
+      el.style.setProperty('--c', color);
+      el.append(...lines.map((text, i) => Object.assign(document.createElement(i % 2 ? 'span' : 'b'), { textContent: text })));
+      el.animate([{ opacity: 0 }, { opacity: 1, offset: 0.12 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], { duration: ms, delay }).onfinish = () => el.remove();
+      cards = [el];
+    };
+    const showStage = (delay) => {
+      const says = stage === MOON_FROM && !moon ? 'No moon tonight' : (A.says && A.says[stage]) || STAGES[stage].says;
+      card([stage ? `Star ${stage + 1} of 7` : 'Relight 7 stars before dawn', ...(A.names ? [A.names[stage]] : []), says], A.card, delay);
+    };
     const soundSwitch = labels.appendChild(Object.assign(document.createElement('span'), { className: 'bn-bear-sound' }));
-    const showSound = () => { soundSwitch.textContent = `Sound: ${soundIsOn ? 'on' : 'off'}`; };
+    // A speaker beside the words, with sound waves when on and crossed out when off, as in the shooting star game
+    const showSound = (el = soundSwitch) => { el.innerHTML = `<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M7.3 3.3L4 6H1.3v4H4l3.3 2.7z" fill="currentColor"/><path d="${soundIsOn ? 'M10.4 5.6a3.3 3.3 0 0 1 0 4.8M12.7 3.3a6.7 6.7 0 0 1 0 9.4' : 'M15 6l-4 4M11 6l4 4'}" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Sound: ${soundIsOn ? 'on' : 'off'}`; };
     showSound();
     wakeAudio();
+    startMusic(kind);
     soundSwitch.addEventListener('click', (e) => {
       e.stopPropagation();
       soundIsOn = !soundIsOn;
@@ -1737,17 +2521,15 @@
       wakeAudio();
       showSound();
       sfx.catch(1);
+      if (soundIsOn) startMusic(kind); else stopMusic(0.2);
     });
-    if (peak) {
-      const card = labels.appendChild(Object.assign(document.createElement('div'), { className: 'bn-wave bn-bear-wave' }));
-      card.style.setProperty('--c', '255 214 150');
-      card.append(Object.assign(document.createElement('b'), { textContent: 'Peak tonight' }), Object.assign(document.createElement('span'), { textContent: `The ${peak}` }), Object.assign(document.createElement('b'), { textContent: 'Double points for stars' }));
-      card.animate([{ opacity: 0 }, { opacity: 1, offset: 0.12 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], { duration: 3200, delay: 900 }).onfinish = () => card.remove();
-    }
+    // The first stage's card, and then on a meteor shower's peak night, a card for that
+    showStage(900);
+    const peakTimer = peak ? setTimeout(() => { if (!ending) card(['Peak tonight', `The ${peak}`, 'Double points for stars'], '255 214 150', 0, 3200); }, 3900) : 0;
     // After the controls, what a run can bring
     let hintTimer = setTimeout(() => {
-      if (kind !== 'bear' || foxKnown) { hint.style.opacity = 0; return; }
-      hint.textContent = `Catch ${UNLOCK_STARS} stars in one run to unlock a new animal`;
+      if (!A.unlocks || unlockedAnimals().includes(A.unlocks)) { hint.style.opacity = 0; return; }
+      hint.textContent = A.homeHint;
       hintTimer = setTimeout(() => { hint.style.opacity = 0; }, 7000);
     }, 8000);
     const typing = () => document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) || document.querySelector('dialog[open]');
@@ -1795,7 +2577,12 @@
       if (!running) return;
       running = false;
       current = null;
+      stopMusic(0.2);
       clearTimeout(hintTimer);
+      clearTimeout(peakTimer);
+      cards.forEach((el) => el.remove());
+      // Night comes back
+      dawn.animate([{ opacity: dawnShown }, { opacity: 0 }], { duration: 2500, easing: 'ease-in-out' }).onfinish = () => dawn.remove();
       if (touch && touch.timer) clearTimeout(touch.timer);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
@@ -1805,10 +2592,17 @@
       window.removeEventListener('pointerup', onUp);
       window.removeEventListener('pointercancel', onUp);
       if (points > best) { try { localStorage.setItem(A.bestKey, String(points)); } catch (e) { /* blocked */ } }
-      [layer, levelLayer, quit, soundSwitch, ...(result ? [] : [hint, score])].forEach((el) => el.remove());
+      [layer, levelLayer, logLayer, quit, soundSwitch, ...(result ? [] : [hint, score])].forEach((el) => el.remove());
       skyStars.forEach((s) => { s.el.style.visibility = ''; });
-      banner.classList.remove('bn-bear-on', 'bn-as-fox');
+      banner.classList.remove('bn-bear-on', 'bn-as-fox', 'bn-as-crab');
       if (!result) { if (onEnd) onEnd(); return; }
+      // The first time all three animals are home, the grand finale, in place of this run's credits
+      if (finale) {
+        score.style.visibility = 'hidden';
+        hint.style.visibility = 'hidden';
+        grandFinale(afterwards);
+        return;
+      }
       // A run worth remembering gets credits, as in the shooting star game, while the aurora surges
       if (caught >= 3 || points >= 300) {
         score.style.visibility = 'hidden';
@@ -1816,14 +2610,178 @@
         rollCredits(afterwards);
       } else afterwards();
     };
+    // The grand finale: fireworks rising from behind the forest and bursting in the aurora's colors and the animals', faster and
+    // faster to a crescendo of gold at 12 s; then the three constellations blaze together, their lines drawn bright, the aurora
+    // surges and credits rise. With sound on, Vivaldi's Spring plays, and its own Sound switch can turn it on. Bursts bloom and
+    // fade rather than flash, and nothing shakes. A click ends it.
+    const grandFinale = (done) => {
+      const b = banner.getBoundingClientRect(), W2 = b.width, H2 = b.height, k2 = H2 / 216, ratio = Math.min(2, window.devicePixelRatio || 1);
+      const sky = Object.assign(document.createElement('canvas'), { className: 'bn-fireworks', width: Math.ceil(W2 * ratio), height: Math.ceil(H2 * ratio) });
+      const ground = banner.querySelector('.bn-ground');
+      if (ground) ground.before(sky); else banner.append(sky);
+      const c = sky.getContext('2d');
+      // The three constellations, where they are in the sky
+      const spot = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2 - b.left, r.top + r.height / 2 - b.top]; };
+      const figures = [
+        { stars: Object.keys(BACK_STARS).map((name) => banner.querySelector(`[data-star="${name}"]`)).filter(Boolean).map(spot), lines: dipperLine.slice(1).map((n, i) => [dipperLine[i], n]), color: '#C9D6FF' },
+        ...['fox', 'crab'].map((other) => ({ stars: [...banner.querySelectorAll(`.bn-animal-sky .${other} [data-sky-star]`)].map(spot), lines: SKY_ANIMALS[other].lines, color: SKY_ANIMALS[other].line }))
+      ].filter((f) => f.stars.length === 7);
+      const glowDot = softDot(64, [[0, 'rgba(255,255,255,1)'], [0.25, 'rgba(255,248,230,.6)'], [1, 'rgba(255,240,210,0)']]);
+      // The bear's blue and violet, the fox's orange, the crab's aqua, the aurora, and gold
+      const PALETTES = [['#A9C1FF', '#D2B3FF', '#E8EEFF'], ['#FFC27A', '#FFE3B0', '#FFD9A0'], ['#9FF5DC', '#B4FFEC', '#7FE6D2'], ['#9FF5DC', '#A9C1FF', '#D2B3FF', '#FFB6E6'], ['#FFE9B8', '#FFD66B']];
+      const rockets = [], bits = [], blooms = [];
+      let t = 0, next = 0.4, shots = 0, then = performance.now(), going = true, blazed = false, credits = null, rise = null, skipHint = null;
+      const launch = (shape) => {
+        const x = W2 * (0.12 + Math.random() * 0.76);
+        rockets.push({ x, top: H2 * (0.12 + Math.random() * 0.3), age: 0, life: 0.9 + Math.random() * 0.4, shape, colors: shape === 'willow' ? PALETTES[4] : PALETTES[shots++ % 4] });
+      };
+      // A burst: sparks flying out, and a soft bloom of light where it opens, which fades in half a second rather than flashing
+      const burst = (r, y) => {
+        const willow = r.shape === 'willow', ring = r.shape === 'ring', count = willow ? 90 : ring ? 64 : 70 + Math.floor(Math.random() * 30);
+        for (let i = 0; i < count; i++) {
+          const a = ring ? i / count * TAU : Math.random() * TAU, v = (ring ? 120 : 50 + Math.random() * 110) * k2 * (willow ? 0.8 : 1);
+          bits.push({ x: r.x, y, px: r.x, py: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, age: 0, life: (willow ? 2.6 : 1.5) + Math.random() * 0.6, color: r.colors[i % r.colors.length], fall: (willow ? 70 : 40) * k2 });
+        }
+        blooms.push({ x: r.x, y, age: 0 });
+        noise(260, 0.05, 900, 120);
+      };
+      // Its own Sound switch, since the run's has gone
+      const switchEl = labels.appendChild(Object.assign(document.createElement('span'), { className: 'bn-bear-sound' }));
+      showSound(switchEl);
+      switchEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        soundIsOn = !soundIsOn;
+        try { localStorage.setItem(SOUND_KEY, soundIsOn ? '1' : '0'); } catch (x) { /* blocked */ }
+        wakeAudio();
+        showSound(switchEl);
+        if (soundIsOn) startMusic('spring'); else stopMusic(0.2);
+      });
+      wakeAudio();
+      startMusic('spring');
+      if (options.surge) options.surge();
+      const best = (other) => { try { return Number(localStorage.getItem(ANIMALS[other].bestKey)) || 0; } catch (e) { return 0; } };
+      const finish = () => {
+        if (!going) return;
+        going = false;
+        banner.removeEventListener('click', skip, true);
+        stopMusic(1.5);
+        if (rise) rise.cancel();
+        [credits, skipHint, switchEl].forEach((el) => el && el.remove());
+        sky.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 600 }).onfinish = () => sky.remove();
+        done();
+      };
+      // A click only skips it
+      const skip = (e) => { e.stopPropagation(); e.preventDefault(); finish(); };
+      banner.addEventListener('click', skip, true);
+      skipHint = labels.appendChild(Object.assign(document.createElement('span'), { className: 'bn-skip', textContent: touchOnly ? 'Tap to skip' : 'Click to skip' }));
+      const rollFinale = () => {
+        const rows = [['All three are home', true], [''], ...Object.values(ANIMALS).flatMap((a) => [[a.title, true], [`Best ${number(best(a.short))}`]]), [''], ['Music', true], ['Antonio Vivaldi'], ['Spring, from The Four Seasons'], [''], ['Thanks for playing', true]];
+        credits = labels.appendChild(Object.assign(document.createElement('div'), { className: 'bn-credits bn-bear-credits' }));
+        credits.replaceChildren(...rows.map(([text, head]) => (text ? Object.assign(document.createElement(head ? 'b' : 'span'), { textContent: text }) : document.createElement('i'))));
+        const tall = credits.offsetHeight;
+        rise = credits.animate([{ opacity: 1, transform: `translate(-50%, ${H2.toFixed(1)}px)` }, { opacity: 1, transform: `translate(-50%, ${(-tall).toFixed(1)}px)` }], { duration: (H2 + tall) / (H2 * 0.4) * 1000, easing: 'linear' });
+        rise.onfinish = finish;
+      };
+      const tick = (now) => {
+        if (!going) return;
+        if (document.hidden) { finish(); return; }
+        const dt = Math.min(0.05, (now - then) / 1000);
+        then = now;
+        t += dt;
+        // Rockets come faster to the crescendo, then a few more under the credits
+        if (t >= next) {
+          if (t >= 12 && t < 13.6) { launch('willow'); next = t + 0.18; }
+          else {
+            launch(Math.random() < 0.25 ? 'ring' : 'peony');
+            if (t < 12 && Math.random() < 0.25) launch('peony');
+            next = t + (t < 12 ? lerp(0.9, 0.32, t / 12) : 1.2) * (0.8 + Math.random() * 0.4);
+          }
+        }
+        if (t >= 14 && !blazed) { blazed = true; if (options.surge) options.surge(); rollFinale(); }
+        for (let i = rockets.length - 1; i >= 0; i--) {
+          const r = rockets[i];
+          r.age += dt;
+          if (r.age >= r.life) { rockets.splice(i, 1); burst(r, r.top); }
+        }
+        for (let i = blooms.length - 1; i >= 0; i--) { blooms[i].age += dt; if (blooms[i].age > 0.5) blooms.splice(i, 1); }
+        for (let i = bits.length - 1; i >= 0; i--) {
+          const p = bits[i], drag = Math.exp(-dt * 1.6);
+          p.age += dt;
+          if (p.age >= p.life) { bits.splice(i, 1); continue; }
+          p.px = p.x;
+          p.py = p.y;
+          p.vx *= drag;
+          p.vy = p.vy * drag + p.fall * dt;
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+        }
+        c.setTransform(ratio, 0, 0, ratio, 0, 0);
+        c.clearRect(0, 0, W2, H2);
+        c.globalCompositeOperation = 'lighter';
+        c.lineCap = 'round';
+        // The three constellations, blazing together
+        const blaze = smooth(clamp((t - 14) / 1.5, 0, 1));
+        if (blaze > 0) {
+          figures.forEach((f, n) => {
+            c.strokeStyle = f.color;
+            c.lineWidth = 1.4;
+            c.globalAlpha = 0.75 * blaze;
+            c.beginPath();
+            f.lines.forEach(([m, o2]) => { c.moveTo(...f.stars[m]); c.lineTo(...f.stars[o2]); });
+            c.stroke();
+            f.stars.forEach(([x, y], i) => {
+              const r = (9 + Math.sin(t * 3 + i * 1.7 + n) * 2) * k2;
+              c.globalAlpha = blaze;
+              c.drawImage(glowDot, x - r, y - r, r * 2, r * 2);
+            });
+          });
+        }
+        // Rockets, a bright head with a short trail, rising from behind the forest
+        rockets.forEach((r) => {
+          const f = 1 - (1 - r.age / r.life) ** 2, y = lerp(H2 * 0.95, r.top, f), trail = c.createLinearGradient(r.x, y, r.x, y + 16 * k2);
+          trail.addColorStop(0, 'rgba(255,240,210,.9)');
+          trail.addColorStop(1, 'rgba(255,240,210,0)');
+          c.globalAlpha = 1;
+          c.strokeStyle = trail;
+          c.lineWidth = 1.6 * k2;
+          c.beginPath();
+          c.moveTo(r.x, y + 16 * k2);
+          c.lineTo(r.x, y);
+          c.stroke();
+          c.drawImage(glowDot, r.x - 4 * k2, y - 4 * k2, 8 * k2, 8 * k2);
+        });
+        // Bursts: the bloom where each opened, and each spark a short streak from where it was, with a glow at its head, fading
+        blooms.forEach((m) => {
+          const r = (18 + 30 * m.age) * k2;
+          c.globalAlpha = 0.5 * (1 - m.age / 0.5);
+          c.drawImage(glowDot, m.x - r, m.y - r, r * 2, r * 2);
+        });
+        bits.forEach((p) => {
+          const fade = (1 - p.age / p.life) ** 1.5, g = 3.2 * Math.max(0.7, k2);
+          c.globalAlpha = fade;
+          c.strokeStyle = p.color;
+          c.lineWidth = 2 * Math.max(0.6, k2);
+          c.beginPath();
+          c.moveTo(p.px, p.py);
+          c.lineTo(p.x, p.y);
+          c.stroke();
+          c.globalAlpha = fade * 0.8;
+          c.drawImage(glowDot, p.x - g, p.y - g, g * 2, g * 2);
+        });
+        c.globalAlpha = 1;
+        c.globalCompositeOperation = 'source-over';
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    };
     const rollCredits = (done) => {
-      const h = banner.getBoundingClientRect().height, time = Math.round(playTime);
-      const rows = [...(newBest ? ['New best!', ''] : []), kind === 'fox' ? 'The Little Fox' : 'The Great Bear', '', `${caught} ${caught === 1 ? 'star' : 'stars'} caught`,
-        ...(bestCombo >= 3 ? [`Longest combo ${bestCombo}`] : []), ...(counts.berries ? [`Berries ${counts.berries}`] : []), ...(counts.honey ? [`Honey pots ${counts.honey}`] : []),
-        ...(counts.bees ? [`Bees bonked ${counts.bees}`] : []), ...(counts.satellites ? [`Satellites ${counts.satellites}`] : []), ...(counts.miles ? [`Air miles ${number(counts.miles)}`] : counts.rides ? [`Plane rides ${counts.rides}`] : []),
+      const h = banner.getBoundingClientRect().height, time = Math.round(playTime), left = counts.left;
+      const rows = [...(newBest ? ['New best!', ''] : []), A.title, ending === 'home' ? `Home by ${clock()}` : `${lit.filter(Boolean).length} of 7 stars relit`, '',
+        `${caught} ${caught === 1 ? 'star' : 'stars'} caught`, ...(counts.alcor ? ['Alcor spotted'] : []), ...(bestCombo >= 3 ? [`Longest combo ${bestCombo}`] : []), ...(counts.berries ? [`Berries ${counts.berries}`] : []), ...(counts.honey ? [`Honey pots ${counts.honey}`] : []),
+        ...(counts.bees ? [`Bees bonked ${counts.bees}`] : []), ...(counts.satellites ? [`Satellites ${counts.satellites}`] : []), ...(counts.miles ? [`Air miles ${number(counts.miles)}`] : counts.rides ? [`Plane rides ${counts.rides}`] : []), ...(counts.booms ? [`Sonic booms ${counts.booms}`] : []),
         ...(counts.moons ? [`Moon gravity ${counts.moons}`] : []), ...(counts.fires ? [`Fox fires ${counts.fires}`] : []),
-        `Time ${Math.floor(time / 60)}:${String(time % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Thanks for playing'];
-      const heads = new Set(['New best!', 'The Little Fox', 'The Great Bear', 'Final score']);
+        ...(left ? [`Night left ${hoursMinutes(left)}`] : []), `Time ${Math.floor(time / 60)}:${String(time % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Thanks for playing'];
+      const heads = new Set(['New best!', ...Object.values(ANIMALS).map((a) => a.title), 'Final score']);
       const credits = labels.appendChild(Object.assign(document.createElement('div'), { className: 'bn-credits bn-bear-credits' }));
       credits.replaceChildren(...rows.map((text) => (text ? Object.assign(document.createElement(heads.has(text) ? 'b' : 'span'), { textContent: text }) : document.createElement('i'))));
       const tall = credits.offsetHeight;
@@ -1851,11 +2809,12 @@
       if (soundIsOn && audio) setTimeout(() => { if (!current && audio) audio.suspend(); }, 2500);
       {
         linger([hint, score]);
-        // For people with the review link, the shared high scores: a top ten score opens them, and the line links to them
+        // For people with the review link, the shared high scores: any score opens them, a top ten one to enter initials, and
+        // the line links to them
         if (window.auroraArcade) {
           window.auroraArcade.gameEnded(points, { game: 'bear', animal: kind }).then((shared) => {
             if (!shared || !score.isConnected) return;
-            score.append(' · ', Object.assign(document.createElement('span'), { textContent: 'High scores' }));
+            score.append(' ', Object.assign(document.createElement('span'), { textContent: 'High scores' }));
             score.classList.add('link');
             score.addEventListener('click', (e) => { e.stopPropagation(); window.auroraArcade.show('bear'); });
           });
@@ -1863,20 +2822,43 @@
       }
       if (onEnd) onEnd();
     };
-    const leave = () => {
-      if (phase === 'out') return;
-      phase = 'out';
+    // A run ends in one of four ways: home, with all seven stars relit; asleep at dawn; out of lives; or quit. Home and dawn have a
+    // moment of their own before the stars go back to the sky.
+    const leave = (why = 'quit', relit = 0) => {
+      if (ending) return;
+      ending = why;
+      phase = why === 'home' ? 'home' : why === 'dawn' ? 'sleep' : 'out';
       phaseTime = 0;
       letGo();
+      cards.forEach((el) => el.remove());
+      const who = A.who, at = Math.max(me.y - A.top, 126);
+      if (why === 'home') {
+        // Each minute of night left is worth points, and the animal rises, glowing, as the aurora surges
+        const left = NIGHT_HOURS * 60 - nightMinutes(), bonus = left * NIGHT_MINUTE_POINTS;
+        points += bonus;
+        counts.left = left;
+        home = { y: me.y, rise: clamp(me.y - A.top - 24, 0, 90) };
+        pop(me.x, at - 48, `${who} is home! +${number(relit)}`, 'rgb(255,232,170)', 3);
+        if (bonus) pop(me.x, at - 24, `+${number(bonus)} for ${hoursMinutes(left)} of night left`, 'rgb(200,212,255)', 3);
+        if (options.surge) options.surge();
+        if (A.unlocks && !unlockedAnimals().includes(A.unlocks)) unlockNext(at - 72);
+        finale = bringHome(kind);
+      } else if (why === 'dawn') {
+        pop(me.x, at - 30, `Dawn! ${who} curls up to sleep`, 'rgb(200,212,255)', 3);
+      }
+      // The music fades as the animal goes back to the sky
+      stopMusic(0.9);
       // The result stays for a moment after the bear has gone back to the sky
       if (!points) return;
       result = true;
       newBest = best > 0 && points > best;
-      if (newBest) sfx.best(); else sfx.over();
-      score.textContent = `${number(points)} points · ${caught} ${caught === 1 ? 'star' : 'stars'}${points > best && best ? ' · New best!' : best ? ` · Best ${number(Math.max(best, points))}` : ''}`;
+      if (why === 'home') sfx.home(); else if (why === 'dawn') sfx.sleep(); else if (newBest) sfx.best(); else sfx.over();
+      const relitNow = lit.filter(Boolean).length, how = why === 'home' ? `Home by ${clock()} with ${number(points)} points` : `${why === 'dawn' ? 'Dawn came with ' : ''}${relitNow} of 7 stars relit and ${number(points)} points`;
+      score.textContent = `${how}${newBest ? ', a new best!' : best ? `. Your best is ${number(Math.max(best, points))}.` : '.'}`;
       clearTimeout(hintTimer);
       const touchWord = touchOnly ? 'Tap' : 'Click';
-      hint.textContent = unlockedNow ? `You unlocked the fox! ${touchWord} its stars, at the upper left, to play as the fox` : kind === 'fox' ? `${touchWord} the fox's stars to play again` : `${touchWord} the Big Dipper to play again`;
+      const next = unlockedNow && ANIMALS[unlockedNow].short;
+      hint.textContent = unlockedNow ? `You unlocked the ${next}! ${touchWord} its stars, at the upper left, to play as the ${next}` : `${touchWord} ${A.again} to play again`;
       hint.style.opacity = 1;
     };
     const frame = (now) => {
@@ -1890,11 +2872,20 @@
       if (phase === 'in') {
         me.alpha = smooth(clamp((phaseTime - 0.6) / 0.4, 0, 1));
         if (phaseTime >= 1) { phase = 'play'; burst(me.x, me.y - 30, 18, 130, 0.6); }
+      } else if ((phase === 'home' && phaseTime >= HOME_SECONDS) || (phase === 'sleep' && phaseTime >= SLEEP_SECONDS)) {
+        // Then the stars go back to the sky
+        phase = 'out';
+        phaseTime = 0;
       } else if (phase === 'out') {
         me.alpha = 1 - smooth(clamp(phaseTime / 0.4, 0, 1));
         if (phaseTime >= 1) { cleanup(); return; }
       }
       while (acc >= STEP) { update(STEP); acc -= STEP; }
+      // Rising home, and staying up while its stars go back to the sky
+      if (home) { me.y = home.y - smooth(phase === 'home' ? clamp(phaseTime / HOME_SECONDS, 0, 1) : 1) * home.rise; me.vx = 0; me.vy = 0; }
+      // Dawn's glow, over the end of the night
+      const dawnNow = smooth(clamp((night / NIGHT_SECONDS - (1 - DAWN_GLOW)) / DAWN_GLOW, 0, 1));
+      if (Math.abs(dawnNow - dawnShown) > 0.004) { dawnShown = dawnNow; dawn.style.opacity = dawnNow.toFixed(3); }
       draw();
       requestAnimationFrame(frame);
     };
