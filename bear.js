@@ -54,14 +54,16 @@
   const RUSH_SECONDS = 5, RUSH_TOP = 315, RUSH_JUMP = 1.12, CHASE_RISE = 0.45, CHASE_CLIMB = 350, CHASE_CLIMB_TOP = 130, ESCAPE_POINTS = 300, BELLY = 7, BELLY_POINTS = 250;
   // Each berry makes the animal a little bigger for the rest of the run (GROW_EACH), up to a quarter bigger at GROW_BERRIES
   // berries, and a sting takes GROW_STING berries' worth back off, so a player who keeps getting stung shrinks into a target
-  // that's easier to keep safe. Bigger, it reaches farther for stars but is a bigger target for bees; it runs and jumps as
-  // before, so berries don't turn into a trap. What it fits through stays the same, since the level is tuned to a few units: it
-  // lands, and meets the log, as its usual size; curled up, sliding or in its shell, it reaches and is stung as its usual size,
-  // and the bear's ball is drawn that size again, as the log clears it by only 3; and the heights it reaches food at don't grow,
-  // so food on the bridges stays out of reach from the ground. At a quarter bigger, the highest bees still pass over a standing
-  // bear. Bears fatten up on berries before winter, so the bear's belly rounds out as well; the fox grows a fuller winter coat;
-  // and the crab, which can only grow by molting, grows at each full belly, stepping out of its old shell, which it leaves
-  // behind for SHED_SECONDS.
+  // that's easier to keep safe. Each starts at its own size (ANIMALS' start: the bear a little smaller than it was drawn
+  // before growing came in, since a quarter bigger made it quite large). Bigger, it reaches farther for stars but is a
+  // bigger target for bees; it runs and jumps as before, so berries don't turn into a trap. What it fits through stays as at
+  // the start, since the level is tuned to a few units (STAND and LOW): it lands, and meets the log, at that size; curled
+  // up, sliding or in its shell, it reaches and is stung at that size, and the bear's ball is drawn that size again to
+  // match, since the log has only a few units to spare; and the heights it reaches food at don't grow, so food on the
+  // bridges stays out of reach from the ground. Even a quarter bigger than ANIMALS' sizes, the highest bees would pass over
+  // a standing bear. Bears fatten up on berries before winter, so the bear's belly rounds out as well; the fox grows a
+  // fuller winter coat; and the crab, which can only grow by molting, grows at each full belly, stepping out of its old
+  // shell, which it leaves behind for SHED_SECONDS.
   const GROW_EACH = 0.025, GROW_BERRIES = 10, GROW_STING = 3, BIGGEST = 1 + GROW_EACH * GROW_BERRIES, SHED_SECONDS = 3;
   // Riding the airliner earns air miles, by the distance flown: 5 points every 0.25 s at its usual speed
   const MILE_SECONDS = 0.25, MILE_POINTS = 5;
@@ -412,9 +414,12 @@
   };
   // What makes each animal different. top: how tall it is, for the banner's ceiling. reach: what it can touch, more than its
   // body so catching feels generous, with food on a bridge out of reach from the ground. sting: what a bee can hit, less than
-  // its body so a near miss stays a miss. low: while curled up, tuck: during a flip, when it is a smaller target.
+  // its body so a near miss stays a miss. low: while curled up, tuck: during a flip, when it is a smaller target. start: the
+  // size it starts a run at, as a share of these (1 if not given), before berries make it grow.
   const ANIMALS = {
     bear: {
+      // A little smaller to begin with, since a quarter bigger made it quite large: fully grown, it's about 6% bigger than these
+      start: 0.85,
       run: 225, accel: 1700, friction: 2200, airAccel: 1300, roll: 620, boost: 240, rollAccel: 1500, rollFriction: 260, tired: 150,
       jump: 80, double: 52, stride: 76, stand: { hw: 30, h: 56 }, low: { hw: 15, h: 30 }, top: 66, edge: 64, dust: 34,
       reach: { hw: 46, top: 74, food: 60 }, lowReach: { r: 26, y: 15 }, sting: { hw: 32, top: 58 }, lowSting: { r: 17, y: 15 }, tuckSting: { r: 30, y: 45 },
@@ -615,6 +620,9 @@
   const start = (banner, onEnd, options = {}) => {
     if (current) return;
     const kind = ANIMALS[options.kind] ? options.kind : 'bear', A = ANIMALS[kind], finaleOnly = !!options.finaleOnly;
+    // Its size at the start of the run, which is the size of what it fits through for the whole run (GROW_EACH): its body for
+    // the log and for landing (STAND), and curled up, sliding or in its shell (LOW)
+    const START = A.start || 1, STAND = { hw: A.stand.hw * START, h: A.stand.h * START }, LOW = { hw: A.low.hw * START, h: A.low.h * START };
     const jumpV = Math.sqrt(2 * GRAVITY * A.jump), doubleV = Math.sqrt(2 * GRAVITY * A.double);
     if (lingering) lingering();
     addStyle();
@@ -959,7 +967,7 @@
       const dx = alkaid.x - mizar.x, dy = alkaid.y - mizar.y, d = Math.hypot(dx, dy) || 1, c = Math.cos(ALCOR_TURN), s = Math.sin(ALCOR_TURN);
       return { x: mizar.x + (dx * c - dy * s) / d * ALCOR_GAP, y: mizar.y + (dx * s + dy * c) / d * ALCOR_GAP, got: false };
     })() : null;
-    const me = { x: clamp(under, A.edge, W - A.edge), y: floorAt(clamp(under, A.edge, W - A.edge)), tilt: 0, tuck: 0, tail: -0.55, dive: 0, pouncing: false, power: 0, powerChain: 0, on: null, onFloor: true, hurt: 0, flash: 0, moonTime: 0, energy: 1, tired: false, snore: 0, snip: 0, rush: 0, dash: 0, dashDir: 1, dashSpeed: 0, dashAsk: 0, dashAskDir: 1, dashWait: 0, airDashed: false, lean: 0, trail: [], vx: 0, vy: 0, face: 1, ground: true, rolling: false, curl: 0, jumps: 0, coyote: COYOTE, buffer: 0, flip: 1, squash: 0, gait: 0, rollUntil: 0, alpha: 0, time: 0, autoDir: 1, fed: 0, molted: 0, big: 1, bigV: 0, molting: false };
+    const me = { x: clamp(under, A.edge, W - A.edge), y: floorAt(clamp(under, A.edge, W - A.edge)), tilt: 0, tuck: 0, tail: -0.55, dive: 0, pouncing: false, power: 0, powerChain: 0, on: null, onFloor: true, hurt: 0, flash: 0, moonTime: 0, energy: 1, tired: false, snore: 0, snip: 0, rush: 0, dash: 0, dashDir: 1, dashSpeed: 0, dashAsk: 0, dashAskDir: 1, dashWait: 0, airDashed: false, lean: 0, trail: [], vx: 0, vy: 0, face: 1, ground: true, rolling: false, curl: 0, jumps: 0, coyote: COYOTE, buffer: 0, flip: 1, squash: 0, gait: 0, rollUntil: 0, alpha: 0, time: 0, autoDir: 1, fed: 0, molted: 0, big: START, bigV: 0, grown: 0, molting: false };
     const keys = { left: false, right: false, down: false, jump: false };
     const sparks = [], fallers = [], pops = [], bees = [], pots = [], visitors = [], rings = [], powers = [], swarms = [], sheds = [];
     let nextPower = 22 + Math.random() * 10;
@@ -1010,7 +1018,7 @@
     // has, chosen then, away from the animal and any honey pot. The berry under it is there again, as a reward for finding it.
     // With nowhere else free, as on a banner with room for it in only one place, it stays where it is.
     const moveLog = () => {
-      const old = logs[0], near = logW / 2 + A.stand.hw + 12;
+      const old = logs[0], near = logW / 2 + STAND.hw + 12;
       const free = (x, gap) => Math.abs(x - me.x) > gap && !pots.some((p) => Math.abs(p.x - x) < logW / 2 + 20);
       if (old && !logSpots.some((x) => Math.abs(x - old.x) > 100 && free(x, near))) return;
       const appear = () => {
@@ -1090,13 +1098,13 @@
     // What the bear can reach: more than its body, so catching feels generous, and more as it grows. Food is out of reach above a
     // fixed height (top), however big the animal, so food on a bridge stays out of reach from the ground.
     const touching = (x, y, r, top = A.reach.top * me.big) => (me.rolling
-      ? Math.hypot(x - me.x, y - (me.y - A.lowReach.y)) < A.lowReach.r + r
+      ? Math.hypot(x - me.x, y - (me.y - A.lowReach.y * START)) < A.lowReach.r * START + r
       : x > me.x - A.reach.hw * me.big - r && x < me.x + A.reach.hw * me.big + r && y > me.y - top - r && y < me.y + r);
     // What a bee can sting: less than its body, so a near miss stays a miss, and more as it grows. Tucked or in a ball, the bear
     // is a smaller target.
     const stingable = (x, y) => {
       if (me.pouncing || me.power > 0) return false;
-      if (me.rolling) return Math.hypot(x - me.x, y - (me.y - A.lowSting.y)) < A.lowSting.r;
+      if (me.rolling) return Math.hypot(x - me.x, y - (me.y - A.lowSting.y * START)) < A.lowSting.r * START;
       if (me.tuck > 0.5) return Math.hypot(x - me.x, y - (me.y - A.tuckSting.y * me.big)) < A.tuckSting.r * me.big;
       return Math.abs(x - me.x) < A.sting.hw * me.big && y > me.y - A.sting.top * me.big && y < me.y - 2;
     };
@@ -1352,9 +1360,9 @@
       showScore();
       if (lives <= 0) leave('stung');
     };
-    const size = () => (me.rolling ? A.low : A.stand);
+    const size = () => (me.rolling ? LOW : STAND);
     const overlaps = (l, x, y, s) => x + s.hw > l.x - l.w / 2 && x - s.hw < l.x + l.w / 2 && y > l.y && y - s.h < l.y + l.h;
-    const canStand = () => !logs.some((l) => overlaps(l, me.x, me.y, A.stand));
+    const canStand = () => !logs.some((l) => overlaps(l, me.x, me.y, STAND));
     const jump = (v) => {
       me.pouncing = false;
       // (A jump during a dash ends it but keeps its speed)
@@ -1375,9 +1383,11 @@
       me.squash *= Math.exp(-dt * 11);
       me.curl = clamp(me.curl + (me.rolling ? dt : -dt) / 0.09, 0, 1);
       // Growing toward what it has eaten, or for the crab, what it had eaten when it last molted, with a little spring to it
-      const grow = 1 + GROW_EACH * (A.molts ? Math.min(me.fed, me.molted) : me.fed);
+      const grow = START * (1 + GROW_EACH * (A.molts ? Math.min(me.fed, me.molted) : me.fed));
       me.bigV += ((grow - me.big) * 240 - me.bigV * 22) * dt;
       me.big += me.bigV * dt;
+      // How far along its growth it is, from 0 at the start to 1 fully grown, for the bear's belly and the fox's coat
+      me.grown = clamp((me.big / START - 1) / (BIGGEST - 1), 0, 1);
       const steering = phase === 'play';
       // On a touch screen it runs by itself, except on the plane, where it rides; a tap jumps off
       const dir = !steering ? 0 : touchOnly ? (me.on ? 0 : me.autoDir) : (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
@@ -1488,7 +1498,7 @@
       const was = me.y, wasGround = me.ground, fall = me.vy;
       me.y += me.vy * dt;
       // The top of the banner is as high as the bear goes, as tall as it is now
-      const headroom = me.rolling ? A.low.h : tall();
+      const headroom = me.rolling ? LOW.h : tall();
       if (me.vy < 0 && me.y < headroom) { me.y = headroom; me.vy = 0; }
       me.ground = false;
       me.onFloor = false;
@@ -1816,7 +1826,7 @@
         else if (phase === 'play' && me.pouncing && touching(b.x, b.y, 8)) {
           bees.splice(i, 1);
           swat(b);
-        } else if (phase === 'play' && A.shell && me.rolling && Math.hypot(b.x - me.x, b.y - (me.y - 10)) < A.low.hw + 8) bounce(b);
+        } else if (phase === 'play' && A.shell && me.rolling && Math.hypot(b.x - me.x, b.y - (me.y - 10)) < LOW.hw + 8) bounce(b);
         // (A swarm rising out of the pot, which the animal is touching, can't sting yet: until November 6 it stung at once, so honey
         // always cost a life)
         else if (phase === 'play' && me.hurt <= 0 && !(b.kind === 'chase' && b.age < CHASE_RISE) && stingable(b.x, b.y)) {
@@ -1903,7 +1913,7 @@
         o.translate(0, 35);
       };
       // Fattening up, the belly rounds out, hanging lower from the top of the back, and the stars on its side go with it
-      const fat = clamp((me.big - 1) / (BIGGEST - 1), 0, 1), round = ([x, y]) => [-6 + (x + 6) * (1 + 0.04 * fat), -56 + (y + 56) * (1 + 0.16 * fat)];
+      const fat = me.grown, round = ([x, y]) => [-6 + (x + 6) * (1 + 0.04 * fat), -56 + (y + 56) * (1 + 0.16 * fat)];
       const folded = () => {
         o.translate(-8, 0);
         o.scale(1 - 0.5 * tuck, 1);
@@ -2056,7 +2066,7 @@
       const air = me.ground ? 0 : 1, stride = me.stride || 0, g = me.gait;
       const tuck = smooth(me.tuck), flat = smooth(me.curl), dive = smooth(me.dive), fold = (x) => -2 + (x + 2) * (1 - 0.5 * tuck);
       // Its winter coat, fuller as it grows: a bushier tail, a thicker ruff and a fluffier outline
-      const coat = clamp((me.big - 1) / (BIGGEST - 1), 0, 1);
+      const coat = me.grown;
       const wave = Math.sin(stride * TAU), breath = Math.sin(me.time * 3) * (1 - g) * (1 - air);
       const bob = -Math.abs(wave) * 2.6 * g + breath * 0.5, pitch = (wave * 0.08 * g + clamp(me.vy / 900, -1, 1) * 0.24 * air) * (1 - tuck) * (1 - dive);
       const rise = clamp(-me.vy / 500, -1, 1), length = lerp(10.5, 5, tuck);
@@ -2534,8 +2544,9 @@
         const sx = 1 + me.squash * 0.75, sy = 1 - me.squash;
         // (A crab faces the front, so it isn't mirrored when it changes direction)
         const facing = A.sideways ? 1 : me.face;
-        // As big as it's grown, except that the bear's ball goes back to its usual size, to fit under the log, though not asleep
-        const g = kind === 'bear' ? lerp(me.big, phase === 'sleep' ? me.big : 1, smooth(me.curl)) : me.big;
+        // As big as it's grown, except that the bear's ball goes back to its size at the start, to fit under the log, though not
+        // asleep
+        const g = kind === 'bear' ? lerp(me.big, phase === 'sleep' ? me.big : START, smooth(me.curl)) : me.big;
         o.setTransform(scale * facing * sx * g, 0, 0, scale * sy * g, OFF_X * scale, OFF_Y * scale);
         // (Leaning into a dash: forward, or for the crab, which isn't mirrored, the way it dashes)
         o.rotate(facing * me.tilt + (A.sideways ? me.dashDir : 1) * me.lean);
@@ -2610,7 +2621,7 @@
         ctx.shadowBlur = 0;
         // Rolling energy, while it is in use or coming back
         if (me.energy < 1 && phase === 'play') {
-          const bx = px - 17 * scale, by = py - (me.rolling ? A.low.h + 12 : tall() + 9) * scale;
+          const bx = px - 17 * scale, by = py - (me.rolling ? LOW.h + 12 : tall() + 9) * scale;
           ctx.globalAlpha = 0.3;
           ctx.fillStyle = '#E8EEFF';
           ctx.fillRect(bx, by, 34 * scale, 3 * scale);
@@ -3080,7 +3091,7 @@
         marchers.forEach((m) => {
           march(m, dt);
           if (m.alpha <= 0) return;
-          Object.assign(me, { x: m.x, y: floorAt(m.x) - m.up, face: m.face, gait: m.gait, stride: m.stride, time: t + m.i, tuck: m.tuck, curl: 0, dive: 0, flip: m.flip, squash: 0, tail: m.tail, snip: m.snip, big: 1,
+          Object.assign(me, { x: m.x, y: floorAt(m.x) - m.up, face: m.face, gait: m.gait, stride: m.stride, time: t + m.i, tuck: m.tuck, curl: 0, dive: 0, flip: m.flip, squash: 0, tail: m.tail, snip: m.snip, big: 1, grown: 0,
             vy: m.vy, vx: m.moving ? m.face * speed : 0, ground: !m.up, tilt: m.up ? 0 : Math.atan(slopeAt(m.x)) });
           paradeOne(pc, m.which, m.alpha, m.light, m.spin);
         });
