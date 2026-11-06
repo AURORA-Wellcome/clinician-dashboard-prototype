@@ -10,6 +10,10 @@
   const AIR_DRAG = 300;
   // Fast rolling runs on energy: it lasts about a second, and comes back in about four while walking
   const ROLL_SECONDS = 1.1, ROLL_RECOVERY = 4, ROLL_START_COST = 0.12, ROLL_READY_AGAIN = 0.35;
+  // A quick second press of ← or → (two within DASH_TAP seconds) dashes that way, at DASH_SPEED times running speed for a moment:
+  // on the ground, or once a jump in the air, where it holds its height. Jumping during a dash keeps its speed, for a long jump.
+  // Then a short wait before the next. A quick sideways swipe does it on a touch screen.
+  const DASH_TAP = 0.25, DASH_SECONDS = 0.22, DASH_SPEED = 2.5, DASH_AGAIN = 0.45, DASH_LEAN = 0.14, DASH_TRAIL = 0.16;
   const GRAVITY = 1900, FALL_MORE = 1.45, RELEASE_MORE = 2.4, MAX_FALL = 980;
   const COYOTE = 0.09, BUFFER = 0.12, FLIP = 0.36, TUCK_UNTIL = 0.72;
   // Five lives, as in the shooting star game: three felt hard
@@ -125,6 +129,8 @@
     // The honey rush kicking in, the swarm escaped, and a full belly
     rush: () => [0, 5, 10, 15].forEach((n, i) => tone(note(n + 12), 70, { type: 'square', level: 0.03, delay: 160 + i * 40 })),
     escape: () => [7, 12, 16, 19, 24].forEach((n, i) => tone(note(n), 110, { type: 'square', level: 0.04, delay: i * 60 })),
+    // A dash: a rush of air falling away, over a quick rising note
+    dash: () => { noise(170, 0.07, 3400, 700); tone(260, 110, { to: 560, type: 'triangle', level: 0.03 }); },
     belly: () => [0, 4, 7, 12].forEach((n, i) => tone(note(n + 5), 150, { level: 0.09, delay: i * 80 })),
     sting: () => { tone(200, 260, { to: 110, type: 'sawtooth', level: 0.06 }); noise(200, 0.2, 260, 60); },
     bonk: (step) => tone(note(-12 + Math.min(step, 6) * 2), 140, { to: note(Math.min(step, 6) * 2), type: 'square', level: 0.05 }),
@@ -374,7 +380,7 @@
       back: Object.values(BACK_STARS),
       title: 'The Great Bear', who: 'The Great Bear', short: 'bear', names: STAGES.map((st) => st.name), unlocks: 'fox', tint: 'rgba(235,242,255,.55)', card: '169 193 255',
       again: 'the Big Dipper', homeHint: 'Bring the Great Bear home to unlock a new animal',
-      keys: '← and → to run, ↑ or Space to jump (twice for a double jump), ↓ to roll, Esc to quit', taps: 'Tap to jump, tap again to double jump, and swipe down to roll'
+      keys: '← and → to run (twice quickly to dash), ↑ or Space to jump (twice for a double jump), ↓ to roll, Esc to quit', taps: 'Tap to jump, tap again to double jump, and swipe down to roll'
     },
     // Quicker and lighter, a smaller target that also catches less. Its stars run along its spine.
     fox: {
@@ -385,7 +391,7 @@
       back: [[-24, -30], [-16, -33], [-8, -31], [-1, -29], [6, -31], [13, -31], [20, -27]], pounce: 78, foxFires: true,
       title: 'The Little Fox', who: 'The fox', short: 'fox', names: null, unlocks: 'crab', tint: 'rgba(255,226,190,.55)', card: '255 214 160',
       again: "the fox's stars", homeHint: 'Bring the fox home to unlock a new animal', says: { 1: 'Slide under the log' },
-      keys: '← and → to run, ↑ or Space to jump (twice for a double jump), ↓ to pounce in the air or slide on the ground, Esc to quit',
+      keys: '← and → to run (twice quickly to dash), ↑ or Space to jump (twice for a double jump), ↓ to pounce in the air or slide on the ground, Esc to quit',
       taps: 'Tap to jump, tap again to double jump, and swipe down to pounce or slide'
     },
     // Low and wide. It scuttles sideways, so it never turns around; it's short enough to walk under the log, jumps short, and
@@ -399,7 +405,7 @@
       back: CRAB_SKY.map(([fx, fy]) => [(fy - 0.5) * 30, -15 + (fx - 0.28) * 16]), sideways: true, shell: true,
       title: 'The Crab', who: 'The crab', short: 'crab', names: CRAB_NAMES, unlocks: null, tint: 'rgba(190,255,236,.55)', card: '159 245 220',
       again: "the crab's stars", says: { 1: 'Walk under the log', 6: 'The Beehive Cluster' },
-      keys: '← and → to scuttle, ↑ or Space to jump (twice for a double jump), ↓ to pull into its shell, Esc to quit',
+      keys: '← and → to scuttle (twice quickly to dash), ↑ or Space to jump (twice for a double jump), ↓ to pull into its shell, Esc to quit',
       taps: 'Tap to jump, tap again to double jump, and swipe down to pull into its shell'
     }
   };
@@ -905,7 +911,7 @@
       const dx = alkaid.x - mizar.x, dy = alkaid.y - mizar.y, d = Math.hypot(dx, dy) || 1, c = Math.cos(ALCOR_TURN), s = Math.sin(ALCOR_TURN);
       return { x: mizar.x + (dx * c - dy * s) / d * ALCOR_GAP, y: mizar.y + (dx * s + dy * c) / d * ALCOR_GAP, got: false };
     })() : null;
-    const me = { x: clamp(under, A.edge, W - A.edge), y: floorAt(clamp(under, A.edge, W - A.edge)), tilt: 0, tuck: 0, tail: -0.55, dive: 0, pouncing: false, power: 0, powerChain: 0, on: null, onFloor: true, hurt: 0, flash: 0, moonTime: 0, energy: 1, tired: false, snore: 0, snip: 0, rush: 0, vx: 0, vy: 0, face: 1, ground: true, rolling: false, curl: 0, jumps: 0, coyote: COYOTE, buffer: 0, flip: 1, squash: 0, gait: 0, rollUntil: 0, alpha: 0, time: 0, autoDir: 1 };
+    const me = { x: clamp(under, A.edge, W - A.edge), y: floorAt(clamp(under, A.edge, W - A.edge)), tilt: 0, tuck: 0, tail: -0.55, dive: 0, pouncing: false, power: 0, powerChain: 0, on: null, onFloor: true, hurt: 0, flash: 0, moonTime: 0, energy: 1, tired: false, snore: 0, snip: 0, rush: 0, dash: 0, dashDir: 1, dashSpeed: 0, dashAsk: 0, dashAskDir: 1, dashWait: 0, airDashed: false, lean: 0, trail: [], vx: 0, vy: 0, face: 1, ground: true, rolling: false, curl: 0, jumps: 0, coyote: COYOTE, buffer: 0, flip: 1, squash: 0, gait: 0, rollUntil: 0, alpha: 0, time: 0, autoDir: 1 };
     const keys = { left: false, right: false, down: false, jump: false };
     const sparks = [], fallers = [], pops = [], bees = [], pots = [], visitors = [], rings = [], powers = [], swarms = [];
     let nextPower = 22 + Math.random() * 10;
@@ -1130,6 +1136,7 @@
     // The fox's dive, which is safe from bees, bats away any it meets, and on landing catches what is close by
     const startPounce = () => {
       me.pouncing = true;
+      me.dash = 0;
       me.flip = 1;
       me.vy = Math.max(me.vy, 620);
       me.vx += me.face * 60;
@@ -1192,7 +1199,7 @@
       v.boomed = true;
       v.vx = v.face * PLANE_TOP * 1.5;
       counts.booms += 1;
-      if (me.on === v) { me.on = null; me.ground = false; me.vy = -jumpV * 1.1; me.jumps = 1; }
+      if (me.on === v) { me.on = null; me.ground = false; me.vy = -jumpV * 1.1; me.jumps = 1; me.dash = 0; }
       award(BOOM_POINTS, me.x, me.y - A.top - 20, 'rgb(232,238,255)', { before: 'Sonic boom!', life: 2.4 });
       rings.push({ x: v.x, y: v.y, age: 0, life: 0.8, r: 190, color: '#E8EEFF' });
       shower(v.x, v.y, 26, 'rgb(232,238,255)');
@@ -1274,6 +1281,7 @@
       me.hurt = HURT_SECONDS;
       me.flash = 0.22;
       me.on = null;
+      me.dash = 0;
       me.vx = (Math.sign(me.x - b.x) || 1) * 190;
       me.vy = -250;
       me.ground = false;
@@ -1287,6 +1295,8 @@
     const canStand = () => !logs.some((l) => overlaps(l, me.x, me.y, A.stand));
     const jump = (v) => {
       me.pouncing = false;
+      // (A jump during a dash ends it but keeps its speed)
+      me.dash = 0;
       me.vy = -v;
       me.ground = false;
       me.buffer = 0;
@@ -1294,6 +1304,8 @@
     const update = (dt) => {
       me.time += dt;
       me.buffer -= dt;
+      me.dashAsk -= dt;
+      me.dashWait -= dt;
       me.coyote = me.ground ? COYOTE : me.coyote - dt;
       me.flip = Math.min(1, me.flip + dt / (FLIP * (me.moonTime > 0 ? 1.8 : 1)));
       // A flip is done tucked: in quickly at the start, and opening out for the last part of the turn
@@ -1338,6 +1350,27 @@
       if (!dir) me.vx = approach(me.vx, 0, grip * dt);
       else if (Math.sign(me.vx) === dir && Math.abs(me.vx) > top) me.vx = approach(me.vx, dir * top, grip * dt);
       else me.vx = approach(me.vx, dir * top, accel * (Math.sign(me.vx) === -dir ? 1.6 : 1) * dt);
+      // Dashing, asked for by a quick second press of ← or → or a sideways swipe: DASH_SPEED times a run's top speed, or more if
+      // it's already going faster that way. Not curled up or pouncing, and once a jump in the air. It holds its speed, and in the
+      // air its height, then eases back to a run, unless a jump takes the speed on.
+      if (me.dash > 0 && (!steering || me.rolling || me.pouncing)) me.dash = 0;
+      if (steering && me.dashAsk > 0 && me.dashWait <= 0 && !me.rolling && !me.pouncing && (me.ground || !me.airDashed)) {
+        const d = me.dashAskDir, run = A.run * (me.power > 0 ? POWER_SPEED : 1) * (me.rush > 0 ? Math.max(1, RUSH_TOP / A.run) : 1);
+        me.dashAsk = 0;
+        me.dash = DASH_SECONDS;
+        me.dashWait = DASH_SECONDS + DASH_AGAIN;
+        me.dashDir = d;
+        me.dashSpeed = Math.max(run * DASH_SPEED, Math.sign(me.vx) === d ? Math.abs(me.vx) : 0);
+        me.face = d;
+        if (!me.ground) { me.airDashed = true; me.vy = 0; }
+        burst(me.x - d * 12, me.y - (me.ground ? 3 : A.top * 0.45), 8, 110, 0.4);
+        sfx.dash();
+      }
+      if (me.dash > 0) {
+        me.dash -= dt;
+        me.vx = me.dashDir * me.dashSpeed;
+        if (me.dash <= 0) me.vx = me.dashDir * Math.max(top, me.dashSpeed * 0.55);
+      }
       // Jumping: a moment's grace after leaving an edge, and a jump pressed just before landing still counts
       if (steering && me.buffer > 0) {
         const launch = (me.moonTime > 0 ? MOON_LAUNCH : 1) * (me.rush > 0 ? RUSH_JUMP : 1);
@@ -1365,7 +1398,7 @@
       else if (!keys.jump && !touchOnly) g *= me.moonTime > 0 ? 1.5 : RELEASE_MORE;
       if (me.rolling && !me.ground && keys.down) g *= 1.3;
       if (me.pouncing) g *= 1.6;
-      me.vy = Math.min(MAX_FALL, me.vy + g * dt);
+      me.vy = me.dash > 0 && !me.ground ? 0 : Math.min(MAX_FALL, me.vy + g * dt);
       // Across, stopping at the banner's edges and the log
       const s = size();
       me.x += (me.vx + (me.on ? me.on.vx : 0)) * dt;
@@ -1373,6 +1406,7 @@
         if (overlaps(l, me.x, me.y, s)) {
           me.x = me.vx > 0 ? l.x - l.w / 2 - s.hw : l.x + l.w / 2 + s.hw;
           me.vx = 0;
+          me.dash = 0;
           if (touchOnly) me.autoDir = -me.autoDir;
         }
       }
@@ -1380,6 +1414,7 @@
       if (me.x < A.edge || me.x > W - A.edge) {
         me.x = clamp(me.x, A.edge, W - A.edge);
         me.vx = 0;
+        me.dash = 0;
         if (touchOnly) me.autoDir = me.x < W / 2 ? 1 : -1;
       }
       // Down, landing on the ground, a ledge or the log, and bumping the log from under
@@ -1445,6 +1480,7 @@
       }
       if (me.ground) {
         me.jumps = 0;
+        me.airDashed = false;
         if (me.pouncing) { me.pouncing = false; pounceLands(); }
         if (!wasGround) {
           me.squash = clamp(fall / 1500, 0.06, 0.2);
@@ -1502,6 +1538,14 @@
       // The honey rush, trailing honey-gold sparks
       me.rush = Math.max(0, me.rush - dt);
       if (me.rush > 0 && Math.random() < 0.3) spark(me.x - me.face * A.reach.hw * 0.6, me.y - Math.random() * A.top * 0.7, -me.face * (30 + Math.random() * 40), -10 - Math.random() * 30, 0.5, 0.6 + Math.random() * 0.5, 'rgb(255,214,120)');
+      // A dash leans into it, and leaves a trail: fading copies of the animal where it just was, and sparks streaming back
+      me.lean = approach(me.lean, me.dash > 0 ? DASH_LEAN : 0, dt * DASH_LEAN / 0.06);
+      me.trail.forEach((t) => { t.age += dt; });
+      while (me.trail.length && me.trail[0].age >= DASH_TRAIL) me.trail.shift();
+      if (me.dash > 0) {
+        if (!me.trail.length || me.trail[me.trail.length - 1].age >= 0.03) me.trail.push({ x: me.x, y: me.y, age: 0 });
+        if (Math.random() < 0.45) spark(me.x - me.dashDir * A.reach.hw * 0.5, me.y - Math.random() * A.top * 0.8, -me.dashDir * (50 + Math.random() * 70), (Math.random() - 0.5) * 24, 0.35, 0.7 + Math.random() * 0.6, SPARKS[Math.floor(Math.random() * SPARKS.length)]);
+      }
       // The bouncing star
       me.power = Math.max(0, me.power - dt);
       if (me.power > 0 && Math.random() < 0.34) spark(me.x + (Math.random() - 0.5) * A.reach.hw * 1.6, me.y - Math.random() * A.top, (Math.random() - 0.5) * 40, -20 - Math.random() * 40, 0.6, 0.8 + Math.random() * 0.8, POWER_COLORS[Math.floor(Math.random() * POWER_COLORS.length)]);
@@ -2386,7 +2430,8 @@
         // (A crab faces the front, so it isn't mirrored when it changes direction)
         const facing = A.sideways ? 1 : me.face;
         o.setTransform(scale * facing * sx, 0, 0, scale * sy, 90 * scale, 110 * scale);
-        o.rotate(facing * me.tilt);
+        // (Leaning into a dash: forward, or for the crab, which isn't mirrored, the way it dashes)
+        o.rotate(facing * me.tilt + (A.sideways ? me.dashDir : 1) * me.lean);
         if (me.flip < 1) {
           const turn = smooth(me.flip) * TAU;
           o.translate(...A.turnAt);
@@ -2436,6 +2481,15 @@
           o.fillRect(0, 0, off.width, off.height);
           o.globalAlpha = 1;
           o.globalCompositeOperation = 'source-over';
+        }
+        // A dash's trail, faint copies fading where it just was
+        if (me.trail.length) {
+          ctx.globalCompositeOperation = 'lighter';
+          for (const t of me.trail) {
+            ctx.globalAlpha = me.alpha * 0.3 * (1 - t.age / DASH_TRAIL);
+            ctx.drawImage(off, (t.x - 90) * scale, (t.y - 110) * scale);
+          }
+          ctx.globalCompositeOperation = 'source-over';
         }
         // On the way home it glows brightest of all
         const homeward = phase === 'home' || (phase === 'out' && ending === 'home');
@@ -2604,14 +2658,20 @@
     // The first stage's card, and then on a meteor shower's peak night, a card for that
     if (!finaleOnly) showStage(900);
     const peakTimer = peak && !finaleOnly ? setTimeout(() => { if (!ending) card(['Peak tonight', `The ${peak}`, 'Double points for stars'], '255 214 150', 0, 3200); }, 3900) : 0;
-    // After the controls, what a run can bring
-    let hintTimer = finaleOnly ? 0 : setTimeout(() => {
+    // After the controls, on a touch screen how to dash, which doesn't fit beside them on a phone, and then what a run can bring
+    const homeHint = () => {
       if (!A.unlocks || unlockedAnimals().includes(A.unlocks)) { hint.style.opacity = 0; return; }
       hint.textContent = A.homeHint;
       hintTimer = setTimeout(() => { hint.style.opacity = 0; }, 7000);
+    };
+    let hintTimer = finaleOnly ? 0 : setTimeout(() => {
+      if (!touchOnly) { homeHint(); return; }
+      hint.textContent = 'Swipe left or right to dash that way';
+      hintTimer = setTimeout(homeHint, 4000);
     }, 8000);
     const typing = () => document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) || document.querySelector('dialog[open]');
     const MAP = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right', ArrowDown: 'down', s: 'down', S: 'down', ArrowUp: 'jump', w: 'jump', W: 'jump', ' ': 'jump' };
+    let tapped = { k: null, at: 0 };
     const onKeyDown = (e) => {
       if (typing() || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === 'Escape') { e.preventDefault(); leave(); return; }
@@ -2619,6 +2679,11 @@
       if (!k) return;
       e.preventDefault();
       if (k === 'jump' && !e.repeat) me.buffer = BUFFER;
+      // A second press of the same arrow soon after the first asks for a dash, and a third starts over
+      if ((k === 'left' || k === 'right') && !e.repeat) {
+        const at = performance.now() / 1000;
+        if (tapped.k === k && at - tapped.at < DASH_TAP) { me.dashAsk = BUFFER; me.dashAskDir = k === 'right' ? 1 : -1; tapped.k = null; } else tapped = { k, at };
+      }
       keys[k] = true;
     };
     const onKeyUp = (e) => { const k = MAP[e.key]; if (k) keys[k] = false; };
@@ -2627,13 +2692,20 @@
     let touch = null;
     const onDown = (e) => {
       if (e.pointerType !== 'touch') return;
-      touch = { y: e.clientY, timer: setTimeout(() => { if (touch) { touch.timer = 0; me.buffer = BUFFER; keys.jump = true; } }, 70) };
+      touch = { x: e.clientX, y: e.clientY, timer: setTimeout(() => { if (touch) { touch.timer = 0; me.buffer = BUFFER; keys.jump = true; } }, 70) };
     };
+    // A swipe down rolls, and a swipe sideways dashes that way, turning first if need be
     const onMove = (e) => {
-      if (!touch || !touch.timer || e.clientY - touch.y < 14) return;
+      if (!touch || !touch.timer) return;
+      const down = e.clientY - touch.y, across = e.clientX - touch.x;
+      if (down >= 14 && down >= Math.abs(across)) swipeRoll = true;
+      else if (Math.abs(across) >= 18 && Math.abs(across) > down) {
+        me.autoDir = Math.sign(across);
+        me.dashAsk = BUFFER;
+        me.dashAskDir = me.autoDir;
+      } else return;
       clearTimeout(touch.timer);
       touch.timer = 0;
-      swipeRoll = true;
     };
     const onUp = () => {
       if (touch && touch.timer) { clearTimeout(touch.timer); me.buffer = BUFFER; }
