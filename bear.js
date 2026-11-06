@@ -2138,8 +2138,9 @@
         }
       }
     };
-    // An animal in the finale's parade, drawn as in a run, from me, which the run no longer needs
-    const paradeOne = (pc, which, alpha, light) => {
+    // An animal in the finale's parade, drawn as in a run, from me, which the run no longer needs. A flip turns forward, or
+    // backward with spin -1.
+    const paradeOne = (pc, which, alpha, light, spin) => {
       const a = ANIMALS[which], px = me.x * scale, py = me.y * scale, facing = a.sideways ? 1 : me.face;
       pc.globalCompositeOperation = 'lighter';
       pc.globalAlpha = alpha * 0.6;
@@ -2149,6 +2150,11 @@
       o.clearRect(0, 0, off.width, off.height);
       o.setTransform(scale * facing, 0, 0, scale, 90 * scale, 110 * scale);
       o.rotate(facing * me.tilt);
+      if (me.flip < 1) {
+        o.translate(...a.turnAt);
+        o.rotate(smooth(me.flip) * TAU * spin);
+        o.translate(-a.turnAt[0], -a.turnAt[1]);
+      }
       if (which === 'fox') paintFox();
       else if (which === 'crab') paintCrab();
       else { o.translate(0, -8.5); paintBear(); }
@@ -2652,12 +2658,12 @@
       const PALETTES = [['#A9C1FF', '#D2B3FF', '#E8EEFF'], ['#FFC27A', '#FFE3B0', '#FFD9A0'], ['#9FF5DC', '#B4FFEC', '#7FE6D2'], ['#9FF5DC', '#A9C1FF', '#D2B3FF', '#FFB6E6'], ['#FFE9B8', '#FFD66B']];
       const rockets = [], bits = [], blooms = [];
       // The parade: the three walk in from the left in a line, the Great Bear leading, march across, turn around together, and
-      // walk back to stand together in the middle, the crab, then the fox and the bear, facing each other. Then they hop in turn
+      // walk back to stand together in the middle, the crab, then the fox and the bear, facing each other. Then they jump in turn
       // while the credits rise. On a layer above the hills, and in front of the clumps of spruce, so none is ever hidden.
       const parade = addLayer(), pc = parade.getContext('2d'), speed = Math.max(90, (W * 0.8 + 60) / 9), turnAt = W * 0.8;
       const behind = [0, 145, 255], apart = Math.max(W * 0.12, 135), ends = [W / 2 - apart, W / 2, W / 2 + apart];
       banner.classList.add('bn-bear-finale');
-      const marchers = ['bear', 'fox', 'crab'].map((which, i) => ({ which, i, light: softDot(256, ANIMALS[which].glow), stride: 0, tail: -0.55, snip: 0, gait: 0, end: ends[2 - i] }));
+      const marchers = ['bear', 'fox', 'crab'].map((which, i) => ({ which, i, light: softDot(256, ANIMALS[which].glow), stride: 0, tail: -0.55, snip: 0, gait: 0, end: ends[2 - i], hop: null, n: 0, standing: false }));
       const march = (m, dt) => {
         const tau = t - 0.8, out = (turnAt + 60) / speed, start = -60 - behind[m.i];
         let x = start + speed * Math.max(0, tau), face = 1, moving = tau >= 0;
@@ -2666,16 +2672,30 @@
           face = -1;
           if (x <= m.end) { x = m.end; moving = false; face = m.which === 'bear' ? -1 : 1; }
         }
-        // A hop: the fox now and then on the march, and all three in turn once they stand together
-        const standing = tau >= out && !moving, every = standing ? 1.6 : 2.2, height = standing ? [18, 28, 12][m.i] : m.which === 'fox' ? 16 : 0;
-        const hopT = ((t + m.i * 0.5) % every) / 0.42, up = hopT < 1 && height ? height * 4 * hopT * (1 - hopT) : 0;
-        if (standing && m.which === 'crab' && hopT < 0.1) m.snip = 0.25;
+        // Jumps: on the march, the bear somersaults now and then and the fox hops, flipping every other time; standing together,
+        // they jump in turn, the bear with a backflip and the fox a somersault, while the crab hops and snaps its claws. A jump
+        // keeps its own height and time in the air to the end, and a flip the way it faced, so none is cut short or turned
+        // around in the air when the parade turns or stops.
+        // [how often, how high, how long in the air, which jumps flip: every one (1), every other (2) or none (0)]
+        const standing = tau >= out && !moving;
+        const [every, height, air, flips] = standing ? [[3.2, 44, 0.7, 1], [3.2, 52, 0.7, 1], [1.6, 12, 0.42, 0]][m.i] : [[3.8, 38, 0.66, 1], [2.2, 18, 0.5, 2], [1, 0, 1, 0]][m.i];
+        const n = Math.floor((t + m.i * 1.07) / every);
+        if (m.hop && (m.hop.age += dt) >= m.hop.air) m.hop = null;
+        if (!m.hop && height && n > m.n && standing === m.standing) {
+          m.hop = { age: 0, height, air, spin: flips && n % flips === 0 ? (standing && m.which === 'bear' ? -1 : 1) : 0 };
+          if (m.which === 'crab') m.snip = 0.25;
+        }
+        Object.assign(m, { n, standing });
+        const h = m.hop, p = h ? h.age / h.air : 0, up = h ? h.height * 4 * p * (1 - p) : 0, vy = h ? -h.height * 4 * (1 - 2 * p) / h.air : 0;
+        const flip = h && h.spin ? clamp((p - 0.08) / 0.84, 0, 1) : 1;
+        if (flip < 1) face = m.face;
         m.snip = Math.max(0, m.snip - dt);
         m.gait = lerp(m.gait, moving && !up ? 1 : 0, 1 - Math.exp(-dt * 10));
         if (moving) m.stride = (m.stride + speed * dt / ANIMALS[m.which].stride) % 1;
-        const vy = up ? -height * 4 * (1 - 2 * hopT) / 0.42 : 0;
         m.tail = lerp(m.tail, up ? (vy > 0 ? 0.85 : -0.25) : moving ? 0.22 : -0.55, 1 - Math.exp(-dt * 9));
-        Object.assign(m, { x, face, up, vy, moving, alpha: smooth(clamp((x + 60) / 40, 0, 1)) });
+        // Tucked through a flip, in quickly at its start and opening out for the last part, as in a run
+        const tuck = flip < 1 ? smooth(clamp(flip / 0.08, 0, 1)) * (1 - smooth(clamp((flip - TUCK_UNTIL) / 0.2, 0, 1))) : 0;
+        Object.assign(m, { x, face, up, vy, moving, flip, tuck, spin: h && h.spin ? h.spin : 1, alpha: smooth(clamp((x + 60) / 40, 0, 1)) });
       };
       let t = 0, next = 0.4, shots = 0, then = performance.now(), going = true, blazed = false, credits = null, rise = null, skipHint = null;
       const launch = (shape) => {
@@ -2827,9 +2847,9 @@
         marchers.forEach((m) => {
           march(m, dt);
           if (m.alpha <= 0) return;
-          Object.assign(me, { x: m.x, y: floorAt(m.x) - m.up, face: m.face, gait: m.gait, stride: m.stride, time: t + m.i, tuck: 0, curl: 0, dive: 0, flip: 1, squash: 0, tail: m.tail, snip: m.snip,
+          Object.assign(me, { x: m.x, y: floorAt(m.x) - m.up, face: m.face, gait: m.gait, stride: m.stride, time: t + m.i, tuck: m.tuck, curl: 0, dive: 0, flip: m.flip, squash: 0, tail: m.tail, snip: m.snip,
             vy: m.vy, vx: m.moving ? m.face * speed : 0, ground: !m.up, tilt: m.up ? 0 : Math.atan(slopeAt(m.x)) });
-          paradeOne(pc, m.which, m.alpha, m.light);
+          paradeOne(pc, m.which, m.alpha, m.light, m.spin);
         });
         pc.globalAlpha = 1;
         requestAnimationFrame(tick);
