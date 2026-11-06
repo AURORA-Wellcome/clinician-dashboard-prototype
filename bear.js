@@ -52,6 +52,17 @@
   // stings before it gives up, escaping it is worth a bonus. Every seven berries make a full belly, which gives back a life, or
   // with every life lit is worth points.
   const RUSH_SECONDS = 5, RUSH_TOP = 315, RUSH_JUMP = 1.12, CHASE_RISE = 0.45, CHASE_CLIMB = 350, CHASE_CLIMB_TOP = 130, ESCAPE_POINTS = 300, BELLY = 7, BELLY_POINTS = 250;
+  // Each berry makes the animal a little bigger for the rest of the run (GROW_EACH), up to a quarter bigger at GROW_BERRIES
+  // berries, and a sting takes GROW_STING berries' worth back off, so a player who keeps getting stung shrinks into a target
+  // that's easier to keep safe. Bigger, it reaches farther for stars but is a bigger target for bees; it runs and jumps as
+  // before, so berries don't turn into a trap. What it fits through stays the same, since the level is tuned to a few units: it
+  // lands, and meets the log, as its usual size; curled up, sliding or in its shell, it reaches and is stung as its usual size,
+  // and the bear's ball is drawn that size again, as the log clears it by only 3; and the heights it reaches food at don't grow,
+  // so food on the bridges stays out of reach from the ground. At a quarter bigger, the highest bees still pass over a standing
+  // bear. Bears fatten up on berries before winter, so the bear's belly rounds out as well; the fox grows a fuller winter coat;
+  // and the crab, which can only grow by molting, grows at each full belly, stepping out of its old shell, which it leaves
+  // behind for SHED_SECONDS.
+  const GROW_EACH = 0.025, GROW_BERRIES = 10, GROW_STING = 3, BIGGEST = 1 + GROW_EACH * GROW_BERRIES, SHED_SECONDS = 3;
   // Riding the airliner earns air miles, by the distance flown: 5 points every 0.25 s at its usual speed
   const MILE_SECONDS = 0.25, MILE_POINTS = 5;
   // The longer the ride, the faster it flies, turning at the banner's edges while it has a rider, until at three times its
@@ -132,6 +143,8 @@
     // A dash: a rush of air falling away, over a quick rising note
     dash: () => { noise(170, 0.07, 3400, 700); tone(260, 110, { to: 560, type: 'triangle', level: 0.03 }); },
     belly: () => [0, 4, 7, 12].forEach((n, i) => tone(note(n + 5), 150, { level: 0.09, delay: i * 80 })),
+    // The crab's old shell cracking open, and it stepping out
+    molt: () => { noise(120, 0.08, 3200, 900); tone(note(7), 140, { to: note(14), type: 'triangle', level: 0.05, delay: 360 }); },
     sting: () => { tone(200, 260, { to: 110, type: 'sawtooth', level: 0.06 }); noise(200, 0.2, 260, 60); },
     bonk: (step) => tone(note(-12 + Math.min(step, 6) * 2), 140, { to: note(Math.min(step, 6) * 2), type: 'square', level: 0.05 }),
     swat: () => noise(110, 0.16, 1400, 220),
@@ -431,7 +444,7 @@
       jump: 50, double: 34, stride: 34, stand: { hw: 28, h: 28 }, low: { hw: 26, h: 18 }, top: 40, edge: 56, dust: 22,
       reach: { hw: 58, top: 50, food: 34 }, lowReach: { r: 22, y: 9 }, sting: { hw: 24, top: 26 }, lowSting: { r: 0, y: 9 }, tuckSting: { r: 20, y: 18 },
       turnAt: [0, -16], shadow: 'rgba(130,240,220,.95)', glow: [[0, 'rgba(120,235,215,.5)'], [0.45, 'rgba(90,200,220,.14)'], [1, 'rgba(90,200,220,0)']], bestKey: 'aurora-crab-best',
-      back: CRAB_SKY.map(([fx, fy]) => [(fy - 0.5) * 30, -15 + (fx - 0.28) * 16]), sideways: true, shell: true,
+      back: CRAB_SKY.map(([fx, fy]) => [(fy - 0.5) * 30, -15 + (fx - 0.28) * 16]), sideways: true, shell: true, molts: true,
       title: 'The Crab', who: 'The crab', short: 'crab', names: CRAB_NAMES, unlocks: null, tint: 'rgba(190,255,236,.55)', card: '159 245 220',
       again: "the crab's stars", says: { 1: 'Walk under the log', 6: 'The Beehive Cluster' },
       keys: '← and → to scuttle (twice quickly to dash), ↑ or Space to jump (twice for a double jump), ↓ to pull into its shell, Esc to quit',
@@ -737,7 +750,13 @@
         spots.forEach(([x, y], i) => { const r = 4.6 + ((n + i * 2) % 3); c.drawImage(dot, x - r, y - r, r * 2, r * 2); });
       });
     }
-    const off = canvas(180 * scale, 180 * scale), o = off.getContext('2d');
+    // The animal is drawn on a canvas of its own, around its feet, with room for it at its biggest. Only the part around it at
+    // its size now (g) is copied to the banner, so its shadow costs no more than it did before it grew.
+    const ROOM = BIGGEST + 0.05, OFF_X = 90 * ROOM, OFF_Y = 110 * ROOM, off = canvas(180 * ROOM * scale, 180 * ROOM * scale), o = off.getContext('2d');
+    const putAnimal = (c, x, y, g) => {
+      const k = clamp(g, 1, ROOM), w = 180 * k * scale;
+      c.drawImage(off, (OFF_X - 90 * k) * scale, (OFF_Y - 110 * k) * scale, w, w, (x - 90 * k) * scale, (y - 110 * k) * scale, w, w);
+    };
     const glow = softDot(256, A.glow);
     const starGlow = softDot(64, [[0, 'rgba(255,255,255,1)'], [0.25, 'rgba(235,242,255,.55)'], [1, 'rgba(220,232,255,0)']]);
 
@@ -940,9 +959,9 @@
       const dx = alkaid.x - mizar.x, dy = alkaid.y - mizar.y, d = Math.hypot(dx, dy) || 1, c = Math.cos(ALCOR_TURN), s = Math.sin(ALCOR_TURN);
       return { x: mizar.x + (dx * c - dy * s) / d * ALCOR_GAP, y: mizar.y + (dx * s + dy * c) / d * ALCOR_GAP, got: false };
     })() : null;
-    const me = { x: clamp(under, A.edge, W - A.edge), y: floorAt(clamp(under, A.edge, W - A.edge)), tilt: 0, tuck: 0, tail: -0.55, dive: 0, pouncing: false, power: 0, powerChain: 0, on: null, onFloor: true, hurt: 0, flash: 0, moonTime: 0, energy: 1, tired: false, snore: 0, snip: 0, rush: 0, dash: 0, dashDir: 1, dashSpeed: 0, dashAsk: 0, dashAskDir: 1, dashWait: 0, airDashed: false, lean: 0, trail: [], vx: 0, vy: 0, face: 1, ground: true, rolling: false, curl: 0, jumps: 0, coyote: COYOTE, buffer: 0, flip: 1, squash: 0, gait: 0, rollUntil: 0, alpha: 0, time: 0, autoDir: 1 };
+    const me = { x: clamp(under, A.edge, W - A.edge), y: floorAt(clamp(under, A.edge, W - A.edge)), tilt: 0, tuck: 0, tail: -0.55, dive: 0, pouncing: false, power: 0, powerChain: 0, on: null, onFloor: true, hurt: 0, flash: 0, moonTime: 0, energy: 1, tired: false, snore: 0, snip: 0, rush: 0, dash: 0, dashDir: 1, dashSpeed: 0, dashAsk: 0, dashAskDir: 1, dashWait: 0, airDashed: false, lean: 0, trail: [], vx: 0, vy: 0, face: 1, ground: true, rolling: false, curl: 0, jumps: 0, coyote: COYOTE, buffer: 0, flip: 1, squash: 0, gait: 0, rollUntil: 0, alpha: 0, time: 0, autoDir: 1, fed: 0, molted: 0, big: 1, bigV: 0, molting: false };
     const keys = { left: false, right: false, down: false, jump: false };
-    const sparks = [], fallers = [], pops = [], bees = [], pots = [], visitors = [], rings = [], powers = [], swarms = [];
+    const sparks = [], fallers = [], pops = [], bees = [], pots = [], visitors = [], rings = [], powers = [], swarms = [], sheds = [];
     let nextPower = 22 + Math.random() * 10;
     let unlockedNow = '', finale = false;
     let combo = 0, comboLeft = 0, bestCombo = 0, newBest = false;
@@ -1066,16 +1085,20 @@
     };
     const pop = (x, y, text, color, life) => pops.push({ x, y, age: 0, text, color, life: life || Math.max(0.9, 0.055 * text.length) });
     const shower = (x, y, count, color) => { for (let n = 0; n < count; n++) { const a = Math.random() * TAU, v = 50 + Math.random() * 130; spark(x, y, Math.cos(a) * v, Math.sin(a) * v, 0.55, 0.9 + Math.random(), color); } };
-    // What the bear can reach: more than its body, so catching feels generous. Food on a bridge is out of reach from the ground.
-    const touching = (x, y, r, top = A.reach.top) => (me.rolling
+    // How tall the animal is now, as it grows (me.big)
+    const tall = () => A.top * me.big;
+    // What the bear can reach: more than its body, so catching feels generous, and more as it grows. Food is out of reach above a
+    // fixed height (top), however big the animal, so food on a bridge stays out of reach from the ground.
+    const touching = (x, y, r, top = A.reach.top * me.big) => (me.rolling
       ? Math.hypot(x - me.x, y - (me.y - A.lowReach.y)) < A.lowReach.r + r
-      : x > me.x - A.reach.hw - r && x < me.x + A.reach.hw + r && y > me.y - top - r && y < me.y + r);
-    // What a bee can sting: less than its body, so a near miss stays a miss. Tucked or in a ball, the bear is a smaller target.
+      : x > me.x - A.reach.hw * me.big - r && x < me.x + A.reach.hw * me.big + r && y > me.y - top - r && y < me.y + r);
+    // What a bee can sting: less than its body, so a near miss stays a miss, and more as it grows. Tucked or in a ball, the bear
+    // is a smaller target.
     const stingable = (x, y) => {
       if (me.pouncing || me.power > 0) return false;
       if (me.rolling) return Math.hypot(x - me.x, y - (me.y - A.lowSting.y)) < A.lowSting.r;
-      if (me.tuck > 0.5) return Math.hypot(x - me.x, y - (me.y - A.tuckSting.y)) < A.tuckSting.r;
-      return Math.abs(x - me.x) < A.sting.hw && y > me.y - A.sting.top && y < me.y - 2;
+      if (me.tuck > 0.5) return Math.hypot(x - me.x, y - (me.y - A.tuckSting.y * me.big)) < A.tuckSting.r * me.big;
+      return Math.abs(x - me.x) < A.sting.hw * me.big && y > me.y - A.sting.top * me.big && y < me.y - 2;
     };
     const tier = () => (COMBO_TIERS.find(([n]) => combo >= n) || [0, 1])[1];
     // A catch adds to the combo, and its points are multiplied by it
@@ -1088,7 +1111,7 @@
       points += worth;
       pop(x, y, `${before ? `${before} ` : ''}+${number(worth)}${m > 1 ? ` ×${m}` : ''}${after ? ` ${after}` : ''}${note ? `, ${note}` : ''}`, color, life);
       if (m > was) {
-        pop(me.x, me.y - A.top - 40, `Combo ×${m}!`, COMBO_COLORS[m], 1.6);
+        pop(me.x, me.y - tall() - 40, `Combo ×${m}!`, COMBO_COLORS[m], 1.6);
         sfx.tier(m);
       }
       showScore();
@@ -1098,7 +1121,7 @@
       if (!stung && combo >= COMBO_BONUS_FROM) {
         const bonus = combo * COMBO_BONUS;
         points += bonus;
-        pop(me.x, me.y - A.top - 40, `Combo of ${combo}! +${number(bonus)}`, COMBO_COLORS[5], 2);
+        pop(me.x, me.y - tall() - 40, `Combo of ${combo}! +${number(bonus)}`, COMBO_COLORS[5], 2);
         sfx.comboEnd();
         showScore();
       }
@@ -1116,7 +1139,7 @@
         points += FOX_FIRES_POINTS;
         counts.fires += 1;
         sfx.fires();
-        pop(me.x, me.y - A.top - 14, `Fox fires! +${FOX_FIRES_POINTS}`, 'rgb(255,200,130)', 2);
+        pop(me.x, me.y - tall() - 14, `Fox fires! +${FOX_FIRES_POINTS}`, 'rgb(255,200,130)', 2);
         shower(me.x - me.face * 50, me.y - 34, 22, 'rgb(255,190,110)');
         if (options.surge) options.surge();
       }
@@ -1136,13 +1159,13 @@
       lit[i] = true;
       const bonus = RELIGHT_POINTS * (n + 1), gain = lives < LIVES;
       points += bonus;
-      shower(me.x + bx * (A.sideways ? 1 : me.face), me.y + by, 18, 'rgb(255,240,200)');
+      shower(me.x + bx * me.big * (A.sideways ? 1 : me.face), me.y + by * me.big, 18, 'rgb(255,240,200)');
       got = 0;
       stage += 1;
       // The last one brings the animal home, which says so itself
       if (stage >= STAGES.length) { leave('home', bonus); return; }
       if (gain) lives += 1;
-      pop(me.x, me.y - A.top - 34, `${stageName(n)} relit! +${number(bonus)}${gain ? ' and a life back' : ''}`, 'rgb(255,232,170)', 2.4);
+      pop(me.x, me.y - tall() - 34, `${stageName(n)} relit! +${number(bonus)}${gain ? ' and a life back' : ''}`, 'rgb(255,232,170)', 2.4);
       between = BREATHER;
       moveLog();
       // What the next stage brings comes soon after its card
@@ -1179,14 +1202,14 @@
       shower(b.x, b.y, 8, 'rgb(255,200,120)');
     };
     const pounceLands = () => {
-      rings.push({ x: me.x, y: me.y - 8, age: 0, life: 0.42, r: A.pounce });
+      rings.push({ x: me.x, y: me.y - 8, age: 0, life: 0.42, r: A.pounce * me.big });
       for (let i = fallers.length - 1; i >= 0; i--) {
         const f = fallers[i], x = lerp(f.x0, f.x1, f.t), y = lerp(f.y0, f.y1, f.t);
-        if (Math.hypot(x - me.x, y - (me.y - 20)) < A.pounce + f.r) { fallers.splice(i, 1); catchStar(f, x, y); }
+        if (Math.hypot(x - me.x, y - (me.y - 20)) < A.pounce * me.big + f.r) { fallers.splice(i, 1); catchStar(f, x, y); }
       }
       for (let i = bees.length - 1; i >= 0; i--) {
         const b = bees[i];
-        if (Math.hypot(b.x - me.x, b.y - (me.y - 20)) < A.pounce) { bees.splice(i, 1); swat(b); }
+        if (Math.hypot(b.x - me.x, b.y - (me.y - 20)) < A.pounce * me.big) { bees.splice(i, 1); swat(b); }
       }
     };
     // Bees cross at different heights, some to jump and some to roll under, faster each stage, and in the last stage some swoop
@@ -1229,7 +1252,7 @@
       v.vx = v.face * PLANE_TOP * 1.5;
       counts.booms += 1;
       if (me.on === v) { me.on = null; me.ground = false; me.vy = -jumpV * 1.1; me.jumps = 1; me.dash = 0; }
-      award(BOOM_POINTS, me.x, me.y - A.top - 20, 'rgb(232,238,255)', { before: 'Sonic boom!', life: 2.4 });
+      award(BOOM_POINTS, me.x, me.y - tall() - 20, 'rgb(232,238,255)', { before: 'Sonic boom!', life: 2.4 });
       rings.push({ x: v.x, y: v.y, age: 0, life: 0.8, r: 190, color: '#E8EEFF' });
       shower(v.x, v.y, 26, 'rgb(232,238,255)');
       for (let i = 0; i < 8; i++) shedStar(v, (i - 3.5) * 45);
@@ -1288,20 +1311,30 @@
       b.vy = -260;
     };
     // Above the combo badge, which sits over the animal's head, and inside the banner
-    const overBadge = () => Math.max(24, me.y - A.top - 58);
-    // A full belly, from seven berries, gives back a life, or with every life lit is worth points
+    const overBadge = () => Math.max(24, me.y - tall() - 58);
+    // A full belly, from seven berries, gives back a life, or with every life lit is worth points. The crab molts then, growing
+    // to what it has eaten, unless it's as big as it gets.
     const fullBelly = () => {
       belly = 0;
       counts.bellies += 1;
       sfx.belly();
+      const molt = A.molts && me.fed > me.molted;
+      if (molt) {
+        me.molted = me.fed;
+        me.molting = true;
+        sfx.molt();
+      }
       if (lives < LIVES) {
         lives += 1;
-        pop(me.x, overBadge(), 'Full belly! A life back', 'rgb(255,150,180)', 2.2);
+        pop(me.x, overBadge(), molt ? 'Full belly! Molted, and a life back' : 'Full belly! A life back', 'rgb(255,150,180)', 2.2);
         showScore();
-      } else award(BELLY_POINTS, me.x, overBadge(), 'rgb(255,150,180)', { before: 'Full belly!' });
+      } else award(BELLY_POINTS, me.x, overBadge(), 'rgb(255,150,180)', { before: molt ? 'Full belly! Molted,' : 'Full belly!' });
     };
     const sting = (b) => {
       lives -= 1;
+      // It shrinks by a few berries' worth, the crab too, which grows back only at its next molt
+      me.fed = Math.max(0, me.fed - GROW_STING);
+      me.molted = Math.min(me.molted, me.fed);
       swarms.forEach((s) => { s.stung = true; });
       comboEnds(true);
       sfx.sting();
@@ -1315,7 +1348,7 @@
       me.vy = -250;
       me.ground = false;
       shower(me.x, me.y - 35, 14, 'rgb(255,170,120)');
-      pop(me.x, me.y - A.top - 10, '−1 life', 'rgb(255,196,130)');
+      pop(me.x, me.y - tall() - 10, '−1 life', 'rgb(255,196,130)');
       showScore();
       if (lives <= 0) leave('stung');
     };
@@ -1341,6 +1374,10 @@
       me.tuck = approach(me.tuck, me.flip < TUCK_UNTIL ? 1 : 0, dt / (me.flip < TUCK_UNTIL ? 0.07 : 0.09));
       me.squash *= Math.exp(-dt * 11);
       me.curl = clamp(me.curl + (me.rolling ? dt : -dt) / 0.09, 0, 1);
+      // Growing toward what it has eaten, or for the crab, what it had eaten when it last molted, with a little spring to it
+      const grow = 1 + GROW_EACH * (A.molts ? Math.min(me.fed, me.molted) : me.fed);
+      me.bigV += ((grow - me.big) * 240 - me.bigV * 22) * dt;
+      me.big += me.bigV * dt;
       const steering = phase === 'play';
       // On a touch screen it runs by itself, except on the plane, where it rides; a tap jumps off
       const dir = !steering ? 0 : touchOnly ? (me.on ? 0 : me.autoDir) : (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
@@ -1392,7 +1429,7 @@
         me.dashSpeed = Math.max(run * DASH_SPEED, Math.sign(me.vx) === d ? Math.abs(me.vx) : 0);
         me.face = d;
         if (!me.ground) { me.airDashed = true; me.vy = 0; }
-        burst(me.x - d * 12, me.y - (me.ground ? 3 : A.top * 0.45), 8, 110, 0.4);
+        burst(me.x - d * 12, me.y - (me.ground ? 3 : tall() * 0.45), 8, 110, 0.4);
         sfx.dash();
       }
       if (me.dash > 0) {
@@ -1439,9 +1476,10 @@
           if (touchOnly) me.autoDir = -me.autoDir;
         }
       }
-      // (Far enough in that the head stays in the banner)
-      if (me.x < A.edge || me.x > W - A.edge) {
-        me.x = clamp(me.x, A.edge, W - A.edge);
+      // (Far enough in that the head stays in the banner, at any size)
+      const edge = A.edge * me.big;
+      if (me.x < edge || me.x > W - edge) {
+        me.x = clamp(me.x, edge, W - edge);
         me.vx = 0;
         me.dash = 0;
         if (touchOnly) me.autoDir = me.x < W / 2 ? 1 : -1;
@@ -1449,8 +1487,8 @@
       // Down, landing on the ground, a ledge or the log, and bumping the log from under
       const was = me.y, wasGround = me.ground, fall = me.vy;
       me.y += me.vy * dt;
-      // The top of the banner is as high as the bear goes
-      const headroom = me.rolling ? A.low.h : A.top;
+      // The top of the banner is as high as the bear goes, as tall as it is now
+      const headroom = me.rolling ? A.low.h : tall();
       if (me.vy < 0 && me.y < headroom) { me.y = headroom; me.vy = 0; }
       me.ground = false;
       me.onFloor = false;
@@ -1501,7 +1539,7 @@
         rideAir += dt;
         if (me.ground || rideAir > 0.8 || phase !== 'play' || !visitors.includes(ridePlane)) {
           counts.miles += rideMiles;
-          pop(me.x, me.y - A.top - 14, `+${number(rideMiles)} air miles`, 'rgb(255,214,170)', 1.8);
+          pop(me.x, me.y - tall() - 14, `+${number(rideMiles)} air miles`, 'rgb(255,214,170)', 1.8);
           rideMiles = 0;
           rideClock = 0;
           ridePlane = null;
@@ -1552,7 +1590,7 @@
           if (nightMinutes() !== shownMinute) { shownMinute = nightMinutes(); showScore(); }
           if (!warned && night >= NIGHT_SECONDS * (NIGHT_HOURS - 1) / NIGHT_HOURS) {
             warned = true;
-            pop(me.x, me.y - A.top - 50, 'Dawn is coming!', 'rgb(200,212,255)', 2.6);
+            pop(me.x, me.y - tall() - 50, 'Dawn is coming!', 'rgb(200,212,255)', 2.6);
             sfx.dawn();
           }
           if (night >= NIGHT_SECONDS) leave('dawn');
@@ -1566,18 +1604,18 @@
       }
       // The honey rush, trailing honey-gold sparks
       me.rush = Math.max(0, me.rush - dt);
-      if (me.rush > 0 && Math.random() < 0.3) spark(me.x - me.face * A.reach.hw * 0.6, me.y - Math.random() * A.top * 0.7, -me.face * (30 + Math.random() * 40), -10 - Math.random() * 30, 0.5, 0.6 + Math.random() * 0.5, 'rgb(255,214,120)');
+      if (me.rush > 0 && Math.random() < 0.3) spark(me.x - me.face * A.reach.hw * me.big * 0.6, me.y - Math.random() * tall() * 0.7, -me.face * (30 + Math.random() * 40), -10 - Math.random() * 30, 0.5, 0.6 + Math.random() * 0.5, 'rgb(255,214,120)');
       // A dash leans into it, and leaves a trail: fading copies of the animal where it just was, and sparks streaming back
       me.lean = approach(me.lean, me.dash > 0 ? DASH_LEAN : 0, dt * DASH_LEAN / 0.06);
       me.trail.forEach((t) => { t.age += dt; });
       while (me.trail.length && me.trail[0].age >= DASH_TRAIL) me.trail.shift();
       if (me.dash > 0) {
         if (!me.trail.length || me.trail[me.trail.length - 1].age >= 0.03) me.trail.push({ x: me.x, y: me.y, age: 0 });
-        if (Math.random() < 0.45) spark(me.x - me.dashDir * A.reach.hw * 0.5, me.y - Math.random() * A.top * 0.8, -me.dashDir * (50 + Math.random() * 70), (Math.random() - 0.5) * 24, 0.35, 0.7 + Math.random() * 0.6, SPARKS[Math.floor(Math.random() * SPARKS.length)]);
+        if (Math.random() < 0.45) spark(me.x - me.dashDir * A.reach.hw * me.big * 0.5, me.y - Math.random() * tall() * 0.8, -me.dashDir * (50 + Math.random() * 70), (Math.random() - 0.5) * 24, 0.35, 0.7 + Math.random() * 0.6, SPARKS[Math.floor(Math.random() * SPARKS.length)]);
       }
       // The bouncing star
       me.power = Math.max(0, me.power - dt);
-      if (me.power > 0 && Math.random() < 0.34) spark(me.x + (Math.random() - 0.5) * A.reach.hw * 1.6, me.y - Math.random() * A.top, (Math.random() - 0.5) * 40, -20 - Math.random() * 40, 0.6, 0.8 + Math.random() * 0.8, POWER_COLORS[Math.floor(Math.random() * POWER_COLORS.length)]);
+      if (me.power > 0 && Math.random() < 0.34) spark(me.x + (Math.random() - 0.5) * A.reach.hw * me.big * 1.6, me.y - Math.random() * tall(), (Math.random() - 0.5) * 40, -20 - Math.random() * 40, 0.6, 0.8 + Math.random() * 0.8, POWER_COLORS[Math.floor(Math.random() * POWER_COLORS.length)]);
       for (let i = powers.length - 1; i >= 0; i--) {
         const s = powers[i];
         s.age += dt;
@@ -1594,7 +1632,7 @@
           me.hurt = 0;
           me.energy = 1;
           me.tired = false;
-          pop(me.x, me.y - A.top - 14, 'Invincible! Run into the bees', 'rgb(255,226,150)', 2.2);
+          pop(me.x, me.y - tall() - 14, 'Invincible! Run into the bees', 'rgb(255,226,150)', 2.2);
           sfx.power();
           POWER_COLORS.forEach((color) => shower(s.x, s.y, 7, color));
         } else if (s.age >= POWER_LIFE) powers.splice(i, 1);
@@ -1613,6 +1651,18 @@
         }
       }
       for (let i = rings.length - 1; i >= 0; i--) { rings[i].age += dt; if (rings[i].age >= rings[i].life) rings.splice(i, 1); }
+      // The crab's old shells: one shed in the air, or on the airliner, drops to a bridge, the log or the ground, and each fades
+      for (let i = sheds.length - 1; i >= 0; i--) {
+        const s = sheds[i];
+        s.age += dt;
+        if (s.age >= SHED_SECONDS) { sheds.splice(i, 1); continue; }
+        if (s.landed) continue;
+        const was = s.y;
+        s.vy = Math.min(MAX_FALL, s.vy + GRAVITY * dt);
+        s.y += s.vy * dt;
+        const on = [...ledges, ...logs].find((l) => was <= l.y + 0.01 && s.y >= l.y && Math.abs(s.x - l.x) < l.w / 2);
+        if (on || s.y >= floorAt(s.x)) { s.y = on ? on.y : floorAt(s.x); s.landed = true; }
+      }
       // Caught stars on their way up to the big star, each making a point of it as it arrives
       forgeAge += dt;
       for (let i = pieces.length - 1; i >= 0; i--) {
@@ -1663,7 +1713,7 @@
         moon.rest = Math.max(0, moon.rest - dt);
         moon.flash = Math.max(0, moon.flash - dt);
         // From Mizar's stage on
-        if (phase === 'play' && stage >= MOON_FROM && !moon.rest && touching(moon.x, moon.y, moon.r * 0.7, 66)) {
+        if (phase === 'play' && stage >= MOON_FROM && !moon.rest && touching(moon.x, moon.y, moon.r * 0.7, 66 * me.big)) {
           moon.total = me.moonTime = 5 + 7 * moon.lit;
           moon.rest = moon.total + MOON_REST;
           moon.flash = 0.7;
@@ -1699,6 +1749,7 @@
           b.on = false;
           counts.berries += 1;
           belly += 1;
+          me.fed = Math.min(GROW_BERRIES, me.fed + 1);
           award(BERRY_POINTS, b.x, b.y - 10, 'rgb(255,130,165)', { note: belly < BELLY ? `${belly} of ${BELLY}` : '' });
           sfx.berry();
           shower(b.x, b.y, 7, 'rgb(255,110,150)');
@@ -1851,10 +1902,15 @@
         o.rotate(pitch);
         o.translate(0, 35);
       };
+      // Fattening up, the belly rounds out, hanging lower from the top of the back, and the stars on its side go with it
+      const fat = clamp((me.big - 1) / (BIGGEST - 1), 0, 1), round = ([x, y]) => [-6 + (x + 6) * (1 + 0.04 * fat), -56 + (y + 56) * (1 + 0.16 * fat)];
       const folded = () => {
         o.translate(-8, 0);
         o.scale(1 - 0.5 * tuck, 1);
         o.translate(8, 0);
+        o.translate(-6, -56);
+        o.scale(1 + 0.04 * fat, 1 + 0.16 * fat);
+        o.translate(6, 56);
       };
       // The head comes down to the chest, chin first
       const head = () => {
@@ -1955,9 +2011,9 @@
       o.strokeStyle = 'rgba(232,240,255,.5)';
       o.lineWidth = 0.7;
       o.beginPath();
-      BACK_LINES.forEach((name, i) => { const [x, y] = BACK_STARS[name]; if (i) o.lineTo(fold(x), y); else o.moveTo(fold(x), y); });
+      BACK_LINES.forEach((name, i) => { const [x, y] = round(BACK_STARS[name]); if (i) o.lineTo(fold(x), y); else o.moveTo(fold(x), y); });
       o.stroke();
-      Object.values(BACK_STARS).forEach(([x, y], i) => backStar(fold(x), y, i, 4.2, 0.7));
+      Object.values(BACK_STARS).map(round).forEach(([x, y], i) => backStar(fold(x), y, i, 4.2, 0.7));
       o.restore();
     };
     const paintBall = () => {
@@ -1999,6 +2055,8 @@
     const paintFox = () => {
       const air = me.ground ? 0 : 1, stride = me.stride || 0, g = me.gait;
       const tuck = smooth(me.tuck), flat = smooth(me.curl), dive = smooth(me.dive), fold = (x) => -2 + (x + 2) * (1 - 0.5 * tuck);
+      // Its winter coat, fuller as it grows: a bushier tail, a thicker ruff and a fluffier outline
+      const coat = clamp((me.big - 1) / (BIGGEST - 1), 0, 1);
       const wave = Math.sin(stride * TAU), breath = Math.sin(me.time * 3) * (1 - g) * (1 - air);
       const bob = -Math.abs(wave) * 2.6 * g + breath * 0.5, pitch = (wave * 0.08 * g + clamp(me.vy / 900, -1, 1) * 0.24 * air) * (1 - tuck) * (1 - dive);
       const rise = clamp(-me.vy / 500, -1, 1), length = lerp(10.5, 5, tuck);
@@ -2041,7 +2099,7 @@
           const off = Math.sin(f * 3.4 + me.time * 7 * g) * (1.2 + 2.2 * f) * g + f * f * 6;
           return [bx + dx * len * f - dy * off, by + dy * len * f + dx * off];
         };
-        const width = (f) => 1.2 + 8.8 * Math.sin(Math.PI * (0.03 + 0.97 * f) ** 0.72) + (edge ? 1.6 : 0);
+        const width = (f) => (1.2 + 8.8 * Math.sin(Math.PI * (0.03 + 0.97 * f) ** 0.72)) * (1 + 0.45 * coat) + (edge ? 1.6 : 0);
         const piece = (from, to, color) => {
           const up = [], down = [];
           for (let i = 0; i <= 9; i++) {
@@ -2088,7 +2146,7 @@
         o.strokeStyle = main;
         o.save();
         folded();
-        o.lineWidth = edge ? 3 : 0.01;
+        o.lineWidth = edge ? 3 + 3 * coat : 0.01;
         o.fill(FOX_BODY);
         o.stroke(FOX_BODY);
         o.restore();
@@ -2098,7 +2156,7 @@
           o.fill();
         }
         head();
-        o.lineWidth = edge ? 13.5 : 11;
+        o.lineWidth = (edge ? 13.5 : 11) + 3 * coat;
         o.beginPath();
         o.moveTo(14, -30);
         o.lineTo(26, -40);
@@ -2136,7 +2194,7 @@
       o.fillStyle = `rgba(255,241,223,${(0.92 * (1 - tuck)).toFixed(2)})`;
       body();
       o.beginPath();
-      o.ellipse(fold(21), -24, 5.2, 8, 0, 0, TAU);
+      o.ellipse(fold(21), -24, 5.2 + 2.2 * coat, 8 + 2.6 * coat, 0, 0, TAU);
       o.fill();
       o.save();
       head();
@@ -2274,7 +2332,7 @@
       pc.globalCompositeOperation = 'source-over';
       o.setTransform(1, 0, 0, 1, 0, 0);
       o.clearRect(0, 0, off.width, off.height);
-      o.setTransform(scale * facing, 0, 0, scale, 90 * scale, 110 * scale);
+      o.setTransform(scale * facing, 0, 0, scale, OFF_X * scale, OFF_Y * scale);
       o.rotate(facing * me.tilt);
       if (me.flip < 1) {
         o.translate(...a.turnAt);
@@ -2287,7 +2345,7 @@
       pc.globalAlpha = alpha;
       pc.shadowColor = a.shadow;
       pc.shadowBlur = 18 * scale;
-      pc.drawImage(off, px - 90 * scale, py - 110 * scale);
+      putAnimal(pc, me.x, me.y, 1);
       pc.shadowBlur = 0;
     };
     // A big star: seven points around a middle, each in the color of the star that made it and the rest outlined faintly, with
@@ -2320,6 +2378,17 @@
         ctx.globalAlpha = alpha;
         ctx.drawImage(skyGlow, cx - r * 1.6, cy - r * 1.6, r * 3.2, r * 3.2);
       }
+    };
+    // The crab's old shell, from the crab as just drawn (before any flash of color), made pale, at the size it was
+    const shed = () => {
+      me.molting = false;
+      const k = clamp(me.big, 1, ROOM), w = 180 * k * scale, c = canvas(w, w), x = c.getContext('2d');
+      x.drawImage(off, (OFF_X - 90 * k) * scale, (OFF_Y - 110 * k) * scale, w, w, 0, 0, w, w);
+      x.globalCompositeOperation = 'source-atop';
+      x.fillStyle = 'rgba(214,255,246,.62)';
+      x.fillRect(0, 0, c.width, c.height);
+      sheds.push({ c, k, x: me.x, y: me.y, vy: 0, age: 0, landed: me.ground && !me.on });
+      shower(me.x, me.y - 16 * k, 16, 'rgb(196,255,240)');
     };
     const draw = () => {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -2390,10 +2459,10 @@
       };
       ctx.globalCompositeOperation = 'lighter';
       ctx.globalAlpha = me.alpha * 0.85 * (0.45 + 0.55 * health);
-      const glowSize = (210 + Math.min(90, caught * 3)) * (0.7 + 0.3 * health) * scale;
-      ctx.drawImage(glow, px - glowSize / 2, py - 30 * scale - glowSize / 2, glowSize, glowSize);
+      const glowSize = (210 + Math.min(90, caught * 3)) * (0.7 + 0.3 * health) * me.big * scale;
+      ctx.drawImage(glow, px - glowSize / 2, py - 30 * me.big * scale - glowSize / 2, glowSize, glowSize);
       ctx.globalAlpha = me.alpha * 0.6 * (1 - height);
-      ctx.drawImage(glow, (me.x - 80) * scale, (under - 9) * scale, 160 * scale, 18 * scale);
+      ctx.drawImage(glow, (me.x - 80 * me.big) * scale, (under - 9) * scale, 160 * me.big * scale, 18 * scale);
       ctx.globalCompositeOperation = 'source-over';
       // The plane and the satellite pass behind the bear. At the end, they fade, with the stars, bees and food, and on the way
       // home or to sleep, they fade first.
@@ -2454,13 +2523,20 @@
         }
       }
       ctx.setTransform(1, 0, 0, 1, 0, 0);
+      // The crab's old shells, behind it
+      for (const s of sheds) {
+        ctx.globalAlpha = leftover * 0.8 * (1 - smooth(clamp(s.age - (SHED_SECONDS - 1), 0, 1)));
+        ctx.drawImage(s.c, (s.x - 90 * s.k) * scale, (s.y - 110 * s.k) * scale);
+      }
       if (me.alpha > 0) {
         o.setTransform(1, 0, 0, 1, 0, 0);
         o.clearRect(0, 0, off.width, off.height);
         const sx = 1 + me.squash * 0.75, sy = 1 - me.squash;
         // (A crab faces the front, so it isn't mirrored when it changes direction)
         const facing = A.sideways ? 1 : me.face;
-        o.setTransform(scale * facing * sx, 0, 0, scale * sy, 90 * scale, 110 * scale);
+        // As big as it's grown, except that the bear's ball goes back to its usual size, to fit under the log, though not asleep
+        const g = kind === 'bear' ? lerp(me.big, phase === 'sleep' ? me.big : 1, smooth(me.curl)) : me.big;
+        o.setTransform(scale * facing * sx * g, 0, 0, scale * sy * g, OFF_X * scale, OFF_Y * scale);
         // (Leaning into a dash: forward, or for the crab, which isn't mirrored, the way it dashes)
         o.rotate(facing * me.tilt + (A.sideways ? me.dashDir : 1) * me.lean);
         if (me.flip < 1) {
@@ -2477,8 +2553,11 @@
             o.translate(0, 30);
           }
           paintFox();
-        } else if (kind === 'crab') paintCrab();
-        else {
+        } else if (kind === 'crab') {
+          paintCrab();
+          // Molting: its old shell, as it is now, stays behind, pale and empty, and it steps out of it bigger
+          if (me.molting) shed();
+        } else {
           // Curling up: the bear shrinks into the ball, which grows out of it
           const curling = me.curl < 0.5 ? 1 - me.curl * 0.7 : 0.65 + (me.curl - 0.5) * 0.7;
           o.scale(curling, curling);
@@ -2518,7 +2597,7 @@
           ctx.globalCompositeOperation = 'lighter';
           for (const t of me.trail) {
             ctx.globalAlpha = me.alpha * 0.3 * (1 - t.age / DASH_TRAIL);
-            ctx.drawImage(off, (t.x - 90) * scale, (t.y - 110) * scale);
+            putAnimal(ctx, t.x, t.y, g);
           }
           ctx.globalCompositeOperation = 'source-over';
         }
@@ -2527,11 +2606,11 @@
         ctx.globalAlpha = me.alpha * flicker * (0.7 + 0.3 * health);
         ctx.shadowColor = homeward ? 'rgba(255,244,214,.95)' : charged ? chargedColor : moonlit ? 'rgba(255,226,150,.95)' : A.shadow;
         ctx.shadowBlur = (homeward ? 34 : charged ? 26 : 6 + 14 * health) * scale;
-        ctx.drawImage(off, px - 90 * scale, py - 110 * scale);
+        putAnimal(ctx, me.x, me.y, g);
         ctx.shadowBlur = 0;
         // Rolling energy, while it is in use or coming back
         if (me.energy < 1 && phase === 'play') {
-          const bx = px - 17 * scale, by = py - (me.rolling ? A.low.h + 12 : A.top + 9) * scale;
+          const bx = px - 17 * scale, by = py - (me.rolling ? A.low.h + 12 : tall() + 9) * scale;
           ctx.globalAlpha = 0.3;
           ctx.fillStyle = '#E8EEFF';
           ctx.fillRect(bx, by, 34 * scale, 3 * scale);
@@ -2601,7 +2680,7 @@
       }
       // The combo, above the animal: how many in a row, the multiplier, and how long is left to keep it going
       if (combo >= 2 && phase === 'play') {
-        const m = tier(), x = clamp(me.x, 46, W - 46), y = Math.max(14, me.y - A.top - 24);
+        const m = tier(), x = clamp(me.x, 46, W - 46), y = Math.max(14, me.y - tall() - 24);
         ctx.font = `12px "AURORA Arcade", ${uiFont}`;
         ctx.globalAlpha = 1;
         ctx.fillStyle = COMBO_COLORS[m];
@@ -3001,7 +3080,7 @@
         marchers.forEach((m) => {
           march(m, dt);
           if (m.alpha <= 0) return;
-          Object.assign(me, { x: m.x, y: floorAt(m.x) - m.up, face: m.face, gait: m.gait, stride: m.stride, time: t + m.i, tuck: m.tuck, curl: 0, dive: 0, flip: m.flip, squash: 0, tail: m.tail, snip: m.snip,
+          Object.assign(me, { x: m.x, y: floorAt(m.x) - m.up, face: m.face, gait: m.gait, stride: m.stride, time: t + m.i, tuck: m.tuck, curl: 0, dive: 0, flip: m.flip, squash: 0, tail: m.tail, snip: m.snip, big: 1,
             vy: m.vy, vx: m.moving ? m.face * speed : 0, ground: !m.up, tilt: m.up ? 0 : Math.atan(slopeAt(m.x)) });
           paradeOne(pc, m.which, m.alpha, m.light, m.spin);
         });
@@ -3069,13 +3148,13 @@
       phaseTime = 0;
       letGo();
       cards.forEach((el) => el.remove());
-      const who = A.who, at = Math.max(me.y - A.top, 126);
+      const who = A.who, at = Math.max(me.y - tall(), 126);
       if (why === 'home') {
         // Each minute of night left is worth points, and the animal rises, glowing, as the aurora surges
         const left = NIGHT_HOURS * 60 - nightMinutes(), bonus = left * NIGHT_MINUTE_POINTS;
         points += bonus;
         counts.left = left;
-        home = { y: me.y, rise: clamp(me.y - A.top - 24, 0, 90) };
+        home = { y: me.y, rise: clamp(me.y - tall() - 24, 0, 90) };
         pop(me.x, at - 48, `${who} is home! +${number(relit)}`, 'rgb(255,232,170)', 3);
         if (bonus) pop(me.x, at - 24, `+${number(bonus)} for ${hoursMinutes(left)} of night left`, 'rgb(200,212,255)', 3);
         if (options.surge) options.surge();
