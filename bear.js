@@ -13,7 +13,7 @@
   // A quick second press of ← or → (two within DASH_TAP seconds) dashes that way, at DASH_SPEED times running speed for a moment:
   // on the ground, or once a jump in the air, where it holds its height. Jumping during a dash keeps its speed, for a long jump.
   // Then a short wait before the next. A quick sideways swipe does it on a touch screen.
-  const DASH_TAP = 0.25, DASH_SECONDS = 0.3, DASH_SPEED = 2.5, DASH_AGAIN = 0.45, DASH_LEAN = 0.14, DASH_TRAIL = 0.16;
+  const DASH_TAP = 0.25, DASH_SECONDS = 0.4, DASH_SPEED = 2.5, DASH_AGAIN = 0.45, DASH_LEAN = 0.14, DASH_TRAIL = 0.16;
   const GRAVITY = 1900, FALL_MORE = 1.45, RELEASE_MORE = 2.4, MAX_FALL = 980;
   const COYOTE = 0.09, BUFFER = 0.12, FLIP = 0.36, TUCK_UNTIL = 0.72;
   // Five lives, as in the shooting star game: three felt hard
@@ -65,6 +65,12 @@
   // fuller winter coat; and the crab, which can only grow by molting, grows at each full belly, stepping out of its old
   // shell, which it leaves behind for SHED_SECONDS.
   const GROW_EACH = 0.025, GROW_BERRIES = 10, GROW_STING = 3, BIGGEST = 1 + GROW_EACH * GROW_BERRIES, SHED_SECONDS = 3;
+  // The cabin: the animal can land on its roof, and landing there stokes the fire, as a click on the cabin does outside the
+  // games, with the chimney's puff of smoke and sparks. A thick cloud of smoke rises from the chimney for SMOKE_SECONDS, and
+  // smoke calms bees, as a beekeeper's does: a bee that flies into it, an angry swarm's too, forgets the animal and drifts off,
+  // worth SWAT_POINTS. A calmed swarm counts as escaped. Then the fire needs STOKE_AGAIN seconds to build back. In the scene's
+  // units, ROOF is the roof's ridge, a little wider than drawn so a landing is forgiving, and CHIMNEY where its smoke starts.
+  const SMOKE_SECONDS = 6, STOKE_AGAIN = 20, ROOF = { x: 1150.6, y: 207.3, w: 26 }, CHIMNEY = { x: 1139.7, y: 201.9 };
   // Riding the airliner earns air miles, by the distance flown: 5 points every 0.25 s at its usual speed
   const MILE_SECONDS = 0.25, MILE_POINTS = 5;
   // The longer the ride, the faster it flies, turning at the banner's edges while it has a rider, until at three times its
@@ -150,6 +156,9 @@
     sting: () => { tone(200, 260, { to: 110, type: 'sawtooth', level: 0.06 }); noise(200, 0.2, 260, 60); },
     bonk: (step) => tone(note(-12 + Math.min(step, 6) * 2), 140, { to: note(Math.min(step, 6) * 2), type: 'square', level: 0.05 }),
     swat: () => noise(110, 0.16, 1400, 220),
+    // The fire stoked from the roof: a rush of flame and a warm rising call; and bees calmed by its smoke, a soft falling hum
+    stoke: () => { noise(520, 0.12, 900, 140); [0, 5, 9].forEach((n, i) => tone(note(n - 12), 170, { type: 'triangle', level: 0.05, delay: 60 + i * 80 })); },
+    calm: () => tone(note(7), 360, { to: note(0), type: 'sine', level: 0.05 }),
     satellite: () => { tone(note(16), 80, { type: 'square', level: 0.04 }); tone(note(21), 120, { type: 'square', level: 0.04, delay: 90 }); },
     plane: () => { tone(note(7), 180, { level: 0.08 }); tone(note(4), 260, { level: 0.08, delay: 170 }); },
     moon: () => [0, 7, 12, 16, 19, 24].forEach((n, i) => tone(note(n - 5), 260, { type: 'sine', level: 0.08, delay: i * 60 })),
@@ -632,6 +641,10 @@
     const k = Math.max(box.width / 1600, box.height / 240), side = (1600 - box.width / k) / 2;
     const floorAt = (x) => (box.height - (240 - ridgeAt(side + x * u / k)) * k) / u;
     const slopeAt = (x) => (floorAt(x + 4) - floorAt(x - 4)) / 8;
+    // The cabin's roof, to land on, and its chimney, in the game's units: none where a narrow banner crops the cabin
+    const sceneX = (x) => (x - side) * k / u, sceneY = (y) => (box.height - (240 - y) * k) / u;
+    const roof = { x: sceneX(ROOF.x), y: sceneY(ROOF.y), w: ROOF.w * k / u }, chimney = { x: sceneX(CHIMNEY.x), y: sceneY(CHIMNEY.y) };
+    const roofs = roof.x > 30 && roof.x < W - 30 ? [roof] : [];
     const scale = dpr * u, touchOnly = matchMedia('(hover: none)').matches;
     const addLayer = () => {
       const c = banner.appendChild(canvas(box.width * dpr, box.height * dpr));
@@ -973,7 +986,7 @@
     let nextPower = 22 + Math.random() * 10;
     let unlockedNow = '', finale = false;
     let combo = 0, comboLeft = 0, bestCombo = 0, newBest = false;
-    const counts = { berries: 0, bellies: 0, honey: 0, escapes: 0, bees: 0, satellites: 0, rides: 0, moons: 0, fires: 0, miles: 0, booms: 0, alcor: 0, left: 0 };
+    const counts = { berries: 0, bellies: 0, honey: 0, escapes: 0, stokes: 0, calmed: 0, bees: 0, satellites: 0, rides: 0, moons: 0, fires: 0, miles: 0, booms: 0, alcor: 0, left: 0 };
     let rideMiles = 0, rideClock = 0, rideAir = 0, ridePlane = null;
     // On a meteor shower's peak night, as in the shooting star game, stars are worth double
     const peak = options.peak || null;
@@ -1045,7 +1058,7 @@
       logLayer.style.opacity = '0';
       logLayer.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300 }).onfinish = appear;
     };
-    let phase = 'in', phaseTime = 0, running = true, acc = 0, last = performance.now(), swipeRoll = false;
+    let phase = 'in', phaseTime = 0, running = true, acc = 0, last = performance.now(), swipeRoll = false, smokeLeft = 0, fireReadyAt = 0;
 
     const spark = (x, y, vx, vy, life, size, color) => {
       if (sparks.length > 90) sparks.shift();
@@ -1177,11 +1190,21 @@
       between = BREATHER;
       moveLog();
       // What the next stage brings comes soon after its card
-      if (stage === BEES_FROM) nextBee = 1.5;
+      if (stage === BEES_FROM) { nextBee = 1.5; if (roofs.length) cabinHint(); }
       if (stage === HONEY_FROM) { nextPot = 2; nextPower = 10; }
       if (stage === VISITORS_FROM) { nextVisitor = 1; planeTurn = false; }
       // The next card comes as the big star nears its place
       showStage(1400);
+    };
+    // When the bees wake, a word about the cabin, if it's in view
+    const cabinHint = () => {
+      clearTimeout(hintTimer);
+      hintTimer = setTimeout(() => {
+        if (ending) return;
+        hint.textContent = "Land on the cabin's roof to stoke its fire: smoke calms bees";
+        hint.style.opacity = 1;
+        hintTimer = setTimeout(() => { hint.style.opacity = 0; }, 6000);
+      }, 3500);
     };
     // Bringing the Great Bear home unlocks the fox, and the fox the crab, whose stars appear in the sky as the animal goes home
     const unlockNext = (y) => {
@@ -1307,6 +1330,52 @@
       b.kind = 'down';
       b.vx = (Math.sign(b.x - me.x) || 1) * 130;
       b.vy = -240;
+    };
+    // The fire stoked from the roof: the chimney's puff and sparks, as a click on the cabin sends outside the games, the cabin's
+    // glow brightening for a moment, and a cloud of smoke that calms bees for SMOKE_SECONDS
+    const stokeFire = () => {
+      smokeLeft = SMOKE_SECONDS;
+      fireReadyAt = me.time + STOKE_AGAIN;
+      counts.stokes += 1;
+      sfx.stoke();
+      pop(me.x, overBadge(), 'Stoked! The smoke calms bees', 'rgb(236,228,214)', 2.4);
+      banner.querySelectorAll('.bn-puff i').forEach((el, i) => {
+        const dx = (0.8 + Math.random() * 0.5).toFixed(2), dy = (2.4 + Math.random() * 0.6).toFixed(2);
+        el.animate([
+          { opacity: 0, transform: 'translate(0, 0) scale(.6)' },
+          { opacity: 0.75, transform: 'translate(.05cqw, -.45cqw) scale(1.3)', offset: 0.14 },
+          { opacity: 0, transform: `translate(${dx}cqw, -${dy}cqw) scale(4.2)` }
+        ], { duration: 2600 + i * 250, delay: i * 160, easing: 'cubic-bezier(.25,.6,.4,1)' });
+      });
+      banner.querySelectorAll('.bn-puff b').forEach((el, i) => {
+        const dx = Math.random() * 0.8 - 0.25, dy = 0.9 + Math.random() * 0.9;
+        el.animate([
+          { opacity: 1, transform: 'translate(0, 0)' },
+          { opacity: 0.8, transform: `translate(${(dx * 0.5).toFixed(2)}cqw, -${(dy * 0.55).toFixed(2)}cqw)`, offset: 0.45 },
+          { opacity: 0, transform: `translate(${dx.toFixed(2)}cqw, -${dy.toFixed(2)}cqw)` }
+        ], { duration: 900 + Math.random() * 700, delay: 60 + i * 70, easing: 'cubic-bezier(.15,.7,.35,1)' });
+      });
+      const cozy = banner.querySelector('.bn-cozy');
+      if (cozy && !cozy.classList.contains('on')) {
+        cozy.classList.add('on');
+        setTimeout(() => cozy.classList.remove('on'), 1800);
+      }
+      shower(chimney.x, chimney.y - 4, 12, 'rgb(255,196,110)');
+    };
+    // Where the smoke reaches: a cloud above the chimney, leaning downwind as the chimney's wisp does, growing as it rises and
+    // thinning away at the end
+    const smokeZone = () => {
+      if (smokeLeft <= 0) return null;
+      const grown = clamp((SMOKE_SECONDS - smokeLeft) / 0.6, 0, 1) * clamp(smokeLeft / 1, 0, 1);
+      return { x: chimney.x + 25, y: chimney.y - 57, r: 58 * grown };
+    };
+    // A bee calmed by the smoke forgets the animal and drifts off, up and away, fading
+    const calm = (b) => {
+      b.kind = 'calm';
+      b.age = 0;
+      b.vx = (Math.random() - 0.5) * 50;
+      b.vy = -25 - Math.random() * 25;
+      counts.calmed += 1;
     };
     // A bee that flies into the crab's shell bounces off it
     const bounce = (b) => {
@@ -1505,11 +1574,12 @@
       me.on = null;
       if (me.vy >= 0) {
         // (The airliner carries the animal only during play, since it fades at the end)
-        for (const l of [...ledges, ...logs, ...(phase === 'play' ? visitors.filter((v) => v.kind === 'plane' && !v.boomed) : [])]) {
+        for (const l of [...ledges, ...logs, ...roofs, ...(phase === 'play' ? visitors.filter((v) => v.kind === 'plane' && !v.boomed) : [])]) {
           if (was <= l.y + 0.01 && me.y >= l.y && me.x + s.hw > l.x - l.w / 2 && me.x - s.hw < l.x + l.w / 2) {
             me.y = l.y;
             me.vy = 0;
             me.ground = true;
+            if (l === roof && !wasGround && phase === 'play' && me.time >= fireReadyAt) stokeFire();
             if (l.kind === 'plane') {
               me.on = l;
               // While it has a rider, even one hopping on it, it turns at the edges
@@ -1614,6 +1684,7 @@
       }
       // The honey rush, trailing honey-gold sparks
       me.rush = Math.max(0, me.rush - dt);
+      smokeLeft = Math.max(0, smokeLeft - dt);
       if (me.rush > 0 && Math.random() < 0.3) spark(me.x - me.face * A.reach.hw * me.big * 0.6, me.y - Math.random() * tall() * 0.7, -me.face * (30 + Math.random() * 40), -10 - Math.random() * 30, 0.5, 0.6 + Math.random() * 0.5, 'rgb(255,214,120)');
       // A dash leans into it, and leaves a trail: fading copies of the animal where it just was, and sparks streaming back
       me.lean = approach(me.lean, me.dash > 0 ? DASH_LEAN : 0, dt * DASH_LEAN / 0.06);
@@ -1782,7 +1853,9 @@
           sendAngry(p.x, p.y);
         } else if (p.age >= p.life) pots.splice(i, 1);
       }
-      // Bees
+      // Bees, and any the smoke calms
+      const smoke = smokeZone();
+      let calmedNow = 0;
       for (let i = bees.length - 1; i >= 0; i--) {
         const b = bees[i];
         b.age += dt;
@@ -1793,6 +1866,12 @@
           b.vy += 900 * dt;
           gone = b.y > box.height / u + 30;
           if (gone) bees.splice(i, 1);
+          continue;
+        }
+        if (b.kind === 'calm') {
+          b.x += (b.vx + Math.sin(b.age * 5 + i) * 18) * dt;
+          b.y += b.vy * dt;
+          if (b.age > 2.4 || b.y < -30) bees.splice(i, 1);
           continue;
         }
         if (b.kind === 'cruise') {
@@ -1822,6 +1901,7 @@
           gone = b.y < -30 || b.x < -40 || b.x > W + 40;
         }
         if (gone) bees.splice(i, 1);
+        else if (smoke && phase === 'play' && Math.hypot(b.x - smoke.x, b.y - smoke.y) < smoke.r) { calm(b); calmedNow += 1; }
         else if (phase === 'play' && me.power > 0 && touching(b.x, b.y, 6)) knockOut(b);
         else if (phase === 'play' && me.pouncing && touching(b.x, b.y, 8)) {
           bees.splice(i, 1);
@@ -1833,6 +1913,10 @@
           bees.splice(i, 1);
           sting(b);
         }
+      }
+      if (calmedNow) {
+        award(SWAT_POINTS * calmedNow, smoke.x, overBadge(), 'rgb(236,228,214)', { before: calmedNow > 1 ? 'Bees calmed' : 'Calmed' });
+        sfx.calm();
       }
       // A swarm that gives up without a sting was escaped
       for (let i = swarms.length - 1; i >= 0; i--) {
@@ -2658,13 +2742,31 @@
         ctx.globalAlpha = fade * smooth(b.grow);
         stamp(berrySprite, b.x, b.y);
       }
+      // The stoked fire's smoke: soft puffs rising from the chimney, leaning downwind, growing and thinning as they go, over
+      // where it calms bees
+      if (smokeLeft > 0) {
+        const env = clamp((SMOKE_SECONDS - smokeLeft) / 0.6, 0, 1) * clamp(smokeLeft / 1, 0, 1), t = SMOKE_SECONDS - smokeLeft;
+        ctx.setTransform(scale, 0, 0, scale, 0, 0);
+        for (let n = 0; n < 12; n++) {
+          const f = (t * 0.4 + n / 12) % 1, x = chimney.x + f * 50 + Math.sin(f * 5 + n) * 5, y = chimney.y - 10 - f * 95, r = 10 + f * 34;
+          const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+          g.addColorStop(0, 'rgba(228,226,222,.75)');
+          g.addColorStop(0.6, 'rgba(206,204,200,.3)');
+          g.addColorStop(1, 'rgba(206,204,200,0)');
+          ctx.globalAlpha = env * Math.sin(Math.PI * Math.min(1, f * 1.3)) * 0.95;
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, TAU);
+          ctx.fill();
+        }
+      }
       for (const p of pots) {
         ctx.globalAlpha = leftover * Math.min(1, p.age * 3) * (p.life - p.age < 3 && Math.floor(p.age * 6) % 2 ? 0.45 : 1);
         stamp(potSprite, p.x, p.y);
       }
       const wing = Math.floor(me.time * 34) % 2;
       for (const b of bees) {
-        ctx.globalAlpha = leftover * Math.min(1, b.age * 4);
+        ctx.globalAlpha = leftover * (b.kind === 'calm' ? Math.max(0, 1 - b.age / 2.4) : Math.min(1, b.age * 4));
         const look = BEES[b.kind === 'chase' && b.age < chaseFor ? 1 : 0][wing];
         if (b.kind === 'down') {
           // Knocked out, upside down
@@ -3103,7 +3205,7 @@
     const rollCredits = (done) => {
       const h = banner.getBoundingClientRect().height, time = Math.round(playTime), left = counts.left;
       const rows = [...(newBest ? ['New best!', ''] : []), A.title, ending === 'home' ? `Home by ${clock()}` : `${lit.filter(Boolean).length} of 7 stars relit`, '',
-        `${caught} ${caught === 1 ? 'star' : 'stars'} caught`, ...(counts.alcor ? ['Alcor spotted'] : []), ...(bestCombo >= 3 ? [`Longest combo ${bestCombo}`] : []), ...(counts.berries ? [`Berries ${counts.berries}`] : []), ...(counts.bellies ? [`Full bellies ${counts.bellies}`] : []), ...(counts.honey ? [`Honey pots ${counts.honey}`] : []), ...(counts.escapes ? [`Swarms escaped ${counts.escapes}`] : []),
+        `${caught} ${caught === 1 ? 'star' : 'stars'} caught`, ...(counts.alcor ? ['Alcor spotted'] : []), ...(bestCombo >= 3 ? [`Longest combo ${bestCombo}`] : []), ...(counts.berries ? [`Berries ${counts.berries}`] : []), ...(counts.bellies ? [`Full bellies ${counts.bellies}`] : []), ...(counts.honey ? [`Honey pots ${counts.honey}`] : []), ...(counts.stokes ? [`Fires stoked ${counts.stokes}`] : []), ...(counts.calmed ? [`Bees calmed ${counts.calmed}`] : []), ...(counts.escapes ? [`Swarms escaped ${counts.escapes}`] : []),
         ...(counts.bees ? [`Bees bonked ${counts.bees}`] : []), ...(counts.satellites ? [`Satellites ${counts.satellites}`] : []), ...(counts.miles ? [`Air miles ${number(counts.miles)}`] : counts.rides ? [`Plane rides ${counts.rides}`] : []), ...(counts.booms ? [`Sonic booms ${counts.booms}`] : []),
         ...(counts.moons ? [`Moon gravity ${counts.moons}`] : []), ...(counts.fires ? [`Fox fires ${counts.fires}`] : []),
         ...(left ? [`Night left ${hoursMinutes(left)}`] : []), `Time ${Math.floor(time / 60)}:${String(time % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Thanks for playing'];
