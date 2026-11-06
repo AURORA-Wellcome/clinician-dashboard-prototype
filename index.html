@@ -768,7 +768,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   // A sparkle rises over about half a second and fades over a second; its star brightens and settles back
   const GLINT_MS = 1500, STAR_MS = 2100;
   const pool = Array.from({ length: 16 }, () => ({ el: glints.appendChild(Object.assign(document.createElement('i'), { className: 'bn-glint' })), until: 0 }));
-  let stars = null, at = null, frame = 0, resting = false, lastSpark = -Infinity, bh = 0, cabin = null, cozyOn = false, dipper = null, overDipper = false;
+  let stars = null, at = null, frame = 0, resting = false, lastSpark = -Infinity, bh = 0, cabin = null, cozyOn = false, dipper = null, overDipper = false, northStar = null, northClicks = [];
   const cozy = banner.querySelector('.bn-cozy');
   // Depth: how far each layer moves, in px, as the pointer goes from the middle to an edge (x, y)
   const layers = [['.bn-px-back', -8, -3], ['.bn-px-main', -16, -5]].map(([sel, kx, ky]) => ({ el: banner.querySelector(sel), kx, ky }));
@@ -795,6 +795,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       return { x: r.left + r.width / 2 - b.left, y: r.top + r.height / 2 - b.top };
     };
     const ph = star('Phecda'), ns = star('North Star');
+    northStar = ns;
     labelDipper.style.transform = `translate(${(ph.x - 12).toFixed(1)}px, ${ph.y.toFixed(1)}px) translate(-100%, -50%)`;
     labelNorth.style.transform = `translate(${(ns.x + 8).toFixed(1)}px, ${ns.y.toFixed(1)}px) translateY(-50%)`;
   };
@@ -1410,11 +1411,15 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   // Returns whether the visitor keeps flying
   const visitorHit = (v, x, y, now) => {
     if (v.kind === 'plane') {
+      // It costs a life, as a landing does, and the cabin dims, whether the bloom was aimed or a chain's: the point is to be
+      // careful around airliners
       v.hit = true;
-      game.points = Math.max(0, game.points - 150);
       game.complaints += 1;
-      floatText('−150 and air traffic control has questions', x, y + game.h * 0.2, '255 150 130');
+      game.missed += 1;
+      setFire(LIVES - game.missed);
+      floatText('−1 life, and air traffic control has questions', x, y + game.h * 0.2, '255 150 130');
       sound.plane();
+      score.animate([{ color: '#FFB46A' }, { color: 'rgba(232,238,255,.95)' }], { duration: 800, easing: 'ease-out' });
       // A near miss: it ducks, banks hard and climbs out of the sky early. It doesn't crash: a passenger jet brought down by
       // something fired from the ground would recall real ones.
       const dir = Math.sign(v.x1 - v.x0) || 1, h = game.h, at = (dx, dy, turn) => `translate(${(x + dir * dx * h).toFixed(1)}px, ${(y + dy * h).toFixed(1)}px) rotate(${(dir * turn).toFixed(1)}deg)`;
@@ -1746,6 +1751,23 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     // For a moment after a run ends, a click doesn't start anything, so the last presses don't start another
     loadBear(() => window.auroraBear.start(banner, () => { setTimeout(() => { bearOn = false; }, 800); }, { kind, surge: surgeOnce, peak: shower && shower.name }));
   };
+  // Secrets: the Konami code, or three quick clicks or taps on the North Star, play the bear game's grand finale on its own,
+  // credits and all
+  const playFinale = () => {
+    if (game || finale || bearOn) return;
+    bearOn = true;
+    loadBear(() => window.auroraBear.start(banner, () => { setTimeout(() => { bearOn = false; }, 800); }, { kind: 'bear', finaleOnly: true, surge: surgeOnce }));
+  };
+  const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+  let typed = [];
+  window.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || (document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) || document.querySelector('dialog[open]')) return;
+    typed = [...typed, e.key.length === 1 ? e.key.toLowerCase() : e.key].slice(-KONAMI.length);
+    if (typed.join() !== KONAMI.join()) return;
+    typed = [];
+    // Brought into view first, if the page has scrolled past it
+    if (banner.getBoundingClientRect().bottom < 60) { banner.scrollIntoView({ block: 'start' }); setTimeout(playFinale, 300); } else playFinale();
+  });
   // Animals already unlocked in this browser show in the sky
   try { if (localStorage.getItem('aurora-animals')) loadBear(() => window.auroraBear.showAnimals(banner, true)); } catch (e) { /* blocked */ }
   // Outside a game, the cabin and the moon do what they always did, and the Big Dipper and an unlocked animal's stars start the
@@ -1762,6 +1784,14 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     if (!game) {
       const animal = window.auroraBear && window.auroraBear.animalAt(x, y);
       if (animal) { startBear(animal); return; }
+    }
+    // Each click or tap on the North Star makes it wink, and three within a second and a half play the finale
+    if (!game && northStar && Math.hypot(x - northStar.x, y - northStar.y) < 14) {
+      const now = performance.now();
+      northClicks = northClicks.filter((when) => now - when < 1500).concat(now);
+      banner.querySelector('[data-star="North Star"]').animate([{ opacity: 1 }, { opacity: 0.25 }, { opacity: 1 }], { duration: 320 });
+      if (northClicks.length >= 3) { northClicks = []; playFinale(); }
+      return;
     }
     if (!game && inDipper(x, y)) { startBear('bear'); return; }
     if (!game && !onCabin && !inDipper(x, y) && performance.now() - gameOver > 1200) startGame();

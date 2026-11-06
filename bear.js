@@ -400,6 +400,7 @@
   const FOX_BODY = new Path2D('M-26-19C-32-26-29-36-18-36C-8-37 2-33 12-35C19-37 24-32 24-25C24-20 14-17 2-16C-8-15-20-14-26-19Z');
   // The animals brought home in this browser. The first time all three are, the grand finale plays.
   const HOMES_KEY = 'aurora-homes';
+  const allHome = () => { try { const list = (localStorage.getItem(HOMES_KEY) || '').split(','); return Object.keys(ANIMALS).every((kind) => list.includes(kind)); } catch (e) { return false; } };
   const bringHome = (kind) => {
     let list = [];
     try { list = (localStorage.getItem(HOMES_KEY) || '').split(',').filter(Boolean); } catch (e) { return false; }
@@ -417,7 +418,7 @@
 .bn-fireworks{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .bn-bear-dawn{position:absolute;inset:0;pointer-events:none;opacity:0;background:linear-gradient(0deg,rgb(160 172 240/.75),rgb(160 172 240/0) 62%)}
 .bn-bear-on{cursor:default;touch-action:none}
-.bn-bear-on .bn-labels{z-index:2}
+.bn-bear-on .bn-labels,.bn-bear-finale .bn-labels{z-index:2}
 .bn-bear-on .bn-figure,.bn-bear-on .bn-label-dipper,.bn-bear-on .bn-label-north,.bn-bear-on .bn-meteor,.bn-bear-on .bn-plane,.bn-bear-on .bn-sat{visibility:hidden}
 .bn-animal-sky{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .bn-animal-sky .lines{opacity:.45;transition:opacity .5s}
@@ -556,7 +557,7 @@
   };
   const start = (banner, onEnd, options = {}) => {
     if (current) return;
-    const kind = ANIMALS[options.kind] ? options.kind : 'bear', A = ANIMALS[kind];
+    const kind = ANIMALS[options.kind] ? options.kind : 'bear', A = ANIMALS[kind], finaleOnly = !!options.finaleOnly;
     const jumpV = Math.sqrt(2 * GRAVITY * A.jump), doubleV = Math.sqrt(2 * GRAVITY * A.double);
     if (lingering) lingering();
     addStyle();
@@ -2044,9 +2045,9 @@
       o.strokeStyle = 'rgba(255,240,215,.55)';
       o.lineWidth = 0.6;
       o.beginPath();
-      A.back.forEach(([x, y], i) => (i ? o.lineTo(fold(x), y) : o.moveTo(fold(x), y)));
+      ANIMALS.fox.back.forEach(([x, y], i) => (i ? o.lineTo(fold(x), y) : o.moveTo(fold(x), y)));
       o.stroke();
-      A.back.forEach(([x, y], i) => backStar(fold(x), y, i, 3.3, 0.5));
+      ANIMALS.fox.back.forEach(([x, y], i) => backStar(fold(x), y, i, 3.3, 0.5));
       o.restore();
     };
     // The crab, from the front, low and wide: four legs a side, stepping in turn as it scuttles; two big claws, whose pincers
@@ -2113,9 +2114,9 @@
       o.strokeStyle = 'rgba(232,255,250,.5)';
       o.lineWidth = 0.6;
       o.beginPath();
-      SKY_ANIMALS.crab.lines.forEach(([m, n]) => { o.moveTo(A.back[m][0], A.back[m][1] + bob + shut * 7); o.lineTo(A.back[n][0], A.back[n][1] + bob + shut * 7); });
+      SKY_ANIMALS.crab.lines.forEach(([m, n]) => { o.moveTo(ANIMALS.crab.back[m][0], ANIMALS.crab.back[m][1] + bob + shut * 7); o.lineTo(ANIMALS.crab.back[n][0], ANIMALS.crab.back[n][1] + bob + shut * 7); });
       o.stroke();
-      A.back.forEach(([x, y], i) => backStar(x, y + bob + shut * 7, i, 3.2, 0.5));
+      ANIMALS.crab.back.forEach(([x, y], i) => backStar(x, y + bob + shut * 7, i, 3.2, 0.5));
       // Eyes on stalks, which go in with the rest
       if (open > 0.05) {
         for (const side of [-1, 1]) {
@@ -2136,6 +2137,26 @@
           o.fill();
         }
       }
+    };
+    // An animal in the finale's parade, drawn as in a run, from me, which the run no longer needs
+    const paradeOne = (pc, which, alpha, light) => {
+      const a = ANIMALS[which], px = me.x * scale, py = me.y * scale, facing = a.sideways ? 1 : me.face;
+      pc.globalCompositeOperation = 'lighter';
+      pc.globalAlpha = alpha * 0.6;
+      pc.drawImage(light, px - 110 * scale, py - 140 * scale, 220 * scale, 220 * scale);
+      pc.globalCompositeOperation = 'source-over';
+      o.setTransform(1, 0, 0, 1, 0, 0);
+      o.clearRect(0, 0, off.width, off.height);
+      o.setTransform(scale * facing, 0, 0, scale, 90 * scale, 110 * scale);
+      o.rotate(facing * me.tilt);
+      if (which === 'fox') paintFox();
+      else if (which === 'crab') paintCrab();
+      else { o.translate(0, -8.5); paintBear(); }
+      pc.globalAlpha = alpha;
+      pc.shadowColor = a.shadow;
+      pc.shadowBlur = 18 * scale;
+      pc.drawImage(off, px - 90 * scale, py - 110 * scale);
+      pc.shadowBlur = 0;
     };
     // A big star: seven points around a middle, each in the color of the star that made it and the rest outlined faintly, with
     // a glow that grows as it fills. A finished one (done) glows brightest, with a white middle.
@@ -2479,7 +2500,7 @@
     };
 
     // Starting and stopping
-    skyStars.forEach((s) => { s.el.style.visibility = 'hidden'; });
+    if (!finaleOnly) skyStars.forEach((s) => { s.el.style.visibility = 'hidden'; });
     banner.classList.add('bn-bear-on');
     banner.classList.remove('bn-as-fox', 'bn-as-crab');
     if (kind !== 'bear') banner.classList.add(`bn-as-${kind}`);
@@ -2513,7 +2534,7 @@
     const showSound = (el = soundSwitch) => { el.innerHTML = `<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M7.3 3.3L4 6H1.3v4H4l3.3 2.7z" fill="currentColor"/><path d="${soundIsOn ? 'M10.4 5.6a3.3 3.3 0 0 1 0 4.8M12.7 3.3a6.7 6.7 0 0 1 0 9.4' : 'M15 6l-4 4M11 6l4 4'}" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Sound: ${soundIsOn ? 'on' : 'off'}`; };
     showSound();
     wakeAudio();
-    startMusic(kind);
+    if (!finaleOnly) startMusic(kind);
     soundSwitch.addEventListener('click', (e) => {
       e.stopPropagation();
       soundIsOn = !soundIsOn;
@@ -2524,10 +2545,10 @@
       if (soundIsOn) startMusic(kind); else stopMusic(0.2);
     });
     // The first stage's card, and then on a meteor shower's peak night, a card for that
-    showStage(900);
-    const peakTimer = peak ? setTimeout(() => { if (!ending) card(['Peak tonight', `The ${peak}`, 'Double points for stars'], '255 214 150', 0, 3200); }, 3900) : 0;
+    if (!finaleOnly) showStage(900);
+    const peakTimer = peak && !finaleOnly ? setTimeout(() => { if (!ending) card(['Peak tonight', `The ${peak}`, 'Double points for stars'], '255 214 150', 0, 3200); }, 3900) : 0;
     // After the controls, what a run can bring
-    let hintTimer = setTimeout(() => {
+    let hintTimer = finaleOnly ? 0 : setTimeout(() => {
       if (!A.unlocks || unlockedAnimals().includes(A.unlocks)) { hint.style.opacity = 0; return; }
       hint.textContent = A.homeHint;
       hintTimer = setTimeout(() => { hint.style.opacity = 0; }, 7000);
@@ -2630,6 +2651,32 @@
       // The bear's blue and violet, the fox's orange, the crab's aqua, the aurora, and gold
       const PALETTES = [['#A9C1FF', '#D2B3FF', '#E8EEFF'], ['#FFC27A', '#FFE3B0', '#FFD9A0'], ['#9FF5DC', '#B4FFEC', '#7FE6D2'], ['#9FF5DC', '#A9C1FF', '#D2B3FF', '#FFB6E6'], ['#FFE9B8', '#FFD66B']];
       const rockets = [], bits = [], blooms = [];
+      // The parade: the three walk in from the left in a line, the Great Bear leading, march across, turn around together, and
+      // walk back to stand together in the middle, the crab, then the fox and the bear, facing each other. Then they hop in turn
+      // while the credits rise. On a layer above the hills, and in front of the clumps of spruce, so none is ever hidden.
+      const parade = addLayer(), pc = parade.getContext('2d'), speed = Math.max(90, (W * 0.8 + 60) / 9), turnAt = W * 0.8;
+      const behind = [0, 145, 255], apart = Math.max(W * 0.12, 135), ends = [W / 2 - apart, W / 2, W / 2 + apart];
+      banner.classList.add('bn-bear-finale');
+      const marchers = ['bear', 'fox', 'crab'].map((which, i) => ({ which, i, light: softDot(256, ANIMALS[which].glow), stride: 0, tail: -0.55, snip: 0, gait: 0, end: ends[2 - i] }));
+      const march = (m, dt) => {
+        const tau = t - 0.8, out = (turnAt + 60) / speed, start = -60 - behind[m.i];
+        let x = start + speed * Math.max(0, tau), face = 1, moving = tau >= 0;
+        if (tau >= out) {
+          x = turnAt - behind[m.i] - speed * (tau - out);
+          face = -1;
+          if (x <= m.end) { x = m.end; moving = false; face = m.which === 'bear' ? -1 : 1; }
+        }
+        // A hop: the fox now and then on the march, and all three in turn once they stand together
+        const standing = tau >= out && !moving, every = standing ? 1.6 : 2.2, height = standing ? [18, 28, 12][m.i] : m.which === 'fox' ? 16 : 0;
+        const hopT = ((t + m.i * 0.5) % every) / 0.42, up = hopT < 1 && height ? height * 4 * hopT * (1 - hopT) : 0;
+        if (standing && m.which === 'crab' && hopT < 0.1) m.snip = 0.25;
+        m.snip = Math.max(0, m.snip - dt);
+        m.gait = lerp(m.gait, moving && !up ? 1 : 0, 1 - Math.exp(-dt * 10));
+        if (moving) m.stride = (m.stride + speed * dt / ANIMALS[m.which].stride) % 1;
+        const vy = up ? -height * 4 * (1 - 2 * hopT) / 0.42 : 0;
+        m.tail = lerp(m.tail, up ? (vy > 0 ? 0.85 : -0.25) : moving ? 0.22 : -0.55, 1 - Math.exp(-dt * 9));
+        Object.assign(m, { x, face, up, vy, moving, alpha: smooth(clamp((x + 60) / 40, 0, 1)) });
+      };
       let t = 0, next = 0.4, shots = 0, then = performance.now(), going = true, blazed = false, credits = null, rise = null, skipHint = null;
       const launch = (shape) => {
         const x = W2 * (0.12 + Math.random() * 0.76);
@@ -2668,6 +2715,7 @@
         if (rise) rise.cancel();
         [credits, skipHint, switchEl].forEach((el) => el && el.remove());
         sky.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 600 }).onfinish = () => sky.remove();
+        parade.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 600 }).onfinish = () => { parade.remove(); banner.classList.remove('bn-bear-finale'); };
         done();
       };
       // A click only skips it
@@ -2675,7 +2723,7 @@
       banner.addEventListener('click', skip, true);
       skipHint = labels.appendChild(Object.assign(document.createElement('span'), { className: 'bn-skip', textContent: touchOnly ? 'Tap to skip' : 'Click to skip' }));
       const rollFinale = () => {
-        const rows = [['All three are home', true], [''], ...Object.values(ANIMALS).flatMap((a) => [[a.title, true], [`Best ${number(best(a.short))}`]]), [''], ['Music', true], ['Antonio Vivaldi'], ['Spring, from The Four Seasons'], [''], ['Thanks for playing', true]];
+        const rows = [[allHome() ? 'All three are home' : 'Credits', true], [''], ...Object.values(ANIMALS).flatMap((a) => [[a.title, true], ...(best(a.short) ? [[`Best ${number(best(a.short))}`]] : [])]), [''], ['Music', true], ['Antonio Vivaldi'], ['Spring, from The Four Seasons'], [''], ['Thanks for playing', true]];
         credits = labels.appendChild(Object.assign(document.createElement('div'), { className: 'bn-credits bn-bear-credits' }));
         credits.replaceChildren(...rows.map(([text, head]) => (text ? Object.assign(document.createElement(head ? 'b' : 'span'), { textContent: text }) : document.createElement('i'))));
         const tall = credits.offsetHeight;
@@ -2770,6 +2818,20 @@
         });
         c.globalAlpha = 1;
         c.globalCompositeOperation = 'source-over';
+        // The parade, in front of the clumps of spruce
+        pc.setTransform(1, 0, 0, 1, 0, 0);
+        pc.clearRect(0, 0, parade.width, parade.height);
+        pc.globalAlpha = smooth(clamp((t - 0.8) / 0.5, 0, 1));
+        pc.drawImage(foreLayer, 0, 0);
+        pc.globalAlpha = 1;
+        marchers.forEach((m) => {
+          march(m, dt);
+          if (m.alpha <= 0) return;
+          Object.assign(me, { x: m.x, y: floorAt(m.x) - m.up, face: m.face, gait: m.gait, stride: m.stride, time: t + m.i, tuck: 0, curl: 0, dive: 0, flip: 1, squash: 0, tail: m.tail, snip: m.snip,
+            vy: m.vy, vx: m.moving ? m.face * speed : 0, ground: !m.up, tilt: m.up ? 0 : Math.atan(slopeAt(m.x)) });
+          paradeOne(pc, m.which, m.alpha, m.light);
+        });
+        pc.globalAlpha = 1;
         requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
@@ -2804,6 +2866,8 @@
       if (options.surge) options.surge();
     };
     const afterwards = () => {
+      // After the finale on its own there's no result to show
+      if (finaleOnly) { hint.remove(); score.remove(); if (onEnd) onEnd(); return; }
       score.style.visibility = '';
       hint.style.visibility = '';
       if (soundIsOn && audio) setTimeout(() => { if (!current && audio) audio.suspend(); }, 2500);
@@ -2890,6 +2954,8 @@
       requestAnimationFrame(frame);
     };
     current = { leave };
+    // The finale on its own: every star lit, and straight to it
+    if (finaleOnly) { lit.fill(true); ending = 'home'; result = true; finale = true; cleanup(); return; }
     requestAnimationFrame(frame);
   };
   window.auroraBear = { start, showAnimals, animalAt, stop: () => current && current.leave() };
