@@ -25,7 +25,7 @@
     { name: 'Dubhe', star: 1.1, slow: 2, bee: 0, says: 'Catch 7 falling stars' },
     { name: 'Merak', star: 1.05, slow: 1.8, bee: 0, says: 'Roll under the log' },
     { name: 'Phecda', star: 1, slow: 1.6, bee: 5, says: 'The bees are awake' },
-    { name: 'Megrez', star: 0.95, slow: 1.45, bee: 4.3, says: 'Honey brings angry bees' },
+    { name: 'Megrez', star: 0.95, slow: 1.45, bee: 4.3, says: 'Grab honey, then outrun the bees' },
     { name: 'Alioth', star: 0.9, slow: 1.3, bee: 3.8, says: 'Ride the airliner' },
     { name: 'Mizar', star: 0.85, slow: 1.15, bee: 3.3, says: 'Bump the moon' },
     { name: 'Alkaid', star: 0.75, slow: 1, bee: 2.6, says: 'The last star' }
@@ -43,6 +43,11 @@
   const ALCOR_STAGE = STAGES.findIndex((s) => s.name === 'Mizar'), ALCOR_POINTS = 500, ALCOR_GAP = 9, ALCOR_TURN = 75.6 * Math.PI / 180;
   const BERRY_POINTS = 25, HONEY_POINTS = 150, PLANE_POINTS = 100, SATELLITE_POINTS = 500;
   const CHASE_SPEED = 245, CHASE_SECONDS = 5, PLANE_SPEED = 115, PLANE_UP = 108;
+  // Honey gives a honey rush: every animal runs at RUSH_TOP at least, enough to outrun the angry swarm, and jumps higher. The
+  // swarm first rises out of the pot and gathers, and on a narrow banner, with less room to run, it gives up sooner. If no bee
+  // stings before it gives up, escaping it is worth a bonus. Every seven berries make a full belly, which gives back a life, or
+  // with every life lit is worth points.
+  const RUSH_SECONDS = 5, RUSH_TOP = 315, RUSH_JUMP = 1.12, CHASE_RISE = 0.45, CHASE_CLIMB = 350, CHASE_CLIMB_TOP = 130, ESCAPE_POINTS = 300, BELLY = 7, BELLY_POINTS = 250;
   // Riding the airliner earns air miles, by the distance flown: 5 points every 0.25 s at its usual speed
   const MILE_SECONDS = 0.25, MILE_POINTS = 5;
   // The longer the ride, the faster it flies, turning at the banner's edges while it has a rider, until at three times its
@@ -117,6 +122,10 @@
     catch: (step) => { const f = note(PENTATONIC[Math.min(step, PENTATONIC.length) - 1]); tone(f, 160); tone(f * 2, 100, { level: 0.05, delay: 25 }); },
     berry: () => tone(880, 70, { to: 620, type: 'sine', level: 0.12 }),
     honey: () => { tone(300, 160, { to: 180, type: 'sine', level: 0.16 }); tone(220, 380, { to: 260, type: 'sawtooth', level: 0.03, delay: 120 }); },
+    // The honey rush kicking in, the swarm escaped, and a full belly
+    rush: () => [0, 5, 10, 15].forEach((n, i) => tone(note(n + 12), 70, { type: 'square', level: 0.03, delay: 160 + i * 40 })),
+    escape: () => [7, 12, 16, 19, 24].forEach((n, i) => tone(note(n), 110, { type: 'square', level: 0.04, delay: i * 60 })),
+    belly: () => [0, 4, 7, 12].forEach((n, i) => tone(note(n + 5), 150, { level: 0.09, delay: i * 80 })),
     sting: () => { tone(200, 260, { to: 110, type: 'sawtooth', level: 0.06 }); noise(200, 0.2, 260, 60); },
     bonk: (step) => tone(note(-12 + Math.min(step, 6) * 2), 140, { to: note(Math.min(step, 6) * 2), type: 'square', level: 0.05 }),
     swat: () => noise(110, 0.16, 1400, 220),
@@ -896,20 +905,22 @@
       const dx = alkaid.x - mizar.x, dy = alkaid.y - mizar.y, d = Math.hypot(dx, dy) || 1, c = Math.cos(ALCOR_TURN), s = Math.sin(ALCOR_TURN);
       return { x: mizar.x + (dx * c - dy * s) / d * ALCOR_GAP, y: mizar.y + (dx * s + dy * c) / d * ALCOR_GAP, got: false };
     })() : null;
-    const me = { x: clamp(under, A.edge, W - A.edge), y: floorAt(clamp(under, A.edge, W - A.edge)), tilt: 0, tuck: 0, tail: -0.55, dive: 0, pouncing: false, power: 0, powerChain: 0, on: null, onFloor: true, hurt: 0, flash: 0, moonTime: 0, energy: 1, tired: false, snore: 0, snip: 0, vx: 0, vy: 0, face: 1, ground: true, rolling: false, curl: 0, jumps: 0, coyote: COYOTE, buffer: 0, flip: 1, squash: 0, gait: 0, rollUntil: 0, alpha: 0, time: 0, autoDir: 1 };
+    const me = { x: clamp(under, A.edge, W - A.edge), y: floorAt(clamp(under, A.edge, W - A.edge)), tilt: 0, tuck: 0, tail: -0.55, dive: 0, pouncing: false, power: 0, powerChain: 0, on: null, onFloor: true, hurt: 0, flash: 0, moonTime: 0, energy: 1, tired: false, snore: 0, snip: 0, rush: 0, vx: 0, vy: 0, face: 1, ground: true, rolling: false, curl: 0, jumps: 0, coyote: COYOTE, buffer: 0, flip: 1, squash: 0, gait: 0, rollUntil: 0, alpha: 0, time: 0, autoDir: 1 };
     const keys = { left: false, right: false, down: false, jump: false };
-    const sparks = [], fallers = [], pops = [], bees = [], pots = [], visitors = [], rings = [], powers = [];
+    const sparks = [], fallers = [], pops = [], bees = [], pots = [], visitors = [], rings = [], powers = [], swarms = [];
     let nextPower = 22 + Math.random() * 10;
     let unlockedNow = '', finale = false;
     let combo = 0, comboLeft = 0, bestCombo = 0, newBest = false;
-    const counts = { berries: 0, honey: 0, bees: 0, satellites: 0, rides: 0, moons: 0, fires: 0, miles: 0, booms: 0, alcor: 0, left: 0 };
+    const counts = { berries: 0, bellies: 0, honey: 0, escapes: 0, bees: 0, satellites: 0, rides: 0, moons: 0, fires: 0, miles: 0, booms: 0, alcor: 0, left: 0 };
     let rideMiles = 0, rideClock = 0, rideAir = 0, ridePlane = null;
     // On a meteor shower's peak night, as in the shooting star game, stars are worth double
     const peak = options.peak || null;
     const uiFont = getComputedStyle(banner).fontFamily;
     readSound();
     if (document.fonts) document.fonts.load('12px "AURORA Arcade"');
-    let nextStar = 1.2, nextBee = 4.5, nextPot = 11, nextVisitor = 13, planeTurn = Math.random() < 0.5, caught = 0, points = 0, playTime = 0, lives = LIVES, result = false;
+    let nextStar = 1.2, nextBee = 4.5, nextPot = 11, nextVisitor = 13, planeTurn = Math.random() < 0.5, caught = 0, points = 0, playTime = 0, lives = LIVES, belly = 0, result = false;
+    // How long an angry swarm chases: 5 s on a wide banner, down to 2 s on a phone's, with a third of the room to run
+    const chaseFor = CHASE_SECONDS * clamp((W - 200) / 1000, 0.4, 1);
     let best = 0;
     try { best = Number(localStorage.getItem(A.bestKey)) || 0; } catch (e) { /* blocked */ }
     // The moon, if it's up tonight. A bump from below brings moon gravity for a while, longer the more of it is lit.
@@ -1033,14 +1044,14 @@
     };
     const tier = () => (COMBO_TIERS.find(([n]) => combo >= n) || [0, 1])[1];
     // A catch adds to the combo, and its points are multiplied by it
-    const award = (base, x, y, color, { before = '', after = '', life } = {}) => {
+    const award = (base, x, y, color, { before = '', after = '', note = '', life } = {}) => {
       const was = tier();
       combo += 1;
       comboLeft = COMBO_SECONDS;
       bestCombo = Math.max(bestCombo, combo);
       const m = tier(), worth = base * m;
       points += worth;
-      pop(x, y, `${before ? `${before} ` : ''}+${number(worth)}${m > 1 ? ` ×${m}` : ''}${after ? ` ${after}` : ''}`, color, life);
+      pop(x, y, `${before ? `${before} ` : ''}+${number(worth)}${m > 1 ? ` ×${m}` : ''}${after ? ` ${after}` : ''}${note ? `, ${note}` : ''}`, color, life);
       if (m > was) {
         pop(me.x, me.y - A.top - 40, `Combo ×${m}!`, COMBO_COLORS[m], 1.6);
         sfx.tier(m);
@@ -1156,6 +1167,7 @@
       }
     };
     const sendAngry = (x, y) => {
+      swarms.push({ age: 0, stung: false });
       for (let i = 0; i < 3; i++) {
         const a = -Math.PI / 2 + (i - 1) * 0.9;
         bees.push({ kind: 'chase', x, y, age: 0, dir: 1, vx: Math.cos(a) * 170, vy: Math.sin(a) * 170, ox: (i - 1) * 22, oy: (i - 1) * 12 });
@@ -1239,12 +1251,26 @@
       b.vx = (Math.sign(b.x - me.x) || 1) * 160;
       b.vy = -260;
     };
+    // Above the combo badge, which sits over the animal's head, and inside the banner
+    const overBadge = () => Math.max(24, me.y - A.top - 58);
+    // A full belly, from seven berries, gives back a life, or with every life lit is worth points
+    const fullBelly = () => {
+      belly = 0;
+      counts.bellies += 1;
+      sfx.belly();
+      if (lives < LIVES) {
+        lives += 1;
+        pop(me.x, overBadge(), 'Full belly! A life back', 'rgb(255,150,180)', 2.2);
+        showScore();
+      } else award(BELLY_POINTS, me.x, overBadge(), 'rgb(255,150,180)', { before: 'Full belly!' });
+    };
     const sting = (b) => {
       lives -= 1;
+      swarms.forEach((s) => { s.stung = true; });
       comboEnds(true);
       sfx.sting();
       // One sting satisfies a swarm, so a mistake with the honey costs one life rather than all three
-      if (b.kind === 'chase') bees.forEach((other) => { if (other.kind === 'chase') other.age = Math.max(other.age, CHASE_SECONDS); });
+      if (b.kind === 'chase') bees.forEach((other) => { if (other.kind === 'chase') other.age = Math.max(other.age, chaseFor); });
       me.hurt = HURT_SECONDS;
       me.flash = 0.22;
       me.on = null;
@@ -1306,7 +1332,7 @@
         me.energy = Math.min(1, me.energy + dt / ROLL_RECOVERY * (me.rolling ? 0.5 : 1));
         if (me.tired && me.energy >= ROLL_READY_AGAIN) me.tired = false;
       }
-      const top = (me.rolling ? (me.tired ? A.tired : A.roll) : A.run) * (1 + 0.8 * slope * dir) * (me.power > 0 ? POWER_SPEED : 1), accel = !me.ground ? A.airAccel : me.rolling ? A.rollAccel : A.accel;
+      const top = (me.rolling ? (me.tired ? A.tired : A.roll) : A.run) * (1 + 0.8 * slope * dir) * (me.power > 0 ? POWER_SPEED : 1) * (me.rush > 0 ? Math.max(1, RUSH_TOP / A.run) : 1), accel = !me.ground ? A.airAccel : me.rolling ? A.rollAccel : A.accel;
       if (me.rolling && me.ground && !me.tired && !A.shell) me.vx += slope * 1100 * dt;
       const grip = !me.ground ? AIR_DRAG : me.rolling ? (me.tired ? 1100 : A.rollFriction) : A.friction;
       if (!dir) me.vx = approach(me.vx, 0, grip * dt);
@@ -1314,7 +1340,7 @@
       else me.vx = approach(me.vx, dir * top, accel * (Math.sign(me.vx) === -dir ? 1.6 : 1) * dt);
       // Jumping: a moment's grace after leaving an edge, and a jump pressed just before landing still counts
       if (steering && me.buffer > 0) {
-        const launch = me.moonTime > 0 ? MOON_LAUNCH : 1;
+        const launch = (me.moonTime > 0 ? MOON_LAUNCH : 1) * (me.rush > 0 ? RUSH_JUMP : 1);
         if (me.coyote > 0) {
           // On a touch screen, which can't steer, a jump from the plane goes off its back at a run. The plane flies near the top
           // of the banner, so the jump itself is short, and without the run the bear would land on it again.
@@ -1473,6 +1499,9 @@
         me.snore -= dt;
         if (me.snore <= 0) { me.snore = 0.7; pop(me.x + me.face * 16, me.y - 30, 'z', 'rgb(200,212,255)', 1.4); }
       }
+      // The honey rush, trailing honey-gold sparks
+      me.rush = Math.max(0, me.rush - dt);
+      if (me.rush > 0 && Math.random() < 0.3) spark(me.x - me.face * A.reach.hw * 0.6, me.y - Math.random() * A.top * 0.7, -me.face * (30 + Math.random() * 40), -10 - Math.random() * 30, 0.5, 0.6 + Math.random() * 0.5, 'rgb(255,214,120)');
       // The bouncing star
       me.power = Math.max(0, me.power - dt);
       if (me.power > 0 && Math.random() < 0.34) spark(me.x + (Math.random() - 0.5) * A.reach.hw * 1.6, me.y - Math.random() * A.top, (Math.random() - 0.5) * 40, -20 - Math.random() * 40, 0.6, 0.8 + Math.random() * 0.8, POWER_COLORS[Math.floor(Math.random() * POWER_COLORS.length)]);
@@ -1596,12 +1625,14 @@
         if (phase === 'play' && touching(b.x, b.y, 4, 60)) {
           b.on = false;
           counts.berries += 1;
-          award(BERRY_POINTS, b.x, b.y - 10, 'rgb(255,130,165)');
+          belly += 1;
+          award(BERRY_POINTS, b.x, b.y - 10, 'rgb(255,130,165)', { note: belly < BELLY ? `${belly} of ${BELLY}` : '' });
           sfx.berry();
           shower(b.x, b.y, 7, 'rgb(255,110,150)');
+          if (belly >= BELLY) fullBelly();
         }
       }
-      // Honey is worth a lot, but it brings angry bees
+      // Honey is worth a lot, and gives a honey rush, but it brings angry bees
       for (let i = pots.length - 1; i >= 0; i--) {
         const p = pots[i];
         p.age += dt;
@@ -1609,7 +1640,10 @@
           pots.splice(i, 1);
           counts.honey += 1;
           award(HONEY_POINTS, p.x, p.y - 16, 'rgb(255,214,120)', { after: 'and angry bees!' });
+          me.rush = RUSH_SECONDS;
+          pop(me.x, overBadge(), 'Honey rush! Run!', 'rgb(255,214,120)', 1.8);
           sfx.honey();
+          sfx.rush();
           shower(p.x, p.y, 16, 'rgb(255,214,120)');
           sendAngry(p.x, p.y);
         } else if (p.age >= p.life) pots.splice(i, 1);
@@ -1638,10 +1672,13 @@
           b.y = ny;
           gone = f >= 1;
         } else {
-          if (b.age < CHASE_SECONDS && phase === 'play') {
+          // An angry swarm rises out of the pot and gathers for a moment, then chases, until it gives up and flies off
+          if (b.age < CHASE_RISE) { const drag = Math.exp(-dt * 3); b.vx *= drag; b.vy *= drag; }
+          else if (b.age < chaseFor && phase === 'play') {
             const dx = me.x + b.ox - b.x, dy = me.y - 32 + b.oy - b.y, d = Math.hypot(dx, dy) || 1;
+            // It steers hard across but climbs and dives slowly, so a well-timed jump carries the animal over it
             b.vx += dx / d * 1000 * dt;
-            b.vy += dy / d * 1000 * dt;
+            b.vy = clamp(b.vy + dy / d * CHASE_CLIMB * dt, -CHASE_CLIMB_TOP, CHASE_CLIMB_TOP);
             const v = Math.hypot(b.vx, b.vy);
             if (v > CHASE_SPEED) { b.vx *= CHASE_SPEED / v; b.vy *= CHASE_SPEED / v; }
           } else b.vy -= 500 * dt;
@@ -1656,9 +1693,23 @@
           bees.splice(i, 1);
           swat(b);
         } else if (phase === 'play' && A.shell && me.rolling && Math.hypot(b.x - me.x, b.y - (me.y - 10)) < A.low.hw + 8) bounce(b);
-        else if (phase === 'play' && me.hurt <= 0 && stingable(b.x, b.y)) {
+        // (A swarm rising out of the pot, which the animal is touching, can't sting yet: until November 6 it stung at once, so honey
+        // always cost a life)
+        else if (phase === 'play' && me.hurt <= 0 && !(b.kind === 'chase' && b.age < CHASE_RISE) && stingable(b.x, b.y)) {
           bees.splice(i, 1);
           sting(b);
+        }
+      }
+      // A swarm that gives up without a sting was escaped
+      for (let i = swarms.length - 1; i >= 0; i--) {
+        const s = swarms[i];
+        s.age += dt;
+        if (s.age < chaseFor) continue;
+        swarms.splice(i, 1);
+        if (!s.stung && phase === 'play') {
+          counts.escapes += 1;
+          award(ESCAPE_POINTS, me.x, overBadge(), 'rgb(255,214,120)', { before: 'Escaped the bees!', life: 2 });
+          sfx.escape();
         }
       }
       // An airliner to ride, and a satellite, high up, worth a lot
@@ -2439,7 +2490,7 @@
       const wing = Math.floor(me.time * 34) % 2;
       for (const b of bees) {
         ctx.globalAlpha = leftover * Math.min(1, b.age * 4);
-        const look = BEES[b.kind === 'chase' && b.age < CHASE_SECONDS ? 1 : 0][wing];
+        const look = BEES[b.kind === 'chase' && b.age < chaseFor ? 1 : 0][wing];
         if (b.kind === 'down') {
           // Knocked out, upside down
           ctx.setTransform(scale * b.dir, 0, 0, -scale, b.x * scale, b.y * scale);
@@ -2859,7 +2910,7 @@
     const rollCredits = (done) => {
       const h = banner.getBoundingClientRect().height, time = Math.round(playTime), left = counts.left;
       const rows = [...(newBest ? ['New best!', ''] : []), A.title, ending === 'home' ? `Home by ${clock()}` : `${lit.filter(Boolean).length} of 7 stars relit`, '',
-        `${caught} ${caught === 1 ? 'star' : 'stars'} caught`, ...(counts.alcor ? ['Alcor spotted'] : []), ...(bestCombo >= 3 ? [`Longest combo ${bestCombo}`] : []), ...(counts.berries ? [`Berries ${counts.berries}`] : []), ...(counts.honey ? [`Honey pots ${counts.honey}`] : []),
+        `${caught} ${caught === 1 ? 'star' : 'stars'} caught`, ...(counts.alcor ? ['Alcor spotted'] : []), ...(bestCombo >= 3 ? [`Longest combo ${bestCombo}`] : []), ...(counts.berries ? [`Berries ${counts.berries}`] : []), ...(counts.bellies ? [`Full bellies ${counts.bellies}`] : []), ...(counts.honey ? [`Honey pots ${counts.honey}`] : []), ...(counts.escapes ? [`Swarms escaped ${counts.escapes}`] : []),
         ...(counts.bees ? [`Bees bonked ${counts.bees}`] : []), ...(counts.satellites ? [`Satellites ${counts.satellites}`] : []), ...(counts.miles ? [`Air miles ${number(counts.miles)}`] : counts.rides ? [`Plane rides ${counts.rides}`] : []), ...(counts.booms ? [`Sonic booms ${counts.booms}`] : []),
         ...(counts.moons ? [`Moon gravity ${counts.moons}`] : []), ...(counts.fires ? [`Fox fires ${counts.fires}`] : []),
         ...(left ? [`Night left ${hoursMinutes(left)}`] : []), `Time ${Math.floor(time / 60)}:${String(time % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Thanks for playing'];
