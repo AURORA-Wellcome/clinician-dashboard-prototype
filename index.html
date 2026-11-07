@@ -449,6 +449,8 @@ img{display:block;max-width:100%;height:auto}
 @keyframes bn-smoke{0%{opacity:0;transform:translate(0,0) scale(.5)}10%{opacity:.5;transform:translate(.02cqw,-.35cqw) scale(.8)}45%{opacity:.4;transform:translate(.25cqw,-1.3cqw) scale(1.9)}100%{opacity:0;transform:translate(1cqw,-2.5cqw) scale(3.6)}}
 /* Firelight: the glow over the cabin brightens and dims a little, slowly */
 @keyframes bn-hearth{from{opacity:.65}to{opacity:1}}
+.bn-cabin-label{position:absolute;left:0;top:0;opacity:0;font-size:.8125rem;line-height:1;letter-spacing:.02em;color:#FFDDB0;text-shadow:0 0 6px #060D26,0 0 2px #060D26;white-space:nowrap;pointer-events:none;transition:opacity .6s}
+.bn-cabin-label.on{opacity:1;transition-duration:.3s}
 @media print{.banner{display:none}}
 
 /* Hero */
@@ -869,6 +871,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const pool = Array.from({ length: 16 }, () => ({ el: glints.appendChild(Object.assign(document.createElement('i'), { className: 'bn-glint' })), until: 0 }));
   let stars = null, at = null, frame = 0, resting = false, lastSpark = -Infinity, bh = 0, cabin = null, cozyOn = false, dipper = null, overDipper = false, northStar = null, northClicks = [];
   const cozy = banner.querySelector('.bn-cozy');
+  const cabinLabel = banner.querySelector('.bn-labels').appendChild(Object.assign(document.createElement('span'), { className: 'bn-cabin-label', textContent: 'Click to keep the fire till spring' }));
   // Depth: how far each layer moves, in px, as the pointer goes from the middle to an edge (x, y)
   const layers = [['.bn-px-back', -8, -3], ['.bn-px-main', -16, -5]].map(([sel, kx, ky]) => ({ el: banner.querySelector(sel), kx, ky }));
   const shift = (fx, fy) => layers.forEach((l) => { l.el.style.transform = `translate3d(${(fx * l.kx).toFixed(1)}px, ${(fy * l.ky).toFixed(1)}px, 0)`; });
@@ -880,6 +883,12 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     // The cabin's window, and how near the pointer must come to warm it
     const hr = banner.querySelector('.bn-hearth').getBoundingClientRect();
     cabin = { x: hr.left + hr.width / 2 - b.left, y: hr.top + hr.height / 2 - b.top, r: Math.max(24, hr.width * 1.3) };
+    // Whether the whole cabin is in view, its gable end being about a tenth of the banner's height right of its window. It
+    // isn't on banners narrower than about 430 px, such as a phone held upright, so there the cabin game doesn't start.
+    cabin.whole = b.width - cabin.x >= 0.1 * b.height;
+    // The cabin's label, above its chimney, kept inside the banner
+    const chimneyTop = banner.querySelector('.bn-puff').getBoundingClientRect().top - b.top, labelHalf = cabinLabel.offsetWidth / 2;
+    cabinLabel.style.transform = `translate(${Math.min(cabin.x, b.width - labelHalf - 8).toFixed(1)}px, ${(chimneyTop - 8).toFixed(1)}px) translate(-50%, -100%)`;
     // (Stars hidden near the moon don't sparkle)
     stars = [...banner.querySelectorAll('.bn-sky g[fill] > circle, .bn-sky .acc circle[fill="#FFFFFF"]')].map((el) => {
       const r = el.getBoundingClientRect();
@@ -1048,7 +1057,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   };
   const tick = () => {
     frame = 0;
-    if (!at || moonOn) return;
+    if (!at || moonOn || cabinOn) return;
     const now = performance.now();
     // At most one new sparkle every 90 ms, so a quick sweep leaves an even trail rather than bursts
     if (now - lastSpark >= 90) {
@@ -1059,13 +1068,15 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       }
     }
     shift(at.x / at.w - 0.5, at.y / at.h - 0.5);
-    // Near the cabin, it warms, and the pointer says it can be clicked
+    // Near the cabin, it warms, and the pointer says it can be clicked; outside a game, a label says a click starts the
+    // cabin game
     const near = (at.x - cabin.x) ** 2 + (at.y - cabin.y) ** 2 < cabin.r ** 2;
     if (near !== cozyOn) { cozyOn = near; cozy.classList.toggle('on', near); }
+    cabinLabel.classList.toggle('on', near && cabin.whole && !game && !bearOn);
     pointMoon(at.x, at.y);
     // The pointer shows what can be clicked: the cabin, the moon, and outside a game the Big Dipper and an unlocked animal's
-    // stars, which start the bear game. During a bear game, clicks belong to the game.
-    banner.style.cursor = !bearOn && !moonOn && (near || (moonOver && !game) || (!game && (inDipper(at.x, at.y) || (window.auroraBear && window.auroraBear.animalAt(at.x, at.y))))) ? 'pointer' : '';
+    // stars, which start the bear game. During a bear, moon or cabin game, clicks belong to the game, which shows its own.
+    banner.style.cursor = !bearOn && !moonOn && !cabinOn && (near || (moonOver && !game) || (!game && (inDipper(at.x, at.y) || (window.auroraBear && window.auroraBear.animalAt(at.x, at.y))))) ? 'pointer' : '';
     const over = !game && inDipper(at.x, at.y);
     if (over !== overDipper) { overDipper = over; showDipper(over ? 0 : 1200); }
     const overC = !game && champBox && at.x >= champBox.l && at.x <= champBox.r && at.y >= champBox.t && at.y <= champBox.b;
@@ -1081,7 +1092,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   });
   banner.addEventListener('pointerleave', () => {
     at = null; resting = true; banner.classList.add('bn-resting'); shift(0, 0);
-    cozyOn = false; cozy.classList.remove('on'); banner.style.cursor = '';
+    cozyOn = false; cozy.classList.remove('on'); cabinLabel.classList.remove('on'); banner.style.cursor = '';
     lightGoal = null; moonOver = false;
     if (!month) moonLabel.classList.remove('on');
     if (lightNow) startLight();
@@ -1092,7 +1103,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   // A tap: the stars nearest it sparkle, and a tap on or near the Big Dipper shows its lines and names. (A tap on the
   // cabin is a click, below.)
   banner.addEventListener('pointerdown', (e) => {
-    if (e.pointerType !== 'touch' || moonOn) return;
+    if (e.pointerType !== 'touch' || moonOn || cabinOn) return;
     if (!stars) measure();
     const b = banner.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top, now = performance.now();
     const d2 = (st) => (st.x - x) ** 2 + (st.y - y) ** 2;
@@ -2694,10 +2705,32 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       restore: () => lightMoon(liveCtx, sunAt(moonPhase)),
     }));
   };
+  // The cabin game, in cabin.js, starts from the cabin, and the stoke a click on it always gave opens the game. Its code
+  // loads once, when someone first starts it, and if it can't load, the cabin is only stoked and a later click tries again.
+  let cabinOn = false, cabinLoad = null;
+  const loadCabin = (then) => {
+    if (!cabinLoad) {
+      cabinLoad = new Promise((resolve, reject) => {
+        document.head.append(Object.assign(document.createElement('script'), { src: './cabin.js?v=126f13da1f', onload: resolve, onerror: reject }));
+      });
+      cabinLoad.catch(() => { cabinLoad = null; });
+    }
+    cabinLoad.then(then, () => { cabinOn = false; });
+  };
+  const startCabin = () => {
+    cabinOn = true;
+    banner.style.cursor = '';
+    // The warmth a pointer near the cabin brings ends with the stoke's flare
+    cozyOn = false;
+    cabinLabel.classList.remove('on');
+    // For a moment after a run ends, a click doesn't start anything, so the last clicks don't start another. The game loads
+    // Vivaldi's Winter from cabin-music.js only when sound is on; its address is here so tools/stamp.py stamps it.
+    loadCabin(() => window.auroraCabin.start(banner, () => { setTimeout(() => { cabinOn = false; }, 800); }, { stoke, surge: surgeOnce, music: './cabin-music.js?v=3b64492be2' }));
+  };
   // Secrets: the Konami code, or three quick clicks or taps on the North Star, play the bear game's grand finale on its own,
   // credits and all
   const playFinale = () => {
-    if (game || finale || bearOn || moonOn) return;
+    if (game || finale || bearOn || moonOn || cabinOn) return;
     bearOn = true;
     loadBear(() => window.auroraBear.start(banner, () => { setTimeout(() => { bearOn = false; }, 800); }, { kind: 'bear', finaleOnly: true, surge: surgeOnce }));
   };
@@ -2713,18 +2746,20 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   });
   // Animals already unlocked in this browser show in the sky
   try { if (localStorage.getItem('aurora-animals')) loadBear(() => window.auroraBear.showAnimals(banner, true)); } catch (e) { /* blocked */ }
-  // Outside a game, the cabin and the moon do what they always did, and the Big Dipper and an unlocked animal's stars start the
-  // bear game; during a shooting star game, every click sends a spark, and during a bear game, clicks belong to it. The moment
-  // after a game ends, a click doesn't start another, so the last clicks don't hide the score.
+  // Outside a game, the cabin stokes its fire and starts the cabin game, the moon starts the moon game, and the Big Dipper and
+  // an unlocked animal's stars start the bear game; during a shooting star game, every click sends a spark (and the cabin
+  // calls a storm once the meter is full), and during the other games, clicks belong to them. The moment after a game ends,
+  // a click doesn't start another, so the last clicks don't hide the score.
   banner.addEventListener('click', (e) => {
     if (finale) { finale.skip(); return; }
-    if (bearOn || moonOn) return;
+    if (bearOn || moonOn || cabinOn) return;
     if (!stars) measure();
     const b = banner.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top;
     const onCabin = (x - cabin.x) ** 2 + (y - cabin.y) ** 2 < cabin.r ** 2;
     // With the aurora meter full, the cabin calls an aurora storm rather than sending a spark
     if (game && onCabin && game.meter >= 1 && game.cabinVisible) { callStorm(); return; }
     if (onCabin) stoke();
+    if (onCabin && cabin.whole && !game && performance.now() - gameOver > 1200) { startCabin(); return; }
     if (!game && moonVisible() && Math.hypot(x - spot().x, y - spot().y) < spot().r * 1.25) { startMoon(); return; }
     if (!game) {
       const animal = window.auroraBear && window.auroraBear.animalAt(x, y);
@@ -2744,9 +2779,10 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   });
   // Play again, from the high score table: the same game, and in the bear game the same animal
   window.addEventListener('aurora-play-again', (e) => {
-    if (game || finale || bearOn || moonOn) return;
+    if (game || finale || bearOn || moonOn || cabinOn) return;
     const { which, animal } = e.detail || {};
     if (which === 'bear') { startBear(animal || 'bear'); return; }
+    if (which === 'cabin') { if (!stars) measure(); if (cabin.whole) { stoke(); startCabin(); } return; }
     if (which === 'moon') { if (moonVisible()) startMoon(); return; }
     if (!stars) measure();
     startGame();
@@ -2922,12 +2958,13 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const GAMES = {
     stars: { game: '', third: 'Site', list: () => window.auroraLeaderboard },
     bear: { game: 'Bear game', third: 'Animal', list: () => window.auroraLeaderboard && window.auroraLeaderboard.bear },
-    moon: { game: 'Moon game', third: 'Reached', list: () => window.auroraLeaderboard && window.auroraLeaderboard.moon }
+    moon: { game: 'Moon game', third: 'Reached', list: () => window.auroraLeaderboard && window.auroraLeaderboard.moon },
+    cabin: { game: 'Cabin game', third: 'Reached', list: () => window.auroraLeaderboard && window.auroraLeaderboard.cabin }
   };
   let top = [], pending = null, saved = null, game = 'stars';
   const thirdColumn = (entry) => {
     // (A score still being entered keeps how far the run got as its animal, as the bear game's does)
-    if (game === 'moon' && entry) { const site = siteName(entry); return `${entry.reached || entry.animal || ''}${site ? `, ${site}` : ''}`; }
+    if ((game === 'moon' || game === 'cabin') && entry) { const site = siteName(entry); return `${entry.reached || entry.animal || ''}${site ? `, ${site}` : ''}`; }
     if (game !== 'bear' || !entry) return siteName(entry);
     const site = siteName(entry);
     return `${entry.animal || 'bear'}${site ? `, ${site}` : ''}`;
@@ -3022,7 +3059,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   });
   dlg.addEventListener('close', () => { pending = null; saved = null; yours.hidden = true; announce(true); game = 'stars'; });
   // Whether a game is on in the banner, so the table doesn't open over it
-  const playing = () => { const b = document.querySelector('.banner'); return !!b && (b.classList.contains('bn-playing') || b.classList.contains('bn-bear-on') || b.classList.contains('bn-moon-on')); };
+  const playing = () => { const b = document.querySelector('.banner'); return !!b && (b.classList.contains('bn-playing') || b.classList.contains('bn-bear-on') || b.classList.contains('bn-moon-on') || b.classList.contains('bn-cabin-on')); };
   window.auroraArcade = {
     // After a game: whether the shared scores can be reached. A score in the top ten opens them, to enter initials. Any other
     // score opens them too, with the score to beat, as a reason to play again.
@@ -3117,6 +3154,6 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   render();
 })();
 </script>
-<script src="./notes.js?v=4f928b0554" data-version="landing" data-page="landing"></script>
+<script src="./notes.js?v=688b17e6f7" data-version="landing" data-page="landing"></script>
 </body>
 </html>

@@ -375,7 +375,7 @@
     }
     if (auth.authStateReady) await auth.authStateReady();
     const user = auth.currentUser || (await authSdk.signInAnonymously(auth)).user;
-    const col = fs.collection(db, 'boards', board, 'notes'), scores = fs.collection(db, 'boards', board, 'scores'), bearScores = fs.collection(db, 'boards', board, 'bearScores'), moonScores = fs.collection(db, 'boards', board, 'moonScores');
+    const col = fs.collection(db, 'boards', board, 'notes'), scores = fs.collection(db, 'boards', board, 'scores'), bearScores = fs.collection(db, 'boards', board, 'bearScores'), moonScores = fs.collection(db, 'boards', board, 'moonScores'), cabinScores = fs.collection(db, 'boards', board, 'cabinScores');
     const ref = (id) => fs.doc(col, id);
     const millis = (t) => (t && typeof t.toMillis === 'function' ? t.toMillis() : t || 0);
     return {
@@ -406,6 +406,11 @@
         bear: {
           top: () => fs.getDocs(fs.query(bearScores, fs.orderBy('points', 'desc'), fs.limit(10))).then((snap) => snap.docs.map((d) => d.data())),
           add: (initials, points, site, animal) => fs.addDoc(bearScores, { uid: user.uid, initials, points, animal, at: fs.serverTimestamp(), ...(site ? { site } : {}) })
+        },
+        // The cabin game's, which also keep how far the run got
+        cabin: {
+          top: () => fs.getDocs(fs.query(cabinScores, fs.orderBy('points', 'desc'), fs.limit(10))).then((snap) => snap.docs.map((d) => d.data())),
+          add: (initials, points, site, reached) => fs.addDoc(cabinScores, { uid: user.uid, initials, points, reached, at: fs.serverTimestamp(), ...(site ? { site } : {}) })
         },
         // The moon game's, which keep how far the run got
         moon: {
