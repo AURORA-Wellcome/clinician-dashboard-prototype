@@ -343,25 +343,39 @@ print(len(html), 'bytes')
 
 # The far-off plane's two crossings, as CSS keyframes (written when a second file is named: paste them over the
 # bn-plane-a and bn-plane-b keyframes in index.html). A straight, level flight seen in this wide view traces an arc: it
-# rises from low on one side, is highest where it passes nearest, then sinks toward the horizon, looking fastest and
-# brightest when nearest. The banner is treated as a panorama about 120 degrees wide and 18 tall, with the horizon at
-# 84% of its height (the ridges). Each crossing is sampled at even times, a steady ground speed, so the changes of
-# apparent speed come from the geometry alone. In the page's 400 s cycle the crossings take 90 and 100 s: about as fast
-# as the satellite where the plane passes nearest, and slower for its size, though 10 to 15 times an airliner's real
-# speed on these paths. The plane looks smaller in proportion to its distance, and it turns to follow its path.
+# is highest, fastest, largest and brightest where it passes nearest, and sinks toward the horizon on either side. Until
+# November 7 each track crossed square to the view, passing nearest near the middle, so the plane grew on the way in and
+# shrank on the way out. Now each runs at an angle to the view, as a flight across the country would: the plane passes
+# nearest just inside the edge where it comes in, then heads away, shrinking, slowing and sinking toward the horizon,
+# until it fades out low over the trees about three quarters of the way across. The banner is treated as a panorama
+# about 120 degrees wide and 18 tall, with the horizon at 84% of its height (the ridges). Each crossing is sampled at
+# even times, a steady ground speed, so the changes of apparent speed come from the geometry alone. In the page's 400 s
+# cycle the crossings take 90 and 100 s: about as fast as the satellite where the plane passes nearest, and slower for
+# its size, though 10 to 15 times an airliner's real speed on these paths. The plane looks smaller in proportion to its
+# distance, and it turns to follow its path.
 FOV_X, FOV_Y, HORIZON = 120, 18, 84
 
 def pct(v):
     return f'{v:.2f}'.rstrip('0').rstrip('.') + '%'
 
-def plane_keyframes(name, start, end, nearest, peak, rightward=True, n=24):
+def plane_keyframes(name, start, end, nearest, peak, rightward=True, far=None, fade=0.25, n=32):
     """One crossing between start% and end% of the cycle. nearest: the bearing where the plane passes nearest
-    (0 = the middle of the banner, positive = right), in degrees; peak: its elevation there, in degrees."""
+    (0 = the middle of the banner, positive = right), in degrees, which may be near or beyond the edge where it comes
+    in; peak: its elevation there, in degrees. far: if the plane would be farther away than this, in nearest
+    distances, before it reaches the far edge, the crossing ends there instead, the plane fading out over the last
+    `fade` of the crossing's time. The plane waits hidden beyond the edge before its crossing."""
     k = math.tan(math.radians(peak))  # altitude over the nearest distance
-    a0, a1 = -FOV_X / 2 - 3, FOV_X / 2 + 3  # just beyond either edge
+    a0, a1 = -FOV_X / 2 - 7, FOV_X / 2 + 7  # beyond either edge, even for the plane at its largest on a phone
     if not rightward:
         a0, a1 = a1, a0
-    s0, s1 = (math.tan(math.radians(a - nearest)) for a in (a0, a1))  # along the track, in nearest distances
+    s0 = math.tan(math.radians(a0 - nearest))  # along the track, in nearest distances
+    # A track only reaches bearings within 90 degrees of where it passes nearest, so heading away it may never reach
+    # the far edge: it closes on the horizon short of it
+    s1 = math.tan(math.radians(a1 - nearest)) if abs(a1 - nearest) < 90 else math.copysign(math.inf, a1 - a0)
+    fading = far is not None and abs(s1) > math.sqrt(far ** 2 - 1)
+    if fading:
+        s1 = math.copysign(math.sqrt(far ** 2 - 1), s1)
+    assert math.isfinite(s1), f'{name} never reaches the far edge: give it a far distance'
     def spot(i):
         sd = s0 + (s1 - s0) * i / n
         r = math.hypot(1, sd)
@@ -371,18 +385,24 @@ def plane_keyframes(name, start, end, nearest, peak, rightward=True, n=24):
     for i in range(n + 1):
         x, y, r = spot(i)
         o = 0.35 + 0.65 * r ** -1.5  # dimmer when farther away
+        if fading:  # and gone into the distance by the end
+            u = min(1, max(0, (i / n - (1 - fade)) / fade))
+            o *= 1 - u * u * (3 - 2 * u)
         # Its heading on the screen, from where it was and where it's going, in the banner's usual proportions. The
         # leftward plane is the same drawing mirrored, so its turn is measured from pointing left.
         (x0, y0, _), (x1, y1, _) = spot(max(0, i - 1)), spot(min(n, i + 1))
         dx, dy = (x1 - x0) * W / 100, (y1 - y0) * H / 100
         turn = math.degrees(math.atan2(dy, dx) if rightward else math.atan2(-dy, -dx))
         at = start + (end - start) * i / n
-        sel = f'0%,{pct(at)}' if i == 0 else f'{pct(at)},100%' if i == n else pct(at)
-        frames.append(f'{sel}{{transform:translate({pct(x)},{pct(y)}) rotate({turn:.1f}deg) scale({1 / r:.2f});opacity:{o:.2f}}}')
+        place = f'transform:translate({pct(x)},{pct(y)}) rotate({turn:.1f}deg) scale({1 / r:.2f})'
+        if i == 0:
+            frames.append(f'0%,{pct(at - 0.01)}{{{place};opacity:0}}')
+        sel = f'{pct(at)},100%' if i == n else pct(at)
+        frames.append(f'{sel}{{{place};opacity:{o:.2f}}}')
     return f'@keyframes {name}{{' + ''.join(frames) + '}'
 
 if len(sys.argv) > 2:
-    css = (plane_keyframes('bn-plane-a', 1, 23.5, nearest=-5, peak=11.2) + '\n'
-           + plane_keyframes('bn-plane-b', 51, 76, nearest=12, peak=8, rightward=False) + '\n')
+    css = (plane_keyframes('bn-plane-a', 1, 23.5, nearest=-58, peak=11.2, far=4.5) + '\n'
+           + plane_keyframes('bn-plane-b', 51, 76, nearest=45, peak=8, rightward=False, far=4.5) + '\n')
     open(sys.argv[2], 'w').write(css)
     print(len(css), 'bytes of plane keyframes')
