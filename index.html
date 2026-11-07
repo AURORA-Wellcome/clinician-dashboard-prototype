@@ -338,8 +338,10 @@ img{display:block;max-width:100%;height:auto}
 .bn-late:not(.bn-stoked) .bn-win,.bn-late:not(.bn-stoked) .bn-win-glow{opacity:.3}
 .bn-late:not(.bn-stoked) .bn-spill{opacity:.06}
 .bn-late:not(.bn-stoked) .bn-hearth{opacity:.35}
-/* Tonight's moon: hidden until the page has drawn it, and near new moon */
-.bn-moon:not(.on){display:none}
+/* Tonight's moon: hidden until the page has drawn it. Near new moon (new) it's an outline, which the bear game, having no
+   moon then, hides during its runs */
+.bn-moon:not(.on):not(.new){display:none}
+.bn-bear-on .bn-moon.new{display:none}
 /* The Big Dipper's lines and names: shown while the pointer is near it, or for a few seconds after a tap */
 .bn-figure,.bn-label{opacity:0;transition:opacity .9s ease-in-out}
 .bn-dipper-on .bn-figure,.bn-dipper-on .bn-label{opacity:1;transition-duration:.5s}
@@ -756,16 +758,30 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     moonHalo.setAttribute('opacity', (0.15 + 0.65 * f).toFixed(2));
     moonHalo.setAttribute('transform', `translate(${(sunX * off).toFixed(2)} ${(-sunY * off).toFixed(2)})`);
   };
+  // Near new moon, with less than this much lit, too little shows to see the moon
+  const NEW_MOON_LIT = 0.03;
   const drawMoon = () => {
     // A small change of phase doesn't show, so the moon is redrawn only about every 1.5 hours
     if (!moonMaps || Math.abs(moonPhase - moonDrawn) < 0.002) return;
     moonDrawn = moonPhase;
     const S = Math.sqrt(moonMaps[0].length), canvas = Object.assign(document.createElement('canvas'), { width: S, height: S }), sun = sunAt(moonPhase);
-    lightMoon(canvas.getContext('2d'), sun);
+    const ctx = canvas.getContext('2d'), lit = (1 + sun.z) / 2, isNew = lit < NEW_MOON_LIT;
+    lightMoon(ctx, sun);
+    // So near new moon, a faint outline over the earthshine keeps the moon there to find, to light with the pointer and to
+    // fly in its game. It's drawn into the image, so it goes while the pointer lights the moon and in the game's own moon.
+    // The bear game, which reads on, has no moon then.
+    if (isNew) {
+      ctx.lineWidth = S / 64;
+      ctx.strokeStyle = 'rgba(222,214,192,.5)';
+      ctx.beginPath();
+      ctx.arc(S / 2, S / 2, S / 2 - ctx.lineWidth, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
     moonFace.setAttribute('href', canvas.toDataURL());
-    moon.classList.toggle('on', (1 + sun.z) / 2 >= 0.03);
+    moon.classList.toggle('on', !isNew);
+    moon.classList.toggle('new', isNew);
     // How much is lit, which sets how long the bear game's moon gravity lasts
-    moon.dataset.lit = ((1 + sun.z) / 2).toFixed(3);
+    moon.dataset.lit = lit.toFixed(3);
   };
   // The phase, 0 new and .5 full, from the moon's and sun's motions (Meeus, Astronomical Algorithms, ch. 48), within about
   // half an hour of published times; an average lunar month can be most of a day off
@@ -1000,7 +1016,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     }
     if (!lightFrame) { lightTime = performance.now(); lightFrame = requestAnimationFrame(stepLight); }
   };
-  const moonVisible = () => moonMaps && moon.classList.contains('on');
+  const moonVisible = () => moonMaps && (moon.classList.contains('on') || moon.classList.contains('new'));
   const releaseMoon = () => {
     clearTimeout(moonLabelTimer);
     lightGoal = null; month = null; moonOver = false;
