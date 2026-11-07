@@ -1,4 +1,4 @@
-// Firestore rules for review notes (notes.js) and the shooting star game's high scores. Paste into Firebase console >
+// Firestore rules for review notes (notes.js) and the banner games' high scores. Paste into Firebase console >
 // Firestore > Rules.
 // Replace BOARD_ID with the private board id from the invite link; keep the real id out of this public repo.
 rules_version = '2';
@@ -61,6 +61,23 @@ service cloud.firestore {
           && d.points is int && d.points > 0 && d.points <= 10000000
           && d.at == request.time
           && d.animal in ['bear', 'fox', 'crab']
+          && (!('site' in d) || (d.site is string && d.site.size() <= 40));
+      }
+      allow read: if member();
+      allow create: if member() && valid(request.resource.data);
+    }
+    // The moon game's high scores, the same, with how far the run got
+    match /boards/{board}/moonScores/{score} {
+      function member() {
+        return board == 'BOARD_ID' && request.auth != null;
+      }
+      function valid(d) {
+        return d.keys().hasOnly(['uid', 'initials', 'points', 'at', 'site', 'reached'])
+          && d.uid == request.auth.uid
+          && d.initials is string && d.initials.matches('^[A-Z]{1,3}$')
+          && d.points is int && d.points > 0 && d.points <= 10000000
+          && d.at == request.time
+          && d.reached in ['Full moon', 'Waning gibbous', 'Last quarter', 'Waning crescent', 'New moon', 'Partial eclipse', 'Total eclipse']
           && (!('site' in d) || (d.site is string && d.site.size() <= 40));
       }
       allow read: if member();

@@ -916,8 +916,9 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     return true;
   };
   // The pointer is the sun. Over the moon's middle it is full, and farther out it is lit from that side, thinning to a
-  // crescent at the edge of the clear sky around it, with the shadows moving across the real terrain. A click or tap on the
-  // moon plays a month of phases in five seconds. A label gives the facts. On leaving, the light eases back to tonight's.
+  // crescent at the edge of the clear sky around it, with the shadows moving across the real terrain. A label gives the facts.
+  // On leaving, the light eases back to tonight's. A click or tap on the moon starts the moon game (below); until November 6
+  // it played a month of phases in five seconds, whose code (playMonth) nothing starts now.
   const MOON_REACH = 3.2, MOON_FARTHEST = 155 * Math.PI / 180, MONTH_MS = 5000, MONTH_DAYS = 29.53;
   const live = Object.assign(document.createElement('canvas'), { className: 'bn-moon-live' }), liveCtx = live.getContext('2d');
   moonFace.ownerSVGElement.after(live);
@@ -954,7 +955,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   };
   const showTonight = () => {
     const d = new Date(Date.now() + offset), p = phaseAt(d);
-    showLabel(`Tonight: ${moonName(p).toLowerCase()}, ${Math.round(50 * (1 - Math.cos(2 * Math.PI * p)))}% lit\nNext full moon ${shortDate(nextFull(d))}`);
+    showLabel(`Tonight: ${moonName(p).toLowerCase()}, ${Math.round(50 * (1 - Math.cos(2 * Math.PI * p)))}% lit\nNext full moon ${shortDate(nextFull(d))}\n${matchMedia('(hover: none)').matches ? 'Tap' : 'Click'} to fly the moon`);
   };
   const stepLight = () => {
     lightFrame = 0;
@@ -1027,7 +1028,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   };
   const tick = () => {
     frame = 0;
-    if (!at) return;
+    if (!at || moonOn) return;
     const now = performance.now();
     // At most one new sparkle every 90 ms, so a quick sweep leaves an even trail rather than bursts
     if (now - lastSpark >= 90) {
@@ -1044,7 +1045,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     pointMoon(at.x, at.y);
     // The pointer shows what can be clicked: the cabin, the moon, and outside a game the Big Dipper and an unlocked animal's
     // stars, which start the bear game. During a bear game, clicks belong to the game.
-    banner.style.cursor = !bearOn && (near || (moonOver && !game) || (!game && (inDipper(at.x, at.y) || (window.auroraBear && window.auroraBear.animalAt(at.x, at.y))))) ? 'pointer' : '';
+    banner.style.cursor = !bearOn && !moonOn && (near || (moonOver && !game) || (!game && (inDipper(at.x, at.y) || (window.auroraBear && window.auroraBear.animalAt(at.x, at.y))))) ? 'pointer' : '';
     const over = !game && inDipper(at.x, at.y);
     if (over !== overDipper) { overDipper = over; showDipper(over ? 0 : 1200); }
     const overC = !game && champBox && at.x >= champBox.l && at.x <= champBox.r && at.y >= champBox.t && at.y <= champBox.b;
@@ -1071,7 +1072,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   // A tap: the stars nearest it sparkle, and a tap on or near the Big Dipper shows its lines and names. (A tap on the
   // cabin is a click, below.)
   banner.addEventListener('pointerdown', (e) => {
-    if (e.pointerType !== 'touch') return;
+    if (e.pointerType !== 'touch' || moonOn) return;
     if (!stars) measure();
     const b = banner.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top, now = performance.now();
     const d2 = (st) => (st.x - x) ** 2 + (st.y - y) ** 2;
@@ -2638,10 +2639,45 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     // For a moment after a run ends, a click doesn't start anything, so the last presses don't start another
     loadBear(() => window.auroraBear.start(banner, () => { setTimeout(() => { bearOn = false; }, 800); }, { kind, surge: surgeOnce, peak: shower && shower.name }));
   };
+  // The moon game, in moon.js, starts from the moon, in place of the month of phases. Its code loads once, when someone
+  // first starts it, and if it can't load, the moon does nothing and a later click tries again.
+  let moonOn = false, moonLoad = null;
+  const loadMoon = (then) => {
+    if (!moonLoad) {
+      moonLoad = new Promise((resolve, reject) => {
+        document.head.append(Object.assign(document.createElement('script'), { src: './moon.js?v=b714a4892f', onload: resolve, onerror: reject }));
+      });
+      moonLoad.catch(() => { moonLoad = null; });
+    }
+    moonLoad.then(then, () => { moonOn = false; });
+  };
+  const startMoon = () => {
+    moonOn = true;
+    banner.style.cursor = '';
+    releaseMoon();
+    loadMoon(() => window.auroraMoon.start(banner, (end) => {
+      // Tonight's label as the moon comes home, which is how a touch screen gets it now
+      if (end.why !== 'gone') {
+        clearTimeout(moonLabelTimer);
+        showTonight();
+        moonLabelTimer = setTimeout(() => { if (!lightGoal && !month) moonLabel.classList.remove('on'); }, 5000);
+      }
+      // For a moment after a run ends, a click doesn't start anything, so the last clicks don't start another
+      setTimeout(() => { moonOn = false; }, 800);
+    }, {
+      spot: spot(), phase: moonPhase, size: Math.sqrt(moonMaps[0].length), sunAt, surge: surgeOnce,
+      // The meteor showers and their peak nights, as the shooting star game has them, and today, for the review's ?at= too
+      showers: SHOWERS, today: new Date(Date.now() + offset),
+      // The moon's maps, for the game to copy and mark with craters, and its lighting, from those copies when given them
+      maps: moonMaps,
+      light: (ctx, sun, maps) => { const own = moonMaps; if (maps) moonMaps = maps; try { lightMoon(ctx, sun); } finally { moonMaps = own; } },
+      restore: () => lightMoon(liveCtx, sunAt(moonPhase)),
+    }));
+  };
   // Secrets: the Konami code, or three quick clicks or taps on the North Star, play the bear game's grand finale on its own,
   // credits and all
   const playFinale = () => {
-    if (game || finale || bearOn) return;
+    if (game || finale || bearOn || moonOn) return;
     bearOn = true;
     loadBear(() => window.auroraBear.start(banner, () => { setTimeout(() => { bearOn = false; }, 800); }, { kind: 'bear', finaleOnly: true, surge: surgeOnce }));
   };
@@ -2662,14 +2698,14 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   // after a game ends, a click doesn't start another, so the last clicks don't hide the score.
   banner.addEventListener('click', (e) => {
     if (finale) { finale.skip(); return; }
-    if (bearOn) return;
+    if (bearOn || moonOn) return;
     if (!stars) measure();
     const b = banner.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top;
     const onCabin = (x - cabin.x) ** 2 + (y - cabin.y) ** 2 < cabin.r ** 2;
     // With the aurora meter full, the cabin calls an aurora storm rather than sending a spark
     if (game && onCabin && game.meter >= 1 && game.cabinVisible) { callStorm(); return; }
     if (onCabin) stoke();
-    if (!game && moonVisible() && Math.hypot(x - spot().x, y - spot().y) < spot().r * 1.25) { if (!month) playMonth(); return; }
+    if (!game && moonVisible() && Math.hypot(x - spot().x, y - spot().y) < spot().r * 1.25) { startMoon(); return; }
     if (!game) {
       const animal = window.auroraBear && window.auroraBear.animalAt(x, y);
       if (animal) { startBear(animal); return; }
@@ -2688,9 +2724,10 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   });
   // Play again, from the high score table: the same game, and in the bear game the same animal
   window.addEventListener('aurora-play-again', (e) => {
-    if (game || finale || bearOn) return;
+    if (game || finale || bearOn || moonOn) return;
     const { which, animal } = e.detail || {};
     if (which === 'bear') { startBear(animal || 'bear'); return; }
+    if (which === 'moon') { if (moonVisible()) startMoon(); return; }
     if (!stars) measure();
     startGame();
   });
@@ -2864,10 +2901,13 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   // Two tables share this dialog: the shooting star game's, and the bear game's, which also says which animal played
   const GAMES = {
     stars: { game: '', third: 'Site', list: () => window.auroraLeaderboard },
-    bear: { game: 'Bear game', third: 'Animal', list: () => window.auroraLeaderboard && window.auroraLeaderboard.bear }
+    bear: { game: 'Bear game', third: 'Animal', list: () => window.auroraLeaderboard && window.auroraLeaderboard.bear },
+    moon: { game: 'Moon game', third: 'Reached', list: () => window.auroraLeaderboard && window.auroraLeaderboard.moon }
   };
   let top = [], pending = null, saved = null, game = 'stars';
   const thirdColumn = (entry) => {
+    // (A score still being entered keeps how far the run got as its animal, as the bear game's does)
+    if (game === 'moon' && entry) { const site = siteName(entry); return `${entry.reached || entry.animal || ''}${site ? `, ${site}` : ''}`; }
     if (game !== 'bear' || !entry) return siteName(entry);
     const site = siteName(entry);
     return `${entry.animal || 'bear'}${site ? `, ${site}` : ''}`;
@@ -2882,7 +2922,8 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       [rank, entry ? entry.initials : '---', thirdColumn(entry), entry ? entry.points.toLocaleString('en-US') : '---'].forEach((text) => tr.appendChild(Object.assign(document.createElement('td'), { textContent: text })));
       return tr;
     }));
-    $('arcade-table').classList.toggle('no-sites', game !== 'bear' && !list.some(siteName));
+    // Only the shooting star game's third column is just the site; the bear's and the moon's always have something to show
+    $('arcade-table').classList.toggle('no-sites', game === 'stars' && !list.some(siteName));
     showSites();
   };
   // mine: a score outside the top ten, shown with the score to beat. end: the table opened as a game ended, so Play again
@@ -2961,7 +3002,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   });
   dlg.addEventListener('close', () => { pending = null; saved = null; yours.hidden = true; announce(true); game = 'stars'; });
   // Whether a game is on in the banner, so the table doesn't open over it
-  const playing = () => { const b = document.querySelector('.banner'); return !!b && (b.classList.contains('bn-playing') || b.classList.contains('bn-bear-on')); };
+  const playing = () => { const b = document.querySelector('.banner'); return !!b && (b.classList.contains('bn-playing') || b.classList.contains('bn-bear-on') || b.classList.contains('bn-moon-on')); };
   window.auroraArcade = {
     // After a game: whether the shared scores can be reached. A score in the top ten opens them, to enter initials. Any other
     // score opens them too, with the score to beat, as a reason to play again.
@@ -3056,6 +3097,6 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   render();
 })();
 </script>
-<script src="./notes.js?v=5eaf0e5c5f" data-version="landing" data-page="landing"></script>
+<script src="./notes.js?v=4f928b0554" data-version="landing" data-page="landing"></script>
 </body>
 </html>
