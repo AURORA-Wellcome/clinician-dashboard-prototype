@@ -5,7 +5,8 @@
 // The spec is Clinicians/Dashboard/Moon game spec 2026-11-06.md, in the project folder. This is its first four steps: the
 // flight; the core of the game (the month's five stages and its changing light, the halo of caught stars, moondust, close
 // shaves, craters and rocks of several kinds); things in the sky (constellations, comets, a meteor shower, Jupiter, Venus,
-// the lunar module) and power-ups; and the eclipse, credits and high scores; with sound and music. Balance is the fifth.
+// the lunar module) and power-ups; and the eclipse, credits and high scores; with sound and music. Balance is the fifth, and
+// waves, which make each stage rise and fall, came after.
 (() => {
   const TAU = Math.PI * 2;
   // Comfort. A moving foreground can bring on motion sickness, so the forest, the cabin and the page stay still, and only
@@ -35,11 +36,12 @@
   // TRAIL_THROW banner heights a second, within TRAIL_SPREAD radians, and drifts left at TRAIL_DRIFT of the stream's speed,
   // as if left behind in space, fading over TRAIL_LIFE seconds.
   const TRAIL_RATE = 110, TRAIL_HAZE = 3, TRAIL_THROW = [0.15, 0.4], TRAIL_SPREAD = 0.9, TRAIL_DRIFT = 0.6, TRAIL_LIFE = [0.45, 0.85];
-  // Pace. Rocks and stars come at SPEED banner heights a second at first, quickening by PACE_GAIN over the month. A speed in
+  // Pace. Rocks and stars come at SPEED banner heights a second at first, quickening by PACE_GAIN over the month (0.4 before
+  // the waves, which now bring the swings of speed; with both, the crescent's surges ran at 1.7 times the opening's). A speed in
   // banner heights, with rocks and the moon sized by the banner's height and coming at the same rate, makes them crowd the
   // moon's path the same at any width (the shooting star game turned out far easier on a phone, aurora-mdy). The stream
   // gathers speed over START_FLOW seconds as a run begins, and slows as the moon goes home.
-  const SPEED = 1.67, PACE_GAIN = 0.4, START_FLOW = 2.2;
+  const SPEED = 1.67, PACE_GAIN = 0.25, START_FLOW = 2.2;
   // The background: three layers of stars, farthest first, drifting left at speed banner heights a second. share: of the
   // stars; size: their radius; alpha: how bright. More of them show as the moon wanes, since moonlight hides the faint ones.
   const LAYERS = [
@@ -51,12 +53,13 @@
   // against 3.2 s at 1440 px. Slowing everything there crowds the moon's path more, so instead fewer rocks come: all of them
   // with at least LOOK seconds to see them coming, down to FEWEST as many on the narrowest banners. Stars come the same. In
   // bot tests, a phone with every rock was struck about 50% more often than 1440 px, and with 60% of them about half as
-  // often, so FEWEST sits between, until longer runs settle it.
+  // often, so FEWEST sits between. Whole months with bots (step 5) bore it out: with 75%, bots were struck as often on a
+  // phone as at 1440 px, or less, and they steer by exact positions, where a finger hides the moon and drags.
   const LOOK = 2.4, FEWEST = 0.75;
   // The month: a run flies its second half, from full moon to new, in five stages. p: the phase each starts at (0.5 is full,
   // 1 new); seconds: how long it lasts; says: its card's second line; rockEvery: a rock every so many seconds; and what it
   // brings, from then on: dust, big rocks that split, rocks that bob, walls with a gap, boulders, tumbling pairs and fast
-  // meteoroids. At new moon comes the eclipse, below.
+  // meteoroids. The month ends in the eclipse, below.
   const STAGES = [
     { name: 'Full moon', p: 0.5, seconds: 25, rockEvery: 1.4 },
     { name: 'Waning gibbous', p: 0.53, seconds: 40, rockEvery: 1.1, says: 'dust', dust: true, big: true, bob: true, shapes: true },
@@ -65,6 +68,42 @@
     { name: 'New moon', p: 0.97, seconds: 20, rockEvery: 2.2, says: 'Cover the sun' },
   ];
   const MONTH_END = 0.995, MONTH_SECONDS = STAGES.reduce((sum, s) => sum + s.seconds, 0);
+  // Waves (Chris, November 7): each stage rises and falls rather than only climbing, so a run has tense stretches and easy
+  // ones. A wave has four phases. In a calm the stream slows to CALM_SPEED of its pace, rocks come CALM_ROCKS as often, plain
+  // ones, CALM_AIMED of them aimed, stars come CALM_STARS as often, away from the moon, so they're there to go and get, the
+  // sights come (a river of stars, constellations, comets, Jupiter, the Seven Sisters, and this run's rare ones when their
+  // time has come), and the waltz drops to its music box. (With no rocks aimed and stars all around, a moon left sitting
+  // still kept a full halo through the calms, which carried it through the surges: half a month for nothing.) In a build the
+  // stream is back to its pace and the waltz is full; for its last WARN seconds before a surge, a rumble and a haze of dust at
+  // the right edge give warning, rather than words. In a surge the stream speeds up to SURGE_SPEED of its pace at full
+  // strength, rocks come up to SURGE_ROCKS times as often, up to SURGE_AIMED of them aimed, stars SURGE_STARS as often, a wall
+  // comes a third of the way through from last quarter on, and the waltz drives. In a release the swarm thins to RELEASE_ROCKS,
+  // and a surge got through without a strike pays SURGE_POINTS. The stream's speed eases from one phase's to the next over
+  // SPEED_EASE seconds, or longer for a bigger change, so it never changes by more than SPEED_SLOPE of its pace in a second,
+  // and the background stars swing only BG_SWING as much, so the sky itself doesn't lurch.
+  // Each stage's phases add up to its length. Its surges grow to the crescent's last, the meteor shower, and the new moon is
+  // one long calm for the eclipse, with its rocks as they were. (Last quarter's surges and the crescent's first are at 0.7 to
+  // 0.8: at full strength, with walls, boulders, pairs, fast meteoroids and dark rocks, a bot half a second late lost nearly
+  // every month in them at 1440 px. The meteor shower's surge is at 0.5, since its meteoroids are fast already.) A surge's
+  // speed follows its strength unless it says otherwise: the crescent's first, the month's peak, runs at the full SURGE_SPEED
+  // with its rocks at 0.6, fast rather than crowded, since the crescent's rocks are the thickest of the month already.
+  const CALM_SPEED = 0.75, SURGE_SPEED = 1.3, SPEED_EASE = 2.8, SPEED_SLOPE = 0.2, BG_SWING = 0.5, WARN = 3, SURGE_POINTS = 500;
+  const CALM_ROCKS = 0.3, CALM_AIMED = 0.17, SURGE_ROCKS = 1.6, SURGE_AIMED = 0.5, RELEASE_ROCKS = 0.5, CALM_STARS = 1.8, SURGE_STARS = 0.7;
+  const WAVES = (() => {
+    const calm = (s, ...sights) => ({ phase: 'calm', s, sights }), build = (s, ...sights) => ({ phase: 'build', s, sights });
+    const surge = (s, strength, extra) => ({ phase: 'surge', s, strength, speed: strength, sights: [], ...extra }), release = (s) => ({ phase: 'release', s, sights: [] });
+    return [
+      [calm(7, 'river'), build(6), surge(6, 0.5), release(2.5), calm(3.5)],
+      [calm(4, 'shape'), build(6), surge(7, 0.7), release(2.5), calm(7, 'river'), build(5.5, 'shape'), surge(6.5, 0.8), release(1.5)],
+      [calm(9, 'jupiter'), build(6, 'comet'), surge(8, 0.7), release(2.5), calm(6, 'shape', 'comet'), build(5.5), surge(7, 0.8), release(1)],
+      [calm(6.5, 'comet'), build(5.5, 'shape'), surge(8, 0.6, { speed: 1 }), release(2.5), calm(8, 'sisters'), build(5, 'comet'), surge(7, 0.5, { shower: true }), release(2.5)],
+      [{ ...calm(20), asWas: true }],
+    ];
+  })();
+  // A river of stars, in a calm: RIVER_STARS along a gentle curve, from the commonest color to the rarest, so following it to
+  // its end pays best, and the catches play a rising run with the music. It flows in the half of the sky away from the moon,
+  // so it's caught by going to it: a moon that sat still in a river's path got most of it for nothing.
+  const RIVER_STARS = 10;
   // The eclipse (step 4). The sun comes into view at the right edge SUN_FROM of the way through the crescent and drifts in; early
   // in the new moon it comes to rest in the moon's half of the sky over SUN_SETTLES seconds, SUN_SIZE of the moon's size, and then
   // wanders slowly, so holding it takes small corrections. With the moon's middle within TOTAL of its radius of the sun's, the sun
@@ -73,8 +112,11 @@
   // each, and through the eclipse, while beads are left, a rock that reaches the moon takes beads (HALO_COST, by its size)
   // rather than a life. It ends with the diamond ring. Any
   // totality wins, worth WIN_LIFE for each life left; otherwise a partial eclipse pays PARTIAL_POINTS for each percent of the sun
-  // covered. (The spec said within 5% of the moon's width; held with a mouse and a wandering sun, that's a pixel or two.)
-  const SUN_FROM = 0.45, SUN_SETTLES = 5, SUN_SIZE = 0.92, TOTAL = 0.2, TOTAL_POINTS = 1000, TOTAL_MAX = 7, ECLIPSE_SECONDS = 12;
+  // covered. (The spec said within 5% of the moon's width; held with a mouse and a wandering sun, that's a pixel or two.) On a
+  // small banner, a phone's or a narrow window's, TOTAL of the radius is 3 px, too fine for a finger: a bot whose finger
+  // wandered 4 px held totality there for 3 to 4 s, where on a laptop, wandering 3 px, it held 6.5 to 7. So it's never less
+  // than TOTAL_PX.
+  const SUN_FROM = 0.45, SUN_SETTLES = 5, SUN_SIZE = 0.92, TOTAL = 0.2, TOTAL_PX = 4.5, TOTAL_POINTS = 1000, TOTAL_MAX = 7, ECLIPSE_SECONDS = 12;
   const BEAD_POINTS = 100, WIN_LIFE = 2000, PARTIAL_POINTS = 20, RING_SECONDS = 1.6;
   // Each new stage is worth STAGE_POINTS for each stage so far, and gives back a life, up to five. The month ends in the
   // eclipse, above.
@@ -105,10 +147,16 @@
   const BREAK_POINTS = { small: 20, medium: 40, large: 80, boulder: 120 };
   const SPLITS_INTO = { boulder: 'large', large: 'medium', medium: 'small' };
   const AIMED = 0.35;
+  // And a moon left sitting still draws the rocks: once it has stayed within STILL_REACH of its radius for STILL_AFTER seconds,
+  // rocks come STILL_ROCKS times as often and STILL_AIMED of them at its height, in any phase but the new moon's, where holding
+  // still over the sun is the point. (With the waves' calms, a moon nobody steered kept a full halo and lasted into the
+  // crescent on a phone, with half a good run's points.) A moon that's being steered never meets it.
+  const STILL_AFTER = 8, STILL_REACH = 0.6, STILL_AIMED = 0.8, STILL_ROCKS = 1.5;
   // Rocks with personalities: BIG of rocks are large, BOB of them bob up and down, a wall with a gap GAP of the moon's radius
-  // tall comes every WALL_EVERY seconds, BOULDER of rocks are boulders (two puffs to split), PAIR of them tumbling pairs, and
-  // FAST of them fast meteoroids, FAST_SPEED times as quick, which glint at the right edge GLINT seconds before they come
-  const BIG = 0.25, BOB = 0.3, GAP = 3.2, WALL_EVERY = [9, 12], BOULDER = 0.1, PAIR = 0.15, FAST = 0.2, FAST_SPEED = 2.2, GLINT = 0.6;
+  // tall comes in each surge from last quarter on (Waves, above), BOULDER of rocks are boulders (two puffs to split), PAIR of
+  // them tumbling pairs, and FAST of them fast meteoroids, FAST_SPEED times as quick, which glint at the right edge GLINT
+  // seconds before they come
+  const BIG = 0.25, BOB = 0.3, GAP = 3.2, BOULDER = 0.1, PAIR = 0.15, FAST = 0.2, FAST_SPEED = 2.2, GLINT = 0.6;
   // Moondust, from the second stage: a click, a tap or the space bar throws a puff straight ahead, about as tall as the moon,
   // at PUFF_SPEED banner heights a second, as far as PUFF_REACH banner heights. It breaks the first rock it meets. The moon
   // holds DUST_MAX puffs, and one comes back every DUST_BACK seconds.
@@ -131,7 +179,7 @@
   // Things in the sky (step 3). Constellations to fly, from their stars' real positions (right ascension and declination in
   // degrees, J2000), north up and never mirrored, so west is to the right, as the sky looks facing them; each star's color as
   // in STARS, by its spectral class; and which stars join. Catching every star in one draws its lines and pays SHAPE_POINTS
-  // for each of its stars, times the halo. One comes every SHAPE_EVERY seconds from the second stage.
+  // for each of its stars, times the halo. They come in calms and builds, from the second stage (Waves, above).
   const SHAPES = [
     { name: 'Cassiopeia', stars: [[2.29, 59.15, 3], [10.13, 56.54, 1], [14.18, 60.72, 4], [21.45, 60.24, 3], [28.6, 63.67, 4]], lines: [[0, 1], [1, 2], [2, 3], [3, 4]] },
     { name: "Orion's belt and sword", stars: [[85.19, -1.94, 5], [84.05, -1.2, 4], [83, -0.3, 5], [83.86, -4.84, 4], [83.82, -5.39, 5], [83.86, -5.91, 5]], lines: [[0, 1], [1, 2], [1, 3], [3, 4], [4, 5]] },
@@ -142,18 +190,18 @@
   // The Seven Sisters, the Pleiades, once in the crescent: a tight cluster of seven blue-white stars, worth SISTERS_POINTS
   // more when all seven are caught. The real moon passes in front of them now and then.
   const SISTERS = { name: 'The Seven Sisters', tight: true, stars: [[56.87, 24.105, 4], [57.29, 24.05, 4], [56.22, 24.11, 4], [56.46, 24.37, 4], [56.58, 23.95, 4], [56.3, 24.47, 4], [56.2, 24.29, 4]], lines: [] };
-  const SHAPE_POINTS = 100, SISTERS_POINTS = 700, SHAPE_EVERY = [18, 26];
-  // Comets, from last quarter, one every COMET_EVERY seconds: a bright head, worth COMET_POINTS, and a dust tail pointing away
-  // from the sun, as real comets' tails do, so it points another way in each stage. Flying inside the tail earns TAIL_POINTS
-  // every TAIL_TICK seconds, times the halo, and fills the moon's dust.
-  const COMET_EVERY = [15, 22], COMET_POINTS = 300, TAIL_POINTS = 5, TAIL_TICK = 0.25;
-  // Jupiter, in the last quarter: it passes behind everything over JUPITER_PASS seconds, its radius JUPITER_R of the sky's
+  const SHAPE_POINTS = 100, SISTERS_POINTS = 700;
+  // Comets, from last quarter, in calms and builds: a bright head, worth COMET_POINTS, and a dust tail pointing away from the
+  // sun, as real comets' tails do, so it points another way in each stage. Flying inside the tail earns TAIL_POINTS every
+  // TAIL_TICK seconds, times the halo, and fills the moon's dust.
+  const COMET_POINTS = 300, TAIL_POINTS = 5, TAIL_TICK = 0.25;
+  // Jupiter, in the last quarter's first calm: it passes behind everything over JUPITER_PASS seconds, its radius JUPITER_R of the sky's
   // height, with its four big moons, the ones Galileo found in 1610. Its pull, JUPITER_PULL banner heights a second each second
   // at its edge, bends the paths of rocks, stars and the moon. Flying close earns NEAR_JUPITER a second; each moon caught
   // GALILEAN_POINTS, and all four GALILEO_POINTS more.
   const JUPITER_PASS = 15, JUPITER_R = 0.38, JUPITER_PULL = 1.1, NEAR_JUPITER = 50, GALILEAN_POINTS = 200, GALILEO_POINTS = 800;
   const GALILEANS = [['Io', '232,200,96', -2.3], ['Europa', '236,228,210', 3], ['Ganymede', '190,176,150', 4.4], ['Callisto', '134,122,108', -5.4]];
-  // A meteor shower, in the crescent: SHOWER_COUNT fast meteoroids over SHOWER_SECONDS, all slanting from one direction, named for
+  // A meteor shower, the crescent's last surge: SHOWER_COUNT fast meteoroids over SHOWER_SECONDS, all slanting from one direction, named for
   // tonight's real shower if one peaks tonight, or else the next, from the shooting star game's dates. Getting through without a
   // strike pays SHOWER_POINTS.
   const SHOWER_COUNT = 14, SHOWER_SECONDS = 4.5, SHOWER_POINTS = 500;
@@ -522,13 +570,17 @@
     osc.start(start);
     osc.stop(end + 0.02);
   };
-  const noise = (ms, level, from = 420, to = 70, delay = 0) => {
-    if (!soundIsOn || !audio) return;
+  const noiseBuffer = () => {
     if (!noiseData) {
       noiseData = audio.createBuffer(1, audio.sampleRate, audio.sampleRate);
       const samples = noiseData.getChannelData(0);
       for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
     }
+    return noiseData;
+  };
+  const noise = (ms, level, from = 420, to = 70, delay = 0) => {
+    if (!soundIsOn || !audio) return;
+    noiseBuffer();
     const start = audio.currentTime + delay / 1000, end = start + ms / 1000, source = audio.createBufferSource(), low = audio.createBiquadFilter(), gain = audio.createGain();
     gain.gain.value = 0;
     source.buffer = noiseData;
@@ -607,6 +659,36 @@
     galilean: () => tone(midiHz(86), 220, { to: midiHz(90), type: 'sine', level: 0.05 }),
     galileo: () => [74, 78, 81, 86].forEach((n, i) => tone(midiHz(n), 340, { type: 'sine', level: 0.06, delay: i * 110 })),
     near: () => tone(midiHz(81), 70, { type: 'sine', level: 0.015 }),
+    // A surge coming: a low rumble that swells for a few seconds and opens up as it nears, like a swarm still far off, with a
+    // low note under it, and falls away as the surge arrives
+    rumble: () => {
+      if (!soundIsOn || !audio) return;
+      const start = audio.currentTime + 0.02, peak = start + WARN * 0.9, end = start + WARN + 0.9;
+      const source = audio.createBufferSource(), low = audio.createBiquadFilter(), gain = audio.createGain();
+      source.buffer = noiseBuffer();
+      source.loop = true;
+      low.type = 'lowpass';
+      low.frequency.setValueAtTime(150, start);
+      low.frequency.exponentialRampToValueAtTime(480, peak);
+      gain.gain.value = 0;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.09, peak);
+      gain.gain.exponentialRampToValueAtTime(0.0001, end);
+      source.connect(low).connect(gain).connect(audioOut);
+      source.start(start);
+      source.stop(end + 0.05);
+      const osc = audio.createOscillator(), hum = audio.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(52, start);
+      osc.frequency.exponentialRampToValueAtTime(62, peak);
+      hum.gain.value = 0;
+      hum.gain.setValueAtTime(0.0001, start);
+      hum.gain.exponentialRampToValueAtTime(0.05, peak);
+      hum.gain.exponentialRampToValueAtTime(0.0001, end);
+      osc.connect(hum).connect(audioOut);
+      osc.start(start);
+      osc.stop(end + 0.05);
+    },
     // A meteor shower coming, a rising rush; getting through it clean
     shower: () => { noise(900, 0.04, 800, 5200); tone(midiHz(69), 700, { to: midiHz(81), type: 'sine', level: 0.03 }); },
     clean: () => [62, 69, 74, 78].forEach((n, i) => tone(midiHz(n + 12), 280, { type: 'sine', level: 0.05, delay: i * 80 })),
@@ -670,14 +752,19 @@
   });
   const WALTZ_STEPS = stepsOf(WALTZ), DANUBE_STEPS = stepsOf(DANUBE);
   // One eighth of a waltz: the bass on the first beat, the chord on the second and third, the melody, and in the minor and the
-  // hush a soft pad under each bar
-  const waltzStep = (s, at, eighth, mode, out) => {
+  // hush a soft pad under each bar. Its texture follows the waves: in a calm the music box alone, over a faint pad; full; or in
+  // a surge driving, with the bass on every beat and the chords a little louder.
+  const waltzStep = (s, at, eighth, mode, out, texture = 'full') => {
     const name = mode === 'major' ? s.chord : IN_MINOR[s.chord], [root, notes] = CHORDS[name], lead = mode === 'major' ? s.lead : s.minorLead;
+    const calm = texture === 'calm' && mode !== 'hush', drive = texture === 'surge' && mode !== 'hush';
     if (s.e === 0) {
-      swell(root, at, eighth * 2.6, 'triangle', mode === 'hush' ? 0.05 : 0.085, out);
-      if (mode !== 'major') notes.forEach((n) => swell(n, at, eighth * 6.2, 'sine', mode === 'hush' ? 0.014 : 0.01, out, { attack: 0.25 }));
+      if (!calm) swell(root, at, eighth * 2.6, 'triangle', mode === 'hush' ? 0.05 : 0.085, out);
+      if (mode !== 'major' || calm) notes.forEach((n) => swell(n, at, eighth * 6.2, 'sine', mode === 'hush' ? 0.014 : calm ? 0.007 : 0.01, out, { attack: 0.25 }));
     }
-    if ((s.e === 2 || s.e === 4) && mode !== 'hush') notes.forEach((n) => swell(n, at, eighth * 1.1, 'sine', 0.018, out, { attack: 0.006 }));
+    if ((s.e === 2 || s.e === 4) && mode !== 'hush' && !calm) {
+      notes.forEach((n) => swell(n, at, eighth * 1.1, 'sine', drive ? 0.022 : 0.018, out, { attack: 0.006 }));
+      if (drive) swell(root + 12, at, eighth * 1.3, 'triangle', 0.05, out);
+    }
     if (lead && (mode !== 'hush' || s.e === 0)) chime(lead[0] + 12, at, Math.max(0.45, lead[1] * eighth * 1.4), mode === 'hush' ? 0.022 : mode === 'minor' ? 0.036 : 0.042, out);
     return name;
   };
@@ -794,11 +881,19 @@
     const blueAt = Math.random() < BLUE_CHANCE ? between([40, 130]) : Infinity;
     const earn = (n) => { const got = n * (power && power.type === 'blue' ? 2 : 1); points += got; return got; };
     let phase = 'in', phaseTime = 0, time = 0, flying = 0, pace = 0, fieldAlpha = 0, moonPhase = tonight;
-    let stage = 0, stageTime = 0, nextRock = 1.2, nextStar = 0.5, nextWall = 0, quietUntil = 0, haloTurn = 0;
+    let stage = 0, stageTime = 0, nextRock = 1.2, nextStar = 0.5, quietUntil = 0, haloTurn = 0;
+    // The waves: the phase now and how far into it; the stream's speed as a share of its pace (drive), easing from one target
+    // to the next; a surge's strength, when it began and with how many strikes, and when its wall comes; whether its warning
+    // has sounded; and how strong the warning haze is. waves = false holds everything at a build's, for tests.
+    let waves = true;
+    // Where the moon last moved to, and when, for a moon left sitting still
+    const rest = { x: 0, y: 0, at: 0 };
+    // The month begins in a calm, so the stream has a calm's speed from the opening on
+    const wave = { stage: -1, index: -1, spec: null, phase: 'build', into: 0, length: 0, strength: 0, drive: CALM_SPEED, from: CALM_SPEED, to: CALM_SPEED, easeAt: 0, easeFor: SPEED_EASE, hitsAt: 0, wallAt: Infinity, warned: false, haze: 0 };
     let dustOn = false, dust = DUST_MAX, usedKeys = false;
     // Things in the sky: constellations on their way, Jupiter, a meteor shower, and when this run's rare ones come
     const groups = [];
-    let jupiter = null, shower = null, nextShape = 0, nextComet = 0, shapeOrder = [], tailTick = 0, tailGain = 0, nearTick = 0, galileo = 0;
+    let jupiter = null, shower = null, shapeOrder = [], tailTick = 0, tailGain = 0, nearTick = 0, galileo = 0;
     let jupiterDone = false, showerDone = false, sistersDone = false, venusDone = false, landerDone = false;
     // The eclipse: the sun, once it shows, where it came from at new moon, how much of it the moon covers, totality so far, the
     // points of totality not yet paid in whole hundreds, and when the diamond ring shone
@@ -832,7 +927,8 @@
         if (music.at < audio.currentTime) music.at = audio.currentTime + 0.05;
         while (music.at < audio.currentTime + 0.3) {
           const mode = stage >= 4 ? 'hush' : stage >= 2 ? 'minor' : 'major', eighth = 60 / WALTZ_BPM / 2 / WALTZ_TEMPO[stage];
-          const chord = waltzStep(WALTZ_STEPS[music.step], music.at, eighth, mode, out);
+          const texture = !waves ? 'full' : wave.phase === 'calm' ? 'calm' : wave.phase === 'surge' ? 'surge' : 'full';
+          const chord = waltzStep(WALTZ_STEPS[music.step], music.at, eighth, mode, out, texture);
           music.grid.push({ at: music.at, chord });
           if (music.grid.length > 8) music.grid.shift();
           music.at += eighth;
@@ -890,9 +986,6 @@
       stageTime = 0;
       const st = STAGES[i];
       if (st.dust) dustOn = true;
-      if (st.walls) nextWall = between([3, 5]);
-      if (st.shapes) nextShape = between([8, 12]);
-      if (st.comets) nextComet = between([4, 7]);
       if (i > 0) {
         const bonus = earn(STAGE_POINTS * i), back = lives < LIVES;
         if (back) lives += 1;
@@ -942,7 +1035,9 @@
       return o;
     };
     const spawnRock = () => {
-      const roll = Math.random(), y = Math.random() < AIMED ? aimedHeight() : anyHeight();
+      // In a calm, the odd plain rock, now and then aimed at the moon
+      if (waves && wave.phase === 'calm' && !wave.spec.asWas) { rock(Math.random() < 0.7 ? 'small' : 'medium', undefined, Math.random() < aimShare() ? aimedHeight() : anyHeight()); return; }
+      const roll = Math.random(), y = Math.random() < aimShare() ? aimedHeight() : anyHeight();
       // Fast meteoroids glint at the right edge first, so they're never a surprise
       if (has('fast') && roll < FAST) { glints.push({ y: anyHeight(0.3, 0.2), at: time }); sfx.glint(); return; }
       if (has('pairs') && roll < FAST + PAIR) {
@@ -967,11 +1062,20 @@
       quietUntil = time + 1.4;
     };
     const spawnStar = () => {
-      const near = Math.random() < NEAR_STARS, which = pickStar(), size = r * 0.22;
-      const y = near ? clamp(me.y + (Math.random() < 0.5 ? -1 : 1) * r * between([1, 2.4]), top - 0.2 * r, bottom + 0.2 * r) : anyHeight(0.3, 0.2);
+      // In a calm, none come near the moon: there are more of them, away from it, to go and get
+      const calm = waves && wave.phase === 'calm' && !wave.spec.asWas, near = Math.random() < NEAR_STARS && !calm, which = pickStar(), size = r * 0.22;
+      let y = near ? clamp(me.y + (Math.random() < 0.5 ? -1 : 1) * r * between([1, 2.4]), top - 0.2 * r, bottom + 0.2 * r) : anyHeight(0.3, 0.2);
+      for (let tries = 0; calm && tries < 3 && Math.abs(y - me.y) < 2.3 * r; tries++) y = anyHeight(0.3, 0.2);
       things.push({ kind: 'star', x: W + 3 * size, y, r: size, speed: between([0.8, 1]), drift: 0, vy: 0, which, seed: Math.random() * TAU });
     };
 
+    // A river of stars along a gentle curve, from the commonest color to the rarest
+    const spawnRiver = () => {
+      const size = r * 0.22, gap = 0.95 * r, mid = lerp(top, bottom, me.y > (top + bottom) / 2 ? 0.28 : 0.72), reach = 0.2 * (bottom - top), start = Math.random() * TAU, way = Math.random() < 0.5 ? -1 : 1;
+      for (let k = 0; k < RIVER_STARS; k++) {
+        things.push({ kind: 'star', x: W + 3 * size + k * gap, y: mid + way * reach * Math.sin(start + k * 0.42), r: size, speed: 0.9, drift: 0, vy: 0, which: Math.min(STARS.length - 1, Math.floor(k * STARS.length / RIVER_STARS)), seed: Math.random() * TAU, river: true });
+      }
+    };
     // A constellation: its stars from their real positions, scaled to fit where the moon flies, coming in from the right as one
     const spawnShape = (shape) => {
       const n = shape.stars.length, ra0 = shape.stars.reduce((sum, s) => sum + s[0], 0) / n, dec0 = shape.stars.reduce((sum, s) => sum + s[1], 0) / n, cosd = Math.cos(dec0 * Math.PI / 180);
@@ -1485,6 +1589,74 @@
       rise.onfinish = finish;
     };
 
+    // The waves. How often rocks and stars come, and how many rocks are aimed, in each phase; the stream's speed to ease
+    // toward; a phase beginning, with its sights, its surge's start and its release's bonus; and each frame, the phase from
+    // the stage's time, the speed's easing, and the warning before a surge.
+    const sitting = () => stage < STAGES.length - 1 && time - rest.at > STILL_AFTER;
+    const rockRate = () => (sitting() ? STILL_ROCKS : 1) * (!waves || wave.spec.asWas ? 1 : wave.phase === 'calm' ? CALM_ROCKS : wave.phase === 'surge' ? 1 + (SURGE_ROCKS - 1) * wave.strength : wave.phase === 'release' ? RELEASE_ROCKS : 1);
+    const starRate = () => (!waves || wave.spec.asWas ? 1 : wave.phase === 'calm' ? CALM_STARS : wave.phase === 'surge' ? SURGE_STARS : 1);
+    const aimShare = () => Math.max(sitting() ? STILL_AIMED : 0, !waves || wave.spec.asWas ? AIMED : wave.phase === 'surge' ? lerp(AIMED, SURGE_AIMED, wave.strength) : wave.phase === 'release' ? AIMED / 2 : wave.phase === 'calm' ? CALM_AIMED : AIMED);
+    const driveOf = (spec) => (spec.phase === 'surge' ? 1 + (SURGE_SPEED - 1) * spec.speed : spec.phase === 'build' ? 1 : CALM_SPEED);
+    const sight = (what) => {
+      if (what === 'river') spawnRiver();
+      else if (what === 'shape') spawnShape(nextShapeOf());
+      else if (what === 'comet') spawnComet();
+      else if (what === 'jupiter' && !jupiterDone) { jupiterDone = true; startJupiter(); }
+      else if (what === 'sisters' && !sistersDone) { sistersDone = true; spawnShape(SISTERS); }
+    };
+    const enterPhase = (index) => {
+      const spec = WAVES[stage][index], was = wave.phase, first = wave.stage < 0;
+      wave.stage = stage;
+      wave.index = index;
+      wave.spec = spec;
+      wave.phase = spec.phase;
+      wave.length = spec.s;
+      wave.strength = spec.strength || 0;
+      wave.warned = false;
+      // The stream eases toward this phase's speed; at the very start it simply has it
+      const to = driveOf(spec);
+      // (an ease of the smoothest kind changes fastest at its middle, 1.875 times its average)
+      if (first) { wave.drive = wave.from = wave.to = to; } else if (to !== wave.to) { wave.from = wave.drive; wave.to = to; wave.easeAt = time; wave.easeFor = Math.max(SPEED_EASE, 1.875 * Math.abs(to - wave.drive) / SPEED_SLOPE); }
+      // A surge got through without a strike pays, as the meteor shower does for itself
+      if (spec.phase === 'release' && was === 'surge' && !wave.shower && hits === wave.hitsAt) {
+        pop(me.x, me.y - me.r - 16, `Through the swarm! +${number(earn(SURGE_POINTS))}`, 'rgb(232,214,173)', 2);
+        sfx.clean();
+        showScore();
+      }
+      wave.shower = !!spec.shower;
+      if (spec.phase === 'surge') {
+        wave.hitsAt = hits;
+        wave.wallAt = has('walls') && !spec.shower ? time + 0.35 * spec.s : Infinity;
+        if (spec.shower && !showerDone && !shower) { showerDone = true; startShower(); }
+      }
+      // Rocks and stars come at this phase's rate from now, not after a calm's long wait
+      nextRock = Math.min(nextRock, STAGES[stage].rockEvery / rockShare / rockRate());
+      nextStar = Math.min(nextStar, STAR_EVERY / starRate());
+      (spec.sights || []).forEach(sight);
+    };
+    const stepWave = (dt) => {
+      if (!waves) { wave.drive = 1; wave.haze = 0; return; }
+      const list = WAVES[stage];
+      let index = 0, into = stageTime;
+      while (index < list.length - 1 && into >= list[index].s) { into -= list[index].s; index += 1; }
+      if (wave.stage !== stage || wave.index !== index) enterPhase(index);
+      wave.into = into;
+      const e = clamp((time - wave.easeAt) / wave.easeFor, 0, 1);
+      wave.drive = lerp(wave.from, wave.to, e * e * e * (e * (e * 6 - 15) + 10));
+      // The warning: for a build's last seconds before a surge, a rumble and a haze of dust gathering at the right edge, which
+      // fades as the surge arrives
+      const next = list[index + 1];
+      if (wave.phase === 'build' && next && next.phase === 'surge') {
+        const left = wave.length - into;
+        if (!wave.warned && left <= WARN) { wave.warned = true; sfx.rumble(); }
+        wave.haze = clamp(1 - left / WARN, 0, 1);
+      } else wave.haze = Math.max(0, wave.haze - dt / (wave.phase === 'surge' ? 2 : 1));
+      // A wall a third of the way through a surge, from last quarter on
+      if (time >= wave.wallAt) { wave.wallAt = Infinity; spawnWall(); }
+    };
+    // The easy moments, when a rare thing whose time has come can show: a calm, or a build's first seconds
+    const easy = () => !waves || wave.phase === 'calm' || (wave.phase === 'build' && wave.into < 2);
+
     const update = (dt) => {
       time += dt;
       phaseTime += dt;
@@ -1511,6 +1683,7 @@
         if (stageTime >= st.seconds) {
           if (next) startStage(stage + 1); else { leave(eclipseEnding()); return; }
         }
+        stepWave(dt);
         const ax = (keys.right ? 1 : 0) - (keys.left ? 1 : 0), ay = (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
         if (ax || ay) {
           const gentle = eclipsing() ? 0.4 : 1;
@@ -1522,37 +1695,29 @@
         if (speed > cap) { vx *= cap / speed; vy *= cap / speed; }
         me.x += vx * dt;
         me.y += vy * dt;
+        if (Math.hypot(me.x - rest.x, me.y - rest.y) > STILL_REACH * r) { rest.x = me.x; rest.y = me.y; rest.at = time; }
         if (dustOn) dust = Math.min(DUST_MAX, dust + dt / DUST_BACK);
         // Power-ups: one running out; a supermoon growing and shrinking back; a dust storm's puffs; the blue moon's one chance
         if (power && time >= power.until) endPower();
         superSize += ((power && power.type === 'supermoon' ? SUPER_SIZE : 1) - superSize) * Math.min(1, dt / 0.25);
         me.r = r * superSize;
         if (power && power.type === 'storm' && dustOn) { stormTick += dt; if (stormTick >= STORM_EVERY) { stormTick = 0; throwDust(true); } }
-        if (!blueDone && stage >= 1 && stage <= 3 && flying >= blueAt) { blueDone = true; spawnPower('blue', W + 2 * r, anyHeight(0.2, 0)); }
-        // New rocks and stars, and walls, with a quiet moment around each so it reads as a wall
+        if (!blueDone && stage >= 1 && stage <= 3 && flying >= blueAt && easy()) { blueDone = true; spawnPower('blue', W + 2 * r, anyHeight(0.2, 0)); }
+        // New rocks and stars, at the wave's rate, with a quiet moment before and after a wall so it reads as one
         nextRock -= dt;
         nextStar -= dt;
-        if (has('walls')) {
-          nextWall -= dt;
-          if (nextWall <= 0) { spawnWall(); nextWall = between(WALL_EVERY); }
-        }
-        if (nextRock <= 0 && time >= quietUntil && !ringAt && (!has('walls') || nextWall > 1.2)) {
+        if (nextRock <= 0 && time >= quietUntil && !ringAt && !(time > wave.wallAt - 1.2)) {
           spawnRock();
-          nextRock = STAGES[stage].rockEvery / rockShare * lerp(0.7, 1.3, Math.random());
+          nextRock = STAGES[stage].rockEvery / rockShare / rockRate() * lerp(0.7, 1.3, Math.random());
         }
         if (nextStar <= 0) {
           spawnStar();
-          nextStar = STAR_EVERY * lerp(0.6, 1.4, Math.random());
+          nextStar = STAR_EVERY / starRate() * lerp(0.6, 1.4, Math.random());
         }
-        // Things in the sky, by stage: constellations and comets now and then, Jupiter and a meteor shower once, the Seven
-        // Sisters once, and this run's rare ones when their time comes
-        if (has('shapes')) { nextShape -= dt; if (nextShape <= 0) { spawnShape(nextShapeOf()); nextShape = between(SHAPE_EVERY); } }
-        if (has('comets')) { nextComet -= dt; if (nextComet <= 0) { spawnComet(); nextComet = between(COMET_EVERY); } }
-        if (stage === 2 && !jupiterDone && stageTime > 16) { jupiterDone = true; startJupiter(); }
-        if (stage === 3 && !showerDone && !shower && stageTime > 10) { showerDone = true; startShower(); }
-        if (stage === 3 && !sistersDone && stageTime > 28) { sistersDone = true; spawnShape(SISTERS); }
-        if (!venusDone && stage >= 1 && flying >= venusAt) { venusDone = true; things.push({ kind: 'planet', x: W + 2 * r, y: anyHeight(0.2, 0), r: r * 0.22, speed: 0.6, drift: 0, vy: 0 }); }
-        if (!landerDone && stage >= 1 && flying >= landerAt) { landerDone = true; things.push({ kind: 'lander', x: W + 2 * r, y: anyHeight(0, -0.2), r: r * 0.6, speed: 0.55, drift: (Math.random() - 0.5) * 0.04 * sky, vy: 0, seed: Math.random() * TAU }); }
+        // This run's rare ones, when their time has come and the moment is easy. (Constellations, comets, Jupiter, the
+        // meteor shower and the Seven Sisters come with the waves.)
+        if (!venusDone && stage >= 1 && flying >= venusAt && easy()) { venusDone = true; things.push({ kind: 'planet', x: W + 2 * r, y: anyHeight(0.2, 0), r: r * 0.22, speed: 0.6, drift: 0, vy: 0 }); }
+        if (!landerDone && stage >= 1 && flying >= landerAt && easy()) { landerDone = true; things.push({ kind: 'lander', x: W + 2 * r, y: anyHeight(0, -0.2), r: r * 0.6, speed: 0.55, drift: (Math.random() - 0.5) * 0.04 * sky, vy: 0, seed: Math.random() * TAU }); }
         // The sun: in the crescent it comes into view at the right edge and drifts in; at new moon it comes to rest in the moon's
         // half of the sky, and wanders slowly
         const mid = (top + bottom) / 2, rs = r * SUN_SIZE, last = STAGES.length - 1;
@@ -1568,7 +1733,7 @@
           cover = overlap(d, me.r, rs);
           if (eclipsing()) {
             mostCover = Math.max(mostCover, cover);
-            const covered = d < TOTAL * me.r && totality < TOTAL_MAX;
+            const covered = d < Math.max(TOTAL * me.r, TOTAL_PX) && totality < TOTAL_MAX;
             if (covered && !inTotality) {
               // Totality: the music drops to a hush, and the first time, the halo's stars line the moon's edge as Baily's beads
               inTotality = true;
@@ -1647,12 +1812,13 @@
           trail.push({ x: me.x + Math.cos(a) * me.r * 0.9, y: me.y + Math.sin(a) * me.r * 0.9, vx: Math.cos(a) * v, vy: Math.sin(a) * v, age: 0, life: lerp(TRAIL_LIFE[0], TRAIL_LIFE[1], Math.random()), size: 1.1 + Math.random() * 1.4, haze: moving.count % TRAIL_HAZE === 0 });
         }
       }
-      // Everything streams left, the background at its own slow pace
+      // Everything streams left at the wave's speed, the background at its own slow pace, swinging only part as much
+      const bgDrive = 1 + (wave.drive - 1) * BG_SWING;
       for (const s of bg) {
-        s.x -= s.layer.speed * H * pace * dt;
+        s.x -= s.layer.speed * H * pace * bgDrive * dt;
         if (s.x < -4) { s.x = W + 4; s.y = Math.random() * (sky + 0.05 * H); }
       }
-      const across = crossSpeed() * pace;
+      const across = crossSpeed() * pace * wave.drive;
       // Constellations move as one, and so do Jupiter and its moons
       for (let i = groups.length - 1; i >= 0; i--) {
         const g = groups[i];
@@ -1802,7 +1968,7 @@
       for (const s of bg) {
         const L = s.layer, a = Math.min(1, fieldAlpha * L.alpha * (0.72 + 0.28 * dark) * (1 + 1.6 * dim) * (0.85 + 0.15 * Math.sin(time * 2.3 + s.twinkle)));
         if (a < 0.02 || s.y > sky + 2) continue;
-        const streak = L === LAYERS[LAYERS.length - 1] ? L.speed * H * pace * 0.035 : 0;
+        const streak = L === LAYERS[LAYERS.length - 1] ? L.speed * H * pace * (1 + (wave.drive - 1) * BG_SWING) * 0.035 : 0;
         ctx.globalAlpha = streak > 1.5 ? a * 0.75 : a;
         if (streak > 1.5) {
           ctx.lineWidth = 2 * L.size;
@@ -1813,6 +1979,24 @@
         } else {
           ctx.beginPath();
           ctx.arc(s.x, s.y, L.size, 0, TAU);
+          ctx.fill();
+        }
+      }
+      // A surge's warning: a haze of dust gathering at the right edge, in soft drifting clouds, with specks in it, as if a swarm
+      // of rocks were still far off and coming
+      if (wave.haze > 0.01) {
+        const tall = sky + 0.1 * H, n = 5, band = Math.min(0.2 * W, 2.2 * tall);
+        for (let i = 0; i < n; i++) {
+          const y = (i + 0.5) / n * tall + Math.sin(time * 0.7 + i * 1.9) * 0.08 * tall, size = (0.5 + 0.15 * Math.sin(time * 0.9 + i)) * tall;
+          ctx.globalAlpha = fieldAlpha * 0.55 * wave.haze * (0.8 + 0.2 * Math.sin(time * 1.3 + i * 2.3));
+          ctx.drawImage(look.puff, W - 0.45 * size - size, y - size, 2 * size, 2 * size);
+        }
+        ctx.fillStyle = 'rgb(206,196,176)';
+        for (let i = 0; i < 16; i++) {
+          const seed = Math.sin(i * 12.9898) * 43758.5453 % 1, x = W - ((time * (8 + 10 * Math.abs(seed)) + i * 37) % band), y = Math.abs(Math.sin(i * 78.233) * 43758.5453 % 1) * tall;
+          ctx.globalAlpha = fieldAlpha * wave.haze * 0.75 * Math.min(1, (W - x) / (0.3 * band));
+          ctx.beginPath();
+          ctx.arc(x, y, 0.9 + 0.5 * (i % 3), 0, TAU);
           ctx.fill();
         }
       }

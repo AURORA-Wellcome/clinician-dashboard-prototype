@@ -2663,7 +2663,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const loadMoon = (then) => {
     if (!moonLoad) {
       moonLoad = new Promise((resolve, reject) => {
-        document.head.append(Object.assign(document.createElement('script'), { src: './moon.js?v=b714a4892f', onload: resolve, onerror: reject }));
+        document.head.append(Object.assign(document.createElement('script'), { src: './moon.js?v=5a858ff076', onload: resolve, onerror: reject }));
       });
       moonLoad.catch(() => { moonLoad = null; });
     }
