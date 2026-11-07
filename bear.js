@@ -65,6 +65,13 @@
   // fuller winter coat; and the crab, which can only grow by molting, grows at each full belly, stepping out of its old
   // shell, which it leaves behind for SHED_SECONDS.
   const GROW_EACH = 0.025, GROW_BERRIES = 10, GROW_STING = 3, BIGGEST = 1 + GROW_EACH * GROW_BERRIES, SHED_SECONDS = 3;
+  // The bridges of stars move at the start of each stage from Merak's, as the log does. Each goes where it fits: LEDGE_SIDE or
+  // more in from the banner's sides; LEDGE_GAP or more from a bridge of its height, so the two read as two, but only
+  // LEDGE_STEP from one of the other height, which its height sets apart; and LEDGE_MOVE or more from where any bridge of its
+  // height was, so the stage looks new, or failing that, on a phone, LEDGE_MOVE_LEAST. Its stars fly there in LEDGE_FLY
+  // seconds, plus one for every LEDGE_FLY_PER units it goes, leaving LEDGE_STAGGER apart, the one in front first.
+  const LEDGE_SIDE = 30, LEDGE_GAP = 40, LEDGE_STEP = 10, LEDGE_MOVE = 150, LEDGE_MOVE_LEAST = 60;
+  const LEDGE_FLY = 0.6, LEDGE_FLY_PER = 1800, LEDGE_STAGGER = 0.02;
   // The cabin: the animal can land on its roof, and landing there stokes the fire, as a click on the cabin does outside the
   // games, with the chimney's puff of smoke and sparks. A thick cloud of smoke rises from the chimney for SMOKE_SECONDS, and
   // smoke calms bees, as a beekeeper's does: a bee that flies into it, an angry swarm's too, forgets the animal and drifts off,
@@ -651,8 +658,12 @@
       c.className = 'bn-bear-layer';
       return c;
     };
-    // The level: bridges of stars to land on from below, and a fallen log low enough that only a ball rolls under it
-    const ledge = (x, up, w) => ({ x, y: floorAt(x) - up, w });
+    // The level: bridges of stars to land on from below, and a fallen log low enough that only a ball rolls under it. A bridge
+    // stands up above the highest ground under its middle and its two berries (LEDGE_BERRIES), so wherever it goes they stay
+    // out of reach from the ground. fly: on its way to a new place (moveLedges), when it can't be landed on.
+    const LEDGE_BERRIES = [-0.28, 0.28];
+    const ledgeY = (x, w, up) => Math.min(floorAt(x), ...LEDGE_BERRIES.map((f) => floorAt(x + w * f))) - up;
+    const ledge = (x, up, w) => ({ x, y: ledgeY(x, w, up), w, up, fly: null });
     const ledges = [ledge(W * 0.2, 58, 120), ledge(W * 0.52, 104, 120), ledge(W * 0.8, 60, 130)];
     // Its underside clears the highest ground below it by just enough for a ball, wherever that is
     const logAt = (x, w) => {
@@ -707,20 +718,20 @@
       }
     }
     // Where the log can go: clear of the clumps in front, so it stays in view, of the cabin and of the banner's edges, and when
-    // there's room, out from under the low bridges, which it would crowd. Places at least 150 apart, the first one first. The
-    // clumps leave room for three on a wide banner and one or two on a phone.
-    const logSpots = (() => {
-      const low = ledges.filter((l) => floorAt(l.x) - l.y < 80);
+    // there's room, out from under the low bridges where they are now, which it would crowd. Places at least 150 apart, its
+    // first place first when that's clear. The clumps leave room for three on a wide banner and one or two on a phone.
+    const logSpots = () => {
+      const low = ledges.filter((l) => l.up < 80);
       const clear = (x, roomy) => x - logW / 2 > 100 && x + logW / 2 < W - 100 && Math.abs(x - cabinX) > 75 + logW / 2
         && clumps.every((c) => Math.abs(x - c.x) > c.wide + 24 + logW / 2) && (!roomy || low.every((l) => Math.abs(x - l.x) > l.w / 2 + logW / 2 + 10));
       const find = (roomy) => {
-        const spots = [firstLog.x];
+        const spots = clear(firstLog.x, roomy) ? [firstLog.x] : [];
         for (let x = 0; x <= W; x += 10) if (clear(x, roomy) && spots.every((s) => Math.abs(x - s) >= 150)) spots.push(x);
         return spots;
       };
       const roomy = find(true);
       return roomy.length >= 3 ? roomy : find(false);
-    })();
+    };
     // The log has a layer of its own, so it can fade out where it was and in where it goes
     const paintLogs = () => {
       const c = logLayer.getContext('2d');
@@ -752,25 +763,44 @@
         c.stroke();
       });
     };
-    {
-      const c = levelLayer.getContext('2d');
-      c.scale(scale, scale);
-      const dot = softDot(64, [[0, 'rgba(255,255,255,1)'], [0.25, 'rgba(255,240,205,.55)'], [1, 'rgba(255,235,190,0)']]);
-      ledges.forEach((l, n) => {
-        const count = Math.max(4, Math.round(l.w / 28)), left = l.x - l.w / 2;
-        const spots = Array.from({ length: count }, (_, i) => [left + l.w * i / (count - 1), l.y + (i % 2 ? 0.9 : -0.5) * (((n + i) % 3) / 2 + 0.3)]);
-        c.lineCap = 'round';
-        c.lineJoin = 'round';
-        [[5, 'rgba(255,233,184,.12)'], [1, 'rgba(255,240,205,.8)']].forEach(([width, color]) => {
-          c.strokeStyle = color;
-          c.lineWidth = width;
-          c.beginPath();
-          spots.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
-          c.stroke();
-        });
-        spots.forEach(([x, y], i) => { const r = 4.6 + ((n + i * 2) % 3); c.drawImage(dot, x - r, y - r, r * 2, r * 2); });
+    // A bridge's stars, left to right, each a little up or down and its own size, the same wherever the bridge goes: [x, y, r]
+    const ledgeStars = (l, n, x = l.x, y = l.y) => {
+      const count = Math.max(4, Math.round(l.w / 28)), left = x - l.w / 2;
+      return Array.from({ length: count }, (_, i) => [left + l.w * i / (count - 1), y + (i % 2 ? 0.9 : -0.5) * (((n + i) % 3) / 2 + 0.3), 4.6 + ((n + i * 2) % 3)]);
+    };
+    const ledgeDot = softDot(64, [[0, 'rgba(255,255,255,1)'], [0.25, 'rgba(255,240,205,.55)'], [1, 'rgba(255,235,190,0)']]);
+    const paintLedge = (c, stars) => {
+      c.lineCap = 'round';
+      c.lineJoin = 'round';
+      [[5, 'rgba(255,233,184,.12)'], [1, 'rgba(255,240,205,.8)']].forEach(([width, color]) => {
+        c.strokeStyle = color;
+        c.lineWidth = width;
+        c.beginPath();
+        stars.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
+        c.stroke();
       });
-    }
+      stars.forEach(([x, y, r]) => c.drawImage(ledgeDot, x - r, y - r, r * 2, r * 2));
+    };
+    // The bridges in place have a canvas of their own, painted again only when one leaves or arrives. One on its way is drawn
+    // with the rest of the game (draw).
+    const paintLedges = () => {
+      const c = levelLayer.getContext('2d');
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.clearRect(0, 0, levelLayer.width, levelLayer.height);
+      c.setTransform(scale, 0, 0, scale, 0, 0);
+      ledges.forEach((l, n) => { if (!l.fly) paintLedge(c, ledgeStars(l, n)); });
+    };
+    paintLedges();
+    // A bridge's stars on their way, the one in front leaving first and each LEDGE_STAGGER after the one ahead of it, along an
+    // arc that rises higher the farther it goes
+    const flyingStars = (l, n) => {
+      const f = l.fly, from = ledgeStars(l, n, f.x0, f.y0), to = ledgeStars(l, n), last = from.length - 1, ahead = l.x > f.x0;
+      const lift = Math.min(30, 12 + Math.abs(l.x - f.x0) * 0.04), span = f.life - last * LEDGE_STAGGER;
+      return from.map(([x0, y0, r], i) => {
+        const t = smooth(clamp((f.age - (ahead ? last - i : i) * LEDGE_STAGGER) / span, 0, 1));
+        return [lerp(x0, to[i][0], t), lerp(y0, to[i][1], t) - Math.sin(t * Math.PI) * lift, r];
+      });
+    };
     // The animal is drawn on a canvas of its own, around its feet, with room for it at its biggest. Only the part around it at
     // its size now (g) is copied to the banner, so its shadow costs no more than it did before it grew.
     const ROOM = BIGGEST + 0.05, OFF_X = 90 * ROOM, OFF_Y = 110 * ROOM, off = canvas(180 * ROOM * scale, 180 * ROOM * scale), o = off.getContext('2d');
@@ -1010,15 +1040,16 @@
     for (let x = 0; x <= W; x += 20) floorSum += floorAt(x);
     const planeY = floorSum / (Math.floor(W / 20) + 1) - PLANE_UP;
     // Where berries grow: along the ground, on the bridges, on top of the log and under it, where only a ball can reach. The
-    // two by the log go where it goes, and grow only while it's there.
+    // two by the log go where it goes, and grow only while it's there; the two on each bridge go where it goes (ledge, at f
+    // of its width from its middle), and don't grow while it's on its way.
     const berries = [], logBerries = [{ x: firstLog.x, y: firstLog.y - 10, log: true }, { x: firstLog.x, y: floorAt(firstLog.x) - 9, under: true, log: true }];
     for (let x = 70; x < W - 40; x += 175) if (Math.abs(x - firstLog.x) >= firstLog.w / 2 + 30) berries.push({ x, y: floorAt(x) - 10 });
-    ledges.forEach((l) => [-0.28, 0.28].forEach((f) => berries.push({ x: l.x + l.w * f, y: l.y - 10 })));
+    ledges.forEach((l) => LEDGE_BERRIES.forEach((f) => berries.push({ x: l.x + l.w * f, y: l.y - 10, ledge: l, f })));
     berries.push(...logBerries);
     const berryLimit = Math.max(2, Math.round(W / 360));
     let nextBerry = 6;
     const growBerry = () => {
-      const free = berries.filter((b) => !b.on && Math.abs(b.x - me.x) > 120 && (!b.log || logs.length));
+      const free = berries.filter((b) => !b.on && Math.abs(b.x - me.x) > 120 && (!b.log || logs.length) && !(b.ledge && b.ledge.fly));
       if (!free.length || berries.filter((b) => b.on).length >= berryLimit) return false;
       const b = free[Math.floor(Math.random() * free.length)];
       b.on = true;
@@ -1031,16 +1062,17 @@
     // has, chosen then, away from the animal and any honey pot. The berry under it is there again, as a reward for finding it.
     // With nowhere else free, as on a banner with room for it in only one place, it stays where it is.
     const moveLog = () => {
-      const old = logs[0], near = logW / 2 + STAND.hw + 12;
+      // (Its places, worked out against where the bridges go this stage, which move first)
+      const old = logs[0], near = logW / 2 + STAND.hw + 12, spots = logSpots();
       const free = (x, gap) => Math.abs(x - me.x) > gap && !pots.some((p) => Math.abs(p.x - x) < logW / 2 + 20);
-      if (old && !logSpots.some((x) => Math.abs(x - old.x) > 100 && free(x, near))) return;
+      if (old && !spots.some((x) => Math.abs(x - old.x) > 100 && free(x, near))) return;
       const appear = () => {
         if (!running || ending || logs.length) return;
-        const others = logSpots.filter((x) => !old || Math.abs(x - old.x) > 100), wide = others.filter((x) => free(x, 160));
+        const others = spots.filter((x) => !old || Math.abs(x - old.x) > 100), wide = others.filter((x) => free(x, 160));
         const ok = wide.length ? wide : others.filter((x) => free(x, near));
         // The first time, where it always was if that's free; then anywhere else that's free; failing that, back where it was;
         // and with the animal in the way of all of them, in a moment
-        const x = !old && ok.includes(logSpots[0]) ? logSpots[0] : ok.length ? ok[Math.floor(Math.random() * ok.length)] : old && free(old.x, near) ? old.x : undefined;
+        const x = !old && ok.includes(firstLog.x) ? firstLog.x : ok.length ? ok[Math.floor(Math.random() * ok.length)] : old && free(old.x, near) ? old.x : undefined;
         if (x === undefined) { setTimeout(appear, 400); return; }
         logLayer.style.opacity = '';
         const l = logAt(x, logW);
@@ -1057,6 +1089,58 @@
       shower(old.x, old.y + 9, 14, 'rgb(190,200,255)');
       logLayer.style.opacity = '0';
       logLayer.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300 }).onfinish = appear;
+    };
+    // New places for the bridges at the start of each stage from Merak's, as for the log, and chosen before the log's, so it
+    // can keep out from under them. A bridge the animal stands on, or one with a honey pot on it, stays where it is, and one
+    // still on its way from the last stage, which can end quickly after a sonic boom, keeps going. The others go where they
+    // fit, at random, each LEDGE_MOVE or more from where any bridge of its height was; failing that, as on a
+    // phone, LEDGE_MOVE_LEAST; and failing that, as on the narrowest phones, LEDGE_MOVE_LEAST from where it was itself, which
+    // can swap the low bridges' sides. With no room even for that, they stay. Their stars fly there (flyingStars), and a berry
+    // that was ripe on one is ripe again when it gets there. A shell the crab left on one falls.
+    const high = (l) => l.up >= 80;
+    // Where one bridge can go, whatever the others do: in from the banner's sides, clear of the cabin's roof so the animal can
+    // still land on it, and the high bridge clear of the big star being made, which an animal standing there would hide
+    const ledgeFits = (l, x) => x - l.w / 2 >= LEDGE_SIDE && x + l.w / 2 <= W - LEDGE_SIDE
+      && roofs.every((r) => Math.abs(x - r.x) >= (l.w + r.w) / 2 + 20)
+      && (!high(l) || Math.abs(x - forge.x) >= l.w / 2 + forge.R + 14);
+    const apart = (a, xa, b, xb) => Math.abs(xa - xb) >= (a.w + b.w) / 2 + (high(a) === high(b) ? LEDGE_GAP : LEDGE_STEP);
+    const moveLedges = () => {
+      const s = size(), stays = ledges.filter((l) => l.fly || pots.some((p) => p.on === l)
+        || (me.ground && !me.onFloor && Math.abs(me.y - l.y) < 0.5 && Math.abs(me.x - l.x) < l.w / 2 + s.hw));
+      const moving = ledges.filter((l) => !stays.includes(l)), was = ledges.map((l) => ({ l, x: l.x, high: high(l) }));
+      if (!moving.length) return;
+      for (const [far, own] of [[LEDGE_MOVE, false], [LEDGE_MOVE_LEAST, false], [LEDGE_MOVE_LEAST, true]]) {
+        // Every place each could go, a unit apart, since on a phone a place can be a window of a few units, then one bridge at
+        // a time, in a new order each try so none always gets first pick, each at random among its places still apart from
+        // those placed. A try that leaves one nowhere starts over.
+        const spots = new Map(moving.map((l) => {
+          const list = [];
+          for (let x = LEDGE_SIDE + l.w / 2; x <= W - LEDGE_SIDE - l.w / 2; x += 1) {
+            if (ledgeFits(l, x) && was.every((o) => (own ? o.l !== l : o.high !== high(l)) || Math.abs(x - o.x) >= far) && stays.every((o) => apart(l, x, o, o.x))) list.push(x);
+          }
+          return [l, list];
+        }));
+        for (let tries = 0; tries < 60; tries++) {
+          const order = moving.slice(), placed = [];
+          for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+          for (const l of order) {
+            const ok = spots.get(l).filter((x) => placed.every(([o, ox]) => apart(l, x, o, ox)));
+            if (!ok.length) break;
+            placed.push([l, ok[Math.floor(Math.random() * ok.length)]]);
+          }
+          if (placed.length < moving.length) continue;
+          for (const [l, x] of placed) {
+            const x0 = l.x, y0 = l.y;
+            l.fly = { x0, y0, age: 0, life: LEDGE_FLY + Math.abs(x - x0) / LEDGE_FLY_PER };
+            l.x = x;
+            l.y = ledgeY(x, l.w, l.up);
+            sheds.forEach((sh) => { if (sh.landed && Math.abs(sh.y - y0) < 0.5 && Math.abs(sh.x - x0) < l.w / 2) { sh.landed = false; sh.vy = 0; } });
+            berries.forEach((b) => { if (b.ledge === l) Object.assign(b, { back: b.on, on: false, x: x + l.w * b.f, y: l.y - 10 }); });
+          }
+          paintLedges();
+          return;
+        }
+      }
     };
     let phase = 'in', phaseTime = 0, running = true, acc = 0, last = performance.now(), swipeRoll = false, smokeLeft = 0, fireReadyAt = 0;
 
@@ -1188,6 +1272,7 @@
       if (gain) lives += 1;
       pop(me.x, me.y - tall() - 34, `${stageName(n)} relit! +${number(bonus)}${gain ? ' and a life back' : ''}`, 'rgb(255,232,170)', 2.4);
       between = BREATHER;
+      moveLedges();
       moveLog();
       // What the next stage brings comes soon after its card
       if (stage === BEES_FROM) { nextBee = 1.5; if (roofs.length) cabinHint(); }
@@ -1263,11 +1348,11 @@
         bees.push({ kind: 'chase', x, y, age: 0, dir: 1, vx: Math.cos(a) * 170, vy: Math.sin(a) * 170, ox: (i - 1) * 22, oy: (i - 1) * 12 });
       }
     };
-    // A honey pot appears somewhere up high or along the ground, away from the bear, and doesn't wait long
+    // A honey pot appears somewhere up high or along the ground, away from the bear, and doesn't wait long. on: the bridge it's on.
     const dropPot = () => {
-      const spots = [...ledges.map((l) => ({ x: l.x, y: l.y - 14 })), ...berries.filter((b) => b.y > planeY + 80 && !b.under).map((b) => ({ x: b.x + 30, y: floorAt(b.x + 30) - 15 }))];
+      const spots = [...ledges.filter((l) => !l.fly).map((l) => ({ x: l.x, y: l.y - 14, on: l })), ...berries.filter((b) => b.y > planeY + 80 && !b.under).map((b) => ({ x: b.x + 30, y: floorAt(b.x + 30) - 15 }))];
       const far = spots.filter((s) => Math.abs(s.x - me.x) > 180), pick = (far.length ? far : spots)[Math.floor(Math.random() * (far.length || spots.length))];
-      pots.push({ x: pick.x, y: pick.y, age: 0, life: 14 });
+      pots.push({ x: pick.x, y: pick.y, age: 0, life: 14, on: pick.on || null });
       shower(pick.x, pick.y, 10, 'rgb(255,214,120)');
     };
     const sendVisitor = (kind) => {
@@ -1573,8 +1658,8 @@
       me.onFloor = false;
       me.on = null;
       if (me.vy >= 0) {
-        // (The airliner carries the animal only during play, since it fades at the end)
-        for (const l of [...ledges, ...logs, ...roofs, ...(phase === 'play' ? visitors.filter((v) => v.kind === 'plane' && !v.boomed) : [])]) {
+        // (The airliner carries the animal only during play, since it fades at the end, and a bridge only once it's in place)
+        for (const l of [...ledges.filter((b) => !b.fly), ...logs, ...roofs, ...(phase === 'play' ? visitors.filter((v) => v.kind === 'plane' && !v.boomed) : [])]) {
           if (was <= l.y + 0.01 && me.y >= l.y && me.x + s.hw > l.x - l.w / 2 && me.x - s.hw < l.x + l.w / 2) {
             me.y = l.y;
             me.vy = 0;
@@ -1732,6 +1817,22 @@
         }
       }
       for (let i = rings.length - 1; i >= 0; i--) { rings[i].age += dt; if (rings[i].age >= rings[i].life) rings.splice(i, 1); }
+      // Bridges on their way to new places, trailing sparks, and in place once their stars all get there
+      ledges.forEach((l, n) => {
+        if (!l.fly) return;
+        l.fly.age += dt;
+        if (l.fly.age < l.fly.life) {
+          if (Math.random() < 0.2) {
+            const stars = flyingStars(l, n), [x, y] = stars[Math.floor(Math.random() * stars.length)];
+            spark(x, y, (Math.random() - 0.5) * 30, (Math.random() - 0.5) * 30, 0.45, 0.7 + Math.random() * 0.6, 'rgb(255,233,184)');
+          }
+          return;
+        }
+        l.fly = null;
+        paintLedges();
+        shower(l.x, l.y, 12, 'rgb(255,233,184)');
+        berries.forEach((b) => { if (b.ledge === l && b.back) Object.assign(b, { on: true, grow: 0, back: false }); });
+      });
       // The crab's old shells: one shed in the air, or on the airliner, drops to a bridge, the log or the ground, and each fades
       for (let i = sheds.length - 1; i >= 0; i--) {
         const s = sheds[i];
@@ -1741,7 +1842,7 @@
         const was = s.y;
         s.vy = Math.min(MAX_FALL, s.vy + GRAVITY * dt);
         s.y += s.vy * dt;
-        const on = [...ledges, ...logs].find((l) => was <= l.y + 0.01 && s.y >= l.y && Math.abs(s.x - l.x) < l.w / 2);
+        const on = [...ledges.filter((l) => !l.fly), ...logs].find((l) => was <= l.y + 0.01 && s.y >= l.y && Math.abs(s.x - l.x) < l.w / 2);
         if (on || s.y >= floorAt(s.x)) { s.y = on ? on.y : floorAt(s.x); s.landed = true; }
       }
       // Caught stars on their way up to the big star, each making a point of it as it arrives
@@ -2487,6 +2588,14 @@
     const draw = () => {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, layer.width, layer.height);
+      // Bridges on their way to new places, behind everything else here, as the ones in place are on their canvas
+      if (ledges.some((l) => l.fly)) {
+        ctx.save();
+        ctx.setTransform(scale, 0, 0, scale, 0, 0);
+        ctx.globalAlpha = 1;
+        ledges.forEach((l, n) => { if (l.fly) paintLedge(ctx, flyingStars(l, n)); });
+        ctx.restore();
+      }
       // The animal's seven stars in their places in the sky: a faint ring where one is still dim, pulsing where the big star
       // being made will go, and a bright star once its big star has got there
       const skyAlpha = phase === 'in' ? smooth(clamp(phaseTime, 0, 1)) : phase === 'out' ? 1 - smooth(clamp(phaseTime / 0.9, 0, 1)) : 1;
