@@ -2711,7 +2711,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const loadCabin = (then) => {
     if (!cabinLoad) {
       cabinLoad = new Promise((resolve, reject) => {
-        document.head.append(Object.assign(document.createElement('script'), { src: './cabin.js?v=126f13da1f', onload: resolve, onerror: reject }));
+        document.head.append(Object.assign(document.createElement('script'), { src: './cabin.js?v=cc1c41aa67', onload: resolve, onerror: reject }));
       });
       cabinLoad.catch(() => { cabinLoad = null; });
     }
@@ -2724,8 +2724,8 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     cozyOn = false;
     cabinLabel.classList.remove('on');
     // For a moment after a run ends, a click doesn't start anything, so the last clicks don't start another. The game loads
-    // Vivaldi's Winter from cabin-music.js only when sound is on; its address is here so tools/stamp.py stamps it.
-    loadCabin(() => window.auroraCabin.start(banner, () => { setTimeout(() => { cabinOn = false; }, 800); }, { stoke, surge: surgeOnce, music: './cabin-music.js?v=3b64492be2' }));
+    // its Vivaldi from cabin-music.js only when sound is on; its address is here so tools/stamp.py stamps it.
+    loadCabin(() => window.auroraCabin.start(banner, () => { setTimeout(() => { cabinOn = false; }, 800); }, { stoke, surge: surgeOnce, music: './cabin-music.js?v=011598227f' }));
   };
   // Secrets: the Konami code, or three quick clicks or taps on the North Star, play the bear game's grand finale on its own,
   // credits and all

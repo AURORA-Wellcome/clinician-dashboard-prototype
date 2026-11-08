@@ -231,15 +231,16 @@
   };
 
   // Music, with sound on: Vivaldi's Four Seasons (1725, long in the public domain), made here like the other sounds. Each piece
-  // is a loop of notes by voice, [voice, MIDI note, start, length] in beats, at its tempo. The first movement of Winter plays
-  // while the army marches, November to February, a little faster each month; its Largo between months, by the fire; its
-  // third movement in March; and the opening of Spring after the thaw and over the credits. MUSIC_LEVEL keeps it under the
-  // effects, which the compressor on the output brings up along with it.
+  // is a loop of notes by voice, [voice, MIDI note, start, length] in beats, at its tempo. It follows the winter, from quiet to
+  // storm and out (MONTH_MUSIC, below); the Largo plays between months, by the fire, and the opening of Spring after the thaw
+  // and over the credits. MUSIC_LEVEL keeps it under the effects, which the compressor on the output brings up along with it.
   const MUSIC_LEVEL = 0.6;
   let music = null;
   // A trill alternates the note with the one above it, TRILL_RATE times a second
   const TRILL_RATE = 14;
-  const musicNote = (freq, at, dur, { type, level, cutoff = 0, attack = 0.012, pluck = false, trill = 0 }) => {
+  // held: for muted strings, the note stays at its level and then releases over this many seconds past its end, overlapping
+  // the next, on two oscillators a little apart in pitch, since one alone sounds static over several seconds
+  const musicNote = (freq, at, dur, { type, level, cutoff = 0, attack = 0.012, pluck = false, trill = 0, held = 0 }) => {
     const osc = audio.createOscillator(), gain = audio.createGain(), end = at + dur;
     gain.gain.value = 0;
     osc.type = type;
@@ -250,13 +251,22 @@
     }
     gain.gain.setValueAtTime(0.0001, at);
     gain.gain.exponentialRampToValueAtTime(level, at + attack);
-    if (!pluck) gain.gain.exponentialRampToValueAtTime(level * 0.6, at + Math.max(attack + 0.01, dur * 0.75));
-    gain.gain.exponentialRampToValueAtTime(0.0001, end);
+    if (held) gain.gain.setValueAtTime(level, Math.max(at + attack, end));
+    else if (!pluck) gain.gain.exponentialRampToValueAtTime(level * 0.6, at + Math.max(attack + 0.01, dur * 0.75));
+    gain.gain.exponentialRampToValueAtTime(0.0001, end + held);
+    const oscs = [osc];
+    if (held) {
+      const twin = audio.createOscillator();
+      twin.type = type;
+      twin.frequency.value = freq;
+      twin.detune.value = 6;
+      osc.detune.value = -6;
+      oscs.push(twin);
+    }
     let head = osc;
-    if (cutoff) { const low = audio.createBiquadFilter(); low.type = 'lowpass'; low.frequency.value = cutoff; osc.connect(low); head = low; }
+    if (cutoff) { const low = audio.createBiquadFilter(); low.type = 'lowpass'; low.frequency.value = cutoff; oscs.forEach((o) => o.connect(low)); head = low; }
     head.connect(gain).connect(music.out);
-    osc.start(at);
-    osc.stop(end + 0.02);
+    oscs.forEach((o) => { o.start(at); o.stop(end + held + 0.02); });
   };
   // The voices: strings as a saw softened by a low-pass filter, darker lower down; plucked strings for the Largo's pizzicato,
   // a quick-fading triangle; and a harpsichord's chords, a short square
@@ -267,6 +277,10 @@
     violin: (f, at, dur, v) => musicNote(f, at, dur * 0.92, { type: 'sawtooth', level: 0.024 * v, cutoff: 2600, attack: 0.015 }),
     viola: (f, at, dur, v) => musicNote(f, at, dur * 0.92, { type: 'sawtooth', level: 0.022 * v, cutoff: 1800, attack: 0.02 }),
     bass: (f, at, dur, v) => musicNote(f, at, dur * 0.9, { type: 'sawtooth', level: 0.048 * v, cutoff: 700, attack: 0.015 }),
+    // Autumn's Adagio, muted: dark, swelling in slowly and holding
+    sordino: (f, at, dur, v) => musicNote(f, at, dur, { type: 'sawtooth', level: 0.008 * v, cutoff: 1000, attack: 0.5, held: 0.7 }),
+    // December's quiet repeated notes: a softer start to each and a darker tone than the violins'
+    hushed: (f, at, dur, v) => musicNote(f, at, dur * 0.92, { type: 'sawtooth', level: 0.024 * v, cutoff: 1500, attack: 0.04 }),
     pizz: (f, at, dur, v) => musicNote(f, at, Math.min(0.4, Math.max(0.18, dur)), { type: 'triangle', level: 0.05 * v, attack: 0.004, pluck: true }),
     harpsichord: (f, at, dur, v) => musicNote(f, at, 0.28, { type: 'square', level: 0.011 * v, cutoff: 3000, attack: 0.004, pluck: true }),
   };
@@ -286,33 +300,45 @@
     return { bpm: 100, beats: 24, notes };
   })();
   const PIECES = { spring: SPRING };
-  // Winter's three passages come from cabin-music.js, loaded the first time sound is on: note lists from the Mutopia Project's
-  // edition, under its license (CC BY-SA 3.0, named in that file and in the credits). For each: its tempo, in quarter notes a
-  // minute, and which voice plays each part, how loud. In the Largo the violins play pizzicato, which the edition marks as the
+  // Autumn's Adagio and Winter's three passages come from cabin-music.js, loaded the first time sound is on: note lists from the
+  // Mutopia Project's editions, under their license (CC BY-SA 3.0, named in that file and in the credits). For each: its tempo,
+  // in quarter notes a minute, and which voice plays each part, how loud. In the Largo the violins play pizzicato, which the edition marks as the
   // rain, and the viola and bass are hushed, as marked. A trill goes up a step in the passage's key, half or whole as the scale
   // has it; long notes are bowed again every REBOW beats, as a player would.
+  // winterhush is Winter's first movement cut short: from takes its notes, upTo where it stops, loopFrom where it goes back to,
+  // and only the parts named play. Its first 11 bars are strings entering one at a time on repeated notes, before any of the
+  // solo's fast runs, and going back to bar 4 keeps them all playing. rebow: Infinity for notes held as written.
   const WINTER = {
+    autumn2: { bpm: 54, rebow: Infinity, voices: { violin1: ['sordino', 1], violin2: ['sordino', 0.9], viola: ['sordino', 0.9], bass: ['sordino', 1.2], cembalo: ['harpsichord', 0.4] } },
+    winterhush: { from: 'winter1', upTo: 44, loopFrom: 12, bpm: 92, voices: { violin1: ['hushed', 0.8], violin2: ['hushed', 0.85], viola: ['hushed', 0.95], bass: ['bass', 0.55] } },
     winter1: { bpm: 106, voices: { solo: ['solo', 1], violin1: ['violin', 0.75], violin2: ['violin', 0.8], viola: ['viola', 0.9], bass: ['bass', 1] } },
     winter2: { bpm: 52, voices: { solo: ['cantabile', 1], violin1: ['pizz', 0.6], violin2: ['pizz', 0.5], viola: ['viola', 0.45], bass: ['bass', 0.5] } },
     winter3: { bpm: 100, voices: { solo: ['solo', 1], violin1: ['violin', 0.75], violin2: ['violin', 0.8], viola: ['viola', 0.9], bass: ['bass', 0.9] } },
   };
   const SCALES = { 'F minor': [5, 7, 8, 10, 0, 1, 3], 'E-flat major': [3, 5, 7, 8, 10, 0, 2] }, REBOW = 3;
   const stepAbove = (n, key) => ((SCALES[key] || []).includes((n + 1) % 12) ? 1 : 2);
+  // The winter's emotional journey, month by month, as [passage, tempo]: Autumn's hushed Adagio as the first snow falls, in
+  // Vivaldi's own order of the seasons; in December, only the quiet opening of Winter, something gathering; in January, the
+  // whole of it, with the solo's runs for the first time, as the army comes from both sides; a little faster in February; and
+  // Winter's third movement for the last storm.
+  const MONTH_MUSIC = [['autumn2', 1], ['winterhush', 1], ['winter1', 1.04], ['winter1', 1.12], ['winter3', 1.16]];
   const buildWinter = () => {
     const M = window.auroraCabinMusic;
     if (!M || PIECES.winter1) return;
     for (const [name, setup] of Object.entries(WINTER)) {
-      const P = M[name];
+      const P = M[setup.from || name], rebow = setup.rebow || REBOW, upTo = setup.upTo || Infinity;
       if (!P) continue;
       const notes = [];
       for (const [part, flat] of Object.entries(P.parts)) {
-        const [voice, v] = setup.voices[part] || ['violin', 0.8], trills = new Set((P.trills && P.trills[part]) || []);
+        if (!setup.voices[part]) continue;
+        const [voice, v] = setup.voices[part], trills = new Set((P.trills && P.trills[part]) || []);
         for (let i = 0; i < flat.length; i += 3) {
           const n = flat[i], start = flat[i + 1] / 8, len = flat[i + 2] / 8, trill = trills.has(flat[i + 1]) ? stepAbove(n, P.key) : 0;
-          for (let s = 0; s < len; s += REBOW) notes.push([voice, n, start + s, Math.min(REBOW, len - s), v, trill]);
+          if (start >= upTo) continue;
+          for (let s = 0; s < len; s += rebow) notes.push([voice, n, start + s, Math.min(rebow, len - s), v, trill]);
         }
       }
-      PIECES[name] = { bpm: setup.bpm, beats: P.beats, notes };
+      PIECES[name] = { bpm: setup.bpm, beats: Math.min(P.beats, upTo), loopFrom: setup.loopFrom || 0, notes };
     }
   };
   let musicLoad = null;
@@ -335,12 +361,13 @@
     out.connect(audioOut);
     const notes = [...piece.notes].sort((a, b) => a[2] - b[2]);
     music = { name, tempo, out, i: 0, origin: audio.currentTime + 0.1, timer: 0 };
+    const loopFrom = piece.loopFrom || 0, loopNote = Math.max(0, notes.findIndex((n) => n[2] >= loopFrom));
     // Notes are scheduled a little ahead, so a busy frame doesn't make them late
     const plan = () => {
       if (!music || music.out !== out) return;
       const beat = 60 / piece.bpm / tempo, horizon = audio.currentTime + 0.35;
       for (;;) {
-        if (music.i >= notes.length) { music.i = 0; music.origin += piece.beats * beat; }
+        if (music.i >= notes.length) { music.i = loopNote; music.origin += (piece.beats - loopFrom) * beat; }
         const [voice, n, start, len, v = 1, trill = 0] = notes[music.i], at = music.origin + start * beat;
         if (at > horizon) break;
         if (at >= audio.currentTime - 0.02) VOICES[voice](midiHz(n), at, len * beat, v, trill);
@@ -1010,13 +1037,12 @@
     };
 
     // The months
-    // The music for where the winter is: the first movement of Winter through February, a little faster each month, its third in
-    // March, the Largo between months, and Spring after the thaw
+    // The music for where the winter is: each month's (MONTH_MUSIC), the Largo between months, and Spring after the thaw
     const musicNow = () => {
       if (soundIsOn && audio) heard = true;
       if (phase === 'breather') startMusic('winter2');
       else if (phase === 'spring' || ending === 'spring') startMusic('spring');
-      else if (phase === 'month') startMusic(monthIndex === MONTHS.length - 1 ? 'winter3' : 'winter1', 1 + 0.04 * monthIndex);
+      else if (phase === 'month') startMusic(...MONTH_MUSIC[monthIndex]);
     };
     soundSwitch.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -1197,7 +1223,7 @@
         ...(counts.lantern ? [`Lanterns lit ${counts.lantern}`] : []), ...(counts.firepit ? [`Fire pits ${counts.firepit}`] : []),
         ...(counts.alight ? [`Woodpiles burned ${counts.alight}`] : counts.woodpile ? [`Woodpiles ${counts.woodpile}`] : []), ...(counts.woodshed ? ['A woodshed'] : []),
         `Stokes ${stoked}`, ...(counts.stars ? [`Star lanterns ${counts.stars}`] : []), `Time ${Math.floor(played / 60)}:${String(played % 60).padStart(2, '0')}`, '', 'Final score', number(points), '',
-        ...(heard ? ['Music', 'Vivaldi, The Four Seasons', 'Winter from the Mutopia', "Project's edition, CC BY-SA", ''] : []), 'Thanks for playing'];
+        ...(heard ? ['Music', 'Vivaldi, The Four Seasons', 'Autumn and Winter from the', "Mutopia Project's edition,", 'CC BY-SA', ''] : []), 'Thanks for playing'];
       const heads = new Set(['New best!', 'Winter at the cabin', 'Final score', 'Music']);
       const credits = labels.appendChild(Object.assign(document.createElement('div'), { className: 'bn-credits bn-cabin-credits' }));
       credits.replaceChildren(...rows.map((text) => (text ? Object.assign(document.createElement(heads.has(text) ? 'b' : 'span'), { textContent: text }) : document.createElement('i'))));
