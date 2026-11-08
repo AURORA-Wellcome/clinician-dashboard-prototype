@@ -1199,9 +1199,9 @@
     // Once the run is over, the line gives its result instead.
     const showScore = () => {
       if (ending) return;
-      const S = STAGES[Math.min(stage, STAGES.length - 1)], name = stageName(Math.min(stage, STAGES.length - 1)), life = lives === 1 ? 'life' : 'lives';
+      const S = STAGES[Math.min(stage, STAGES.length - 1)], name = stageName(Math.min(stage, STAGES.length - 1)), life = lives === 1 ? 'foxfire' : 'foxfires';
       score.textContent = box.width < 600
-        ? `${name} ${got}/${POINTS}, ${number(points)} points, ${lives} ${life}, ${clock()}`
+        ? `${name} ${got}/${POINTS}, ${number(points)}${box.width < 360 ? '' : ' points'}, ${lives} ${life}, ${clock()}`
         : `${name}: ${got} of ${POINTS} stars, ${number(points)} points, ${lives} ${life}, ${clock()}`;
     };
     const pop = (x, y, text, color, life) => pops.push({ x, y, age: 0, text, color, life: life || Math.max(0.9, 0.055 * text.length) });
@@ -1286,7 +1286,7 @@
       // The last one brings the animal home, which says so itself
       if (stage >= STAGES.length) { leave('home', bonus); return; }
       if (gain) lives += 1;
-      pop(me.x, me.y - tall() - 34, `${stageName(n)} relit! +${number(bonus)}${gain ? ' and a life back' : ''}`, 'rgb(255,232,170)', 2.4);
+      pop(me.x, me.y - tall() - 34, `${stageName(n)} relit! +${number(bonus)}${gain ? ' and a foxfire back' : ''}`, 'rgb(255,232,170)', 2.4);
       between = BREATHER;
       moveLedges();
       moveLog();
@@ -1504,7 +1504,7 @@
       }
       if (lives < LIVES) {
         lives += 1;
-        pop(me.x, overBadge(), molt ? 'Full belly! Molted, and a life back' : 'Full belly! A life back', 'rgb(255,150,180)', 2.2);
+        pop(me.x, overBadge(), molt ? 'Full belly! Molted, and a foxfire back' : 'Full belly! A foxfire back', 'rgb(255,150,180)', 2.2);
         showScore();
       } else award(BELLY_POINTS, me.x, overBadge(), 'rgb(255,150,180)', { before: molt ? 'Full belly! Molted,' : 'Full belly!' });
     };
@@ -1526,7 +1526,7 @@
       me.vy = -250;
       me.ground = false;
       shower(me.x, me.y - 35, 14, 'rgb(255,170,120)');
-      pop(me.x, me.y - tall() - 10, '−1 life', 'rgb(255,196,130)');
+      pop(me.x, me.y - tall() - 10, '−1 foxfire', 'rgb(255,196,130)');
       showScore();
       if (lives <= 0) leave('stung');
     };
@@ -3333,8 +3333,8 @@
         `${caught} ${caught === 1 ? 'star' : 'stars'} caught`, ...(counts.alcor ? ['Alcor spotted'] : []), ...(bestCombo >= 3 ? [`Longest combo ${bestCombo}`] : []), ...(counts.berries ? [`Berries ${counts.berries}`] : []), ...(counts.bellies ? [`Full bellies ${counts.bellies}`] : []), ...(counts.honey ? [`Honey pots ${counts.honey}`] : []), ...(counts.stokes ? [`Fires stoked ${counts.stokes}`] : []), ...(counts.calmed ? [`Bees calmed ${counts.calmed}`] : []), ...(counts.escapes ? [`Swarms escaped ${counts.escapes}`] : []),
         ...(counts.bees ? [`Bees bonked ${counts.bees}`] : []), ...(counts.satellites ? [`Satellites ${counts.satellites}`] : []), ...(counts.miles ? [`Air miles ${number(counts.miles)}`] : counts.rides ? [`Plane rides ${counts.rides}`] : []), ...(counts.booms ? [`Sonic booms ${counts.booms}`] : []),
         ...(counts.moons ? [`Moon gravity ${counts.moons}`] : []), ...(counts.fires ? [`Fox fires ${counts.fires}`] : []),
-        ...(left ? [`Night left ${hoursMinutes(left)}`] : []), `Time ${Math.floor(time / 60)}:${String(time % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Thanks for playing'];
-      const heads = new Set(['New best!', ...Object.values(ANIMALS).map((a) => a.title), 'Final score']);
+        ...(left ? [`Night left ${hoursMinutes(left)}`] : []), `Time ${Math.floor(time / 60)}:${String(time % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Foxfires', 'The aurora in Finnish is', 'revontulet, fox fires', '', 'Thanks for playing'];
+      const heads = new Set(['New best!', ...Object.values(ANIMALS).map((a) => a.title), 'Final score', 'Foxfires']);
       const credits = labels.appendChild(Object.assign(document.createElement('div'), { className: 'bn-credits bn-bear-credits' }));
       credits.replaceChildren(...rows.map((text) => (text ? Object.assign(document.createElement(heads.has(text) ? 'b' : 'span'), { textContent: text }) : document.createElement('i'))));
       const tall = credits.offsetHeight;

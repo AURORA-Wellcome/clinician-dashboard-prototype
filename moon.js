@@ -905,7 +905,7 @@
     let ending = null, result = false, running = true, last = performance.now(), from = null, danubeFor = 0, danubeEnds = 0, newBestRun = false;
     const best = (() => { try { return Number(localStorage.getItem(BEST_KEY)) || 0; } catch (e) { return 0; } })();
     const showScore = () => {
-      const lifeWord = `${lives} ${lives === 1 ? 'life' : 'lives'}`, n = halo.length;
+      const lifeWord = `${lives} ${lives === 1 ? 'foxfire' : 'foxfires'}`, n = halo.length;
       const total = totality > 0 ? `, totality ${totality.toFixed(1)} s` : '';
       score.textContent = W < 600 ? `${number(points)}, ${lifeWord}${n ? `, ×${n}` : ''}${total}` : `${STAGES[stage].name}: ${number(points)} points, ${lifeWord}${n ? `, halo ×${n}` : ''}${total}`;
     };
@@ -989,7 +989,7 @@
       if (i > 0) {
         const bonus = earn(STAGE_POINTS * i), back = lives < LIVES;
         if (back) lives += 1;
-        pop(me.x, me.y - me.r - 14, `+${number(bonus)}${back ? ' and a life back' : ''}`, 'rgb(232,214,173)', 2);
+        pop(me.x, me.y - me.r - 14, `+${number(bonus)}${back ? ' and a foxfire back' : ''}`, 'rgb(232,214,173)', 2);
         sfx.stage(i >= 2);
         if (i >= 4 && music) {
           const now = audio.currentTime;
@@ -1359,7 +1359,7 @@
       sfx.strike();
       shake(toward, 1, 1);
       crater(toward, o.r / r);
-      pop(me.x, me.y - me.r - 10, lives ? 'A new crater! −1 life' : 'No lives left', 'rgb(255,198,162)');
+      pop(me.x, me.y - me.r - 10, lives ? 'A new crater! −1 foxfire' : 'Out of foxfires', 'rgb(255,198,162)');
       showScore();
       if (!lives) leave('out');
     };
@@ -1478,7 +1478,7 @@
       stopMusic(why === 'eclipse' ? 0.4 : 0.9);
       if (why === 'eclipse') {
         const bonus = earn(WIN_LIFE * lives);
-        pop(me.x, me.y - me.r - 16, `Total eclipse! +${number(bonus)} for ${lives} ${lives === 1 ? 'life' : 'lives'} left`, 'rgb(255,240,206)', 2.6);
+        pop(me.x, me.y - me.r - 16, `Total eclipse! +${number(bonus)} for ${lives} ${lives === 1 ? 'foxfire' : 'foxfires'} left`, 'rgb(255,240,206)', 2.6);
       }
       if (why === 'partial') {
         const pct = Math.round(mostCover * 100), bonus = earn(PARTIAL_POINTS * pct);
@@ -1565,9 +1565,10 @@
         `Time ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`, '', 'Final score', number(points), '',
         ...(danube ? ['Music', 'The Blue Danube', 'Johann Strauss II, 1867', ''] : []),
         ...(ending === 'eclipse' ? ['The next total eclipse', 'August 2, 2027', 'Spain, North Africa and Egypt', ''] : []),
+        'Foxfires', 'The aurora in Finnish is', 'revontulet, fox fires', '',
         'Thanks for playing',
       ];
-      const heads = new Set(['New best!', 'Moon game', 'Final score', 'Music', 'The next total eclipse']);
+      const heads = new Set(['New best!', 'Moon game', 'Final score', 'Music', 'The next total eclipse', 'Foxfires']);
       const roll = labels.appendChild(Object.assign(document.createElement('div'), { className: 'bn-credits bn-moon-credits' }));
       roll.replaceChildren(...rows.map((text) => (text ? Object.assign(document.createElement(heads.has(text) ? 'b' : 'span'), { textContent: text }) : document.createElement('i'))));
       const tall = roll.offsetHeight;

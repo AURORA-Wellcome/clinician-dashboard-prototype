@@ -760,7 +760,7 @@
     const shownIndex = () => Math.min(MONTHS.length - 1, phase === 'breather' ? monthIndex + 1 : monthIndex);
     const showScore = () => {
       if (phase === 'open' && !built) return;
-      score.textContent = `${W < 560 ? '' : `${MONTHS[shownIndex()].name}: `}${number(points)} points, ${number(wood)} wood, ${lives} ${lives === 1 ? 'life' : 'lives'}`;
+      score.textContent = `${W < 560 ? '' : `${MONTHS[shownIndex()].name}: `}${number(points)} points, ${number(wood)} wood, ${lives} ${lives === 1 ? 'foxfire' : 'foxfires'}`;
       renderMenu();
     };
     score.textContent = `Keep the fire going till spring${best ? `. Your best is ${number(best)}` : ''}`;
@@ -878,7 +878,7 @@
       lost += 1;
       sfx.chill();
       spray(at.x, f.flies ? at.y : f.y, 16, '220,236,255');
-      pop(at.x, Math.min(at.y, wall.y) - 0.3 * H, lives > 0 ? (cost > 1 ? `−${cost} lives` : '−1 life') : 'The fire went out', WARM);
+      pop(at.x, Math.min(at.y, wall.y) - 0.3 * H, lives > 0 ? (cost > 1 ? `−${cost} foxfires` : '−1 foxfire') : 'The fire went out', WARM);
       if (lives > 0) {
         warmth.push({ age: 0, id: ++warmthId, reach: FLARE_REACH });
         nudge(true);
@@ -1087,7 +1087,7 @@
       const back = lives < LIVES;
       lives = Math.min(LIVES, lives + 1);
       setFire();
-      pop(middle.x, middle.y - 0.28 * H, `+${CORD + more} wood${back ? ' and a life back' : ''}`, GOLD);
+      pop(middle.x, middle.y - 0.28 * H, `+${CORD + more} wood${back ? ' and a foxfire back' : ''}`, GOLD);
       const M = MONTHS[monthIndex + 1];
       card([M.name, M.says], '196 220 255', 600);
       say('');
@@ -1103,7 +1103,7 @@
       points += forLives + wood;
       card(['Spring!', 'The fire kept all winter'], '159 245 220', 300, 3400);
       say('');
-      pop(middle.x, middle.y - 0.28 * H, `+${number(forLives)} for ${lives} ${lives === 1 ? 'life' : 'lives'} left`, GOLD);
+      pop(middle.x, middle.y - 0.28 * H, `+${number(forLives)} for ${lives} ${lives === 1 ? 'foxfire' : 'foxfires'} left`, GOLD);
       if (wood) pop(middle.x, middle.y - 0.14 * H, `+${number(wood)} for wood left`, GOLD);
       if (options.surge) options.surge();
       counts.kept += 1;
@@ -1223,8 +1223,8 @@
         ...(counts.lantern ? [`Lanterns lit ${counts.lantern}`] : []), ...(counts.firepit ? [`Fire pits ${counts.firepit}`] : []),
         ...(counts.alight ? [`Woodpiles burned ${counts.alight}`] : counts.woodpile ? [`Woodpiles ${counts.woodpile}`] : []), ...(counts.woodshed ? ['A woodshed'] : []),
         `Stokes ${stoked}`, ...(counts.stars ? [`Star lanterns ${counts.stars}`] : []), `Time ${Math.floor(played / 60)}:${String(played % 60).padStart(2, '0')}`, '', 'Final score', number(points), '',
-        ...(heard ? ['Music', 'Vivaldi, The Four Seasons', 'Autumn and Winter from the', "Mutopia Project's edition,", 'CC BY-SA', ''] : []), 'Thanks for playing'];
-      const heads = new Set(['New best!', 'Winter at the cabin', 'Final score', 'Music']);
+        ...(heard ? ['Music', 'Vivaldi, The Four Seasons', 'Autumn and Winter from the', "Mutopia Project's edition,", 'CC BY-SA', ''] : []), 'Foxfires', 'The aurora in Finnish is', 'revontulet, fox fires', '', 'Thanks for playing'];
+      const heads = new Set(['New best!', 'Winter at the cabin', 'Final score', 'Music', 'Foxfires']);
       const credits = labels.appendChild(Object.assign(document.createElement('div'), { className: 'bn-credits bn-cabin-credits' }));
       credits.replaceChildren(...rows.map((text) => (text ? Object.assign(document.createElement(heads.has(text) ? 'b' : 'span'), { textContent: text }) : document.createElement('i'))));
       const tall = credits.offsetHeight;

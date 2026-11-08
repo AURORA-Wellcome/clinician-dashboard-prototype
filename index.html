@@ -1524,6 +1524,9 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     pop.textContent = text;
     pop.classList.toggle('big', !!big);
     pop.style.setProperty('--c', color);
+    // A long message on a narrow banner takes two lines rather than running off its edges
+    pop.style.whiteSpace = pop.style.width = pop.style.textAlign = '';
+    if (pop.offsetWidth > game.w - 12) Object.assign(pop.style, { whiteSpace: 'normal', width: `${game.w - 12}px`, textAlign: 'center' });
     const half = pop.offsetWidth / 2 + 6, px = Math.min(game.w - half, Math.max(half, x)), py = Math.max(pop.offsetHeight + 26, y);
     const at = (rise, scale = 1) => `translate(${px.toFixed(1)}px, ${(py - rise).toFixed(1)}px) translate(-50%, -100%) scale(${scale})`;
     pop.animate([
@@ -1800,7 +1803,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       game.missed += 1;
       game.twin = false;
       setFire(LIVES - game.missed);
-      floatText('−1 life, and air traffic control has questions', x, y + game.h * 0.2, '255 150 130');
+      floatText('−1 foxfire, and air traffic control has questions', x, y + game.h * 0.2, '255 150 130');
       sound.plane();
       score.animate([{ color: '#FFB46A' }, { color: 'rgba(232,238,255,.95)' }], { duration: 800, easing: 'ease-out' });
       // A near miss: it ducks, banks hard and climbs out of the sky early. It doesn't crash: a passenger jet brought down by
@@ -1998,7 +2001,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     }
     game.missed -= 1;
     game.lanterns += 1;
-    floatText('Lantern! +1 life', x, y + h * 0.13, '255 214 140', true);
+    floatText('Lantern! +1 foxfire', x, y + h * 0.13, '255 214 140', true);
     const at = (px, py) => `translate(${px.toFixed(1)}px, ${py.toFixed(1)}px)`;
     lanternLight.animate([
       { opacity: 1, transform: `${at(x, y)} scale(1.3)` },
@@ -2107,13 +2110,13 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     game.missed += direct || s.heavy ? 2 : 1;
     game.twin = false;
     setFire(LIVES - game.missed);
-    floatText(`${s.heavy ? 'The fireball landed! −2 lives' : direct ? 'Direct hit! −2 lives' : '−1 life'}${twin ? ', twin sparks lost' : ''}`, x, y - h * 0.14, '255 196 130', direct || s.heavy);
+    floatText(`${s.heavy ? 'The fireball landed! −2 foxfires' : direct ? 'Direct hit! −2 foxfires' : '−1 foxfire'}${twin ? ', twin sparks lost' : ''}`, x, y - h * 0.14, '255 196 130', direct || s.heavy);
     sound.landing(s.size, direct || s.heavy);
     score.animate([{ color: '#FFB46A' }, { color: 'rgba(232,238,255,.95)' }], { duration: 800, easing: 'ease-out' });
   };
   const showScore = () => {
     const left = Math.max(0, LIVES - game.missed), beat = game.best && game.points > game.best;
-    score.textContent = `${beat ? 'New best! ' : ''}${number(game.points)} points, ${left} ${left === 1 ? 'life' : 'lives'} left${game.twin ? ', twin sparks' : ''}`;
+    score.textContent = `${beat ? 'New best! ' : ''}${number(game.points)} points, ${left} ${left === 1 ? 'foxfire' : 'foxfires'}${game.w < 360 ? '' : ' left'}${game.twin ? ', twin sparks' : ''}`;
   };
   // Bosses. Wave 10 brings a fireball, a bolide too big to catch in one go. It comes in slowly from one side, high, and arcs
   // across the sky and down to the forest short of the other side, in about 19 s, shedding burning pieces that fall as stars.
@@ -2271,7 +2274,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
     game.boss = null;
     game.points += boss.worth;
     if (back) { game.missed -= 1; setFire(LIVES - game.missed); stoke(); }
-    floatText(`${b.kind === 'fireball' ? 'Fireball shattered!' : 'Mothership driven off!'} +${number(boss.worth)}${back ? ' and a life back' : ''}`, p.x, p.y + h * 0.18, boss.color, true);
+    floatText(`${b.kind === 'fireball' ? 'Fireball shattered!' : 'Mothership driven off!'} +${number(boss.worth)}${back ? ' and a foxfire back' : ''}`, p.x, p.y + h * 0.18, boss.color, true);
     sound.beaten();
     if (!document.hidden) surgeOnce();
     shockAt(p);
@@ -2445,8 +2448,8 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
       timers.push(setTimeout(() => sparkle({ x: b.x, y: b.y, accent: true, base: 1, last: 0 }, performance.now()), delay + 120));
     });
     const names = CONSTELLATIONS.find(([least]) => played.caught >= least)[1], seconds = Math.round((performance.now() - played.start) / 1000);
-    const rows = [...(played.won ? ['Victory!', 'The night is saved', ''] : []), ...(newBest ? ['New best!', ''] : []), 'Your constellation', names[Math.floor(Math.random() * names.length)], '', `${played.caught} stars caught`, `Best catch +${number(played.bestCatch)}`, ...(played.bestChain > 1 ? [`Best chain ×${played.bestChain}`] : []), played.won ? `All ${LAST_WAVE + 1} waves` : `Reached wave ${played.wave + 1} of ${LAST_WAVE + 1}`, ...(played.fireball ? [played.fireball === 'shattered' ? 'Fireball shattered' : 'The fireball landed'] : []), ...(played.won ? ['Mothership driven off'] : []), ...(played.returned ? [`Stars returned: ${played.returned}`] : []), ...(played.satellites ? [`Satellites caught: ${played.satellites}`] : []), ...(played.comets ? [`Comets caught: ${played.comets}`] : []), ...(played.complaints ? [`Air traffic complaints: ${played.complaints}`] : []), ...(played.smooth ? [`Smooth flights: ${played.smooth}`] : []), ...(played.encounters ? [`Close encounters: ${played.encounters}`] : []), ...(played.rescued ? [`Stars rescued: ${played.rescued}`] : []), ...(played.abducted ? [`Stars abducted: ${played.abducted}`] : []), ...(played.closeCalls ? [`Close calls: ${played.closeCalls}`] : []), ...(played.frosts ? [`Frost stars: ${played.frosts}`] : []), ...(played.lanterns ? [`Lives relit: ${played.lanterns}`] : []), ...(played.storms ? [`Aurora storms called: ${played.storms}`] : []), ...(played.zaps ? [`Firefly zaps: ${played.zaps}`] : []), `Time ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Moon maps: NASA', 'Thanks for playing'];
-    const heads = new Set(['Victory!', 'New best!', 'Your constellation', 'Final score']);
+    const rows = [...(played.won ? ['Victory!', 'The night is saved', ''] : []), ...(newBest ? ['New best!', ''] : []), 'Your constellation', names[Math.floor(Math.random() * names.length)], '', `${played.caught} stars caught`, `Best catch +${number(played.bestCatch)}`, ...(played.bestChain > 1 ? [`Best chain ×${played.bestChain}`] : []), played.won ? `All ${LAST_WAVE + 1} waves` : `Reached wave ${played.wave + 1} of ${LAST_WAVE + 1}`, ...(played.fireball ? [played.fireball === 'shattered' ? 'Fireball shattered' : 'The fireball landed'] : []), ...(played.won ? ['Mothership driven off'] : []), ...(played.returned ? [`Stars returned: ${played.returned}`] : []), ...(played.satellites ? [`Satellites caught: ${played.satellites}`] : []), ...(played.comets ? [`Comets caught: ${played.comets}`] : []), ...(played.complaints ? [`Air traffic complaints: ${played.complaints}`] : []), ...(played.smooth ? [`Smooth flights: ${played.smooth}`] : []), ...(played.encounters ? [`Close encounters: ${played.encounters}`] : []), ...(played.rescued ? [`Stars rescued: ${played.rescued}`] : []), ...(played.abducted ? [`Stars abducted: ${played.abducted}`] : []), ...(played.closeCalls ? [`Close calls: ${played.closeCalls}`] : []), ...(played.frosts ? [`Frost stars: ${played.frosts}`] : []), ...(played.lanterns ? [`Foxfires relit: ${played.lanterns}`] : []), ...(played.storms ? [`Aurora storms called: ${played.storms}`] : []), ...(played.zaps ? [`Firefly zaps: ${played.zaps}`] : []), `Time ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Moon maps: NASA', '', 'Foxfires', 'The aurora in Finnish is', 'revontulet, fox fires', '', 'Thanks for playing'];
+    const heads = new Set(['Victory!', 'New best!', 'Your constellation', 'Final score', 'Foxfires']);
     credits.replaceChildren(...rows.map((text) => (text ? Object.assign(document.createElement(heads.has(text) ? 'b' : 'span'), { textContent: text }) : document.createElement('i'))));
     const { h } = played, tall = credits.offsetHeight;
     const rise = credits.animate([{ opacity: 1, transform: `translate(-50%, ${h.toFixed(1)}px)` }, { opacity: 1, transform: `translate(-50%, ${(-tall).toFixed(1)}px)` }], { duration: (h + tall) / (h * 0.4) * 1000, delay: 1500, easing: 'linear' });
@@ -2654,7 +2657,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const loadBear = (then) => {
     if (!bearLoad) {
       bearLoad = new Promise((resolve, reject) => {
-        document.head.append(Object.assign(document.createElement('script'), { src: './bear.js?v=94fb7389c4', onload: resolve, onerror: reject }));
+        document.head.append(Object.assign(document.createElement('script'), { src: './bear.js?v=cca95fb794', onload: resolve, onerror: reject }));
       });
       // If it can't load, the sky works as before, and a later click tries again
       bearLoad.catch(() => { bearLoad = null; });
@@ -2676,7 +2679,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const loadMoon = (then) => {
     if (!moonLoad) {
       moonLoad = new Promise((resolve, reject) => {
-        document.head.append(Object.assign(document.createElement('script'), { src: './moon.js?v=5a858ff076', onload: resolve, onerror: reject }));
+        document.head.append(Object.assign(document.createElement('script'), { src: './moon.js?v=9036ed1a95', onload: resolve, onerror: reject }));
       });
       moonLoad.catch(() => { moonLoad = null; });
     }
@@ -2711,7 +2714,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const loadCabin = (then) => {
     if (!cabinLoad) {
       cabinLoad = new Promise((resolve, reject) => {
-        document.head.append(Object.assign(document.createElement('script'), { src: './cabin.js?v=cc1c41aa67', onload: resolve, onerror: reject }));
+        document.head.append(Object.assign(document.createElement('script'), { src: './cabin.js?v=44891a5a3c', onload: resolve, onerror: reject }));
       });
       cabinLoad.catch(() => { cabinLoad = null; });
     }
