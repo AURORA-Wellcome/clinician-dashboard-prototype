@@ -68,9 +68,12 @@
   // The bridges of stars move at the start of each stage from Merak's, as the log does. Each goes where it fits: LEDGE_SIDE or
   // more in from the banner's sides; LEDGE_GAP or more from a bridge of its height, so the two read as two, but only
   // LEDGE_STEP from one of the other height, which its height sets apart; and LEDGE_MOVE or more from where any bridge of its
-  // height was, so the stage looks new, or failing that, on a phone, LEDGE_MOVE_LEAST. Its stars fly there in LEDGE_FLY
-  // seconds, plus one for every LEDGE_FLY_PER units it goes, leaving LEDGE_STAGGER apart, the one in front first.
-  const LEDGE_SIDE = 30, LEDGE_GAP = 40, LEDGE_STEP = 10, LEDGE_MOVE = 150, LEDGE_MOVE_LEAST = 60;
+  // height was, so the stage looks new, or failing that, on a phone, LEDGE_MOVE_LEAST. It goes only over ground about as
+  // level as under the first stage's bridges: nowhere under it, or within 20 of its ends, more than LEDGE_DIP lower than under
+  // its middle, so it's no harder to jump up to (for its first few hours, a bridge could land over a dip, up to 118 above
+  // the ground, out of reach of a double jump pressed early). Its stars fly there in LEDGE_FLY seconds, plus one for
+  // every LEDGE_FLY_PER units it goes, leaving LEDGE_STAGGER apart, the one in front first.
+  const LEDGE_SIDE = 30, LEDGE_GAP = 40, LEDGE_STEP = 10, LEDGE_MOVE = 150, LEDGE_MOVE_LEAST = 60, LEDGE_DIP = 4;
   const LEDGE_FLY = 0.6, LEDGE_FLY_PER = 1800, LEDGE_STAGGER = 0.02;
   // The cabin: the animal can land on its roof, and landing there stokes the fire, as a click on the cabin does outside the
   // games, with the chimney's puff of smoke and sparks. A thick cloud of smoke rises from the chimney for SMOKE_SECONDS, and
@@ -659,11 +662,10 @@
       return c;
     };
     // The level: bridges of stars to land on from below, and a fallen log low enough that only a ball rolls under it. A bridge
-    // stands up above the highest ground under its middle and its two berries (LEDGE_BERRIES), so wherever it goes they stay
-    // out of reach from the ground. fly: on its way to a new place (moveLedges), when it can't be landed on.
+    // stands up above the ground under its middle, with its two berries at LEDGE_BERRIES of its width from there. fly: on its
+    // way to a new place (moveLedges), when it can't be landed on.
     const LEDGE_BERRIES = [-0.28, 0.28];
-    const ledgeY = (x, w, up) => Math.min(floorAt(x), ...LEDGE_BERRIES.map((f) => floorAt(x + w * f))) - up;
-    const ledge = (x, up, w) => ({ x, y: ledgeY(x, w, up), w, up, fly: null });
+    const ledge = (x, up, w) => ({ x, y: floorAt(x) - up, w, up, fly: null });
     const ledges = [ledge(W * 0.2, 58, 120), ledge(W * 0.52, 104, 120), ledge(W * 0.8, 60, 130)];
     // Its underside clears the highest ground below it by just enough for a ball, wherever that is
     const logAt = (x, w) => {
@@ -1103,6 +1105,25 @@
     const ledgeFits = (l, x) => x - l.w / 2 >= LEDGE_SIDE && x + l.w / 2 <= W - LEDGE_SIDE
       && roofs.every((r) => Math.abs(x - r.x) >= (l.w + r.w) / 2 + 20)
       && (!high(l) || Math.abs(x - forge.x) >= l.w / 2 + forge.R + 14);
+    // And over ground level enough (LEDGE_DIP), from the ground's height every unit across (ground), with a low bridge's
+    // berries 65 or more above the ground under them, out of reach from it (60, the reach for food, and a berry's size)
+    let ground = null;
+    const ledgeLevel = (l, x) => {
+      const mid = floorAt(x);
+      for (let s = Math.max(0, Math.round(x - l.w / 2 - 20)); s <= Math.min(ground.length - 1, x + l.w / 2 + 20); s += 2) if (ground[s] - mid > LEDGE_DIP) return false;
+      return LEDGE_BERRIES.every((f) => floorAt(x + l.w * f) - (mid - l.up - 10) >= 65);
+    };
+    // Each bridge's places as far as those go, which hold for the whole run: worked out when the bridges first move
+    const ledgePlaces = new Map();
+    const placesFor = (l) => {
+      if (!ground) ground = Array.from({ length: Math.floor(W) + 1 }, (_, i) => floorAt(i));
+      if (!ledgePlaces.has(l)) {
+        const list = [];
+        for (let x = LEDGE_SIDE + l.w / 2; x <= W - LEDGE_SIDE - l.w / 2; x += 1) if (ledgeFits(l, x) && ledgeLevel(l, x)) list.push(x);
+        ledgePlaces.set(l, list);
+      }
+      return ledgePlaces.get(l);
+    };
     const apart = (a, xa, b, xb) => Math.abs(xa - xb) >= (a.w + b.w) / 2 + (high(a) === high(b) ? LEDGE_GAP : LEDGE_STEP);
     const moveLedges = () => {
       const s = size(), stays = ledges.filter((l) => l.fly || pots.some((p) => p.on === l)
@@ -1113,13 +1134,8 @@
         // Every place each could go, a unit apart, since on a phone a place can be a window of a few units, then one bridge at
         // a time, in a new order each try so none always gets first pick, each at random among its places still apart from
         // those placed. A try that leaves one nowhere starts over.
-        const spots = new Map(moving.map((l) => {
-          const list = [];
-          for (let x = LEDGE_SIDE + l.w / 2; x <= W - LEDGE_SIDE - l.w / 2; x += 1) {
-            if (ledgeFits(l, x) && was.every((o) => (own ? o.l !== l : o.high !== high(l)) || Math.abs(x - o.x) >= far) && stays.every((o) => apart(l, x, o, o.x))) list.push(x);
-          }
-          return [l, list];
-        }));
+        const spots = new Map(moving.map((l) => [l, placesFor(l).filter((x) => was.every((o) => (own ? o.l !== l : o.high !== high(l)) || Math.abs(x - o.x) >= far)
+          && stays.every((o) => apart(l, x, o, o.x)))]));
         for (let tries = 0; tries < 60; tries++) {
           const order = moving.slice(), placed = [];
           for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
@@ -1133,7 +1149,7 @@
             const x0 = l.x, y0 = l.y;
             l.fly = { x0, y0, age: 0, life: LEDGE_FLY + Math.abs(x - x0) / LEDGE_FLY_PER };
             l.x = x;
-            l.y = ledgeY(x, l.w, l.up);
+            l.y = floorAt(x) - l.up;
             sheds.forEach((sh) => { if (sh.landed && Math.abs(sh.y - y0) < 0.5 && Math.abs(sh.x - x0) < l.w / 2) { sh.landed = false; sh.vy = 0; } });
             berries.forEach((b) => { if (b.ledge === l) Object.assign(b, { back: b.on, on: false, x: x + l.w * b.f, y: l.y - 10 }); });
           }
