@@ -1260,7 +1260,7 @@
         points += FOX_FIRES_POINTS;
         counts.fires += 1;
         sfx.fires();
-        pop(me.x, me.y - tall() - 14, `Fox fires! +${FOX_FIRES_POINTS}`, 'rgb(255,200,130)', 2);
+        pop(me.x, me.y - tall() - 14, `Tail sparks! +${FOX_FIRES_POINTS}`, 'rgb(255,200,130)', 2);
         shower(me.x - me.face * 50, me.y - 34, 22, 'rgb(255,190,110)');
         if (options.surge) options.surge();
       }
@@ -3332,7 +3332,7 @@
       const rows = [...(newBest ? ['New best!', ''] : []), A.title, ending === 'home' ? `Home by ${clock()}` : `${lit.filter(Boolean).length} of 7 stars relit`, '',
         `${caught} ${caught === 1 ? 'star' : 'stars'} caught`, ...(counts.alcor ? ['Alcor spotted'] : []), ...(bestCombo >= 3 ? [`Longest combo ${bestCombo}`] : []), ...(counts.berries ? [`Berries ${counts.berries}`] : []), ...(counts.bellies ? [`Full bellies ${counts.bellies}`] : []), ...(counts.honey ? [`Honey pots ${counts.honey}`] : []), ...(counts.stokes ? [`Fires stoked ${counts.stokes}`] : []), ...(counts.calmed ? [`Bees calmed ${counts.calmed}`] : []), ...(counts.escapes ? [`Swarms escaped ${counts.escapes}`] : []),
         ...(counts.bees ? [`Bees bonked ${counts.bees}`] : []), ...(counts.satellites ? [`Satellites ${counts.satellites}`] : []), ...(counts.miles ? [`Air miles ${number(counts.miles)}`] : counts.rides ? [`Plane rides ${counts.rides}`] : []), ...(counts.booms ? [`Sonic booms ${counts.booms}`] : []),
-        ...(counts.moons ? [`Moon gravity ${counts.moons}`] : []), ...(counts.fires ? [`Fox fires ${counts.fires}`] : []),
+        ...(counts.moons ? [`Moon gravity ${counts.moons}`] : []), ...(counts.fires ? [`Tail sparks ${counts.fires}`] : []),
         ...(left ? [`Night left ${hoursMinutes(left)}`] : []), `Time ${Math.floor(time / 60)}:${String(time % 60).padStart(2, '0')}`, '', 'Final score', number(points), '', 'Foxfires', 'The aurora in Finnish is', 'revontulet, fox fires', '', 'Thanks for playing'];
       const heads = new Set(['New best!', ...Object.values(ANIMALS).map((a) => a.title), 'Final score', 'Foxfires']);
       const credits = labels.appendChild(Object.assign(document.createElement('div'), { className: 'bn-credits bn-bear-credits' }));
