@@ -189,11 +189,14 @@
     for (let i = 0; i < STARS.length; i++) { roll -= STARS[i].share; if (roll < 0) return i; }
     return 0;
   };
-  // A run with nothing built in its first IDLE seconds ends without a score, so a click meant only to stoke the fire costs
-  // nothing. The army waits for the first lantern. A breather of BREATHER seconds comes between months, and the cabin's choice
-  // opens CHOICE_AFTER seconds into it. The rings fade in
-  // over OPENING, and everything fades over FADE as a run ends. The thaw holds SPRING_HOLD seconds before it does, and after
-  // the fire goes out it stays out OUT_DARK seconds, then relights with a stoke, as in the shooting star game.
+  // A run with nothing built ends without a score after IDLE seconds with no input, or three times that once the cabin's
+  // first addition is chosen, so a click meant only to stoke the fire costs nothing. Input is the pointer moving over the
+  // banner, a click or tap on it, menus included, a finger dragging your animal or a key steering it, so someone reading the
+  // menus or looking over the rings isn't hurried out (at first the seconds ran from the opening, however busy the player).
+  // The army waits for the first lantern. A breather of BREATHER seconds comes between months, and the cabin's choice opens
+  // CHOICE_AFTER seconds into it. The rings fade in over OPENING, and everything fades over FADE as a run ends. The thaw
+  // holds SPRING_HOLD seconds before it does, and after the fire goes out it stays out OUT_DARK seconds, then relights with
+  // a stoke, as in the shooting star game.
   const CHOICE_AFTER = 4, IDLE = 20, BREATHER = 20, OPENING = 0.8, FADE = 1.2, SPRING_HOLD = 3, OUT_DARK = 2.5;
   const BEST_KEY = 'aurora-cabin-best';
   // Until a winter has been kept in this browser, the army takes FIRST_WINTER as much melting from December on, Old Man Winter
@@ -1104,7 +1107,7 @@
     const foes = [], drips = [], steam = [], bits = [], pops = [], warmth = [], remains = [], sparks = [], risers = [];
     let warmthId = 0;
     let wood = START_WOOD, points = 0, lives = LIVES, melted = 0, lost = 0, stoked = 0, built = 0;
-    let phase = 'open', phaseTime = 0, time = 0, monthIndex = 0, monthTime = 0, nextRank = 0, nextWraith = 0, breatherLeft = 0;
+    let phase = 'open', phaseTime = 0, time = 0, inputAt = 0, monthIndex = 0, monthTime = 0, nextRank = 0, nextWraith = 0, breatherLeft = 0;
     let fieldAlpha = 0, fadeFrom = 1, fadeFor = FADE, stokeAt = -Infinity, hover = null, menuFor = null, menuKey = '', preview = null;
     let king = null, kingCame = false, lastRaise = -Infinity, nudgeUntil = -Infinity, lastNudge = -Infinity, lastMeltSound = -Infinity, lastCrackSound = -Infinity, began = 0;
     // For the credits: the army melted by kind, what was built, woodpiles lit, months kept, and the king
@@ -1975,8 +1978,11 @@
       if (ending || paused || !onHero(where(e))) return;
       drag = { id: e.pointerId, x0: where(e).x, moved: false };
     };
+    // Input for IDLE (above): a mouse or pen moving over the banner, or a finger dragging your animal, but not a finger passing
+    // over it
     const onMove = (e) => {
       if (drag && e.pointerId === drag.id) {
+        inputAt = time;
         const at = where(e).x;
         if (!drag.moved && Math.abs(at - drag.x0) > 6) {
           drag.moved = true;
@@ -1985,6 +1991,7 @@
         if (drag.moved) { if (hero) hero.target = clamp(at, heroMin(), heroMax()); return; }
       }
       if (e.pointerType === 'touch' || ending) return;
+      inputAt = time;
       const p = where(e);
       hover = pick(p);
       banner.style.cursor = hover ? 'pointer' : onHero(p) ? 'grab' : '';
@@ -1995,6 +2002,9 @@
       drag = null;
     };
     const onLeave = () => { hover = null; };
+    // Any click or tap on the banner is input for IDLE (above), menus and links included, so this listens before their own
+    // handlers, which stop clicks there
+    const onAnyClick = () => { inputAt = time; };
     const onKey = (e) => {
       if (typing() || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === 'Escape') {
@@ -2007,9 +2017,11 @@
       } else if (e.key === 'ArrowLeft' || e.code === 'KeyA') {
         e.preventDefault();
         keysDown.add('left');
+        inputAt = time;
       } else if (e.key === 'ArrowRight' || e.code === 'KeyD') {
         e.preventDefault();
         keysDown.add('right');
+        inputAt = time;
       } else if (e.code === 'KeyQ') useAbility();
       else if (e.code === 'KeyR') callAurora();
       else if (e.code === 'KeyF') knitScarf();
@@ -2046,6 +2058,7 @@
       pop(cabinPopX, middle.y - 0.28 * H, `+${s * NEXT_WOOD} wood`, GOLD);
       startMonth(monthIndex + 1);
     };
+    banner.addEventListener('click', onAnyClick, true);
     banner.addEventListener('click', onClick);
     banner.addEventListener('pointerdown', onDown);
     banner.addEventListener('pointermove', onMove);
@@ -2170,6 +2183,7 @@
       running = false;
       current = null;
       hintTimers.forEach(clearTimeout);
+      banner.removeEventListener('click', onAnyClick, true);
       banner.removeEventListener('click', onClick);
       banner.removeEventListener('pointerdown', onDown);
       banner.removeEventListener('pointermove', onMove);
@@ -2259,7 +2273,7 @@
       const M = MONTHS[monthIndex];
       if (phase === 'open') {
         fieldAlpha = smooth(clamp(phaseTime / OPENING, 0, 1));
-        if (!built && phaseTime > (wingCount ? IDLE * 3 : IDLE)) { leave('idle'); return; }
+        if (!built && time - inputAt > (wingCount ? IDLE * 3 : IDLE)) { leave('idle'); return; }
       } else if (phase === 'month') {
         fieldAlpha = 1;
         monthTime += dt;

@@ -2714,7 +2714,7 @@ a.frame:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
   const loadCabin = (then) => {
     if (!cabinLoad) {
       cabinLoad = new Promise((resolve, reject) => {
-        document.head.append(Object.assign(document.createElement('script'), { src: './cabin.js?v=68672eeb15', onload: resolve, onerror: reject }));
+        document.head.append(Object.assign(document.createElement('script'), { src: './cabin.js?v=328f7f7a86', onload: resolve, onerror: reject }));
       });
       cabinLoad.catch(() => { cabinLoad = null; });
     }
